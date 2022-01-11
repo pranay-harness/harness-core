@@ -1,11 +1,20 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.beans.PrometheusDataCollectionInfo;
 import io.harness.cvng.beans.PrometheusDataCollectionInfo.MetricCollectionInfo;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
 import io.harness.cvng.core.entities.PrometheusCVConfig.MetricInfo;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionSLIInfoMapper;
+import io.harness.cvng.core.utils.dataCollection.MetricDataCollectionUtils;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 
 import com.google.common.base.Preconditions;
@@ -16,11 +25,13 @@ public class PrometheusDataCollectionInfoMapper
     implements DataCollectionInfoMapper<PrometheusDataCollectionInfo, PrometheusCVConfig>,
                DataCollectionSLIInfoMapper<PrometheusDataCollectionInfo, PrometheusCVConfig> {
   @Override
-  public PrometheusDataCollectionInfo toDataCollectionInfo(PrometheusCVConfig cvConfig) {
+  public PrometheusDataCollectionInfo toDataCollectionInfo(PrometheusCVConfig cvConfig, TaskType taskType) {
     Preconditions.checkNotNull(cvConfig);
     List<MetricCollectionInfo> metricCollectionInfoList = new ArrayList<>();
-    cvConfig.getMetricInfoList().forEach(
-        metricInfo -> { metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo)); });
+    cvConfig.getMetricInfoList()
+        .stream()
+        .filter(metricInfo -> MetricDataCollectionUtils.isMetricApplicableForDataCollection(metricInfo, taskType))
+        .forEach(metricInfo -> { metricCollectionInfoList.add(getMetricCollectionInfo(metricInfo)); });
     return getDataCollectionInfo(metricCollectionInfoList, cvConfig);
   }
 

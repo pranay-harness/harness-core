@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Shield 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
 
 CONFIG_FILE=/opt/harness/config.yml
 NEWRELIC_FILE=/opt/harness/newrelic.yml
@@ -400,6 +404,10 @@ fi
 
 if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
   yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
+fi
+
+if [[ "" != "$SEGMENT_VERIFY_CERT_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT_NG"
 fi
 
 if [[ "" != "$SALESFORCE_USERNAME" ]]; then

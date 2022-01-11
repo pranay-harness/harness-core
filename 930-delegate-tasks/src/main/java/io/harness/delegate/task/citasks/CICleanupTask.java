@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks;
 
 /**
@@ -39,9 +46,9 @@ public class CICleanupTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     CICleanupTaskParams ciCleanupTaskParams = (CICleanupTaskParams) parameters;
     if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.GCP_K8) {
-      return ciK8CleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+      return ciK8CleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams, getTaskId());
     } else if (ciCleanupTaskParams.getType() == CICleanupTaskParams.Type.VM) {
-      return ciVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams);
+      return ciVmCleanupTaskHandler.executeTaskInternal(ciCleanupTaskParams, getTaskId());
     } else {
       throw new CIStageExecutionException(
           String.format("Invalid infra type for cleanup step", ciCleanupTaskParams.getType()));

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
@@ -50,7 +57,8 @@ public class CIVmInitializeTaskHandlerTest extends CategoryTest {
     Response<SetupVmResponse> setupResponse =
         Response.success(SetupVmResponse.builder().instanceID("test").ipAddress("1.1.1.1").build());
     when(httpHelper.setupStageWithRetries(any())).thenReturn(setupResponse);
-    VmTaskExecutionResponse response = ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
+    VmTaskExecutionResponse response =
+        ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -62,7 +70,8 @@ public class CIVmInitializeTaskHandlerTest extends CategoryTest {
     ResponseBody body = mock(ResponseBody.class);
     Response<SetupVmResponse> setupResponse = Response.error(400, body);
     when(httpHelper.setupStageWithRetries(any())).thenReturn(setupResponse);
-    VmTaskExecutionResponse response = ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient);
+    VmTaskExecutionResponse response =
+        ciVmInitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }

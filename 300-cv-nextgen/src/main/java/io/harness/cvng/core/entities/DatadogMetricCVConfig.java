@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
@@ -60,6 +67,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
               .metricName(definition.getMetricName())
               .identifier(definition.getIdentifier())
               .metric(definition.getMetric())
+              .metricPath(definition.getMetricPath())
               .query(definition.getQuery())
               .groupingQuery(definition.getGroupingQuery())
               .metricType(metricType)
@@ -90,6 +98,7 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
   @FieldNameConstants(innerTypeName = "MetricInfoKeys")
   public static class MetricInfo extends AnalysisInfo {
     private String metricName;
+    private String metricPath;
     private String metric;
     private String query;
     private String groupingQuery;

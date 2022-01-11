@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.steps.approval;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -56,7 +63,7 @@ public class ApprovalStepVariableCreator extends GenericStepVariableCreator {
       YamlField uuidNode = variableNode.getField(YAMLFieldNameConstants.UUID);
       if (uuidNode != null) {
         String original = YAMLFieldNameConstants.SPEC + "." + YamlTypes.APPROVAL_INPUTS;
-        String replacement = YAMLFieldNameConstants.INPUT + "." + YamlTypes.APPROVAL_INPUTS;
+        String replacement = YAMLFieldNameConstants.OUTPUT + "." + YamlTypes.APPROVAL_INPUTS;
 
         String fqn = YamlUtils.getFullyQualifiedName(uuidNode.getNode()).replace(original, replacement);
         String localName =

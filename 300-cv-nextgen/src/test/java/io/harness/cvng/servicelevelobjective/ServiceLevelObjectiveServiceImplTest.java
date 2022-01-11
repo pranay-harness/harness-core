@@ -1,5 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective;
 
+import static io.harness.rule.OwnerRule.ABHIJITH;
 import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,18 +17,23 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.servicelevelobjective.beans.DayOfWeek;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
 import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
 import io.harness.cvng.servicelevelobjective.beans.SLOCalenderType;
+import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLOTarget;
 import io.harness.cvng.servicelevelobjective.beans.SLOTargetType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorType;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveFilter;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveResponse;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricEventType;
 import io.harness.cvng.servicelevelobjective.beans.slimetricspec.RatioSLIMetricSpec;
@@ -28,15 +41,22 @@ import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.CalenderSLOTargetSpec.WeeklyCalendarSpec;
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.RollingSLOTargetSpec;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator.SLOHealthIndicatorKeys;
+import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
+import io.harness.cvng.statemachine.entities.AnalysisOrchestrator.AnalysisOrchestratorKeys;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ng.beans.PageResponse;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -49,8 +69,10 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Inject ServiceLevelObjectiveService serviceLevelObjectiveService;
 
   @Inject MonitoredServiceService monitoredServiceService;
-
+  @Inject VerificationTaskService verificationTaskService;
   @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
+  @Inject SLOHealthIndicatorService sloHealthIndicatorService;
+  @Inject HPersistence hPersistence;
   String accountId;
   String orgIdentifier;
   String projectIdentifier;
@@ -102,7 +124,6 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
                     .spec(RollingSLOTargetSpec.builder().periodLength("30d").build())
                     .build();
 
-    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     calendarSloTarget = SLOTarget.builder()
                             .type(SLOTargetType.CALENDER)
                             .sloTargetPercentage(80.0)
@@ -130,6 +151,19 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
         serviceLevelObjectiveService.create(projectParams, sloDTO);
     assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testCreate_validateSLOHealthIndicatorCreationTest() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    SLOHealthIndicator sloHealthIndicator =
+        sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO.getIdentifier());
+    assertThat(sloHealthIndicator.getErrorBudgetRemainingPercentage()).isEqualTo(100.0);
   }
 
   @Test
@@ -211,6 +245,25 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   }
 
   @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdate_validateSLOHealthIndicatorUpdate() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    SLOHealthIndicator existingSloHealthIndicator =
+        sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO.getIdentifier());
+    sloDTO.setDescription("newDescription");
+    ServiceLevelObjectiveResponse updatedServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    SLOHealthIndicator updatedSloHealthIndicator =
+        sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO.getIdentifier());
+    assertThat(updatedSloHealthIndicator.getLastUpdatedAt())
+        .isGreaterThan(existingSloHealthIndicator.getLastUpdatedAt());
+  }
+
+  @Test
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
   public void testUpdate_SLIUpdateSuccess() {
@@ -282,6 +335,48 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = DEEPAK_CHHIKARA)
   @Category(UnitTests.class)
+  public void testUpdate_SLIUpdateWithSLOTarget() {
+    ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
+    createMonitoredService();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+    ServiceLevelIndicatorDTO responseSLIDTO =
+        serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO().getServiceLevelIndicators().get(0);
+    String sliIndicator =
+        serviceLevelIndicatorService
+            .getServiceLevelIndicator(builderFactory.getProjectParams(), responseSLIDTO.getIdentifier())
+            .getUuid();
+    ServiceLevelIndicatorDTO serviceLevelIndicatorDTO1 = sloDTO.getServiceLevelIndicators().get(0);
+    RatioSLIMetricSpec ratioSLIMetricSpec = (RatioSLIMetricSpec) serviceLevelIndicatorDTO1.getSpec().getSpec();
+    ratioSLIMetricSpec.setThresholdType(ThresholdType.LESS_THAN);
+    serviceLevelIndicatorDTO1.setIdentifier(responseSLIDTO.getIdentifier());
+    serviceLevelIndicatorDTO1.setName(responseSLIDTO.getName());
+    serviceLevelIndicatorDTO1.getSpec().setSpec(ratioSLIMetricSpec);
+    sloDTO.setTarget(calendarSloTarget);
+    ServiceLevelObjectiveResponse updateServiceLevelObjectiveResponse =
+        serviceLevelObjectiveService.update(projectParams, sloDTO.getIdentifier(), sloDTO);
+    String updatedSliIndicator = serviceLevelIndicatorService
+                                     .getServiceLevelIndicator(builderFactory.getProjectParams(),
+                                         updateServiceLevelObjectiveResponse.getServiceLevelObjectiveDTO()
+                                             .getServiceLevelIndicators()
+                                             .get(0)
+                                             .getIdentifier())
+                                     .getUuid();
+
+    assertThat(sliIndicator).isEqualTo(updatedSliIndicator);
+    String verificationTaskId =
+        verificationTaskService.createSLIVerificationTask(builderFactory.getContext().getAccountId(), sliIndicator);
+    AnalysisOrchestrator analysisOrchestrator =
+        hPersistence.createQuery(AnalysisOrchestrator.class)
+            .filter(AnalysisOrchestratorKeys.verificationTaskId, verificationTaskId)
+            .get();
+    assertThat(analysisOrchestrator.getAnalysisStateMachineQueue().size()).isEqualTo(13);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
   public void testUpdate_UpdateNewSLI() {
     ServiceLevelObjectiveDTO sloDTO = createSLOBuilder();
     createMonitoredService();
@@ -341,6 +436,186 @@ public class ServiceLevelObjectiveServiceImplTest extends CvNextGenTestBase {
     ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
         serviceLevelObjectiveService.get(projectParams, sloDTO.getIdentifier());
     assertThat(serviceLevelObjectiveResponse.getServiceLevelObjectiveDTO()).isEqualTo(sloDTO);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGet_errorBudgetRiskBasedQuery() {
+    createMonitoredService();
+
+    ServiceLevelObjectiveDTO sloDTO1 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id1").build();
+    serviceLevelObjectiveService.create(projectParams, sloDTO1);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO1.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, 10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(10)));
+
+    ServiceLevelObjectiveDTO sloDTO2 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id2").build();
+    serviceLevelObjectiveService.create(projectParams, sloDTO2);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO2.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, -10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(-10)));
+
+    PageResponse<ServiceLevelObjectiveResponse> serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.get(projectParams, 0, 1,
+            ServiceLevelObjectiveFilter.builder().errorBudgetRisks(Arrays.asList(ErrorBudgetRisk.UNHEALTHY)).build());
+    assertThat(serviceLevelObjectiveResponse.getContent().get(0).getServiceLevelObjectiveDTO()).isEqualTo(sloDTO1);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetSLOForDashboard_errorBudgetRiskBasedQuery() {
+    createMonitoredService();
+    ServiceLevelObjectiveDTO sloDTO1 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id1").build();
+    serviceLevelObjectiveService.create(projectParams, sloDTO1);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO1.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, 10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(10)));
+
+    ServiceLevelObjectiveDTO sloDTO2 = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id2").build();
+    serviceLevelObjectiveService.create(projectParams, sloDTO2);
+    hPersistence.update(sloHealthIndicatorService.getBySLOIdentifier(projectParams, sloDTO2.getIdentifier()),
+        hPersistence.createUpdateOperations(SLOHealthIndicator.class)
+            .set(SLOHealthIndicatorKeys.errorBudgetRemainingPercentage, -10)
+            .set(SLOHealthIndicatorKeys.errorBudgetRisk, ErrorBudgetRisk.getFromPercentage(-10)));
+
+    PageResponse<ServiceLevelObjectiveResponse> serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.getSLOForDashboard(projectParams,
+            SLODashboardApiFilter.builder().errorBudgetRisks(Arrays.asList(ErrorBudgetRisk.UNHEALTHY)).build(),
+            PageParams.builder().page(0).size(10).build());
+    assertThat(serviceLevelObjectiveResponse.getContent().get(0).getServiceLevelObjectiveDTO()).isEqualTo(sloDTO1);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetRiskCount_Success() {
+    createMonitoredService();
+    ServiceLevelObjectiveDTO sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id1").build();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    SLOHealthIndicator sloHealthIndicator = builderFactory.sLOHealthIndicatorBuilder()
+                                                .serviceLevelObjectiveIdentifier(sloDTO.getIdentifier())
+                                                .errorBudgetRemainingPercentage(10)
+                                                .errorBudgetRisk(ErrorBudgetRisk.UNHEALTHY)
+                                                .build();
+    hPersistence.save(sloHealthIndicator);
+    sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id2").build();
+    serviceLevelObjectiveResponse = serviceLevelObjectiveService.create(projectParams, sloDTO);
+    sloHealthIndicator = builderFactory.sLOHealthIndicatorBuilder()
+                             .serviceLevelObjectiveIdentifier(sloDTO.getIdentifier())
+                             .errorBudgetRemainingPercentage(-10)
+                             .errorBudgetRisk(ErrorBudgetRisk.EXHAUSTED)
+                             .build();
+    hPersistence.save(sloHealthIndicator);
+    sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder().identifier("id3").build();
+    serviceLevelObjectiveResponse = serviceLevelObjectiveService.create(projectParams, sloDTO);
+
+    SLORiskCountResponse sloRiskCountResponse =
+        serviceLevelObjectiveService.getRiskCount(projectParams, SLODashboardApiFilter.builder().build());
+
+    assertThat(sloRiskCountResponse.getTotalCount()).isEqualTo(3);
+    assertThat(sloRiskCountResponse.getRiskCounts()).hasSize(5);
+    assertThat(sloRiskCountResponse.getRiskCounts()
+                   .stream()
+                   .filter(rc -> rc.getErrorBudgetRisk().equals(ErrorBudgetRisk.EXHAUSTED))
+                   .findAny()
+                   .get()
+                   .getDisplayName())
+        .isEqualTo(ErrorBudgetRisk.EXHAUSTED.getDisplayName());
+    assertThat(sloRiskCountResponse.getRiskCounts()
+                   .stream()
+                   .filter(rc -> rc.getErrorBudgetRisk().equals(ErrorBudgetRisk.EXHAUSTED))
+                   .findAny()
+                   .get()
+                   .getCount())
+        .isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testGetRiskCount_WithFilters() {
+    createMonitoredService();
+    ServiceLevelObjectiveDTO sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder()
+                                          .identifier("id1")
+                                          .userJourneyRef("uj1")
+                                          .type(ServiceLevelIndicatorType.AVAILABILITY)
+                                          .build();
+    ServiceLevelObjectiveResponse serviceLevelObjectiveResponse =
+        serviceLevelObjectiveService.create(projectParams, sloDTO);
+    SLOHealthIndicator sloHealthIndicator = builderFactory.sLOHealthIndicatorBuilder()
+                                                .serviceLevelObjectiveIdentifier(sloDTO.getIdentifier())
+                                                .errorBudgetRemainingPercentage(10)
+                                                .errorBudgetRisk(ErrorBudgetRisk.UNHEALTHY)
+                                                .build();
+    hPersistence.save(sloHealthIndicator);
+    sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder()
+                 .identifier("id5")
+                 .userJourneyRef("uj2")
+                 .type(ServiceLevelIndicatorType.AVAILABILITY)
+                 .build();
+    serviceLevelObjectiveResponse = serviceLevelObjectiveService.create(projectParams, sloDTO);
+    sloHealthIndicator = builderFactory.sLOHealthIndicatorBuilder()
+                             .serviceLevelObjectiveIdentifier(sloDTO.getIdentifier())
+                             .errorBudgetRemainingPercentage(10)
+                             .errorBudgetRisk(ErrorBudgetRisk.UNHEALTHY)
+                             .build();
+    hPersistence.save(sloHealthIndicator);
+    sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder()
+                 .identifier("id2")
+                 .userJourneyRef("uj1")
+                 .type(ServiceLevelIndicatorType.AVAILABILITY)
+                 .target(SLOTarget.builder()
+                             .type(SLOTargetType.CALENDER)
+                             .sloTargetPercentage(80.0)
+                             .spec(CalenderSLOTargetSpec.builder()
+                                       .type(SLOCalenderType.WEEKLY)
+                                       .spec(WeeklyCalendarSpec.builder().dayOfWeek(DayOfWeek.MONDAY).build())
+                                       .build())
+                             .build())
+                 .build();
+    serviceLevelObjectiveResponse = serviceLevelObjectiveService.create(projectParams, sloDTO);
+    sloHealthIndicator = builderFactory.sLOHealthIndicatorBuilder()
+                             .serviceLevelObjectiveIdentifier(sloDTO.getIdentifier())
+                             .errorBudgetRemainingPercentage(-10)
+                             .errorBudgetRisk(ErrorBudgetRisk.EXHAUSTED)
+                             .build();
+    hPersistence.save(sloHealthIndicator);
+    sloDTO = builderFactory.getServiceLevelObjectiveDTOBuilder()
+                 .identifier("id3")
+                 .type(ServiceLevelIndicatorType.AVAILABILITY)
+                 .userJourneyRef("uj3")
+                 .build();
+    serviceLevelObjectiveResponse = serviceLevelObjectiveService.create(projectParams, sloDTO);
+
+    SLORiskCountResponse sloRiskCountResponse = serviceLevelObjectiveService.getRiskCount(projectParams,
+        SLODashboardApiFilter.builder()
+            .userJourneyIdentifiers(Arrays.asList("uj1"))
+            .sliTypes(Arrays.asList(ServiceLevelIndicatorType.AVAILABILITY))
+            .targetTypes(Arrays.asList(SLOTargetType.ROLLING))
+            .build());
+
+    assertThat(sloRiskCountResponse.getTotalCount()).isEqualTo(1);
+    assertThat(sloRiskCountResponse.getRiskCounts()).hasSize(5);
+    assertThat(sloRiskCountResponse.getRiskCounts()
+                   .stream()
+                   .filter(rc -> rc.getErrorBudgetRisk().equals(ErrorBudgetRisk.UNHEALTHY))
+                   .findAny()
+                   .get()
+                   .getDisplayName())
+        .isEqualTo(ErrorBudgetRisk.UNHEALTHY.getDisplayName());
+    assertThat(sloRiskCountResponse.getRiskCounts()
+                   .stream()
+                   .filter(rc -> rc.getErrorBudgetRisk().equals(ErrorBudgetRisk.UNHEALTHY))
+                   .findAny()
+                   .get()
+                   .getCount())
+        .isEqualTo(1);
   }
 
   private ServiceLevelObjectiveDTO createSLOBuilder() {

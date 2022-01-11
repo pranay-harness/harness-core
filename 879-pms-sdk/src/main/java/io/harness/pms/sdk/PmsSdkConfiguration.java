@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk;
 
 import io.harness.ModuleType;
@@ -10,6 +17,7 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.PipelineSdkRedisEventsConfig;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
@@ -58,6 +66,8 @@ public class PmsSdkConfiguration {
       EventsFrameworkConfiguration.builder()
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
+
+  @Default PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig = PipelineSdkRedisEventsConfig.builder().build();
 
   public String getServiceName() {
     return moduleType.name().toLowerCase();

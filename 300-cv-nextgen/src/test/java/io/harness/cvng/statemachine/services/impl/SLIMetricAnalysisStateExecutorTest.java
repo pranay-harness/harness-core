@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -11,16 +18,19 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
+import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO.Sources;
 import io.harness.cvng.core.services.api.TimeSeriesRecordService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
-import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.SLIMissingDataType;
-import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
+import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
+import io.harness.cvng.servicelevelobjective.beans.ServiceLevelObjectiveDTO;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIRecordKeys;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
-import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
+import io.harness.cvng.servicelevelobjective.services.impl.SLOHealthIndicatorServiceImpl;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState.StateType;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -44,48 +54,48 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 public class SLIMetricAnalysisStateExecutorTest extends CvNextGenTestBase {
-  private String verificationTaskId;
+  @Inject Map<StateType, AnalysisStateExecutor> stateTypeAnalysisStateExecutorMap;
+  @Inject private HPersistence hPersistence;
+  @Inject private ServiceLevelObjectiveService serviceLevelObjectiveService;
+  @Inject private MonitoredServiceService monitoredServiceService;
+  @Inject private SLOHealthIndicatorServiceImpl sloHealthIndicatorService;
+  @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
+  @Mock TimeSeriesRecordService timeSeriesRecordService;
+  @Mock VerificationTaskService verificationTaskService;
+  BuilderFactory builderFactory;
   private Instant startTime;
   private Instant endTime;
-  @Inject Map<StateType, AnalysisStateExecutor> stateTypeAnalysisStateExecutorMap;
+  private String verificationTaskId;
+  private ServiceLevelIndicator serviceLevelIndicator;
   AnalysisStateExecutor sliMetricAnalysisStateExecutor;
   private SLIMetricAnalysisState sliMetricAnalysisState;
-  @Mock TimeSeriesRecordService timeSeriesRecordService;
-  BuilderFactory builderFactory;
-  @Mock ServiceLevelIndicatorService serviceLevelIndicatorService;
-  @Mock VerificationTaskService verificationTaskService;
-  private ServiceLevelIndicator serviceLevelIndicator;
-  @Inject HPersistence hPersistence;
+  ServiceLevelObjectiveDTO serviceLevelObjective;
+
   @Before
   public void setup() throws IllegalAccessException {
-    builderFactory = BuilderFactory.getDefault();
     MockitoAnnotations.initMocks(this);
-    sliMetricAnalysisStateExecutor = stateTypeAnalysisStateExecutorMap.get(StateType.SLI_METRIC_ANALYSIS);
 
-    verificationTaskId = generateUuid();
+    builderFactory = BuilderFactory.getDefault();
+    sliMetricAnalysisStateExecutor = stateTypeAnalysisStateExecutorMap.get(StateType.SLI_METRIC_ANALYSIS);
+    MonitoredServiceDTO monitoredServiceDTO =
+        builderFactory.monitoredServiceDTOBuilder().sources(Sources.builder().build()).build();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    serviceLevelObjective = builderFactory.getServiceLevelObjectiveDTOBuilder()
+                                .monitoredServiceRef(monitoredServiceDTO.getIdentifier())
+                                .healthSourceRef(generateUuid())
+                                .build();
+    serviceLevelObjectiveService.create(builderFactory.getProjectParams(), serviceLevelObjective);
+    serviceLevelIndicator = serviceLevelIndicatorService.getServiceLevelIndicator(
+        builderFactory.getProjectParams(), serviceLevelObjective.getServiceLevelIndicators().get(0).getIdentifier());
+    verificationTaskId = serviceLevelIndicator.getUuid();
     startTime = Instant.now().minus(10, ChronoUnit.MINUTES).truncatedTo(ChronoUnit.MINUTES);
     endTime = startTime.plus(5, ChronoUnit.MINUTES);
-    serviceLevelIndicator = ThresholdServiceLevelIndicator.builder()
-                                .metric1("metric1")
-                                .thresholdType(ThresholdType.GREATER_THAN)
-                                .thresholdValue(50.0)
-                                .sliMissingDataType(SLIMissingDataType.GOOD)
-                                .accountId(builderFactory.getContext().getAccountId())
-                                .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
-                                .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
-                                .sliMetricType(SLIMetricType.THRESHOLD)
-                                .healthSourceIdentifier(generateUuid())
-                                .monitoredServiceIdentifier(generateUuid())
-                                .uuid(generateUuid())
-                                .build();
     AnalysisInput input =
         AnalysisInput.builder().verificationTaskId(verificationTaskId).startTime(startTime).endTime(endTime).build();
-    FieldUtils.writeField(
-        sliMetricAnalysisStateExecutor, "serviceLevelIndicatorService", serviceLevelIndicatorService, true);
+
     FieldUtils.writeField(sliMetricAnalysisStateExecutor, "timeSeriesRecordService", timeSeriesRecordService, true);
     FieldUtils.writeField(sliMetricAnalysisStateExecutor, "verificationTaskService", verificationTaskService, true);
     when(verificationTaskService.getSliId(any())).thenReturn(verificationTaskId);
-    when(serviceLevelIndicatorService.get(any())).thenReturn(serviceLevelIndicator);
     when(timeSeriesRecordService.getTimeSeriesRecordDTOs(any(), any(), any())).thenReturn(generateTimeSeriesRecord());
     sliMetricAnalysisState = SLIMetricAnalysisState.builder().build();
     sliMetricAnalysisState.setInputs(input);
@@ -105,27 +115,45 @@ public class SLIMetricAnalysisStateExecutorTest extends CvNextGenTestBase {
                                         .asList();
     assertThat(sliMetricAnalysisState.getStatus().name()).isEqualTo(AnalysisStatus.SUCCESS.name());
     assertThat(sliRecordList.size()).isEqualTo(5);
+    SLOHealthIndicator sloHealthIndicator = sloHealthIndicatorService.getBySLOIdentifier(
+        builderFactory.getProjectParams(), serviceLevelObjective.getIdentifier());
+    assertThat(sloHealthIndicator.getErrorBudgetRemainingPercentage()).isEqualTo(100);
   }
 
   private List<TimeSeriesRecordDTO> generateTimeSeriesRecord() {
     List<TimeSeriesRecordDTO> timeSeriesDataCollectionRecordList = new ArrayList<>();
     String host = generateUuid();
     String metric1 = "metric1";
-    String metricName = "metricName";
+    String metric2 = "metric2";
+    String metricName1 = "metricName1";
+    String metricName2 = "metricName2";
     String group1 = "group1";
-    Double value1 = 90.0;
+    String group2 = "group2";
+    Double value1 = 20.0;
+    Double value2 = 50.0;
     for (Instant instant = startTime; instant.isBefore(endTime); instant = instant.plus(1, ChronoUnit.MINUTES)) {
-      TimeSeriesRecordDTO timeSeriesDataCollectionRecord =
+      TimeSeriesRecordDTO timeSeriesDataCollectionRecord1 =
           TimeSeriesRecordDTO.builder()
               .verificationTaskId(verificationTaskId)
               .host(host)
               .groupName(group1)
               .metricIdentifier(metric1)
-              .metricName(metricName)
+              .metricName(metricName1)
               .metricValue(value1)
               .epochMinute(TimeUnit.MILLISECONDS.toMinutes(instant.toEpochMilli()))
               .build();
-      timeSeriesDataCollectionRecordList.add(timeSeriesDataCollectionRecord);
+      timeSeriesDataCollectionRecordList.add(timeSeriesDataCollectionRecord1);
+      TimeSeriesRecordDTO timeSeriesDataCollectionRecord2 =
+          TimeSeriesRecordDTO.builder()
+              .verificationTaskId(verificationTaskId)
+              .host(host)
+              .groupName(group2)
+              .metricIdentifier(metric2)
+              .metricName(metricName2)
+              .metricValue(value2)
+              .epochMinute(TimeUnit.MILLISECONDS.toMinutes(instant.toEpochMilli()))
+              .build();
+      timeSeriesDataCollectionRecordList.add(timeSeriesDataCollectionRecord2);
     }
     return timeSeriesDataCollectionRecordList;
   }

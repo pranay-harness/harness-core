@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.connector.gitsync;
 
 import static io.harness.grpc.utils.StringValueUtils.getStringFromStringValue;
@@ -69,7 +76,10 @@ public class ConnectorFullSyncHelper {
     final Page<ConnectorResponseDTO> connectorResponseDtos = connectorService.list(0, 1000, entityScope.getAccountId(),
         excludeSecretManagerConnectorForFullSyncInFilter(), getStringFromStringValue(entityScope.getOrgId()),
         getStringFromStringValue(entityScope.getProjectId()), null, null, false, false);
-    return connectorResponseDtos.get().map(ConnectorResponseDTO::getConnector).collect(Collectors.toList());
+    return connectorResponseDtos.get()
+        .filter(connectorResponseDTO -> connectorResponseDTO.getGitDetails().getFilePath() == null)
+        .map(ConnectorResponseDTO::getConnector)
+        .collect(Collectors.toList());
   }
 
   private ConnectorFilterPropertiesDTO excludeSecretManagerConnectorForFullSyncInFilter() {

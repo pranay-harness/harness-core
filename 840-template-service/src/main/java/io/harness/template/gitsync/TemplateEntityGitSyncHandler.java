@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.template.gitsync;
 
 import io.harness.EntityType;
@@ -5,23 +12,28 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.NGTemplateReference;
 import io.harness.common.EntityReference;
-import io.harness.encryption.ScopeHelper;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.FileChange;
+import io.harness.gitsync.FullSyncChangeSet;
 import io.harness.gitsync.ScopeDetails;
 import io.harness.gitsync.entityInfo.AbstractGitSdkEntityHandler;
 import io.harness.gitsync.entityInfo.GitSdkEntityHandlerInterface;
 import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.grpc.utils.StringValueUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.EntityDetail;
 import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.beans.yaml.NGTemplateInfoConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
+import io.harness.template.helpers.TemplateEntityDetailUtils;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
 
@@ -36,10 +48,13 @@ import java.util.function.Supplier;
 public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<TemplateEntity, NGTemplateConfig>
     implements GitSdkEntityHandlerInterface<TemplateEntity, NGTemplateConfig> {
   private final NGTemplateService templateService;
+  private final TemplateFullGitSyncHelper templateFullGitSyncHelper;
 
   @Inject
-  public TemplateEntityGitSyncHandler(NGTemplateService templateService) {
+  public TemplateEntityGitSyncHandler(
+      NGTemplateService templateService, TemplateFullGitSyncHelper templateFullGitSyncHelper) {
     this.templateService = templateService;
+    this.templateFullGitSyncHelper = templateFullGitSyncHelper;
   }
 
   @Override
@@ -64,19 +79,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
 
   @Override
   public EntityDetail getEntityDetail(TemplateEntity entity) {
-    return EntityDetail.builder()
-        .name(entity.getName())
-        .type(EntityType.TEMPLATE)
-        .entityRef(NGTemplateReference.builder()
-                       .accountIdentifier(entity.getAccountIdentifier())
-                       .orgIdentifier(entity.getOrgIdentifier())
-                       .projectIdentifier(entity.getProjectIdentifier())
-                       .scope(ScopeHelper.getScope(
-                           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
-                       .identifier(entity.getIdentifier())
-                       .versionLabel(entity.getVersionLabel())
-                       .build())
-        .build();
+    return TemplateEntityDetailUtils.getEntityDetail(entity);
   }
 
   @Override
@@ -137,10 +140,9 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
     return TemplateEntityKeys.branch;
   }
 
-  // todo(archit): implement
   @Override
   public List<FileChange> listAllEntities(ScopeDetails scopeDetails) {
-    return null;
+    return templateFullGitSyncHelper.getAllEntitiesForFullSync(scopeDetails);
   }
 
   @Override
@@ -150,12 +152,32 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
     Optional<TemplateEntity> templateEntity = templateService.get(accountIdentifier,
         templateInfoConfig.getOrgIdentifier(), templateInfoConfig.getProjectIdentifier(),
         templateInfoConfig.getIdentifier(), templateInfoConfig.getVersionLabel(), false);
-    return templateEntity.map(entity -> EntityGitDetailsMapper.mapEntityGitDetails(entity));
+    return templateEntity.map(EntityGitDetailsMapper::mapEntityGitDetails);
   }
 
-  // todo(archit): implement
   @Override
   public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
-    return null;
+    TemplateReferenceProtoDTO templateRef = entityReference.getTemplateRef();
+    Optional<TemplateEntity> templateEntity =
+        templateService.get(StringValueUtils.getStringFromStringValue(templateRef.getAccountIdentifier()),
+            StringValueUtils.getStringFromStringValue(templateRef.getOrgIdentifier()),
+            StringValueUtils.getStringFromStringValue(templateRef.getProjectIdentifier()),
+            StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+            StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()), false);
+    if (!templateEntity.isPresent()) {
+      throw new InvalidRequestException(
+          String.format("Template for this identifier %s and versionLabel %s doesn't exist - ",
+              StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel())));
+    }
+    return templateEntity.get().getYaml();
+  }
+
+  @Override
+  public NGTemplateConfig fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));
+      return templateFullGitSyncHelper.doFullGitSync(fullSyncChangeSet.getEntityDetail());
+    }
   }
 }

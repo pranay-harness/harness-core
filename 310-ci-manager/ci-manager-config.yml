@@ -141,11 +141,11 @@ ciExecutionServiceConfig:
       entrypoint:
         - /bin/plugin
     cacheGCSConfig:
-      image: plugins/cache:1.3.2
+      image: plugins/cache:1.3.3
       entrypoint:
         - /bin/drone-cache
     cacheS3Config:
-      image: plugins/cache:1.3.2
+      image: plugins/cache:1.3.3
       entrypoint:
         - /bin/drone-cache
 
@@ -158,8 +158,8 @@ ciExecutionServiceConfig:
       gcsUpload: plugins/gcs:1.2.4
       s3Upload: plugins/s3:1.0.3
       artifactoryUpload: plugins/artifactory:1.0.2
-      cacheGCS: plugins/cache:1.3.2
-      cacheS3: plugins/cache:1.3.2
+      cacheGCS: plugins/cache:1.3.3
+      cacheS3: plugins/cache:1.3.3
 
 pmsSdkExecutionPoolConfig:
   corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-50}
@@ -172,6 +172,9 @@ pmsSdkOrchestrationEventPoolConfig:
   maxPoolSize: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_MAX_SIZE:-300}
   idleTime: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME:-120}
   timeUnit: ${PMS_SDK_ORCHESTRATION_EVENT_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+asyncDelegateResponseConsumption:
+  corePoolSize: ${ASYNC_DELEGATE_RESPONSE_THREAD_COUNT:-1}
 
 pmsSdkGrpcServerConfig:
   connectors:

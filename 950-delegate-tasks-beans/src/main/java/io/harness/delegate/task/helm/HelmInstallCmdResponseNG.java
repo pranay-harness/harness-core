@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.helm;
 
 import io.harness.container.ContainerInfo;
@@ -18,7 +25,8 @@ public class HelmInstallCmdResponseNG extends HelmCommandResponseNG {
 
   @Builder
   public HelmInstallCmdResponseNG(CommandExecutionStatus commandExecutionStatus, String output,
-      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo, int prevReleaseVersion, String releaseName, HelmVersion helmVersion) {
+      List<ContainerInfo> containerInfoList, HelmChartInfo helmChartInfo, int prevReleaseVersion, String releaseName,
+      HelmVersion helmVersion) {
     super(commandExecutionStatus, output);
     this.containerInfoList = containerInfoList;
     this.helmChartInfo = helmChartInfo;

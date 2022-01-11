@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.user.service.impl;
 
 import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
@@ -624,8 +631,9 @@ public class NgUserServiceImpl implements NgUserService {
         //  This is benign. Move on.
       }
       if (userMembership != null) {
+        String userName = userMetadata.map(UserMetadata::getName).orElse(null);
         outboxService.save(
-            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, userName, source));
       }
       return userMembership;
     });
@@ -697,12 +705,13 @@ public class NgUserServiceImpl implements NgUserService {
 
       Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
       String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      String userName = userMetadata.map(UserMetadata::getName).orElse(null);
 
       userMemberships.forEach(
           userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
             userMembershipRepository.delete(userMembership);
-            outboxService.save(
-                new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            outboxService.save(new RemoveCollaboratorEvent(
+                scope.getAccountIdentifier(), scope, publicIdentifier, userId, userName, source));
             return userMembership;
           })));
     }
@@ -717,12 +726,13 @@ public class NgUserServiceImpl implements NgUserService {
 
       Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
       String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      String userName = userMetadata.map(UserMetadata::getName).orElse(null);
 
       userMemberships.forEach(
           userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
             userMembershipRepository.delete(userMembership);
             outboxService.save(new RemoveCollaboratorEvent(userMembership.getScope().getAccountIdentifier(),
-                userMembership.getScope(), publicIdentifier, userId, source));
+                userMembership.getScope(), publicIdentifier, userId, userName, source));
             return userMembership;
           })));
     }

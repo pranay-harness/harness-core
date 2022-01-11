@@ -1,7 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.template.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.remote.client.NGRestUtils.getResponse;
 
 import static java.lang.String.format;
 
@@ -10,6 +20,8 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.encryption.Scope;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
@@ -19,6 +31,9 @@ import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.grpc.utils.StringValueUtils;
+import io.harness.organization.remote.OrganizationClient;
+import io.harness.project.remote.ProjectClient;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.TransactionHelper;
 import io.harness.template.TemplateFilterPropertiesDTO;
@@ -32,6 +47,7 @@ import io.harness.template.mappers.NGTemplateDtoMapper;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -54,6 +70,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private TransactionHelper transactionHelper;
   @Inject EnforcementClientService enforcementClientService;
+  @Inject @Named("PRIVILEGED") private ProjectClient projectClient;
+  @Inject @Named("PRIVILEGED") private OrganizationClient organizationClient;
 
   private static final String DUP_KEY_EXP_FORMAT_STRING =
       "Template [%s] of versionLabel [%s] under Project[%s], Organization [%s] already exists";
@@ -62,10 +80,21 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   public TemplateEntity create(TemplateEntity templateEntity, boolean setStableTemplate, String comments) {
     enforcementClientService.checkAvailability(
         FeatureRestrictionName.TEMPLATE_SERVICE, templateEntity.getAccountIdentifier());
-    try {
-      NGTemplateServiceHelper.validatePresenceOfRequiredFields(
-          templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
 
+    NGTemplateServiceHelper.validatePresenceOfRequiredFields(
+        templateEntity.getAccountId(), templateEntity.getIdentifier(), templateEntity.getVersionLabel());
+    assureThatTheProjectAndOrgExists(
+        templateEntity.getAccountId(), templateEntity.getOrgIdentifier(), templateEntity.getProjectIdentifier());
+
+    if (!validateIdentifierIsUnique(templateEntity.getAccountId(), templateEntity.getOrgIdentifier(),
+            templateEntity.getProjectIdentifier(), templateEntity.getIdentifier(), templateEntity.getVersionLabel())) {
+      throw new InvalidRequestException(String.format(
+          "The template with identifier %s and version label %s already exists in the account %s, org %s, project %s",
+          templateEntity.getIdentifier(), templateEntity.getVersionLabel(), templateEntity.getAccountId(),
+          templateEntity.getOrgIdentifier(), templateEntity.getProjectIdentifier()));
+    }
+
+    try {
       // Check if this is template identifier first entry, for marking it as stable template.
       boolean firstVersionEntry =
           getAllTemplatesForGivenIdentifier(templateEntity.getAccountId(), templateEntity.getOrgIdentifier(),
@@ -469,12 +498,80 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     return true;
   }
 
+  @Override
+  public TemplateEntity fullSyncTemplate(EntityDetailProtoDTO entityDetailProtoDTO) {
+    try {
+      TemplateReferenceProtoDTO templateRef = entityDetailProtoDTO.getTemplateRef();
+
+      Optional<TemplateEntity> unSyncedTemplate =
+          getUnSyncedTemplate(StringValueUtils.getStringFromStringValue(templateRef.getAccountIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getOrgIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getProjectIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()));
+
+      return makeTemplateUpdateCall(unSyncedTemplate.get(), unSyncedTemplate.get(), ChangeType.ADD, "",
+          TemplateUpdateEventType.OTHERS_EVENT, true);
+    } catch (DuplicateKeyException ex) {
+      TemplateReferenceProtoDTO templateRef = entityDetailProtoDTO.getTemplateRef();
+      throw new DuplicateFieldException(
+          format(DUP_KEY_EXP_FORMAT_STRING, StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()),
+              StringValueUtils.getStringFromStringValue(templateRef.getProjectIdentifier()),
+              StringValueUtils.getStringFromStringValue(templateRef.getOrgIdentifier())),
+          USER_SRE, ex);
+    } catch (Exception e) {
+      TemplateReferenceProtoDTO templateRef = entityDetailProtoDTO.getTemplateRef();
+      log.error(String.format("Error while saving template [%s] of versionLabel [%s]",
+                    StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+                    StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel())),
+          e);
+      throw new InvalidRequestException(String.format("Error while saving template [%s] of versionLabel [%s]: %s",
+          StringValueUtils.getStringFromStringValue(templateRef.getIdentifier()),
+          StringValueUtils.getStringFromStringValue(templateRef.getVersionLabel()), e.getMessage()));
+    }
+  }
+
+  @Override
+  public boolean validateIdentifierIsUnique(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel) {
+    return !templateRepository.existsByAccountIdAndOrgIdAndProjectIdAndIdentifierAndVersionLabel(
+        accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel);
+  }
+
+  private void assureThatTheProjectAndOrgExists(String accountId, String orgId, String projectId) {
+    if (isNotEmpty(projectId)) {
+      // it's project level template
+      if (isEmpty(orgId)) {
+        throw new InvalidRequestException(String.format("Project %s specified without the org Identifier", projectId));
+      }
+      checkProjectExists(accountId, orgId, projectId);
+    } else if (isNotEmpty(orgId)) {
+      // its a org level connector
+      checkThatTheOrganizationExists(orgId, accountId);
+    }
+  }
+
+  private void checkProjectExists(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    if (isNotEmpty(orgIdentifier) && isNotEmpty(projectIdentifier)) {
+      getResponse(projectClient.getProject(projectIdentifier, accountIdentifier, orgIdentifier),
+          String.format("Project with orgIdentifier %s and identifier %s not found", orgIdentifier, projectIdentifier));
+    }
+  }
+
+  private void checkThatTheOrganizationExists(String accountIdentifier, String orgIdentifier) {
+    if (isNotEmpty(orgIdentifier)) {
+      getResponse(organizationClient.getOrganization(orgIdentifier, accountIdentifier),
+          String.format("Organization with orgIdentifier %s not found", orgIdentifier));
+    }
+  }
+
   @VisibleForTesting
   String getActualComments(String accountId, String orgIdentifier, String projectIdentifier, String comments) {
     boolean gitSyncEnabled = gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);
     if (gitSyncEnabled) {
       GitEntityInfo gitEntityInfo = GitContextHelper.getGitEntityInfo();
-      if (gitEntityInfo != null && EmptyPredicate.isNotEmpty(gitEntityInfo.getCommitMsg())) {
+      if (gitEntityInfo != null && isNotEmpty(gitEntityInfo.getCommitMsg())) {
         return gitEntityInfo.getCommitMsg();
       }
     }
@@ -663,5 +760,22 @@ public class NGTemplateServiceImpl implements NGTemplateService {
     PageRequest pageRequest = PageRequest.of(0, 1000, Sort.by(Sort.Direction.DESC, TemplateEntityKeys.lastUpdatedAt));
     return list(criteria, pageRequest, accountId, orgIdentifier, projectIdentifier, getDistinctFromBranches)
         .getContent();
+  }
+
+  private Optional<TemplateEntity> getUnSyncedTemplate(String accountId, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel) {
+    try (TemplateGitSyncBranchContextGuard ignored =
+             templateServiceHelper.getTemplateGitContextForGivenTemplate(null, null, "")) {
+      Optional<TemplateEntity> optionalTemplate =
+          templateRepository
+              .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+                  accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, true);
+      if (!optionalTemplate.isPresent()) {
+        throw new InvalidRequestException(format(
+            "Template with identifier [%s] and versionLabel [%s] under Project[%s], Organization [%s] doesn't exist.",
+            accountId, versionLabel, projectIdentifier, orgIdentifier));
+      }
+      return optionalTemplate;
+    }
   }
 }

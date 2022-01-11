@@ -1,10 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.creator.plan.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.infrastructure.InfrastructurePmsPlanCreator;
-import io.harness.cdng.creator.plan.service.ServicePMSPlanCreator;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
 import io.harness.cdng.pipeline.steps.DeploymentStageStep;
@@ -16,6 +22,8 @@ import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.GenericStepPMSPlanCreator;
 import io.harness.plancreator.steps.common.SpecParameters;
 import io.harness.plancreator.utils.CommonPlanCreatorUtils;
+import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
@@ -29,6 +37,7 @@ import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -39,7 +48,6 @@ import java.util.Set;
 @OwnedBy(CDC)
 public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   @Inject private KryoSerializer kryoSerializer;
-  @Inject private ServicePMSPlanCreator servicePMSPlanCreator;
 
   @Override
   public Set<String> getSupportedStageTypes() {
@@ -55,6 +63,35 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
   public SpecParameters getSpecParameters(
       String childNodeId, PlanCreationContext ctx, StageElementConfig stageElementConfig) {
     return DeploymentStageStepParameters.getStepParameters(childNodeId);
+  }
+
+  public Dependencies getDependenciesForService(
+      YamlField serviceField, String serviceNodeUuid, PipelineInfrastructure actualInfraConfig) {
+    Map<String, YamlField> serviceYamlFieldMap = new HashMap<>();
+    serviceYamlFieldMap.put(serviceNodeUuid, serviceField);
+
+    Map<String, ByteString> serviceDependencyMap = new HashMap<>();
+    serviceDependencyMap.put(YamlTypes.INFRASTRUCTURE_STEP_PARAMETERS,
+        ByteString.copyFrom(kryoSerializer.asDeflatedBytes(
+            InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""))));
+
+    Dependency serviceDependency = Dependency.newBuilder().putAllMetadata(serviceDependencyMap).build();
+
+    return DependenciesUtils.toDependenciesProto(serviceYamlFieldMap)
+        .toBuilder()
+        .putDependencyMetadata(serviceNodeUuid, serviceDependency)
+        .build();
+  }
+
+  public void addCDExecutionDependencies(
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, YamlField executionField) {
+    Map<String, YamlField> executionYamlFieldMap = new HashMap<>();
+    executionYamlFieldMap.put(executionField.getNode().getUuid(), executionField);
+
+    planCreationResponseMap.put(executionField.getNode().getUuid(),
+        PlanCreationResponse.builder()
+            .dependencies(DependenciesUtils.toDependenciesProto(executionYamlFieldMap))
+            .build());
   }
 
   @Override
@@ -79,19 +116,20 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
       throw new InvalidRequestException("Infrastructure section cannot be absent in a pipeline");
     }
 
+    String serviceNodeUuid = serviceField.getNode().getUuid();
+
     PipelineInfrastructure pipelineInfrastructure = ((DeploymentStageConfig) field.getStageType()).getInfrastructure();
     PipelineInfrastructure actualInfraConfig =
         InfrastructurePmsPlanCreator.getActualInfraConfig(pipelineInfrastructure, infraField);
 
-    PlanCreationResponse servicePlanCreationResponse = servicePMSPlanCreator.createPlanForServiceNode(serviceField,
-        ((DeploymentStageConfig) field.getStageType()).getServiceConfig(), kryoSerializer,
-        InfrastructurePmsPlanCreator.getInfraSectionStepParams(actualInfraConfig, ""), ctx);
-    planCreationResponseMap.put(servicePlanCreationResponse.getStartingNodeId(),
-        PlanCreationResponse.builder().nodes(servicePlanCreationResponse.getNodes()).build());
+    // Adding dependency for service
+    planCreationResponseMap.put(serviceNodeUuid,
+        PlanCreationResponse.builder()
+            .dependencies(getDependenciesForService(serviceField, serviceNodeUuid, actualInfraConfig))
+            .build());
 
     // Adding Spec node
-    PlanNode specPlanNode =
-        CommonPlanCreatorUtils.getSpecPlanNode(specField.getNode().getUuid(), serviceField.getNode().getUuid());
+    PlanNode specPlanNode = CommonPlanCreatorUtils.getSpecPlanNode(specField.getNode().getUuid(), serviceNodeUuid);
     planCreationResponseMap.put(
         specPlanNode.getUuid(), PlanCreationResponse.builder().node(specPlanNode.getUuid(), specPlanNode).build());
 
@@ -123,13 +161,7 @@ public class DeploymentStagePMSPlanCreator extends GenericStagePlanCreator {
     if (executionField == null) {
       throw new InvalidRequestException("Execution section cannot be absent in a pipeline");
     }
-    Map<String, YamlField> executionYamlFieldMap = new HashMap<>();
-    executionYamlFieldMap.put(executionField.getNode().getUuid(), executionField);
-
-    planCreationResponseMap.put(executionField.getNode().getUuid(),
-        PlanCreationResponse.builder()
-            .dependencies(DependenciesUtils.toDependenciesProto(executionYamlFieldMap))
-            .build());
+    addCDExecutionDependencies(planCreationResponseMap, executionField);
 
     return planCreationResponseMap;
   }

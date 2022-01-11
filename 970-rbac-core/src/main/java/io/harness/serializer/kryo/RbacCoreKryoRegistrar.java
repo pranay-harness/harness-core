@@ -1,7 +1,15 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import io.harness.serializer.KryoRegistrar;
 
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
@@ -21,5 +29,6 @@ public class RbacCoreKryoRegistrar implements KryoRegistrar {
     kryo.register(PermissionAttribute.Action.class, 5354);
     kryo.register(PermissionAttribute.PermissionType.class, 5353);
     kryo.register(PermissionAttribute.class, 5352);
+    kryo.register(AppFilter.class, 5357);
   }
 }

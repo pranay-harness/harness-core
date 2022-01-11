@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.entities.changeSource;
 
 import io.harness.annotation.HarnessEntity;
@@ -116,11 +123,13 @@ public abstract class ChangeSource
   public void updateNextIteration(String fieldName, long nextIteration) {
     if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
+      return;
     } else if (ChangeSourceKeys.demoDataGenerationIteration.equals(fieldName)) {
       this.demoDataGenerationIteration = nextIteration;
       return;
+    } else {
+      throw new IllegalArgumentException("Invalid fieldName " + fieldName);
     }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   @Override

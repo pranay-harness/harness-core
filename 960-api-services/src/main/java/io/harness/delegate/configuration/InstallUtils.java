@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.configuration;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -75,6 +82,7 @@ public class InstallUtils {
   private static String kustomizeVersionOld = "v3.5.4";
   private static String kustomizeVersionNew = "v4.0.0";
   private static String kustomizePath = "kustomize";
+  private static boolean isCustomKustomizePath;
   private static String kustomizeBinaryName = "kustomize";
 
   private static final List<String> kustomizeVersions = Arrays.asList(kustomizeVersionOld, kustomizeVersionNew);
@@ -187,17 +195,14 @@ public class InstallUtils {
   }
 
   public static String getKustomizePath(boolean useLatestVersion) {
-    if (useLatestVersion) {
-      return Paths.get(kustomizeBaseDir, kustomizeVersionNew, kustomizeBinaryName)
-          .toAbsolutePath()
-          .normalize()
-          .toString();
-    } else {
-      return Paths.get(kustomizeBaseDir, kustomizeVersionOld, kustomizeBinaryName)
-          .toAbsolutePath()
-          .normalize()
-          .toString();
+    if (isCustomKustomizePath) {
+      return kustomizePath;
     }
+    return Paths
+        .get(kustomizeBaseDir, useLatestVersion ? kustomizeVersionNew : kustomizeVersionOld, kustomizeBinaryName)
+        .toAbsolutePath()
+        .normalize()
+        .toString();
   }
 
   public static boolean installKubectl(DelegateConfiguration configuration) {
@@ -1074,11 +1079,12 @@ public class InstallUtils {
   public static boolean installKustomize(DelegateConfiguration configuration, String kustomizeVersion) {
     try {
       if (StringUtils.isNotEmpty(configuration.getKustomizePath())) {
+        isCustomKustomizePath = true;
         kustomizePath = configuration.getKustomizePath();
         log.info("Found user configured kustomize at {}. Skipping Install.", kustomizePath);
         return true;
       }
-
+      isCustomKustomizePath = false;
       if (SystemUtils.IS_OS_WINDOWS) {
         log.info("Skipping kustomize install on Windows");
         return true;

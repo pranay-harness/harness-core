@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.ngpipeline.inputset.beans.entity;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -11,6 +18,7 @@ import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.AccountAccess;
@@ -68,6 +76,16 @@ public class InputSetEntity
                  .field(InputSetEntityKeys.identifier)
                  .field(InputSetEntityKeys.yamlGitConfigRef)
                  .field(InputSetEntityKeys.branch)
+                 .build())
+        // for full sync
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_repo_branch")
+                 .field(InputSetEntityKeys.accountId)
+                 .field(InputSetEntityKeys.orgIdentifier)
+                 .field(InputSetEntityKeys.projectIdentifier)
+                 .field(InputSetEntityKeys.yamlGitConfigRef)
+                 .field(InputSetEntityKeys.branch)
+                 .descRangeField(InputSetEntityKeys.lastUpdatedAt)
                  .build())
         .build();
   }

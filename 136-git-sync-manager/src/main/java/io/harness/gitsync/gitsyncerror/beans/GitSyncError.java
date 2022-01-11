@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.gitsyncerror.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -12,7 +19,6 @@ import io.harness.data.validator.Trimmed;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.gitsyncerror.GitSyncErrorStatus;
 import io.harness.gitsync.gitsyncerror.beans.GitToHarnessErrorDetails.GitToHarnessErrorDetailsKeys;
-import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
@@ -113,18 +119,25 @@ public class GitSyncError
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_scopes_errorType_repo_branch_filepath_status_sort_Index")
-                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.scopes,
-                     GitSyncErrorKeys.errorType, GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName,
-                     GitSyncErrorKeys.completeFilePath, GitSyncErrorKeys.status))
+                 .name("accountId_repo_branch_errorType_status_filePath_sort_Index")
+                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.repoUrl,
+                     GitSyncErrorKeys.branchName, GitSyncErrorKeys.errorType, GitSyncErrorKeys.status,
+                     GitSyncErrorKeys.completeFilePath))
                  .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
-        .add(CompoundMongoIndex.builder()
-                 .name("accountId_errorType_commitId_repo_branch_filePath_unique_Index")
-                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.errorType,
-                     GitSyncErrorKeys.gitCommitId, GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName,
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_commitId_repo_branch_errorType_filePath_unique_Index")
+                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.gitCommitId,
+                     GitSyncErrorKeys.repoUrl, GitSyncErrorKeys.branchName, GitSyncErrorKeys.errorType,
                      GitSyncErrorKeys.completeFilePath))
                  .unique(true)
+                 .descSortField(GitSyncErrorKeys.createdAt)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_repo_errorType_status_sort_Index")
+                 .fields(Arrays.asList(GitSyncErrorKeys.accountIdentifier, GitSyncErrorKeys.repoUrl,
+                     GitSyncErrorKeys.errorType, GitSyncErrorKeys.status))
+                 .descSortField(GitSyncErrorKeys.createdAt)
                  .build())
         .build();
   }

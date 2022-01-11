@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -16,11 +23,15 @@ import static io.harness.delegate.beans.DelegateTaskEvent.DelegateTaskEventBuild
 import static io.harness.delegate.beans.NgSetupFields.NG;
 import static io.harness.delegate.beans.executioncapability.ExecutionCapability.EvaluationMode;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
-import static io.harness.delegate.task.TaskFailureReason.NO_ELIGIBLE_DELEGATE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.noop;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_ACQUIRE;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_ACQUIRE_FAILED;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_CREATION;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_EXPIRED;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_NO_ELIGIBLE_DELEGATES;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
@@ -44,6 +55,7 @@ import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilityTaskSelectionDetails;
 import io.harness.capability.CapabilityTaskSelectionDetails.CapabilityTaskSelectionDetailsKeys;
 import io.harness.capability.service.CapabilityService;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
 import io.harness.delegate.beans.DelegateInstanceStatus;
@@ -92,6 +104,7 @@ import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.mongo.DelayLogContext;
 import io.harness.network.SafeHttpCall;
 import io.harness.observer.Subject;
@@ -100,6 +113,7 @@ import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.selection.log.BatchDelegateSelectionLog;
+import io.harness.selection.log.DelegateSelectionLogTaskMetadata;
 import io.harness.serializer.KryoSerializer;
 import io.harness.service.intfc.DelegateCache;
 import io.harness.service.intfc.DelegateCallbackRegistry;
@@ -150,11 +164,14 @@ import com.google.common.base.Suppliers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.time.Clock;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -164,6 +181,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -175,7 +193,6 @@ import java.util.stream.Collectors;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.tuple.Pair;
 import org.atmosphere.cpr.BroadcasterFactory;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
@@ -198,7 +215,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   public static final String TASK_CATEGORY_MAP = "Task Category Map";
   private static final long CAPABILITIES_CHECK_TASK_TIMEOUT_IN_MINUTES = 1L;
 
-  private static final long VALIDATION_TIMEOUT = TimeUnit.SECONDS.toMillis(12);
+  private static final long VALIDATION_TIMEOUT = TimeUnit.MINUTES.toMillis(2);
 
   @Inject private HPersistence persistence;
   @Inject private WaitNotifyEngine waitNotifyEngine;
@@ -241,8 +258,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
   @Inject private DelegateInsightsService delegateInsightsService;
   @Inject private DelegateSetupService delegateSetupService;
   @Inject private AuditHelper auditHelper;
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   @Inject @Getter private Subject<DelegateObserver> subject = new Subject<>();
+
+  private static final SecureRandom random = new SecureRandom();
 
   private Supplier<Long> taskCountCache = Suppliers.memoizeWithExpiration(this::fetchTaskCount, 1, TimeUnit.MINUTES);
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
@@ -336,6 +356,11 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
     if (task.getExecutionCapabilities() == null) {
       task.setExecutionCapabilities(new ArrayList<>(selectorCapabilities));
+      if (task.getData() != null && isNotEmpty(selectorCapabilities)) {
+        addToTaskActivityLog(task,
+            CapabilityHelper.generateLogStringWithSelectionCapabilitiesGenerated(
+                task.getData().getTaskType(), task.getExecutionCapabilities()));
+      }
     } else {
       task.getExecutionCapabilities().addAll(selectorCapabilities);
     }
@@ -347,12 +372,12 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (task.getUuid() == null) {
       task.setUuid(generateUuid());
     }
+    log.info("Queueing async task {} of type {} ", task.getUuid(), task.getData().getTaskType());
 
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task, QUEUED);
-      log.info("Queueing async task");
+      processDelegateTask(task, QUEUED);
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
     return task.getUuid();
@@ -368,18 +393,8 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), task.getRank(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task, QUEUED);
-      List<String> eligibleDelegateIds = ensureDelegateAvailableToExecuteTask(task);
-      if (isEmpty(eligibleDelegateIds)) {
-        log.warn(assignDelegateService.getActiveDelegateAssignmentErrorMessage(NO_ELIGIBLE_DELEGATE, task));
-        if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-          throw new NoInstalledDelegatesException();
-        } else {
-          throw new NoAvailableDelegatesException();
-        }
-      }
-
-      log.info("Processing sync task {}", task.getUuid());
+      log.info("Processing sync task {} of type {}", task.getUuid(), task.getData().getTaskType());
+      processDelegateTask(task, QUEUED);
       broadcastHelper.rebroadcastDelegateTask(task);
     }
   }
@@ -393,7 +408,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
   @VisibleForTesting
   @Override
-  public void saveDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
+  public void processDelegateTask(DelegateTask task, DelegateTask.Status taskStatus) {
+    String taskInfo =
+        String.format("Processing task id: %s of task type %s", task.getUuid(), task.getData().getTaskType());
+    addToTaskActivityLog(task, taskInfo);
     task.setStatus(taskStatus);
     task.setVersion(getVersion());
     task.setLastBroadcastAt(clock.millis());
@@ -414,80 +432,98 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     try (AutoLogContext ignore = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
       try {
-        // order of these three calls is important, first capabilities are created, then appended, then used in
-        // pickFirstAttemptDelegate
-        generateCapabilitiesForTaskIfFeatureEnabled(task);
+        BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
+        // capabilities created,then appended to task.executionCapabilities to get eligible delegates
+        generateCapabilitiesForTask(task);
         convertToExecutionCapability(task);
-        task.setPreAssignedDelegateId(obtainCapableDelegateId(task, Collections.emptySet()));
-        log.debug("Set first attempt delegate complete for task [{}]", task);
+
+        List<String> eligibleListOfDelegates = assignDelegateService.getEligibleDelegatesToExecuteTask(task, batch);
+
+        if (eligibleListOfDelegates.isEmpty()) {
+          String errorMessage = String.format("No eligible delegates to execute task id %s", task.getUuid());
+          addToTaskActivityLog(task, errorMessage);
+          delegateSelectionLogsService.logNoEligibleDelegatesToExecuteTask(batch, task.getAccountId());
+          delegateSelectionLogsService.save(batch);
+          delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_NO_ELIGIBLE_DELEGATES);
+          throw new NoEligibleDelegatesInAccountException();
+        }
+        // shuffle the eligible delegates to evenly distribute the load
+        Collections.shuffle(eligibleListOfDelegates);
+        task.setBroadcastToDelegateIds(
+            Lists.newArrayList(getDelegateIdForFirstBroadcast(task, eligibleListOfDelegates)));
+
+        delegateSelectionLogsService.logEligibleDelegatesToExecuteTask(
+            batch, Sets.newHashSet(eligibleListOfDelegates), task.getAccountId());
+        // save eligible delegate ids as part of task (will be used for rebroadcasting)
+        task.setEligibleToExecuteDelegateIds(new LinkedList<>(eligibleListOfDelegates));
+
+        log.info("Assignable/eligible delegates to execute task {} are {}.", task.getUuid(),
+            task.getEligibleToExecuteDelegateIds());
+
+        // filter only connected ones from list
+        List<String> connectedEligibleDelegates =
+            assignDelegateService.getConnectedDelegateList(eligibleListOfDelegates, task.getAccountId(), batch);
+
+        if (!task.getData().isAsync() && connectedEligibleDelegates.isEmpty()) {
+          addToTaskActivityLog(task, "No Connected eligible delegates to execute sync task");
+          delegateSelectionLogsService.save(batch);
+          if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
+            throw new NoInstalledDelegatesException();
+          } else {
+            throw new NoAvailableDelegatesException();
+          }
+        }
+        checkTaskRankRateLimit(task.getRank());
+
+        // Added temporarily to help to identifying tasks whose task setup abstractions need to be fixed
+        verifyTaskSetupAbstractions(task);
+        if (task.isSelectionLogsTrackingEnabled()) {
+          persistence.save(DelegateSelectionLogTaskMetadata.builder()
+                               .taskId(task.getUuid())
+                               .accountId(task.getAccountId())
+                               .setupAbstractions(task.getSetupAbstractions())
+                               .build());
+        }
+
         // Ensure that broadcast happens at least 5 seconds from current time for async tasks
         if (task.getData().isAsync()) {
           task.setNextBroadcast(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(5));
         }
-
-        checkTaskRankRateLimit(task.getRank());
-
-        // TODO: Make this call to make sure there are no secrets in disallowed expressions
-        // resolvePreAssignmentExpressions(task, CHECK_FOR_SECRETS);
-
-        // Added temporarily to help identifying tasks whose task setup abstractions need to be fixed
-        verifyTaskSetupAbstractions(task);
-
+        delegateSelectionLogsService.save(batch);
         persistence.save(task);
+        delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_CREATION);
+        log.info("Task {} marked as {} with first attempt broadcast to {}", task.getUuid(), taskStatus,
+            task.getBroadcastToDelegateIds());
+        addToTaskActivityLog(task, "Task processing completed");
       } catch (Exception exception) {
-        Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
-                                            .filter(DelegateTaskKeys.accountId, task.getAccountId())
-                                            .filter(DelegateTaskKeys.uuid, task.getUuid());
-        DelegateTaskResponse response =
-            DelegateTaskResponse.builder()
-                .response(ErrorNotifyResponseData.builder().errorMessage(ExceptionUtils.getMessage(exception)).build())
-                .responseCode(ResponseCode.FAILED)
-                .accountId(task.getAccountId())
-                .build();
-        delegateTaskService.handleResponse(task, taskQuery, response);
+        log.info("Task id {} failed with error {}", task.getUuid(), exception);
+        printErrorMessageOnTaskFailure(task);
+        handleTaskFailureResponse(task, ExceptionUtils.getMessage(exception));
+        throw exception;
       }
     }
   }
 
-  public String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates) {
-    try (TaskLogContext ignore = new TaskLogContext(task.getUuid(), OVERRIDE_ERROR);
-         AccountLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      return assignDelegateService.pickFirstAttemptDelegate(task);
-    } catch (Exception ex) {
-      log.error("Unexpected error occurred while obtaining capable delegate Ids", ex);
-      return null;
-    }
-  }
-
-  @VisibleForTesting
-  public String pickDelegateForTaskWithoutAnyAgentCapabilities(DelegateTask task, List<String> activeDelegates) {
-    if (isEmpty(activeDelegates)) {
-      log.warn("No active delegates found to execute the task.");
-      return null;
-    }
-
-    boolean ignoreAlreadyTriedDelegates =
-        task.getAlreadyTriedDelegates() == null || task.getAlreadyTriedDelegates().containsAll(activeDelegates);
-
-    // Filter delegate to try different ones when rebroadcasting, but allow all eventually when all are exhausted
-    Set<String> validDelegateIds =
-        activeDelegates.stream()
-            .filter(delegateId -> ignoreAlreadyTriedDelegates || !task.getAlreadyTriedDelegates().contains(delegateId))
-            .collect(Collectors.toSet());
-
-    for (String delegateId : validDelegateIds) {
-      BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-      boolean canAssign = assignDelegateService.canAssign(batch, delegateId, task);
-      delegateSelectionLogsService.save(batch);
-
-      if (canAssign) {
-        log.info("Setting preAssignedDelegate for task without agent capabilities to {}.", delegateId);
+  private String getDelegateIdForFirstBroadcast(DelegateTask delegateTask, List<String> eligibleListOfDelegates) {
+    for (String delegateId : eligibleListOfDelegates) {
+      if (assignDelegateService.isWhitelisted(delegateTask, delegateId)) {
         return delegateId;
       }
     }
+    printCriteriaNoMatch(delegateTask);
+    return eligibleListOfDelegates.get(random.nextInt(eligibleListOfDelegates.size()));
+  }
 
-    log.warn("No assignable active delegates found to execute the task.");
-    return null;
+  private void handleTaskFailureResponse(DelegateTask task, String errorMessage) {
+    Query<DelegateTask> taskQuery = persistence.createQuery(DelegateTask.class)
+                                        .filter(DelegateTaskKeys.accountId, task.getAccountId())
+                                        .filter(DelegateTaskKeys.uuid, task.getUuid());
+    DelegateTaskResponse response = DelegateTaskResponse.builder()
+                                        .response(ErrorNotifyResponseData.builder().errorMessage(errorMessage).build())
+                                        .responseCode(ResponseCode.FAILED)
+                                        .accountId(task.getAccountId())
+                                        .build();
+    delegateTaskService.handleResponse(task, taskQuery, response);
   }
 
   @VisibleForTesting
@@ -640,7 +676,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     try (AutoLogContext ignore1 = new TaskLogContext(task.getUuid(), task.getData().getTaskType(),
              TaskType.valueOf(task.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_NESTS);
          AutoLogContext ignore2 = new AccountLogContext(task.getAccountId(), OVERRIDE_ERROR)) {
-      saveDelegateTask(task, QUEUED);
+      processDelegateTask(task, QUEUED);
       log.debug("Queueing parked task");
       broadcastHelper.broadcastNewDelegateTaskAsync(task);
     }
@@ -657,7 +693,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     return delegateTaskResultsProvider.getDelegateTaskResults(taskId);
   }
 
-  private void generateCapabilitiesForTaskIfFeatureEnabled(DelegateTask task) {
+  private void generateCapabilitiesForTask(DelegateTask task) {
     addMergedParamsForCapabilityCheck(task);
 
     DelegateTaskPackage delegateTaskPackage = getDelegatePackageWithEncryptionConfig(task);
@@ -670,6 +706,9 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (isNotEmpty(task.getExecutionCapabilities())) {
       log.debug(CapabilityHelper.generateLogStringWithCapabilitiesGenerated(
           task.getData().getTaskType(), task.getExecutionCapabilities()));
+      addToTaskActivityLog(task,
+          CapabilityHelper.generateLogStringWithCapabilitiesGenerated(
+              task.getData().getTaskType(), task.getExecutionCapabilities()));
     }
   }
 
@@ -719,42 +758,6 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       default:
         noop();
     }
-  }
-
-  private List<String> ensureDelegateAvailableToExecuteTask(DelegateTask task) {
-    if (task == null) {
-      log.warn("Delegate task is null");
-      throw new InvalidArgumentsException(Pair.of("args", "Delegate task is null"));
-    }
-    if (task.getAccountId() == null) {
-      log.warn("Delegate task has null account ID");
-      throw new InvalidArgumentsException(Pair.of("args", "Delegate task has null account ID"));
-    }
-
-    BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(task);
-
-    List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(task.getAccountId(), batch);
-
-    List<String> eligibleDelegates = activeDelegates.stream()
-                                         .filter(delegateId -> assignDelegateService.canAssign(batch, delegateId, task))
-                                         .collect(toList());
-
-    delegateSelectionLogsService.save(batch);
-
-    if (activeDelegates.isEmpty()) {
-      if (assignDelegateService.noInstalledDelegates(task.getAccountId())) {
-        log.info("No installed delegates found for the account. Task id: {}", task.getUuid());
-      } else {
-        log.info("No delegates are active for the account. Task id: {}", task.getUuid());
-      }
-    } else if (eligibleDelegates.isEmpty()) {
-      log.warn("{} delegates active but no delegates are eligible to execute task with id: {}", activeDelegates.size(),
-          task.getUuid());
-    }
-
-    log.info("{} delegates {} eligible to execute task with id: {}", eligibleDelegates.size(), eligibleDelegates,
-        task.getUuid());
-    return eligibleDelegates;
   }
 
   @Override
@@ -815,19 +818,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
       if (delegateTask == null) {
         return null;
       }
+      delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE);
 
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        BatchDelegateSelectionLog batch = delegateSelectionLogsService.createBatch(delegateTask);
-        boolean canAssign = assignDelegateService.canAssign(batch, delegateId, delegateTask);
-        delegateSelectionLogsService.save(batch);
-
-        if (!canAssign) {
-          log.info("Delegate is not scoped for task");
-          ensureDelegateAvailableToExecuteTask(delegateTask); // Raises an alert if there are no eligible delegates.
-          return null;
-        }
-
         if (assignDelegateService.shouldValidate(delegateTask, delegateId)) {
           setValidationStarted(delegateId, delegateTask);
           return resolvePreAssignmentExpressions(delegateTask, SecretManagerMode.APPLY);
@@ -1062,6 +1056,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             delegateTaskPackageBuilder.logStreamingToken(logStreamingAccountToken);
           }
         } catch (ExecutionException e) {
+          delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_ACQUIRE_FAILED);
           log.warn("Unable to retrieve the log streaming service account token, while preparing delegate task package");
           throw new InvalidRequestException(e.getMessage() + "\nPlease ensure log service is running.", e);
         }
@@ -1216,7 +1211,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     if (task != null) {
       try (
           DelayLogContext ignore = new DelayLogContext(task.getLastUpdatedAt() - task.getCreatedAt(), OVERRIDE_ERROR)) {
-        log.info("Task assigned to delegate");
+        log.info("Task with id {} assigned to delegate", delegateTask.getUuid());
       }
       task.getData().setParameters(delegateTask.getData().getParameters());
 
@@ -1275,6 +1270,7 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
           errorMessage =
               "Task expired. " + assignDelegateService.getActiveDelegateAssignmentErrorMessage(EXPIRED, delegateTask);
+          delegateMetricsService.recordDelegateTaskMetrics(delegateTask, DELEGATE_TASK_EXPIRED);
           log.info("Marking task as expired: {}", errorMessage);
 
           if (isNotBlank(delegateTask.getWaitId())) {
@@ -1358,13 +1354,16 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
             .doesNotExist()
             .field(DelegateTaskKeys.expiry)
             .greaterThan(currentTimeMillis());
-
-    return delegateTaskQuery.asKeyList()
-        .stream()
-        .map(taskKey
+    List<DelegateTask> delegateTasks =
+        delegateTaskQuery.asList()
+            .stream()
+            .filter(delegateTask -> delegateTask.getEligibleToExecuteDelegateIds().contains(delegateId))
+            .collect(toList());
+    return delegateTasks.stream()
+        .map(delegateTask
             -> aDelegateTaskEvent()
                    .withAccountId(accountId)
-                   .withDelegateTaskId(taskKey.getId().toString())
+                   .withDelegateTaskId(delegateTask.getUuid())
                    .withSync(sync)
                    .build())
         .collect(toList());
@@ -1475,5 +1474,23 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
     delegateTasks.forEach(delegateTask -> {
       delegateTaskService.processDelegateResponse(accountId, delegateId, delegateTask.getUuid(), delegateTaskResponse);
     });
+  }
+
+  public void addToTaskActivityLog(DelegateTask task, String message) {
+    if (task.getTaskActivityLogs() == null) {
+      task.setTaskActivityLogs(Lists.newArrayList());
+    }
+    task.getTaskActivityLogs().add(message);
+  }
+
+  private void printErrorMessageOnTaskFailure(DelegateTask task) {
+    log.info("Task Activity Log {}", task.getTaskActivityLogs().stream().collect(Collectors.joining("\n")));
+  }
+  private void printCriteriaNoMatch(DelegateTask task) {
+    log.info("Task {} Criteria Mismatch with delegates :  {}", task.getUuid(),
+        task.getTaskActivityLogs()
+            .stream()
+            .filter(message -> message.startsWith("No matching criteria"))
+            .collect(Collectors.joining("\n")));
   }
 }

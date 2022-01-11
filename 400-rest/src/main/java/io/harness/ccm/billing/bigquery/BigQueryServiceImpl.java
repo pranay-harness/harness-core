@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.billing.bigquery;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -7,6 +14,7 @@ import static io.harness.ccm.billing.GcpServiceAccountServiceImpl.getImpersonate
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.billing.GcpServiceAccountServiceImpl;
 
 import software.wings.beans.ValidationResult;
 
@@ -61,8 +69,6 @@ public class BigQueryServiceImpl implements BigQueryService, io.harness.ccm.bigQ
 
   @Override
   public ServiceAccountCredentials getCredentials(String googleCredentialPathSystemEnv) {
-    // This method isnt used anywhere in 400-rest. CENG uses the one in 490.
-    // Null implementation is needed because of inheritance.
-    return null;
+    return GcpServiceAccountServiceImpl.getCredentials(googleCredentialPathSystemEnv);
   }
 }

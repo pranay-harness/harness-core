@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.CAFFEINE;
@@ -186,8 +193,12 @@ public class GraphQLRule implements MethodRule, InjectorRuleMixin, MongoRuleMixi
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
-    SegmentConfiguration segmentConfiguration =
-        SegmentConfiguration.builder().enabled(false).url("dummy_url").apiKey("dummy_key").build();
+    SegmentConfiguration segmentConfiguration = SegmentConfiguration.builder()
+                                                    .enabled(false)
+                                                    .url("dummy_url")
+                                                    .apiKey("dummy_key")
+                                                    .certValidationRequired(false)
+                                                    .build();
     configuration.setSegmentConfiguration(segmentConfiguration);
     return configuration;
   }

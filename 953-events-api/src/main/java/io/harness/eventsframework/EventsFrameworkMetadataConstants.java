@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.eventsframework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -45,4 +52,13 @@ public final class EventsFrameworkMetadataConstants {
   public static final String API_KEY_ENTITY = "apiKey";
   public static final String TOKEN_ENTITY = "token";
   public static final String TEMPLATE_ENTITY = "template";
+
+  // Metric Constants
+  public static final String ACCOUNT_IDENTIFIER_METRICS_KEY = "accountId";
+  public static final String STREAM_NAME_METRICS_KEY = "streamName";
+
+  public static final String GITOPS_AGENT_ENTITY = "agent";
+  public static final String GITOPS_APPLICATION_ENTITY = "application";
+  public static final String GITOPS_REPOSITORY_ENTITY = "repository";
+  public static final String GITOPS_CLUSTER_ENTITY = "cluster";
 }

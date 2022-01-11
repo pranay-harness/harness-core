@@ -1,5 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.fullsync.dtos;
 
+import io.harness.gitsync.sdk.GitSyncApiConstants;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -8,11 +18,13 @@ import lombok.experimental.FieldDefaults;
 
 @Data
 @Builder
+@Schema(name = "GitFullSyncConfigRequest", description = "This contains details to trigger Full Sync")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitFullSyncConfigRequestDTO {
-  @NotNull String branch;
-  String message;
-  String baseBranch;
+  @Schema(description = "Branch on which Entities will be pushed") @NotNull String branch;
+  @Schema(description = "PR Title") String message;
+  @Schema(description = "Source Branch for pull request") String baseBranch;
+  @Schema(description = "This checks whether to create a pull request. Its default value is False")
   boolean createPullRequest;
-  @NotNull String repoIdentifier;
+  @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @NotNull String repoIdentifier;
 }

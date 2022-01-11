@@ -74,7 +74,6 @@ go_path(
         "//product/ci/engine:engine_lib",
         "//product/ci/addon:addon_lib",
         "//product/ci/scm:scm_lib",
-        "//product/ci/ti-service:ti-service_lib",
         "//product/log-service:log-service_lib",
     ],
 )

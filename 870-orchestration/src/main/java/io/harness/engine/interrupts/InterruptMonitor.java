@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.interrupts;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -44,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
 /**
@@ -67,7 +75,7 @@ public class InterruptMonitor implements Handler<Interrupt> {
 
   public void registerIterators(IteratorConfig iteratorConfig) {
     PumpExecutorOptions executorOptions = PumpExecutorOptions.builder()
-                                              .name("InterruptMonitor")
+                                              .name("InterruptMonitor-%d")
                                               .poolSize(iteratorConfig.getThreadPoolCount())
                                               .interval(ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
                                               .build();
@@ -133,10 +141,17 @@ public class InterruptMonitor implements Handler<Interrupt> {
               .collect(Collectors.toList());
       if (isNotEmpty(runningNodes)) {
         log.info("Running Nodes found {}", runningNodes);
-        if (runningNodes.stream().allMatch(ne -> ne.getStatus() == Status.DISCONTINUING)) {
+        if (runningNodes.stream().allMatch(
+                ne -> ne.getStatus() == Status.DISCONTINUING || ne.getStatus() == Status.QUEUED)) {
           log.info("All running nodes are discontinuing, Aborting these");
           for (NodeExecution ne : runningNodes) {
-            abortHelper.abortDiscontinuingNode(ne, interrupt.getUuid(), interrupt.getInterruptConfig());
+            try {
+              abortHelper.abortDiscontinuingNode(ne, interrupt.getUuid(), interrupt.getInterruptConfig());
+            } catch (MappingInstantiationException ex) {
+              log.info("Node Execution Instantiation Exception Occurred. Cannot Recover from it ignore");
+              interruptService.markProcessed(interrupt.getUuid(), PROCESSED_UNSUCCESSFULLY);
+              break;
+            }
           }
         } else {
           log.info("Not all running nodes are discontinuing, Ignoring");
@@ -155,8 +170,14 @@ public class InterruptMonitor implements Handler<Interrupt> {
     if (EmptyPredicate.isEmpty(parents)) {
       // If running parents are empty that means we have reached to the top and we did not find any running returning
       // This means all the nodes are in correct stuses except the plan Execution
-      PlanExecution planExecution = planExecutionService.updateCalculatedStatus(interrupt.getPlanExecutionId());
-      log.info("Only plan Status was not correct. Updated plan status to {}", planExecution.getStatus());
+      Status status = planExecutionService.calculateStatus(interrupt.getPlanExecutionId());
+      PlanExecution planExecution =
+          planExecutionService.updateStatusForceful(interrupt.getPlanExecutionId(), status, null, true);
+      if (planExecution == null) {
+        log.error("Failed to update PlanExecution {} with Status {}", interrupt.getPlanExecutionId(), status);
+      } else {
+        log.info("Only plan Status was not correct. Updated plan status to {}", planExecution.getStatus());
+      }
       return;
     }
 

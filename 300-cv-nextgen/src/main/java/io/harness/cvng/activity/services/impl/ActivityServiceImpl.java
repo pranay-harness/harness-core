@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.activity.services.impl;
 
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
@@ -20,8 +27,6 @@ import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClu
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.activity.services.api.ActivityUpdateHandler;
-import io.harness.cvng.alert.services.api.AlertRuleService;
-import io.harness.cvng.alert.util.VerificationStatus;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -90,7 +95,6 @@ public class ActivityServiceImpl implements ActivityService {
   @Inject private VerificationJobService verificationJobService;
   @Inject private NextGenService nextGenService;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
-  @Inject private AlertRuleService alertRuleService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
   @Inject private Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap;
@@ -161,14 +165,6 @@ public class ActivityServiceImpl implements ActivityService {
               .set(ActivityKeys.verificationSummary, summary);
       hPersistence.update(activityQuery, activityUpdateOperations);
       log.info("Updated the status of activity {} to {}", activity.getUuid(), summary.getAggregatedStatus());
-    }
-
-    if (ActivityVerificationStatus.getFinalStates().contains(summary.getAggregatedStatus())) {
-      DeploymentActivity deploymentActivity = (DeploymentActivity) activity;
-      alertRuleService.processDeploymentVerification(activity.getAccountId(), activity.getOrgIdentifier(),
-          activity.getProjectIdentifier(), activity.getServiceIdentifier(), activity.getEnvironmentIdentifier(),
-          activity.getType(), VerificationStatus.getVerificationStatus(summary.getAggregatedStatus()),
-          summary.getStartTime(), summary.getDurationMs(), deploymentActivity.getDeploymentTag());
     }
   }
 
@@ -435,8 +431,10 @@ public class ActivityServiceImpl implements ActivityService {
         verificationJobInstanceService.get(getVerificationJobInstanceId(activityId));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(
-            HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), dataSourceTypeToHealthSourceTransformerMap)));
+        HealthSourceDTO healthSourceDTO = HealthSourceDTO.toHealthSourceDTO(
+            HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), dataSourceTypeToHealthSourceTransformerMap));
+        healthSourceDTO.setIdentifier(cvConfig.getFullyQualifiedIdentifier());
+        healthSourceDTOS.add(healthSourceDTO);
       });
     });
     return healthSourceDTOS;

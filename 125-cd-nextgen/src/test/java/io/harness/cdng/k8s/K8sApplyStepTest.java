@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -9,16 +16,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
+import io.harness.cdng.manifest.steps.ManifestsOutcome;
+import io.harness.cdng.manifest.yaml.K8sManifestOutcome;
+import io.harness.cdng.manifest.yaml.OpenshiftManifestOutcome;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.task.k8s.K8sApplyRequest;
 import io.harness.delegate.task.k8s.K8sDeployResponse;
@@ -83,7 +95,7 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
     K8sApplyRequest request = executeTask(stepElementParameters, K8sApplyRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
     assertThat(request.isSkipSteadyStateCheck()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepElementParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(CDStepHelper.getTimeoutInMin(stepElementParameters));
   }
 
   @Test
@@ -92,6 +104,10 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
   public void testShouldValidateFilePathsSuccess() {
     K8sApplyStepParameters stepParameters = new K8sApplyStepParameters();
     stepParameters.setFilePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "file2.yaml")));
+
+    ManifestsOutcome manifestsOutcomes = new ManifestsOutcome();
+    doReturn(manifestsOutcomes).when(k8sStepHelper).resolveManifestsOutcome(ambiance);
+    doReturn(K8sManifestOutcome.builder().build()).when(k8sStepHelper).getK8sSupportedManifestOutcome(any());
 
     final StepElementParameters stepElementParameters =
         StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
@@ -131,6 +147,29 @@ public class K8sApplyStepTest extends AbstractK8sStepExecutorTestBase {
             .build();
 
     assertFilePathsValidation(stepElementParametersWithNullFilePaths);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldValidateManifestType() {
+    K8sApplyStepParameters stepParameters = new K8sApplyStepParameters();
+    stepParameters.setFilePaths(ParameterField.createValueField(Arrays.asList("file1.yaml", "file2.yaml")));
+
+    ManifestsOutcome manifestsOutcomes = new ManifestsOutcome();
+    doReturn(manifestsOutcomes).when(k8sStepHelper).resolveManifestsOutcome(ambiance);
+    doReturn(OpenshiftManifestOutcome.builder().build()).when(k8sStepHelper).getK8sSupportedManifestOutcome(any());
+
+    final StepElementParameters stepElementParameters =
+        StepElementParameters.builder().spec(stepParameters).timeout(ParameterField.ofNull()).build();
+
+    try {
+      k8sApplyStep.startChainLink(ambiance, stepElementParameters, StepInputPackage.builder().build());
+      fail("Should throw unsupported operation exception");
+    } catch (Exception ex) {
+      assertThat(ex).isInstanceOf(UnsupportedOperationException.class);
+      assertThat(ex.getMessage()).isEqualTo("Unsupported Manifest type: [OpenshiftTemplate]");
+    }
   }
 
   @Test

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.metrics;
 
 import com.google.inject.Inject;
@@ -22,8 +29,10 @@ public class PipelineTelemetryRecordsJob {
     long initialDelay = new SecureRandom().nextInt(1);
 
     try {
+      log.info("PipelineTelemetryRecordsJob scheduler starting");
       executorService.scheduleAtFixedRate(
           () -> publisher.recordTelemetry(), initialDelay, METRICS_RECORD_PERIOD_HOURS, TimeUnit.HOURS);
+      log.info("PipelineTelemetryRecordsJob scheduler started");
     } catch (Exception e) {
       log.error("Exception while creating the scheduled job to track pipelines", e);
     }

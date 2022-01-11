@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.resourcegroup.model;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -46,7 +53,6 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @TypeAlias("resourceGroup")
 @StoreIn(DbAliases.RESOURCEGROUP)
 public class ResourceGroup implements PersistentRegularIterable, PersistentEntity {
-  public static final String ALL_RESOURCES_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   public static final String DEFAULT_COLOR = "#0063F7";
 
   public static List<MongoIndex> mongoIndexes() {

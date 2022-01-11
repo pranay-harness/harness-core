@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 BASEDIR=$(pwd -L)
 
@@ -66,6 +70,12 @@ find . \( -iname "*.java" -o -iname "*.proto" \) | xargs clang-format -i
 bazel run //:buildifier
 
 git diff --exit-code
+
+if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+  echo "There are changes identified due to code format issue"
+  echo "Please rerun code-formatter and update the PR to fix it"
+  exit 1
+fi
 
 find . \( -iname "*.proto" -a -not -regex ".*/target/.*" \) |\
     grep -v src/main/proto/log_analysis_record.proto |\

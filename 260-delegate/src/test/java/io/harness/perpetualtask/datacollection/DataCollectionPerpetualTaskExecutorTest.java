@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -36,6 +43,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -48,6 +56,7 @@ import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -151,9 +160,13 @@ public class DataCollectionPerpetualTaskExecutorTest extends DelegateTestBase {
             .build());
 
     dataCollectionInfo.setDataCollectionDsl(dataCollectionDsl);
+    List<List<EncryptedDataDetail>> encryptedDataDetailList = new ArrayList<>();
+    encryptedDataDetailList.add(new ArrayList());
+    encryptedDataDetailList.get(0).add(EncryptedDataDetail.builder().build());
+
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
                                                     .connectorConfigDTO(appDynamicsConnectorDTO)
-                                                    .encryptedDataDetails(Lists.newArrayList())
+                                                    .encryptedDataDetails(encryptedDataDetailList)
                                                     .build();
     ByteString bytes = ByteString.copyFrom(kryoSerializer.asBytes(cvDataCollectionInfo));
     perpetualTaskParams = PerpetualTaskExecutionParams.newBuilder()

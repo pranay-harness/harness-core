@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.metrics.services.impl;
 
 import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
@@ -15,7 +22,6 @@ import io.harness.cvng.metrics.beans.AccountMetricContext;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateMachineKeys;
-import io.harness.cvng.statemachine.services.api.OrchestrationService;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance;
 import io.harness.cvng.verificationjob.entities.VerificationJobInstance.VerificationJobInstanceKeys;
 import io.harness.metrics.AutoMetricContext;
@@ -78,7 +84,6 @@ public class CVNGMetricsPublisher implements MetricsPublisher, MetricDefinitionI
             .name("analysis_state_machine")
             .build());
   }
-  @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
   @Inject private HPersistence hPersistence;
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.network;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -51,7 +58,7 @@ import org.apache.http.HttpHost;
 public class Http {
   private static UrlValidator urlValidator =
       new UrlValidator(new String[] {"http", "https"}, UrlValidator.ALLOW_LOCAL_URLS);
-  private static ConnectionPool connectionPool = new ConnectionPool(0, 5, TimeUnit.MINUTES);
+  public static ConnectionPool connectionPool = new ConnectionPool(0, 5, TimeUnit.MINUTES);
 
   private static TrustManager[] trustAllCerts = getTrustManagers();
   private static final SSLContext sc = createSslContext();

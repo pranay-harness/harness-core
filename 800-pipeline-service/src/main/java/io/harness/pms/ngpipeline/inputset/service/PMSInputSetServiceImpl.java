@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.ngpipeline.inputset.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -6,11 +13,15 @@ import static io.harness.exception.WingsException.USER_SRE;
 import static java.lang.String.format;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.InputSetReferenceProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
+import io.harness.grpc.utils.StringValueUtils;
+import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.inputset.gitsync.InputSetYamlDTOMapper;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity;
 import io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntity.InputSetEntityKeys;
@@ -99,6 +110,26 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
                                         .withIsEntityInvalid(false);
 
     return makeInputSetUpdateCall(entityToUpdate, changeType);
+  }
+
+  @Override
+  public InputSetEntity syncInputSetWithGit(EntityDetailProtoDTO entityDetail) {
+    InputSetReferenceProtoDTO inputSetRef = entityDetail.getInputSetRef();
+    String accountId = StringValueUtils.getStringFromStringValue(inputSetRef.getAccountIdentifier());
+    String orgId = StringValueUtils.getStringFromStringValue(inputSetRef.getOrgIdentifier());
+    String projectId = StringValueUtils.getStringFromStringValue(inputSetRef.getProjectIdentifier());
+    String pipelineId = StringValueUtils.getStringFromStringValue(inputSetRef.getPipelineIdentifier());
+    String inputSetId = StringValueUtils.getStringFromStringValue(inputSetRef.getIdentifier());
+    Optional<InputSetEntity> optionalInputSetEntity;
+    try (PmsGitSyncBranchContextGuard ignored = new PmsGitSyncBranchContextGuard(null, false)) {
+      optionalInputSetEntity = get(accountId, orgId, projectId, pipelineId, inputSetId, false);
+    }
+    if (!optionalInputSetEntity.isPresent()) {
+      throw new InvalidRequestException(
+          format("Input Set [%s], for pipeline [%s], under Project[%s], Organization [%s] doesn't exist.", inputSetId,
+              pipelineId, projectId, orgId));
+    }
+    return makeInputSetUpdateCall(optionalInputSetEntity.get(), ChangeType.ADD);
   }
 
   @Override

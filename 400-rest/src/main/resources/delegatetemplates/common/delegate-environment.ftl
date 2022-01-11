@@ -39,8 +39,6 @@
           value: "${delegateDescription}"
         - name: DELEGATE_TAGS
           value: "${delegateTags}"
-        - name: DELEGATE_TASK_LIMIT
-          value: "${delegateTaskLimit}"
         - name: DELEGATE_ORG_IDENTIFIER
           value: "${delegateOrgIdentifier}"
         - name: DELEGATE_PROJECT_IDENTIFIER
@@ -52,7 +50,7 @@
 </#macro>
 <#macro common>
         - name: JAVA_OPTS
-          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
+          value: "-Xms64M"
         - name: ACCOUNT_ID
           value: ${accountId}
         - name: ACCOUNT_SECRET

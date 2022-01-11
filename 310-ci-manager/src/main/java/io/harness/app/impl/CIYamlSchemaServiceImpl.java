@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.app.impl;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
@@ -5,9 +12,11 @@ import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.intfc.CIYamlSchemaService;
+import io.harness.beans.FeatureFlag;
 import io.harness.beans.stages.IntegrationStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
@@ -15,6 +24,7 @@ import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
@@ -36,6 +46,7 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -54,36 +65,47 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
   private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
+  private final AccountClient accountClient;
+
   @Inject
   public CIYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      List<YamlSchemaRootClass> yamlSchemaRootClasses) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, AccountClient accountClient) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
+    this.accountClient = accountClient;
   }
 
   @Override
-  public PartialSchemaDTO getMergedIntegrationStageYamlSchema(
-      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
-    return getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, stepSchemaWithDetails);
+  public PartialSchemaDTO getMergedIntegrationStageYamlSchema(String accountIdentifier, String projectIdentifier,
+      String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
+    return getIntegrationStageYamlSchemaUtil(
+        accountIdentifier, projectIdentifier, orgIdentifier, scope, stepSchemaWithDetails);
   }
 
   @Override
   public List<YamlSchemaWithDetails> getIntegrationStageYamlSchemaWithDetails(
-      String projectIdentifier, String orgIdentifier, Scope scope) {
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
     return yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(projectIdentifier, orgIdentifier, scope,
         YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), ModuleType.CI);
   }
 
   @Override
-  public PartialSchemaDTO getIntegrationStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
-    return getIntegrationStageYamlSchemaUtil(projectIdentifier, orgIdentifier, scope, null);
+  public JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope) {
+    return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
   }
 
-  public PartialSchemaDTO getIntegrationStageYamlSchemaUtil(
-      String projectIdentifier, String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
+  @Override
+  public List<PartialSchemaDTO> getIntegrationStageYamlSchema(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
+    return Collections.singletonList(
+        getIntegrationStageYamlSchemaUtil(accountIdentifier, projectIdentifier, orgIdentifier, scope, null));
+  }
+
+  public PartialSchemaDTO getIntegrationStageYamlSchemaUtil(String accountIdentifier, String projectIdentifier,
+      String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
     JsonNode integrationStageSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.INTEGRATION_STAGE, orgIdentifier, projectIdentifier, scope);
     JsonNode integrationStageSteps =
@@ -106,12 +128,18 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     removeUnwantedNodes(definitions);
 
     yamlSchemaGenerator.modifyRefsNamespace(integrationStageSchema, CI_NAMESPACE);
+    List<String> enabledFeatureFlags =
+        RestClientUtils.getResponse(accountClient.listAllFeatureFlagsForAccount(accountIdentifier))
+            .stream()
+            .filter(FeatureFlag::isEnabled)
+            .map(FeatureFlag::getName)
+            .collect(Collectors.toList());
     // Should be after this modifyRefsNamespace call.
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(integrationStageSchema.get(DEFINITIONS_NODE),
         YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CI_NAMESPACE);
     if (stepSchemaWithDetails != null) {
       YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
-          integrationStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD);
+          integrationStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags);
     }
 
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();

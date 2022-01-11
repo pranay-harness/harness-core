@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.service;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
@@ -48,16 +55,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -164,45 +170,35 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     PmsYamlSchemaHelper.flattenParallelElementConfig(pipelineDefinitions);
 
     List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountIdentifier, orgIdentifier);
-
+    enabledModules.add(ModuleType.PMS);
     List<YamlSchemaWithDetails> stepsSchemaWithDetails =
         fetchSchemaWithDetailsFromModules(accountIdentifier, enabledModules);
-    CompletableFutures<PartialSchemaDTO> completableFutures = new CompletableFutures<>(executor);
+    CompletableFutures<List<PartialSchemaDTO>> completableFutures = new CompletableFutures<>(executor);
     for (ModuleType enabledModule : enabledModules) {
-      List<YamlSchemaWithDetails> moduleYamlSchemaDetails = new ArrayList<>();
-      for (YamlSchemaWithDetails yamlSchemaWithDetails : stepsSchemaWithDetails) {
-        if (yamlSchemaWithDetails.getYamlSchemaMetadata() != null
-            && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
-            && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(enabledModule)
-            // Don't send step to its owner module.
-            && yamlSchemaWithDetails.getModuleType() != enabledModule) {
-          moduleYamlSchemaDetails.add(yamlSchemaWithDetails);
-        }
-      }
+      List<YamlSchemaWithDetails> moduleYamlSchemaDetails =
+          filterYamlSchemaDetailsByModule(stepsSchemaWithDetails, enabledModule);
       completableFutures.supplyAsync(
           () -> schemaFetcher.fetchSchema(accountIdentifier, enabledModule, moduleYamlSchemaDetails));
     }
 
     try {
-      List<PartialSchemaDTO> partialSchemaDTOS = completableFutures.allOf().get(2, TimeUnit.MINUTES);
-      Map<ModuleType, PartialSchemaDTO> partialSchemaDtoMap =
-          partialSchemaDTOS.stream()
-              .filter(Objects::nonNull)
-              .collect(Collectors.toMap(PartialSchemaDTO::getModuleType, Function.identity()));
+      List<List<PartialSchemaDTO>> partialSchemaDTOList = completableFutures.allOf().get(2, TimeUnit.MINUTES);
+      Map<ModuleType, List<PartialSchemaDTO>> partialSchemaDtoMap = new HashMap<>();
+
+      for (List<PartialSchemaDTO> partialSchemaDTOList1 : partialSchemaDTOList) {
+        if (partialSchemaDTOList1 != null) {
+          partialSchemaDtoMap.put(partialSchemaDTOList1.get(0).getModuleType(), partialSchemaDTOList1);
+        }
+      }
       mergeCVIntoCDIfPresent(partialSchemaDtoMap);
 
-      partialSchemaDtoMap.values().forEach(partialSchemaDTO
-          -> pmsYamlSchemaHelper.processPartialStageSchema(
-              finalMergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO));
+      partialSchemaDtoMap.values().forEach(partialSchemaDTOList1
+          -> partialSchemaDTOList1.forEach(partialSchemaDTO
+              -> pmsYamlSchemaHelper.processPartialStageSchema(
+                  finalMergedDefinitions, pipelineStepsDefinitions, stageElementConfig, partialSchemaDTO)));
     } catch (Exception e) {
       log.error(format("[PMS] Exception while merging yaml schema: %s", e.getMessage()), e);
     }
-
-    pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
-        approvalYamlSchemaService.getApprovalYamlSchema(projectIdentifier, orgIdentifier, scope));
-
-    pmsYamlSchemaHelper.processPartialStageSchema(mergedDefinitions, pipelineStepsDefinitions, stageElementConfig,
-        featureFlagYamlService.getFeatureFlagYamlSchema(projectIdentifier, orgIdentifier, scope));
 
     // Remove duplicate if then statements from stage element config. Keep references only to new ones we added above.
     removeDuplicateIfThenFromStageElementConfig(stageElementConfig);
@@ -230,14 +226,15 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
-  private void mergeCVIntoCDIfPresent(Map<ModuleType, PartialSchemaDTO> partialSchemaDTOMap) {
+  private void mergeCVIntoCDIfPresent(Map<ModuleType, List<PartialSchemaDTO>> partialSchemaDTOMap) {
     if (!partialSchemaDTOMap.containsKey(ModuleType.CD) || !partialSchemaDTOMap.containsKey(ModuleType.CV)) {
       partialSchemaDTOMap.remove(ModuleType.CV);
       return;
     }
 
-    PartialSchemaDTO cdPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CD);
-    PartialSchemaDTO cvPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CV);
+    // Adding index 0. This complete method will be removed after moving cv step onto new schema.
+    PartialSchemaDTO cdPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CD).get(0);
+    PartialSchemaDTO cvPartialSchemaDTO = partialSchemaDTOMap.get(ModuleType.CV).get(0);
 
     JsonNode cvDefinitions =
         cvPartialSchemaDTO.getSchema().get(DEFINITIONS_NODE).get(cvPartialSchemaDTO.getNamespace());
@@ -280,6 +277,21 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     return null;
   }
 
+  private List<YamlSchemaWithDetails> filterYamlSchemaDetailsByModule(
+      List<YamlSchemaWithDetails> allYamlSchemaWithDetails, ModuleType moduleType) {
+    List<YamlSchemaWithDetails> moduleYamlSchemaDetails = new ArrayList<>();
+    for (YamlSchemaWithDetails yamlSchemaWithDetails : allYamlSchemaWithDetails) {
+      if (yamlSchemaWithDetails.getYamlSchemaMetadata() != null
+          && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported() != null
+          && yamlSchemaWithDetails.getYamlSchemaMetadata().getModulesSupported().contains(moduleType)
+          // Don't send step to its owner module.
+          && yamlSchemaWithDetails.getModuleType() != moduleType) {
+        moduleYamlSchemaDetails.add(yamlSchemaWithDetails);
+      }
+    }
+    return moduleYamlSchemaDetails;
+  }
+
   @SuppressWarnings("unchecked")
   private List<ModuleType> obtainEnabledModules(
       String projectIdentifier, String accountIdentifier, String orgIdentifier) {
@@ -305,6 +317,11 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
                                                  .map(ModuleType::fromString)
                                                  .collect(Collectors.toList());
 
+      if (instanceModuleTypes.size() != projectModuleTypes.size()) {
+        log.warn(
+            "There is a mismatch of instanceModuleTypes and projectModuleTypes. Please investigate if the sdk is registered or not");
+      }
+
       return (List<ModuleType>) CollectionUtils.intersection(projectModuleTypes, instanceModuleTypes);
     } catch (Exception e) {
       log.warn(
@@ -314,10 +331,9 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
-  public List<YamlSchemaWithDetails> fetchSchemaWithDetailsFromModules(
+  protected List<YamlSchemaWithDetails> fetchSchemaWithDetailsFromModules(
       String accountIdentifier, List<ModuleType> moduleTypes) {
-    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(
-        null, null, null, pmsYamlSchemaHelper.getNodeEntityTypesByYamlGroup(StepCategory.STEP.name()), ModuleType.PMS);
+    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = new ArrayList<>();
     for (ModuleType moduleType : moduleTypes) {
       try {
         yamlSchemaWithDetailsList.addAll(
@@ -327,5 +343,21 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
       }
     }
     return yamlSchemaWithDetailsList;
+  }
+
+  // Introduce cache here.
+  @Override
+  public JsonNode getIndividualYamlSchema(String accountId, String orgIdentifier, String projectIdentifier, Scope scope,
+      EntityType entityType, String yamlGroup) {
+    if (yamlGroup.equals(StepCategory.PIPELINE.toString())) {
+      return getPipelineYamlSchemaInternal(accountId, projectIdentifier, orgIdentifier, null);
+    }
+    List<YamlSchemaWithDetails> yamlSchemaWithDetailsList = null;
+    if (yamlGroup.equals(StepCategory.STAGE.toString())) {
+      List<ModuleType> enabledModules = obtainEnabledModules(projectIdentifier, accountId, orgIdentifier);
+      yamlSchemaWithDetailsList = fetchSchemaWithDetailsFromModules(accountId, enabledModules);
+    }
+    return schemaFetcher.fetchStepYamlSchema(
+        accountId, projectIdentifier, orgIdentifier, scope, entityType, yamlGroup, yamlSchemaWithDetailsList);
   }
 }

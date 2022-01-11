@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -6,7 +13,6 @@ import static io.harness.beans.SecretManagerCapabilities.TRANSITION_SECRET_TO_SM
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.eraro.ErrorCode.RESOURCE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGER_ID_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.UNSUPPORTED_OPERATION_EXCEPTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.persistence.HPersistence.returnNewOptions;
@@ -231,12 +237,7 @@ public class SecretManagerConfigServiceImpl implements SecretManagerConfigServic
   @Override
   public SecretManagerConfig getSecretManager(String accountId, String entityId, boolean maskSecrets) {
     SecretManagerConfig secretManagerConfig = getSecretManagerInternal(accountId, entityId);
-    if (secretManagerConfig == null) {
-      String message =
-              String.format("Secret manager with id %s for account %s can't be found.", entityId, accountId);
-      log.warn(message);
-      throw new SecretManagementException(SECRET_MANAGER_ID_NOT_FOUND, message, USER);
-    } else {
+    if (secretManagerConfig != null) {
       decryptEncryptionConfigSecrets(accountId, secretManagerConfig, maskSecrets);
       secretManagerConfig.setNumOfEncryptedValue(getEncryptedDataCount(accountId, entityId));
     }

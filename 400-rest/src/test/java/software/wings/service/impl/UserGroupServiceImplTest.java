@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
@@ -11,10 +18,12 @@ import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GARVIT;
 import static io.harness.rule.OwnerRule.HANTANG;
+import static io.harness.rule.OwnerRule.KARAN;
 import static io.harness.rule.OwnerRule.MEHUL;
 import static io.harness.rule.OwnerRule.MOHIT;
 import static io.harness.rule.OwnerRule.NIKOLA;
 import static io.harness.rule.OwnerRule.RAMA;
+import static io.harness.rule.OwnerRule.REETIKA;
 import static io.harness.rule.OwnerRule.SATYAM;
 import static io.harness.rule.OwnerRule.UJJAWAL;
 import static io.harness.rule.OwnerRule.VARDAN_BANSAL;
@@ -43,6 +52,7 @@ import static software.wings.security.PermissionAttribute.PermissionType.USER_PE
 import static software.wings.security.UserThreadLocal.userGuard;
 import static software.wings.service.impl.UserServiceImpl.ADD_TO_ACCOUNT_OR_GROUP_EMAIL_TEMPLATE_NAME;
 import static software.wings.service.impl.UserServiceImpl.INVITE_EMAIL_TEMPLATE_NAME;
+import static software.wings.utils.WingsTestConstants.ACCOUNT1_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_NAME;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -51,12 +61,15 @@ import static software.wings.utils.WingsTestConstants.PASSWORD;
 import static software.wings.utils.WingsTestConstants.USER_EMAIL;
 import static software.wings.utils.WingsTestConstants.USER_GROUP_ID;
 import static software.wings.utils.WingsTestConstants.USER_NAME;
+import static software.wings.utils.WingsTestConstants.UUID;
+import static software.wings.utils.WingsTestConstants.UUID1;
 import static software.wings.utils.WingsTestConstants.mockChecker;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -71,6 +84,7 @@ import static org.mockito.Mockito.when;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
 import io.harness.category.element.UnitTests;
@@ -79,6 +93,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.limits.LimitCheckerFactory;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.persistence.HPersistence;
@@ -99,9 +114,9 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.helpers.ext.mail.EmailData;
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.Filter;
-import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -210,6 +225,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Mock private AuditServiceHelper auditServiceHelper;
   @Mock private CCMSettingService ccmSettingService;
   @Mock private AppService appService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @Inject private HPersistence persistence;
   //  @InjectMocks @Inject private AccountService accountService = spy(AccountServiceImpl.class);
@@ -230,6 +246,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     when(rbacFeature.getMaxUsageAllowedForAccount(accountId)).thenReturn(Integer.MAX_VALUE);
     when(rbacFeature.getMaxUsageAllowedForAccount(ACCOUNT_ID)).thenReturn(Integer.MAX_VALUE);
     when(ccmSettingService.isCloudCostEnabled(eq(accountId))).thenReturn(false);
+    when(featureFlagService.isEnabled(FeatureName.CG_RBAC_EXCLUSION, accountId)).thenReturn(true);
     persistence.save(user);
   }
 
@@ -406,7 +423,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     return AppPermission.builder()
         .permissionType(ENV)
-        .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+        .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
         .entityFilter(envFilter)
         .actions(new HashSet<>(allActions))
         .build();
@@ -510,7 +527,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       Account accountForUser = createAndSaveAccount(ACCOUNT_ID);
       User savedUser = createUserAndSave(
           "USER_ID_DUMMY", "USER_NAME", UserGroup.builder().uuid("USERGROUP_TEST").build(), accountForUser);
-      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      AppFilter appFilter = AppFilter.builder().filterType(FilterType.ALL).build();
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
 
@@ -597,7 +614,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
   @Owner(developers = DEEPAK)
   @Category(UnitTests.class)
   public void shouldUpdateUserGroupPermissions() {
-    GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+    AppFilter appFilter = AppFilter.builder().filterType(FilterType.ALL).build();
     AppPermission appPermission =
         AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
     UserGroup userGroup = builder().accountId(accountId).name(userGroupName).build();
@@ -615,6 +632,33 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     assertThat(updatedUserGroup.getAccountPermissions().getPermissions())
         .containsExactlyInAnyOrderElementsOf(allPermissions);
     assertThat(updatedUserGroup.getAppPermissions()).containsExactlyInAnyOrderElementsOf(appPermissions);
+  }
+
+  @Test
+  @Owner(developers = REETIKA)
+  @Category(UnitTests.class)
+  public void shouldValidateUserGroup() {
+    UserGroup userGroup = builder().accountId(accountId).name(userGroupName).build();
+    UserGroup savedUserGroup = userGroupService.save(userGroup);
+
+    Set<PermissionType> allPermissions =
+        ImmutableSet.of(MANAGE_APPLICATIONS, USER_PERMISSION_READ, USER_PERMISSION_MANAGEMENT, TEMPLATE_MANAGEMENT,
+            ACCOUNT_MANAGEMENT, AUDIT_VIEWER, MANAGE_TAGS, MANAGE_ACCOUNT_DEFAULTS);
+    AccountPermissions accountPermissions =
+        AccountPermissions.builder().permissions(new HashSet<>(allPermissions)).build();
+    Set<AppPermission> appPermissions = new HashSet<>();
+    AppFilter appFilter = AppFilter.builder().filterType(AppFilter.FilterType.EXCLUDE_SELECTED).build();
+    AppPermission appPermission =
+        AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
+
+    appPermissions.add(appPermission);
+    try {
+      userGroupService.setUserGroupPermissions(accountId, savedUserGroup.getUuid(), accountPermissions, appPermissions);
+      fail("Expected failure as the appFilter is invalid");
+    } catch (InvalidRequestException exception) {
+      assertThat(exception.getParams().get("message"))
+          .isEqualTo("Invalid Request: Please provide atleast one application");
+    }
   }
 
   @Test
@@ -686,7 +730,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
       when(accountService.save(any(), eq(false), eq(false))).thenReturn(account);
       when(accountService.get(ACCOUNT_ID)).thenReturn(account);
 
-      GenericEntityFilter appFilter = GenericEntityFilter.builder().filterType(FilterType.ALL).build();
+      AppFilter appFilter = AppFilter.builder().filterType(FilterType.ALL).build();
       AppPermission appPermission =
           AppPermission.builder().permissionType(PermissionType.ALL_APP_ENTITIES).appFilter(appFilter).build();
       UserGroup userGroup1 =
@@ -825,6 +869,59 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
 
     assertThat(getIds(userGroupService.listByAccountId(ACCOUNT_ID, user, true)))
         .isEqualTo(Arrays.asList(defaultUserGroup.getUuid(), nonDefaultUserGroup.getUuid()));
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFilter() {
+    UserGroup userGroupAccountId =
+        builder().accountId(ACCOUNT_ID).name(userGroupName).memberIds(singletonList(user.getUuid())).build();
+    UserGroup userGroupAccountId1 =
+        builder().accountId(ACCOUNT1_ID).name(userGroupName2).memberIds(singletonList(user.getUuid())).build();
+    persistence.save(userGroupAccountId);
+    persistence.save(userGroupAccountId1);
+
+    List<UserGroup> userGroups = userGroupService.filter(ACCOUNT_ID, null);
+    assertThat(userGroups.size()).isEqualTo(1);
+    assertThat(userGroups.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFilterByUserGroupId() {
+    UserGroup userGroupUuid = builder().uuid(UUID).accountId(ACCOUNT_ID).name(userGroupName).build();
+    UserGroup userGroupUuid1 = builder().uuid(UUID1).accountId(ACCOUNT_ID).name(userGroupName2).build();
+    persistence.save(userGroupUuid);
+    persistence.save(userGroupUuid1);
+
+    List<UserGroup> userGroups = userGroupService.filter(ACCOUNT_ID, singletonList(UUID));
+    assertThat(userGroups.size()).isEqualTo(1);
+    assertThat(userGroups.get(0).getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(userGroups.get(0).getUuid()).isEqualTo(UUID);
+  }
+
+  @Test
+  @Owner(developers = KARAN)
+  @Category(UnitTests.class)
+  public void testFilterWithJustNameInResponse() {
+    UserGroup userGroupUuid =
+        builder().uuid(UUID).accountId(ACCOUNT_ID).name(userGroupName).memberIds(singletonList(user.getUuid())).build();
+    UserGroup userGroupUuid1 = builder()
+                                   .uuid(UUID1)
+                                   .accountId(ACCOUNT1_ID)
+                                   .name(userGroupName2)
+                                   .memberIds(singletonList(user.getUuid()))
+                                   .build();
+    persistence.save(userGroupUuid);
+    persistence.save(userGroupUuid1);
+
+    List<UserGroup> userGroups = userGroupService.filter(ACCOUNT_ID, null, singletonList("name"));
+    assertThat(userGroups.size()).isEqualTo(1);
+    assertThat(userGroups.get(0).getAccountId()).isNull();
+    assertThat(userGroups.get(0).getMemberIds()).isNull();
+    assertThat(userGroups.get(0).getName()).isEqualTo(userGroupName);
   }
 
   @Test
@@ -1288,7 +1385,7 @@ public class UserGroupServiceImplTest extends WingsBaseTest {
     if (isNotEmpty(appIds)) {
       ids.addAll(appIds);
     }
-    return new AppPermission(permissionType, new GenericEntityFilter(ids, filterType), new EnvFilter(), actions);
+    return new AppPermission(permissionType, new AppFilter(ids, filterType), new EnvFilter(), actions);
   }
 
   private UserGroup createUserGroup(List<String> memberIds) {

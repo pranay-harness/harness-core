@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -52,7 +59,8 @@ public class CIInitializeTaskTest extends CategoryTest {
   public void runWithTaskParams() {
     CIInitializeTaskParams params = CIK8InitializeTaskParams.builder().build();
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciK8InitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient)).thenReturn(response);
+    when(ciK8InitializeTaskHandler.executeTaskInternal(params, logStreamingTaskClient, task.getTaskId()))
+        .thenReturn(response);
     assertEquals(task.run(params), response);
   }
 

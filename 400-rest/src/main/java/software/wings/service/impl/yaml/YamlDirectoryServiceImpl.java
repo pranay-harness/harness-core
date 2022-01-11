@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessModule._951_CG_GIT_SYNC;
@@ -125,6 +132,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
@@ -2970,8 +2978,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathForGovernanceConfig();
     } else if (entity instanceof CgEventConfig) {
       return getRootPathByEventConfig((CgEventConfig) entity);
+    } else if (entity instanceof UserGroup) {
+      return SETUP_FOLDER;
     }
-
     throw new InvalidRequestException(
         "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
   }

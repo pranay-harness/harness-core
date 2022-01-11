@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -76,7 +83,6 @@ public class YamlUtilsTest extends CategoryTest {
     YamlField yamlField = YamlUtils.readTree(YamlUtils.injectUuid(yamlContent));
     // Pipeline Node
     YamlNode pipelineNode = yamlField.getNode().getField("pipeline").getNode();
-
     // Stages Node
     YamlField stagesNode = pipelineNode.getField("stages");
     // Stage1 Node
@@ -84,9 +90,11 @@ public class YamlUtilsTest extends CategoryTest {
 
     String stageFQN = YamlUtils.getFullyQualifiedName(stage1Node);
     assertThat(stageFQN).isEqualTo("pipeline.stages.qaStage");
+    assertThat(YamlUtils.getFullyQualifiedNameTillRoot(stage1Node)).isEqualTo("pipeline.stages.qaStage");
     // Stage1 Service Node
     YamlNode serviceNode = stage1Node.getField("spec").getNode().getField("service").getNode();
     assertThat(YamlUtils.getFullyQualifiedName(serviceNode)).isEqualTo("pipeline.stages.qaStage.spec.service");
+    assertThat(YamlUtils.getFullyQualifiedNameTillRoot(serviceNode)).isEqualTo("pipeline.stages.qaStage.spec.service");
 
     // image Path qualified Name
     YamlNode imagePath = serviceNode.getField("serviceDefinition")
@@ -103,6 +111,8 @@ public class YamlUtilsTest extends CategoryTest {
                              .getNode();
     assertThat(YamlUtils.getFullyQualifiedName(imagePath))
         .isEqualTo("pipeline.stages.qaStage.spec.service.serviceDefinition.spec.artifacts.primary.spec.imagePath");
+    assertThat(YamlUtils.getFullyQualifiedNameTillRoot(imagePath))
+        .isEqualTo("pipeline.stages.qaStage.spec.service.serviceDefinition.spec.artifacts.primary.spec.imagePath");
 
     // infrastructure qualified name
     YamlNode infraNode = stage1Node.getField("spec").getNode().getField("infrastructure").getNode();
@@ -113,6 +123,8 @@ public class YamlUtilsTest extends CategoryTest {
         stage1Node.getField("spec").getNode().getField("execution").getNode().getField("steps").getNode();
     YamlNode step1Node = stepsNode.asArray().get(0).getField("step").getNode();
     assertThat(YamlUtils.getFullyQualifiedName(step1Node))
+        .isEqualTo("pipeline.stages.qaStage.spec.execution.steps.rolloutDeployment");
+    assertThat(YamlUtils.getFullyQualifiedNameTillRoot(step1Node))
         .isEqualTo("pipeline.stages.qaStage.spec.execution.steps.rolloutDeployment");
   }
 

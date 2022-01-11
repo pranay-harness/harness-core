@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.servicenow.resources.service;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
@@ -56,7 +63,7 @@ public class ServiceNowResourceServiceImpl implements ServiceNowResourceService 
       IdentifierRef serviceNowConnectorRef, String orgId, String projectId, String ticketType) {
     ServiceNowTaskNGParametersBuilder parametersBuilder = ServiceNowTaskNGParameters.builder()
                                                               .action(ServiceNowActionNG.GET_TICKET_CREATE_METADATA)
-                                                              .issueType(ticketType);
+                                                              .ticketType(ticketType);
     return obtainServiceNowTaskNGResponse(serviceNowConnectorRef, orgId, projectId, parametersBuilder)
         .getServiceNowFieldNGList();
   }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -9,6 +16,9 @@ import static io.harness.rule.OwnerRule.RAGHU;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.service.impl.newrelic.NewRelicMetricDataRecord.DEFAULT_GROUP_NAME;
 
+import static java.util.Collections.singletonList;
+import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -24,8 +34,12 @@ import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
 import io.harness.context.ContextElementType;
 import io.harness.cv.WorkflowVerificationResult;
+import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.ff.FeatureFlagService;
+import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.DelegateCache;
 import io.harness.tasks.ResponseData;
 
 import software.wings.beans.AccountType;
@@ -33,6 +47,8 @@ import software.wings.beans.Application;
 import software.wings.beans.DynaTraceConfig;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.TaskType;
+import software.wings.delegatetasks.validation.DelegateConnectionResult;
+import software.wings.service.impl.AssignDelegateServiceImpl;
 import software.wings.service.impl.analysis.AnalysisComparisonStrategy;
 import software.wings.service.impl.analysis.ContinuousVerificationExecutionMetaData;
 import software.wings.service.impl.dynatrace.DynaTraceDataCollectionInfo;
@@ -47,9 +63,11 @@ import software.wings.sm.StateType;
 import software.wings.verification.VerificationDataAnalysisResponse;
 import software.wings.verification.VerificationStateAnalysisExecutionData;
 
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.text.ParseException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,10 +76,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
@@ -74,6 +95,15 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Mock private FeatureFlagService mockFeatureFlagService;
   private DynatraceState dynatraceState;
   private List<String> serviceMethods = Lists.newArrayList(UUID.randomUUID().toString(), UUID.randomUUID().toString());
+  @Mock private LoadingCache<String, List<Delegate>> accountDelegatesCache;
+  @Mock private LoadingCache<String, String> logStreamingAccountTokenCache;
+  @Inject @InjectMocks private AssignDelegateServiceImpl assignDelegateService;
+  @Mock private DelegateCache delegateCache;
+  @Mock
+  private LoadingCache<ImmutablePair<String, String>, Optional<DelegateConnectionResult>> delegateConnectionResultCache;
+  private static final String VERSION = "1.0.0";
+  private static final List<String> supportedTasks = Arrays.stream(TaskType.values()).map(Enum::name).collect(toList());
+  @Inject private HPersistence persistence;
 
   @Before
   public void setup() throws IllegalAccessException {
@@ -139,7 +169,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  public void testTriggerCollection() throws ParseException {
+  public void testTriggerCollection() throws ParseException, ExecutionException {
     assertThat(wingsPersistence.createQuery(DelegateTask.class).count()).isEqualTo(0);
     DynaTraceConfig dynaTraceConfig = DynaTraceConfig.builder()
                                           .accountId(accountId)
@@ -165,7 +195,7 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     doReturn(serviceId).when(spyState).getPhaseServiceId(executionContext);
     when(workflowStandardParams.getEnv()).thenReturn(anEnvironment().uuid(UUID.randomUUID().toString()).build());
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
-
+    createDelegate(accountId);
     ExecutionResponse response = spyState.execute(executionContext);
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.RUNNING);
     assertThat(response.getErrorMessage())
@@ -295,9 +325,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testTriggerCollection_withServiceEntityId() {
+  public void testTriggerCollection_withServiceEntityId() throws ExecutionException {
     when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
     dynatraceState.setServiceEntityId("entityID1");
+    createDelegate(accountId);
     DelegateTask task = setupAndGetDelegateTaskFromTrigger();
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
@@ -319,9 +350,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testTriggerCollection_withServiceEntityIdMultiService() {
+  public void testTriggerCollection_withServiceEntityIdMultiService() throws ExecutionException {
     when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
     dynatraceState.setServiceEntityId("entityID1,entityID2");
+    createDelegate(accountId);
     DelegateTask task = setupAndGetDelegateTaskFromTrigger();
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
@@ -332,9 +364,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testTriggerCollection_withServiceEntityIdMultiServiceWithSpace() {
+  public void testTriggerCollection_withServiceEntityIdMultiServiceWithSpace() throws ExecutionException {
     when(dynaTraceService.validateDynatraceServiceId(anyString(), anyString())).thenReturn(true);
     dynatraceState.setServiceEntityId("entityID1 , entityID2");
+    createDelegate(accountId);
     DelegateTask task = setupAndGetDelegateTaskFromTrigger();
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
@@ -345,9 +378,10 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
   @Test
   @Owner(developers = PRAVEEN)
   @Category(UnitTests.class)
-  public void testTriggerCollection_withServiceName() {
+  public void testTriggerCollection_withServiceName() throws ExecutionException {
     when(dynaTraceService.resolveDynatraceServiceNameToId(anyString(), anyString())).thenReturn("entityID3");
     dynatraceState.setServiceEntityId("serviceName3");
+    createDelegate(accountId);
     DelegateTask task = setupAndGetDelegateTaskFromTrigger();
     final DynaTraceDataCollectionInfo actualCollectionInfo =
         (DynaTraceDataCollectionInfo) task.getData().getParameters()[0];
@@ -395,5 +429,29 @@ public class DynatraceStateTest extends APMStateVerificationTestBase {
     when(executionContext.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
 
     return spyState.execute(executionContext);
+  }
+
+  private void createDelegate(String accountId) throws ExecutionException {
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .ip("127.0.0.1")
+                            .hostName("localhost")
+                            .delegateName("testDelegateName")
+                            .version(VERSION)
+                            .supportedTaskTypes(supportedTasks)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+    persistence.save(delegate);
+    when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
+    when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), "dynatrace-url")))
+        .thenReturn(of(DelegateConnectionResult.builder()
+                           .accountId(accountId)
+                           .delegateId(delegate.getUuid())
+                           .duration(100L)
+                           .criteria("aaa")
+                           .validated(true)
+                           .build()));
   }
 }

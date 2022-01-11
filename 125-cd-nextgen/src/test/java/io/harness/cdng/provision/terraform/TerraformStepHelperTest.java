@@ -1,11 +1,21 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.provision.terraform;
 
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
@@ -106,6 +116,7 @@ public class TerraformStepHelperTest extends CategoryTest {
         .putSetupAbstractions("accountId", "test-account")
         .putSetupAbstractions("projectIdentifier", "test-project")
         .putSetupAbstractions("orgIdentifier", "test-org")
+        .setPlanExecutionId("exec_id")
         .build();
   }
 
@@ -400,6 +411,16 @@ public class TerraformStepHelperTest extends CategoryTest {
         helper.toTerraformVarFileConfig(varFilesMap, terraformTaskNGResponse, ambiance);
     assertThat(terraformVarFileConfig).isEmpty();
   }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetTerraformPlanName() {
+    Ambiance ambiance = getAmbiance();
+    String planName = helper.getTerraformPlanName(TerraformPlanCommand.APPLY, ambiance);
+    assertThat(planName).isEqualTo("tfPlan-exec-id");
+  }
+
   @Test
   @Owner(developers = NAMAN_TALAYCHA)
   @Category(UnitTests.class)
@@ -620,12 +641,9 @@ public class TerraformStepHelperTest extends CategoryTest {
   public void testUpdateParentEntityIdAndVersionNegativeScenario() {
     String entityId = "test-account/test-org/test-project/provId_$";
     String stateFileId = "";
-    String str = String.format("Unable to update entityId and Version for entityId: [%s]", entityId);
-    try {
-      helper.updateParentEntityIdAndVersion(entityId, stateFileId);
-    } catch (InvalidRequestException invalidRequestException) {
-      assertThat(invalidRequestException.getMessage()).isEqualTo(str);
-    }
+    String str =
+        format("Unable to update StateFile version for entityId: [%s], Please try re-running pipeline", entityId);
+    assertThatThrownBy(() -> helper.updateParentEntityIdAndVersion(entityId, stateFileId)).hasMessageContaining(str);
   }
 
   @Test
@@ -635,7 +653,8 @@ public class TerraformStepHelperTest extends CategoryTest {
     String entityId = "test-account/test-org/test-project/provId_$";
     String stateFileId = "";
     mockStatic(RestClientUtils.class);
-    String str = String.format("Unable to update entityId and Version for entityId: [%s]", entityId);
+    String str =
+        format("Unable to update StateFile version for entityId: [%s], Please try re-running pipeline", entityId);
     try {
       helper.updateParentEntityIdAndVersion(entityId, stateFileId);
       PowerMockito.verifyStatic(RestClientUtils.class, times(1));

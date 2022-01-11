@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.rule;
 
 import static io.harness.cache.CacheBackend.NOOP;
@@ -422,8 +429,12 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
-    configuration.setSegmentConfiguration(
-        SegmentConfiguration.builder().enabled(false).apiKey("dummy_api_key").url("dummy_url").build());
+    configuration.setSegmentConfiguration(SegmentConfiguration.builder()
+                                              .enabled(false)
+                                              .apiKey("dummy_api_key")
+                                              .url("dummy_url")
+                                              .certValidationRequired(false)
+                                              .build());
     return configuration;
   }
 

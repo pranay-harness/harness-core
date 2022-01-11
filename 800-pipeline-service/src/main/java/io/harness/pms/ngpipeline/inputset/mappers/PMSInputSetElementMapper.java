@@ -1,11 +1,21 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.ngpipeline.inputset.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.merger.helpers.InputSetYamlHelper.getPipelineComponent;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.InputSetReference;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.gitsync.sdk.EntityValidityDetails;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.inputset.InputSetErrorWrapperDTOPMS;
 import io.harness.pms.merger.helpers.InputSetYamlHelper;
@@ -151,6 +161,20 @@ public class PMSInputSetElementMapper {
         .entityValidityDetails(entity.isEntityInvalid()
                 ? EntityValidityDetails.builder().valid(false).invalidYaml(entity.getYaml()).build()
                 : EntityValidityDetails.builder().valid(true).build())
+        .build();
+  }
+
+  public EntityDetail toEntityDetail(InputSetEntity entity) {
+    return EntityDetail.builder()
+        .name(entity.getName())
+        .type(EntityType.INPUT_SETS)
+        .entityRef(InputSetReference.builder()
+                       .accountIdentifier(entity.getAccountIdentifier())
+                       .orgIdentifier(entity.getOrgIdentifier())
+                       .projectIdentifier(entity.getProjectIdentifier())
+                       .pipelineIdentifier(entity.getPipelineIdentifier())
+                       .identifier(entity.getIdentifier())
+                       .build())
         .build();
   }
 }

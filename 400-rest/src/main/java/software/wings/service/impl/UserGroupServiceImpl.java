@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -40,6 +47,7 @@ import static org.mongodb.morphia.mapping.Mapper.ID_KEY;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageRequest.PageRequestBuilder;
 import io.harness.beans.PageResponse;
@@ -52,6 +60,7 @@ import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.exception.WingsException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.UuidAware;
@@ -74,6 +83,8 @@ import software.wings.dl.WingsPersistence;
 import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.scheduler.LdapGroupSyncJobHelper;
+import software.wings.security.AppFilter;
+import software.wings.security.Filter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.PermissionAttribute.PermissionType;
@@ -142,6 +153,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject private CCMSettingService ccmSettingService;
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
+  @Inject private FeatureFlagService featureFlagService;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
 
   @Override
@@ -276,6 +288,30 @@ public class UserGroupServiceImpl implements UserGroupService {
       return emptyList();
     }
     return userGroupList.stream().map(this::getUserGroupSummary).collect(toList());
+  }
+
+  @Override
+  public List<UserGroup> filter(String accountId, List<String> userGroupIds) {
+    return getQuery(accountId, userGroupIds).asList();
+  }
+
+  @Override
+  public List<UserGroup> filter(String accountId, List<String> userGroupIds, List<String> fieldsNeededInResponse) {
+    if (isEmpty(fieldsNeededInResponse)) {
+      return filter(accountId, userGroupIds);
+    }
+    Query<UserGroup> userGroupQuery = getQuery(accountId, userGroupIds);
+    fieldsNeededInResponse.forEach(field -> userGroupQuery.project(field, true));
+    return userGroupQuery.asList();
+  }
+
+  private Query<UserGroup> getQuery(String accountId, List<String> userGroupIds) {
+    Query<UserGroup> userGroupQuery =
+        wingsPersistence.createQuery(UserGroup.class).filter(UserGroupKeys.accountId, accountId);
+    if (isNotEmpty(userGroupIds)) {
+      userGroupQuery.field("_id").in(userGroupIds);
+    }
+    return userGroupQuery;
   }
 
   @Override
@@ -512,6 +548,7 @@ public class UserGroupServiceImpl implements UserGroupService {
     UserGroup userGroup = get(accountId, userGroupId);
     checkImplicitPermissions(accountPermissions, accountId, userGroup.getName());
     checkDeploymentPermissions(userGroup);
+    validateAppFilterForAppPermissions(appPermissions, accountId);
     UpdateOperations<UserGroup> operations = wingsPersistence.createUpdateOperations(UserGroup.class);
     setUnset(operations, UserGroupKeys.appPermissions, appPermissions);
     AccountPermissions accountPermissionsUpdate =
@@ -575,13 +612,13 @@ public class UserGroupServiceImpl implements UserGroupService {
     if (isNotEmpty(appPermissions)) {
       hasAllAppAccess = appPermissions.stream().anyMatch(appPermission
           -> appPermission.getAppFilter() != null && appPermission.getAppFilter().getFilterType() != null
-              && appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.ALL));
+              && appPermission.getAppFilter().getFilterType().equals(AppFilter.FilterType.ALL));
       if (!hasAllAppAccess) {
         allowedAppIds =
             appPermissions.stream()
                 .filter(appPermission
                     -> appPermission.getAppFilter() != null && appPermission.getAppFilter().getFilterType() != null
-                        && appPermission.getAppFilter().getFilterType().equals(GenericEntityFilter.FilterType.SELECTED)
+                        && appPermission.getAppFilter().getFilterType().equals(AppFilter.FilterType.SELECTED)
                         && isNotEmpty(appPermission.getAppFilter().getIds()))
                 .map(appPermission -> appPermission.getAppFilter().getIds())
                 .flatMap(Collection::stream)
@@ -594,11 +631,8 @@ public class UserGroupServiceImpl implements UserGroupService {
           AppPermission.builder()
               .permissionType(PermissionType.APP_TEMPLATE)
               .appFilter(hasAllAppAccess
-                      ? GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build()
-                      : GenericEntityFilter.builder()
-                            .filterType(GenericEntityFilter.FilterType.SELECTED)
-                            .ids(allowedAppIds)
-                            .build())
+                      ? AppFilter.builder().filterType(AppFilter.FilterType.ALL).build()
+                      : AppFilter.builder().filterType(AppFilter.FilterType.SELECTED).ids(allowedAppIds).build())
               .entityFilter(GenericEntityFilter.builder().filterType(GenericEntityFilter.FilterType.ALL).build())
               .actions(hasAccountLevelTemplateManagementPermission
                       ? new HashSet<>(Arrays.asList(PermissionAttribute.Action.CREATE, PermissionAttribute.Action.READ,
@@ -612,10 +646,51 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
+  private void validateAppFilterForAppPermissions(Set<AppPermission> appPermissions, String accountId) {
+    if (appPermissions == null) {
+      return;
+    }
+    appPermissions.forEach(appPermission -> {
+      AppFilter appFilter = appPermission.getAppFilter();
+      Filter entityFilter = appPermission.getEntityFilter();
+
+      if (appFilter == null || appFilter.getFilterType() == null) {
+        throw new InvalidRequestException("Invalid Request: Missing App Filter");
+      }
+
+      switch (appFilter.getFilterType()) {
+        case AppFilter.FilterType.ALL:
+          if (appFilter.getIds() != null) {
+            throw new InvalidRequestException("Invalid Request: Dynamic Filter ALL cannot contain ids");
+          }
+          break;
+        case AppFilter.FilterType.SELECTED:
+          if (isAppPermissionWithEmptyIds(appPermission)) {
+            throw new InvalidRequestException("Invalid Request: Please provide atleast one application");
+          }
+          break;
+        case AppFilter.FilterType.EXCLUDE_SELECTED:
+          if (featureFlagService.isEnabled(FeatureName.CG_RBAC_EXCLUSION, accountId)) {
+            if (isAppPermissionWithEmptyIds(appPermission)) {
+              throw new InvalidRequestException("Invalid Request: Please provide atleast one application");
+            } else if (isNotEmpty(entityFilter.getIds())) {
+              throw new InvalidRequestException("Invalid Request: Cannot add custom entities to a Dynamic Filter");
+            }
+          } else {
+            throw new InvalidRequestException("Invalid Request: Please provide a valid application filter");
+          }
+          break;
+        default:
+          throw new InvalidRequestException("Invalid Request: Please provide a valid application filter");
+      }
+    });
+  }
+
   @Override
   public UserGroup updatePermissions(UserGroup userGroup) {
     checkImplicitPermissions(userGroup.getAccountPermissions(), userGroup.getAccountId(), userGroup.getName());
     checkDeploymentPermissions(userGroup);
+    validateAppFilterForAppPermissions(userGroup.getAppPermissions(), userGroup.getAccountId());
     AccountPermissions accountPermissions =
         Optional.ofNullable(userGroup.getAccountPermissions()).orElse(AccountPermissions.builder().build());
     accountPermissions = addDefaultCePermissions(accountPermissions);
@@ -914,7 +989,7 @@ public class UserGroupServiceImpl implements UserGroupService {
         continue;
       }
 
-      GenericEntityFilter filter = permission.getAppFilter();
+      AppFilter filter = permission.getAppFilter();
       Set<String> ids = filter.getIds();
 
       if (ids != null && ids.removeIf(appIds::contains)) {
@@ -1026,7 +1101,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   }
 
   private boolean isAppPermissionSelected(AppPermission appPermission) {
-    GenericEntityFilter appFilter = appPermission.getAppFilter();
+    AppFilter appFilter = appPermission.getAppFilter();
     if (appFilter == null) {
       return false;
     }
@@ -1036,7 +1111,7 @@ public class UserGroupServiceImpl implements UserGroupService {
       return false;
     }
 
-    return filterType.equals(GenericEntityFilter.FilterType.SELECTED);
+    return filterType.equals(AppFilter.FilterType.SELECTED);
   }
 
   private boolean isAppPermissionWithEmptyIds(AppPermission appPermission) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.BEARER;
@@ -9,6 +16,7 @@ import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInt
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPaths;
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
@@ -37,6 +45,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.configuration.DeployVariant;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
@@ -154,6 +163,7 @@ import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.springdata.HMongoTemplate;
+import io.harness.telemetry.NGTelemetryRecordsJob;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
@@ -396,7 +406,19 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     }
     registerMigrations(injector);
 
+    log.info("NextGenApplication DEPLOY_VERSION = " + System.getenv().get(DEPLOY_VERSION));
+    if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
+      initializeNGMonitoring(appConfig, injector);
+    } else {
+      log.info("NextGenApplication DEPLOY_VERSION is not COMMUNITY");
+    }
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeNGMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    log.info("Initializing NGMonitoring");
+    injector.getInstance(NGTelemetryRecordsJob.class).scheduleTasks();
   }
 
   private void registerOasResource(NextGenConfiguration appConfig, Environment environment, Injector injector) {

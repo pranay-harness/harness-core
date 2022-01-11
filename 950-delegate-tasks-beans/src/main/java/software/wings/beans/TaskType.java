@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -222,7 +229,7 @@ public enum TaskType {
   DYNA_TRACE_GET_SERVICES(TaskGroup.DYNA_TRACE),
   DYNATRACE_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7),
   HELM_COMMAND_TASK(TaskGroup.HELM),
-  HELM_COMMAND_TASK_NG(TaskGroup.HELM),
+  HELM_COMMAND_TASK_NG(TaskGroup.HELM, "Helm Command Task"),
   KUBERNETES_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER),
   PCF_COMMAND_TASK(TaskGroup.PCF),
   SPOTINST_COMMAND_TASK(TaskGroup.SPOTINST),

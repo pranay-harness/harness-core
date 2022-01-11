@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
@@ -21,6 +28,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.aws.AwsNgConfigMapper;
+import io.harness.delegate.task.citasks.vm.helper.CIVMConstants;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.WingsException;
 import io.harness.security.encryption.SecretDecryptionService;
@@ -30,6 +38,7 @@ import com.amazonaws.AmazonClientException;
 import com.amazonaws.services.ec2.model.AmazonEC2Exception;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Base64;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONObject;
 
@@ -59,16 +68,75 @@ public class ImageSecretBuilder {
 
     String imageName = imageDetailsWithConnector.getImageDetails().getName();
     if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
-      return getJSONEncodedDockerCredentials(connectorDetails);
+      return jsonEncodeCredentials(getDockerCredentials(connectorDetails));
     } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
-      return getJSONEncodedGCRCredentials(imageName, connectorDetails);
+      return jsonEncodeCredentials(getGCRCredentials(imageName, connectorDetails));
     } else if (connectorDetails.getConnectorType() == ConnectorType.AWS) {
-      return getJSONEncodedECRCredentials(imageName, connectorDetails);
+      return jsonEncodeAWSCredentials(getECRCredentials(imageName, connectorDetails));
     }
     return null;
   }
 
-  private String getJSONEncodedDockerCredentials(ConnectorDetails connectorDetails) {
+  public ImageCredentials getImageCredentials(ImageDetailsWithConnector imageDetailsWithConnector) {
+    ConnectorDetails connectorDetails = imageDetailsWithConnector.getImageConnectorDetails();
+    if (connectorDetails == null) {
+      return null;
+    }
+
+    String imageName = imageDetailsWithConnector.getImageDetails().getName();
+    if (connectorDetails.getConnectorType() == ConnectorType.DOCKER) {
+      ImageCredentials dockerCredentials = getDockerCredentials(connectorDetails);
+      return convertV2ConnectorsToV1(dockerCredentials);
+    } else if (connectorDetails.getConnectorType() == ConnectorType.GCP) {
+      return getGCRCredentials(imageName, connectorDetails);
+    } else if (connectorDetails.getConnectorType() == ConnectorType.AWS) {
+      ImageCredentials ecrCredentials = getECRCredentials(imageName, connectorDetails);
+      return decodeAWSTokenToGetUserAndPassword(ecrCredentials);
+    }
+    return null;
+  }
+
+  private ImageCredentials convertV2ConnectorsToV1(ImageCredentials dockerCredentials) {
+    if (dockerCredentials != null && CIVMConstants.DOCKER_REGISTRY_V2.equals(dockerCredentials.getRegistryUrl())) {
+      return ImageCredentials.builder()
+          .registryUrl(CIVMConstants.DOCKER_REGISTRY_V1)
+          .userName(dockerCredentials.getUserName())
+          .password(dockerCredentials.getPassword())
+          .build();
+    } else {
+      return dockerCredentials;
+    }
+  }
+
+  private ImageCredentials decodeAWSTokenToGetUserAndPassword(ImageCredentials imageCredentials) {
+    if (imageCredentials == null) {
+      return null;
+    }
+
+    String token = imageCredentials.getPassword();
+    byte[] decodedBytes = Base64.getDecoder().decode(token);
+    String decodedString = new String(decodedBytes);
+    String[] split = decodedString.split(":");
+    if (split.length != 2) {
+      throw new InvalidArgumentsException(format("ecr token format is invalid"));
+    }
+    return ImageCredentials.builder()
+        .userName(split[0])
+        .password(split[1])
+        .registryUrl(imageCredentials.getRegistryUrl())
+        .build();
+  }
+
+  private String jsonEncodeAWSCredentials(ImageCredentials ecrCredentials) {
+    if (null == ecrCredentials) {
+      return null;
+    }
+    return new JSONObject()
+        .put(ecrCredentials.getRegistryUrl(), new JSONObject().put(AUTH, ecrCredentials.getPassword()))
+        .toString();
+  }
+
+  private ImageCredentials getDockerCredentials(ConnectorDetails connectorDetails) {
     DockerConnectorDTO dockerConfig = (DockerConnectorDTO) connectorDetails.getConnectorConfig();
     if (dockerConfig.getAuth().getAuthType() == DockerAuthType.USER_PASSWORD) {
       log.info("Decrypting docker username and password for  connector id:[{}], type:[{}]",
@@ -91,7 +159,7 @@ public class ImageSecretBuilder {
 
       validateDecodedDockerCredentials(username, password, connectorDetails.getIdentifier());
       validateDecodedDockerRegistryUrl(registryUrl, connectorDetails.getIdentifier());
-      return jsonEncodeCredentials(registryUrl, username, password);
+      return ImageCredentials.builder().registryUrl(registryUrl).userName(username).password(password).build();
     } else if (dockerConfig.getAuth().getAuthType() == DockerAuthType.ANONYMOUS) {
       String registryUrl = dockerConfig.getDockerRegistryUrl();
       validateDecodedDockerRegistryUrl(registryUrl, connectorDetails.getIdentifier());
@@ -104,7 +172,7 @@ public class ImageSecretBuilder {
     }
   }
 
-  private String getJSONEncodedGCRCredentials(String imageName, ConnectorDetails connectorDetails) {
+  private ImageCredentials getGCRCredentials(String imageName, ConnectorDetails connectorDetails) {
     // Image name is of format: HOST-NAME/PROJECT-ID/IMAGE. HOST-NAME is registry url.
     String[] imageParts = imageName.split(PATH_SEPARATOR);
     if (imageParts.length == 0 || !imageParts[0].endsWith(BASE_GCR_HOSTNAME)) {
@@ -141,11 +209,10 @@ public class ImageSecretBuilder {
           format("Password should not be empty for gcp connector %s", connectorDetails.getIdentifier()),
           WingsException.USER);
     }
-
-    return jsonEncodeCredentials(registryUrl, username, password);
+    return ImageCredentials.builder().registryUrl(registryUrl).userName(username).password(password).build();
   }
 
-  private String getJSONEncodedECRCredentials(String imageName, ConnectorDetails connectorDetails) {
+  private ImageCredentials getECRCredentials(String imageName, ConnectorDetails connectorDetails) {
     // Image name is of format: <account-ID>.dkr.ecr.<region>.amazonaws.com/image
     if (imageName.startsWith(HTTPS_URL)) {
       imageName = imageName.substring(HTTPS_URL.length());
@@ -173,19 +240,24 @@ public class ImageSecretBuilder {
     try {
       String token = awsClient.getAmazonEcrAuthToken(awsConfig, account, region);
       // Token is base64 encoded username:password
-      return new JSONObject().put(registryUrl, new JSONObject().put(AUTH, token)).toString();
+      return ImageCredentials.builder().registryUrl(registryUrl).password(token).build();
     } catch (AmazonEC2Exception amazonEC2Exception) {
       handleAmazonServiceException(amazonEC2Exception);
     } catch (AmazonClientException amazonClientException) {
       handleAmazonClientException(amazonClientException);
     }
-
     return null;
   }
 
-  private String jsonEncodeCredentials(String registryUrl, String username, String password) {
+  private String jsonEncodeCredentials(ImageCredentials imageCredentials) {
+    if (null == imageCredentials) {
+      return null;
+    }
     return new JSONObject()
-        .put(registryUrl, new JSONObject().put(USERNAME, username).put(PASSWORD, password))
+        .put(imageCredentials.getRegistryUrl(),
+            new JSONObject()
+                .put(USERNAME, imageCredentials.getUserName())
+                .put(PASSWORD, imageCredentials.getPassword()))
         .toString();
   }
 

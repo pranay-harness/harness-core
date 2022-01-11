@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks;
 
 import static java.lang.String.format;
@@ -35,9 +42,9 @@ public class CIExecuteStepTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     CIExecuteStepTaskParams ciExecuteStepTaskParams = (CIExecuteStepTaskParams) parameters;
     if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.K8) {
-      return ciK8ExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
+      return ciK8ExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams, getTaskId());
     } else if (ciExecuteStepTaskParams.getType() == CIExecuteStepTaskParams.Type.VM) {
-      return ciVmExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams);
+      return ciVmExecuteStepTaskHandler.executeTaskInternal(ciExecuteStepTaskParams, getTaskId());
     } else {
       throw new CIStageExecutionException(
           format("Invalid infra type for executing step", ciExecuteStepTaskParams.getType()));

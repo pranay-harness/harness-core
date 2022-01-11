@@ -1,6 +1,11 @@
-package io.harness.cdng.creator.plan.manifest;
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
 
-import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
+package io.harness.cdng.creator.plan.manifest;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -43,10 +48,9 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class ManifestsPlanCreator {
-  public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig) {
-    String manifestsId = UUIDGenerator.generateUuid();
+  public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig, String finalManifestsId) {
     List<ManifestConfigWrapper> manifestListConfig =
-        getParameterFieldValue(serviceConfig.getServiceDefinition().getServiceSpec().getManifests());
+        serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
     ManifestListBuilder manifestListBuilder = new ManifestListBuilder(manifestListConfig);
     manifestListBuilder.addOverrideSets(serviceConfig);
     manifestListBuilder.addStageOverrides(serviceConfig);
@@ -66,7 +70,7 @@ public class ManifestsPlanCreator {
             .build();
     PlanNode manifestsNode =
         PlanNode.builder()
-            .uuid("manifests-" + manifestsId)
+            .uuid(finalManifestsId)
             .stepType(ManifestsStep.STEP_TYPE)
             .name(PlanCreatorConstants.MANIFESTS_NODE_NAME)
             .identifier(YamlTypes.MANIFEST_LIST_CONFIG)
@@ -80,7 +84,6 @@ public class ManifestsPlanCreator {
     planNodes.add(manifestsNode);
     return PlanCreationResponse.builder()
         .nodes(planNodes.stream().collect(Collectors.toMap(PlanNode::getUuid, Function.identity())))
-        .startingNodeId(manifestsNode.getUuid())
         .build();
   }
 
@@ -147,7 +150,9 @@ public class ManifestsPlanCreator {
 
       for (String useManifestOverrideSet : serviceConfig.getStageOverrides().getUseManifestOverrideSets().getValue()) {
         List<ManifestOverrideSets> manifestOverrideSetsList =
-            getParameterFieldValue(serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets())
+            serviceConfig.getServiceDefinition()
+                .getServiceSpec()
+                .getManifestOverrideSets()
                 .stream()
                 .map(ManifestOverrideSetWrapper::getOverrideSet)
                 .filter(overrideSet -> overrideSet.getIdentifier().equals(useManifestOverrideSet))

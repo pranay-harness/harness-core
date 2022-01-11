@@ -1,9 +1,18 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.entities.DataCollectionTask.Type.SERVICE_GUARD;
 import static io.harness.cvng.core.services.CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskState;
 import io.harness.cvng.beans.DataCollectionExecutionStatus;
 import io.harness.cvng.beans.DataCollectionTaskDTO;
 import io.harness.cvng.beans.DataCollectionTaskDTO.DataCollectionTaskResult;
@@ -15,6 +24,7 @@ import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.services.api.DataCollectionTaskManagementService;
 import io.harness.cvng.core.services.api.DataCollectionTaskService;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.services.impl.MetricContextBuilder;
 import io.harness.cvng.statemachine.services.api.OrchestrationService;
@@ -47,6 +57,7 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
   @Inject private OrchestrationService orchestrationService;
   @Inject private MetricService metricService;
   @Inject private MetricContextBuilder metricContextBuilder;
+  @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject
   private Map<DataCollectionTask.Type, DataCollectionTaskManagementService>
       dataCollectionTaskManagementServiceMapBinder;
@@ -122,24 +133,32 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
 
   @Override
   public void updateTaskStatus(DataCollectionTaskResult result) {
+    updateTaskStatus(result, true);
+  }
+
+  private void updateTaskStatus(DataCollectionTaskResult result, boolean updateIfRunning) {
     log.info("Updating status {}", result);
     UpdateOperations<DataCollectionTask> updateOperations =
         hPersistence.createUpdateOperations(DataCollectionTask.class)
             .set(DataCollectionTaskKeys.status, result.getStatus());
     if (result.getStacktrace() != null) {
-      updateOperations.set(DataCollectionTaskKeys.exception, result.getException());
       updateOperations.set(DataCollectionTaskKeys.stacktrace, result.getStacktrace());
     }
+    if (result.getException() != null) {
+      updateOperations.set(DataCollectionTaskKeys.exception, result.getException());
+    }
     Query<DataCollectionTask> query = hPersistence.createQuery(DataCollectionTask.class)
-                                          .filter(DataCollectionTaskKeys.uuid, result.getDataCollectionTaskId())
-                                          .filter(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.RUNNING);
+                                          .filter(DataCollectionTaskKeys.uuid, result.getDataCollectionTaskId());
+    if (updateIfRunning) {
+      query = query.filter(DataCollectionTaskKeys.status, DataCollectionExecutionStatus.RUNNING);
+    }
+
     UpdateResults updateResults = hPersistence.update(query, updateOperations);
     if (updateResults.getUpdatedCount() == 0) {
       // https://harness.atlassian.net/browse/CVNG-1601
       log.info("Task is not in running state. Skipping the update {}", result);
       return;
     }
-
     DataCollectionTask dataCollectionTask = getDataCollectionTask(result.getDataCollectionTaskId());
     recordMetricsOnUpdateStatus(dataCollectionTask);
     if (result.getStatus() == DataCollectionExecutionStatus.SUCCESS) {
@@ -174,9 +193,12 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
       metricService.incCounter(CVNGMetricsUtils.getDataCollectionTaskStatusMetricName(dataCollectionTask.getStatus()));
       metricService.recordDuration(
           CVNGMetricsUtils.DATA_COLLECTION_TASK_TOTAL_TIME, dataCollectionTask.totalTime(clock.instant()));
-      metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
-      metricService.recordDuration(
-          CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
+
+      if (dataCollectionTask.getLastPickedAt() != null) {
+        metricService.recordDuration(CVNGMetricsUtils.DATA_COLLECTION_TASK_WAIT_TIME, dataCollectionTask.waitTime());
+        metricService.recordDuration(
+            CVNGMetricsUtils.DATA_COLLECTION_TASK_RUNNING_TIME, dataCollectionTask.runningTime(clock.instant()));
+      }
     }
   }
 
@@ -264,6 +286,35 @@ public class DataCollectionTaskServiceImpl implements DataCollectionTaskService 
           dataCollectionTask.getVerificationTaskId(), dataCollectionTask.getStartTime());
       throw new IllegalStateException(
           "DataCollectionTask with same startTime already exist. This shouldn't be happening. Please check delegate logs");
+    }
+  }
+
+  @Override
+  public void updatePerpetualTaskStatus(DataCollectionTask dataCollectionTask) {
+    Optional<CVNGPerpetualTaskDTO> cvngPerpetualTaskDTO =
+        monitoringSourcePerpetualTaskService.getPerpetualTaskStatus(dataCollectionTask.getDataCollectionWorkerId());
+    if (cvngPerpetualTaskDTO.isPresent()) {
+      if (cvngPerpetualTaskDTO.get().getCvngPerpetualTaskUnassignedReason() != null) {
+        DataCollectionTaskResult dataCollectionTaskResult =
+            DataCollectionTaskResult.builder()
+                .dataCollectionTaskId(dataCollectionTask.getUuid())
+                .status(DataCollectionExecutionStatus.FAILED)
+                .exception(
+                    "Perpetual task unassigned:" + cvngPerpetualTaskDTO.get().getCvngPerpetualTaskUnassignedReason())
+                .build();
+        updateTaskStatus(dataCollectionTaskResult, false);
+      } else if (cvngPerpetualTaskDTO.get().getCvngPerpetualTaskState() != null
+          && !cvngPerpetualTaskDTO.get().getCvngPerpetualTaskState().equals(CVNGPerpetualTaskState.TASK_ASSIGNED)) {
+        DataCollectionTaskResult dataCollectionTaskResult =
+            DataCollectionTaskResult.builder()
+                .dataCollectionTaskId(dataCollectionTask.getUuid())
+                .status(DataCollectionExecutionStatus.FAILED)
+                .exception("Perpetual task assigned but not in a valid state:"
+                    + cvngPerpetualTaskDTO.get().getCvngPerpetualTaskState()
+                    + " and is assigned to delegate:" + cvngPerpetualTaskDTO.get().getDelegateId())
+                .build();
+        updateTaskStatus(dataCollectionTaskResult, false);
+      }
     }
   }
 

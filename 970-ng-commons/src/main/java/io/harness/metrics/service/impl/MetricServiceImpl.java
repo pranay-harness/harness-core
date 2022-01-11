@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.metrics.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -37,6 +44,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,19 +60,34 @@ import org.reflections.scanners.ResourcesScanner;
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
 public class MetricServiceImpl implements MetricService {
-  public static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
-  // If "METRICS_TARGET_PROJECT_ID" env variable has a valid value, it identifies the GCP project ID to which the
-  // metrics will be published.
-  private static final String METRICS_TARGET_PROJECT_ID = "METRICS_TARGET_PROJECT_ID";
-  private static boolean WILL_PUBLISH_METRICS;
+  private static final String GOOGLE_APPLICATION_CREDENTIALS = "GOOGLE_APPLICATION_CREDENTIALS";
+  private static final String ENV_METRICS_COLLECTION_DISABLED = "METRICS_COLLECTION_DISABLED";
+  private static final boolean METRICS_COLLECTION_IS_ENABLED;
   private static final List<MetricConfiguration> METRIC_CONFIG_DEFINITIONS = new ArrayList<>();
   private static final Map<String, MetricGroup> METRIC_GROUP_MAP = new HashMap<>();
 
   static {
-    initializeFromYAML();
+    METRICS_COLLECTION_IS_ENABLED = isMetricPublicationEnabled();
+    if (METRICS_COLLECTION_IS_ENABLED) {
+      initializeFromYAML();
+    }
   }
   private static final Tagger tagger = Tags.getTagger();
   private static final StatsRecorder statsRecorder = Stats.getStatsRecorder();
+
+  private static boolean isMetricPublicationEnabled() {
+    String disabled = System.getenv(ENV_METRICS_COLLECTION_DISABLED);
+    log.info("METRICS_COLLECTION_DISABLED: {}", disabled);
+    // By default, metrics collection is enabled.
+    disabled = isEmpty(disabled) ? "false" : disabled.trim().toLowerCase();
+    if (disabled.equals("true") || disabled.equals("yes")) {
+      return false; // Not enabled.
+    }
+
+    String creds = System.getenv(GOOGLE_APPLICATION_CREDENTIALS);
+    log.info("GOOGLE_APPLICATION_CREDENTIALS: {}", creds);
+    return isNotEmpty(creds);
+  }
 
   private static void recordTaggedStat(Map<TagKey, String> tags, Measure md, Double d) {
     TagContextBuilder contextBuilder = tagger.emptyBuilder();
@@ -129,17 +152,14 @@ public class MetricServiceImpl implements MetricService {
     METRIC_CONFIG_DEFINITIONS.addAll(metricConfigDefinitions);
 
     try {
-      log.info("GOOGLE_APPLICATION_CREDENTIALS: {}", System.getenv(GOOGLE_APPLICATION_CREDENTIALS));
-      if (isNotEmpty(System.getenv(GOOGLE_APPLICATION_CREDENTIALS))) {
-        WILL_PUBLISH_METRICS = true;
-        StackdriverStatsConfiguration configuration =
-            StackdriverStatsConfiguration.builder()
-                .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
-                .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
-                .build();
-        StackdriverStatsExporter.createAndRegister(configuration);
-        log.info("StackdriverStatsExporter created");
-      }
+      StackdriverStatsConfiguration configuration =
+          StackdriverStatsConfiguration.builder()
+              .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
+              .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
+              .setConstantLabels(Collections.emptyMap())
+              .build();
+      StackdriverStatsExporter.createAndRegister(configuration);
+      log.info("StackdriverStatsExporter created");
     } catch (Exception ex) {
       log.error("Exception while trying to register stackdriver metrics exporter", ex);
     }
@@ -154,8 +174,12 @@ public class MetricServiceImpl implements MetricService {
   public void initializeMetrics() {
     initializeMetrics(new ArrayList<>());
   }
+
   @Override
   public void initializeMetrics(List<MetricDefinitionInitializer> metricDefinitionInitializes) {
+    if (!METRICS_COLLECTION_IS_ENABLED) {
+      return;
+    }
     fetchAndInitMetricDefinitions(metricDefinitionInitializes);
   }
 
@@ -181,11 +205,9 @@ public class MetricServiceImpl implements MetricService {
   @Override
   public void recordMetric(String metricName, double value) {
     try {
-      if (!WILL_PUBLISH_METRICS) {
-        log.debug("Credentials to APM not set. We will not be able to publish metrics");
+      if (!METRICS_COLLECTION_IS_ENABLED) {
         return;
       }
-
       MetricConfiguration metricConfiguration = null;
       for (MetricConfiguration configDefinition : METRIC_CONFIG_DEFINITIONS) {
         if (configDefinition.getMetrics()
@@ -251,11 +273,8 @@ public class MetricServiceImpl implements MetricService {
 
     labelValues.put(ENV_LABEL, env);
 
-    if (labelNames.size() != labelValues.size()) {
-      log.error("Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
-          + " and labels: " + labelValues);
-      // TODO: send a metric for this and add alert on it.
-    }
+    // TODO: send a metric for this and add alert on it. If labelNames.size() != labelValues.size()
+
     return labelValues;
   }
 }

@@ -1,3 +1,9 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
 
 package io.harness.cvng.migration;
 
@@ -12,6 +18,7 @@ import io.harness.cvng.migration.list.CleanUpMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.CleanUpOldDocuments;
 import io.harness.cvng.migration.list.CleanupDeprecatedDocuments;
 import io.harness.cvng.migration.list.CreateDefaultVerificationJobsMigration;
+import io.harness.cvng.migration.list.CustomHealthCustomPackForExistingProjects;
 import io.harness.cvng.migration.list.DeleteInvalidOrchestratorsMigration;
 import io.harness.cvng.migration.list.DeleteOrchestratorWithInvalidVerificationTaskId;
 import io.harness.cvng.migration.list.DeleteSLISLOMigration;
@@ -73,6 +80,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(27, AppDCustomMetricForExistingProjects.class))
         .add(Pair.of(28, DeleteSLISLOMigration.class))
         .add(Pair.of(29, NewRelicCustomPackForExistingProjects.class))
+        .add(Pair.of(30, CustomHealthCustomPackForExistingProjects.class))
         .build();
   }
 }

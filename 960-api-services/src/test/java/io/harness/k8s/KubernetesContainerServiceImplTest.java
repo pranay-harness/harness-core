@@ -1,11 +1,21 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
+import static io.harness.k8s.KubernetesConvention.CompressedReleaseHistoryFlag;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.model.KubernetesClusterAuthType.OIDC;
 import static io.harness.k8s.model.KubernetesClusterAuthType.USER_PASSWORD;
+import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ANSHUL;
@@ -110,6 +120,7 @@ import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
 import io.kubernetes.client.openapi.models.V1ConfigMapList;
 import io.kubernetes.client.openapi.models.V1ListMetaBuilder;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
@@ -126,6 +137,7 @@ import io.kubernetes.client.openapi.models.V1StatusBuilder;
 import io.kubernetes.client.openapi.models.VersionInfo;
 import io.kubernetes.client.openapi.models.VersionInfoBuilder;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -153,6 +165,7 @@ import org.mockito.junit.MockitoRule;
 @OwnedBy(CDP)
 public class KubernetesContainerServiceImplTest extends CategoryTest {
   public static final String MASTER_URL = "masterUrl";
+  public static final String DUMMY_RELEASE_HISTORY = "dummyReleaseHistory";
   public static final char[] USERNAME = "username".toCharArray();
   public static final char[] PASSWORD = "PASSWORD".toCharArray();
   private static final KubernetesConfig KUBERNETES_CONFIG = KubernetesConfig.builder()
@@ -1048,9 +1061,12 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldFetchReleaseHistoryFromSecrets() throws Exception {
-    V1Secret v1Secret =
-        new V1SecretBuilder().withData(ImmutableMap.of(ReleaseHistoryKeyName, "test".getBytes())).build();
+  public void testShouldFetchCompressedReleaseHistoryFromSecrets() throws Exception {
+    byte[] dummyReleaseHistory = compressString("test");
+    V1Secret v1Secret = new V1SecretBuilder()
+                            .withData(ImmutableMap.of(ReleaseHistoryKeyName, dummyReleaseHistory,
+                                CompressedReleaseHistoryFlag, new byte[] {(byte) 1}))
+                            .build();
 
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), v1Secret));
@@ -1058,6 +1074,23 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
 
     assertThat(releaseHistory).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testShouldFetchUncompressedReleaseHistoryFromSecrets() throws Exception {
+    V1Secret v1Secret =
+        new V1SecretBuilder()
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, DUMMY_RELEASE_HISTORY.getBytes(StandardCharsets.UTF_8)))
+            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), v1Secret));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromSecrets(KUBERNETES_CONFIG, "secret");
+
+    assertThat(releaseHistory).isEqualTo(DUMMY_RELEASE_HISTORY);
   }
 
   @Test
@@ -1088,14 +1121,32 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
-  public void testShouldFetchReleaseHistoryFromConfigMap() throws Exception {
-    V1ConfigMap configMap = new V1ConfigMapBuilder().withData(ImmutableMap.of(ReleaseHistoryKeyName, "test")).build();
+  public void testShouldFetchCompressedReleaseHistoryFromConfigMap() throws Exception {
+    String dummyReleaseHistory = encodeBase64(compressString("test"));
+    V1ConfigMap configMap =
+        new V1ConfigMapBuilder()
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, dummyReleaseHistory, CompressedReleaseHistoryFlag, "true"))
+            .build();
 
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
 
     String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(KUBERNETES_CONFIG, "configmap");
     assertThat(releaseHistory).isEqualTo("test");
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testShouldFetchUncompressedReleaseHistoryFromConfigMap() throws Exception {
+    V1ConfigMap configMap =
+        new V1ConfigMapBuilder().withData(ImmutableMap.of(ReleaseHistoryKeyName, DUMMY_RELEASE_HISTORY)).build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
+
+    String releaseHistory = kubernetesContainerService.fetchReleaseHistoryFromConfigMap(KUBERNETES_CONFIG, "configmap");
+    assertThat(releaseHistory).isEqualTo(DUMMY_RELEASE_HISTORY);
   }
 
   @Test
@@ -1136,29 +1187,26 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
 
-    Map<String, String> data = new HashMap<>();
-    data.put(ReleaseHistoryKeyName, "version=1.0");
-    configMap.setData(data);
     configMap.getMetadata().setNamespace("test");
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
 
-    V1ConfigMap result =
-        kubernetesContainerService.saveReleaseHistoryInConfigMap(KUBERNETES_CONFIG, "release", "version=1.0");
+    V1ObjectMeta result =
+        kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=1.0", false);
     assertThat(result).isNotNull();
-    assertThat(result.getData().get(ReleaseHistoryKeyName)).isEqualTo("version=1.0");
-    assertThat(result.getMetadata().getNamespace()).isEqualTo("test");
+    assertThat(result.getNamespace()).isEqualTo("test");
   }
 
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldCreateReleaseHistoryInConfigMap() throws Exception {
+    String dummyReleaseHistory = encodeBase64(compressString("version=2.0"));
     V1ConfigMap configMap =
         new V1ConfigMapBuilder()
             .withMetadata(
                 new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
-            .withData(ImmutableMap.of(ReleaseHistoryKeyName, "version=2.0"))
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, dummyReleaseHistory))
             .build();
 
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMapList.class).getType()))
@@ -1167,11 +1215,10 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1ConfigMap.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), configMap));
 
-    V1ConfigMap result =
-        kubernetesContainerService.saveReleaseHistoryInConfigMap(KUBERNETES_CONFIG, "release", "version=2.0");
+    V1ObjectMeta result =
+        kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=2.0", false);
     assertThat(result).isNotNull();
-    assertThat(result.getData().get(ReleaseHistoryKeyName)).isEqualTo("version=2.0");
-    assertThat(result.getMetadata().getNamespace()).isEqualTo("default");
+    assertThat(result.getNamespace()).isEqualTo("default");
   }
 
   @Test
@@ -1208,32 +1255,31 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), secret));
 
-    V1Secret result =
-        kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=1.0");
-    assertThat(result).isNotNull();
-    assertThat(new String(result.getData().get(ReleaseHistoryKeyName))).isEqualTo("version=1.0");
-    assertThat(result.getMetadata().getNamespace()).isEqualTo("test");
+    V1ObjectMeta secretMeta =
+        kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=1.0", true);
+    assertThat(secretMeta).isNotNull();
+    assertThat(secretMeta.getNamespace()).isEqualTo("test");
   }
 
   @Test
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void testShouldCreateReleaseHistoryInSecret() throws Exception {
+    byte[] dummyReleaseHistory = encodeBase64ToByteArray(compressString("version=2.0"));
     V1Secret secret =
         new V1SecretBuilder()
             .withMetadata(
                 new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
-            .withData(ImmutableMap.of(ReleaseHistoryKeyName, encodeBase64ToByteArray("version=2.0".getBytes())))
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, dummyReleaseHistory))
             .build();
 
     when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Secret.class).getType()))
         .thenReturn(new ApiResponse<>(200, emptyMap(), secret));
 
-    V1Secret result =
-        kubernetesContainerService.saveReleaseHistoryInSecrets(KUBERNETES_CONFIG, "release", "version=2.0");
+    V1ObjectMeta result =
+        kubernetesContainerService.saveReleaseHistory(KUBERNETES_CONFIG, "release", "version=2.0", true);
     assertThat(result).isNotNull();
-    assertThat(new String(result.getData().get(ReleaseHistoryKeyName))).isEqualTo("version=2.0");
-    assertThat(result.getMetadata().getNamespace()).isEqualTo("default");
+    assertThat(result.getNamespace()).isEqualTo("default");
   }
 
   @Test
@@ -1279,5 +1325,60 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
     kubernetesContainerService.deleteConfigMap(KUBERNETES_CONFIG, "release");
 
     verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Status.class).getType());
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testFetchReleaseHistoryFromUncompressedConfigMap() throws IOException {
+    V1ConfigMap uncompressedConfigMap =
+        new V1ConfigMapBuilder().withData(ImmutableMap.of(ReleaseHistoryKeyName, DUMMY_RELEASE_HISTORY)).build();
+
+    assertThat(kubernetesContainerService.fetchReleaseHistoryValue(uncompressedConfigMap))
+        .isEqualTo(DUMMY_RELEASE_HISTORY);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testFetchReleaseHistoryFromCompressedConfigMap() throws IOException {
+    String dummyReleaseHistory = encodeBase64(compressString(DUMMY_RELEASE_HISTORY));
+    V1ConfigMap compressedConfigMap =
+        new V1ConfigMapBuilder()
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, dummyReleaseHistory, CompressedReleaseHistoryFlag, "true"))
+            .build();
+
+    assertThat(kubernetesContainerService.fetchReleaseHistoryValue(compressedConfigMap))
+        .isEqualTo(DUMMY_RELEASE_HISTORY);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testFetchReleaseHistoryFromUncompressedSecret() throws IOException {
+    V1Secret uncompressedSecret =
+        new V1SecretBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(ReleaseHistoryKeyName, DUMMY_RELEASE_HISTORY.getBytes(StandardCharsets.UTF_8)))
+            .build();
+    assertThat(kubernetesContainerService.fetchReleaseHistoryValue(uncompressedSecret))
+        .isEqualTo(DUMMY_RELEASE_HISTORY);
+  }
+
+  @Test
+  @Owner(developers = ABHINAV2)
+  @Category(UnitTests.class)
+  public void testFetchReleaseHistoryFromCompressedSecret() throws IOException {
+    byte[] dummyReleaseHistory = compressString(DUMMY_RELEASE_HISTORY);
+    V1Secret compressedSecret =
+        new V1SecretBuilder()
+            .withMetadata(
+                new V1ObjectMetaBuilder().withNamespace(KUBERNETES_CONFIG.getNamespace()).withName("release").build())
+            .withData(ImmutableMap.of(
+                ReleaseHistoryKeyName, dummyReleaseHistory, CompressedReleaseHistoryFlag, new byte[] {(byte) 1}))
+            .build();
+
+    assertThat(kubernetesContainerService.fetchReleaseHistoryValue(compressedSecret)).isEqualTo(DUMMY_RELEASE_HISTORY);
   }
 }

@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 set -x
 set -e
 
@@ -37,6 +42,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^Archit Singla <archit.singla@harness.io>$" |\
     grep -iv "^Arpit Tiwari <arpit.tiwari@harness.io>$" |\
     grep -iv "^Arvind Choudhary <arvind.choudhary@harness.io>$" |\
+    grep -iv "^Ashish Sanodia <ashish.sanodia@harness.io>$" |\
     grep -vi "^Bharat Goel <bharat.goel@harness.io>$" |\
     grep -iv "^Bogdan Azaric <bogdan.azaric@harness.io>$" |\
     grep -iv "^Bojan Micovic <bojan.micovic@harness.io>$" |\
@@ -211,6 +217,7 @@ git log -1000 --oneline --format='%aN <%aE>' | sort -u |\
     grep -iv "^bharat bandhu goel <bharat.goel@harness.io>$" |\
     grep -iv "^Bharat Goel <bharat.goel@harness.io>$" |\
     grep -iv "^Milos Vasic <milos.vasic@harness.io>$" |\
+    grep -iv "^David Warren <david.warren@harness.io>$" |\
     grep -iv "^Alexandru Ciofu <alexandru.ciofu@harness.io>$"` || :
 
 if [ ! -z "$UNKNOWN_USERS" ]

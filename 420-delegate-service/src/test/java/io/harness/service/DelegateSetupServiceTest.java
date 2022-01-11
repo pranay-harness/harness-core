@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.service;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -97,14 +104,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
         .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
 
-    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
-                                              .size(DelegateSize.LARGE)
-                                              .cpu(2.5d)
-                                              .label("size")
-                                              .ram(2048)
-                                              .taskLimit(25)
-                                              .replicas(2)
-                                              .build();
+    DelegateSizeDetails grp1SizeDetails =
+        DelegateSizeDetails.builder().size(DelegateSize.LARGE).cpu(2.5d).label("size").ram(2048).replicas(2).build();
 
     DelegateGroup delegateGroup1 = DelegateGroup.builder()
                                        .name("grp1")
@@ -436,14 +437,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
         .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
 
-    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
-                                              .size(DelegateSize.LARGE)
-                                              .cpu(2.5d)
-                                              .label("size")
-                                              .ram(2048)
-                                              .taskLimit(25)
-                                              .replicas(2)
-                                              .build();
+    DelegateSizeDetails grp1SizeDetails =
+        DelegateSizeDetails.builder().size(DelegateSize.LARGE).cpu(2.5d).label("size").ram(2048).replicas(2).build();
 
     DelegateGroup delegateGroup1 = DelegateGroup.builder()
                                        .name("grp1")
@@ -544,14 +539,8 @@ public class DelegateSetupServiceTest extends DelegateServiceTestBase {
     when(delegateCache.getDelegateProfile(accountId, delegateProfileId))
         .thenReturn(DelegateProfile.builder().name("profile").selectors(ImmutableList.of("s1", "s2")).build());
 
-    DelegateSizeDetails grp1SizeDetails = DelegateSizeDetails.builder()
-                                              .size(DelegateSize.LARGE)
-                                              .cpu(2.5d)
-                                              .label("size")
-                                              .ram(2048)
-                                              .taskLimit(25)
-                                              .replicas(2)
-                                              .build();
+    DelegateSizeDetails grp1SizeDetails =
+        DelegateSizeDetails.builder().size(DelegateSize.LARGE).cpu(2.5d).label("size").ram(2048).replicas(2).build();
 
     DelegateGroup delegateGroup1 = DelegateGroup.builder()
                                        .name("grp1")

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -23,6 +30,7 @@ import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
 import io.harness.delegate.task.helm.HelmListReleaseResponseNG;
+import io.harness.delegate.task.helm.HelmReleaseHistoryCmdResponseNG;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -40,6 +48,8 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
+import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.supplier.ThrowingSupplier;
 import io.harness.tasks.ResponseData;
 
@@ -113,6 +123,15 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
       return nativeHelmStepHelper.handleTaskException(ambiance, nativeHelmExecutionPassThroughData, e);
     }
 
+    if (helmCmdExecResponseNG.getHelmCommandResponse() instanceof HelmReleaseHistoryCmdResponseNG) {
+      // this means helm hist has failed
+      return StepResponse.builder()
+          .status(Status.FAILED)
+          .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmCmdExecResponseNG.getErrorMessage()).build())
+          .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
+          .build();
+    }
+
     if (helmCmdExecResponseNG.getHelmCommandResponse() instanceof HelmListReleaseResponseNG) {
       // this means list releases has failed
       return StepResponse.builder()
@@ -130,14 +149,13 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
     nativeHelmDeployOutcomeBuilder.prevReleaseVersion(helmInstallCmdResponseNG.getPrevReleaseVersion());
     nativeHelmDeployOutcomeBuilder.newReleaseVersion(helmInstallCmdResponseNG.getPrevReleaseVersion() + 1);
 
+    StepResponseBuilder stepResponseBuilder =
+        StepResponse.builder().unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses());
+
     if (helmCmdExecResponseNG.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_DEPLOY_OUTCOME,
           nativeHelmDeployOutcomeBuilder.build(), StepOutcomeGroup.STEP.name());
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmCmdExecResponseNG.getErrorMessage()).build())
-          .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
-          .build();
+      return nativeHelmStepHelper.getFailureResponseBuilder(helmCmdExecResponseNG, stepResponseBuilder).build();
     }
 
     nativeHelmDeployOutcomeBuilder.containerInfoList(helmInstallCmdResponseNG.getContainerInfoList());
@@ -148,14 +166,13 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
 
     StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(ambiance,
         K8sContainerToHelmServiceInstanceInfoMapper.toServerInstanceInfoList(
-            helmInstallCmdResponseNG.getContainerInfoList(), helmInstallCmdResponseNG.getHelmChartInfo(), helmInstallCmdResponseNG.getHelmVersion()));
+            helmInstallCmdResponseNG.getContainerInfoList(), helmInstallCmdResponseNG.getHelmChartInfo(),
+            helmInstallCmdResponseNG.getHelmVersion()));
 
-    return StepResponse.builder()
-        .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
-        .status(Status.SUCCEEDED)
+    return stepResponseBuilder.status(Status.SUCCEEDED)
         .stepOutcome(stepOutcome)
         .stepOutcome(StepResponse.StepOutcome.builder()
-                         .name(OutcomeExpressionConstants.OUTPUT)
+                         .name(OutcomeExpressionConstants.HELM_DEPLOY_OUTCOME)
                          .outcome(nativeHelmDeployOutcome)
                          .build())
         .build();
@@ -185,13 +202,17 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
             .namespace(nativeHelmStepHelper.getK8sInfraDelegateConfig(infrastructure, ambiance).getNamespace())
             .k8SteadyStateCheckEnabled(cdFeatureFlagHelper.isEnabled(
                 AmbianceUtils.getAccountId(ambiance), FeatureName.HELM_STEADY_STATE_CHECK_1_16))
+            .useLatestKubectlVersion(
+                cdFeatureFlagHelper.isEnabled(AmbianceUtils.getAccountId(ambiance), FeatureName.NEW_KUBECTL_VERSION))
             .shouldOpenFetchFilesLogStream(true)
             .build();
 
-    if (stepParameters.getTimeout() != null) {
+    if (!ParameterField.isNull(stepParameters.getTimeout())) {
       helmCommandRequest.setTimeoutInMillis(
           NGTimeConversionHelper.convertTimeStringToMilliseconds(stepParameters.getTimeout().getValue()));
     }
+
+    nativeHelmStepHelper.publishReleaseNameStepDetails(ambiance, releaseName);
 
     return nativeHelmStepHelper.queueNativeHelmTask(
         stepParameters, helmCommandRequest, ambiance, executionPassThroughData);

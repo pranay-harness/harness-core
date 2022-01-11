@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.executions.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -75,9 +82,17 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
    */
   @Override
   public PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops) {
+    return updateStatusForceful(planExecutionId, status, ops, false);
+  }
+
+  @Override
+  public PlanExecution updateStatusForceful(
+      @NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops, boolean forced) {
     EnumSet<Status> allowedStartStatuses = StatusUtils.planAllowedStartSet(status);
-    Query query = query(where(PlanExecutionKeys.uuid).is(planExecutionId))
-                      .addCriteria(where(PlanExecutionKeys.status).in(allowedStartStatuses));
+    Query query = query(where(PlanExecutionKeys.uuid).is(planExecutionId));
+    if (!forced) {
+      query.addCriteria(where(PlanExecutionKeys.status).in(allowedStartStatuses));
+    }
     Update updateOps = new Update()
                            .set(PlanExecutionKeys.status, status)
                            .set(PlanExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
@@ -150,7 +165,7 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
 
   public Status calculateStatus(String planExecutionId) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchNodeExecutionsWithoutOldRetries(planExecutionId);
-    return OrchestrationUtils.calculateStatus(nodeExecutions, planExecutionId);
+    return OrchestrationUtils.calculateStatusForPlanExecution(nodeExecutions, planExecutionId);
   }
 
   @Override

@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: permissionsConfiguration
-version: 12
+version: 14
 permissions:
   - identifier: core_project_delete
     name: Delete Project
@@ -558,6 +558,55 @@ permissions:
     - account
     - organization
     - project
+  - identifier: core_governancePolicy_edit
+    name: Create or Edit Policies
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_governancePolicy_view
+    name: View Policies
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_governancePolicy_delete
+    name: Delete Policies
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_governancePolicySets_edit
+    name: Create or Edit Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_governancePolicySets_view
+    name: View Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_governancePolicySets_delete
+    name: Delete Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
+  - identifier: core_governancePolicySets_evaluate
+    name: Evaluate Policy Sets
+    status: ACTIVE
+    allowedScopeLevels:
+    - account
+    - organization
+    - project
   - identifier: chi_monitoredservice_view
     name: View Monitored Service
     status: ACTIVE
@@ -600,3 +649,135 @@ permissions:
     includeInAllRoles: false
     allowedScopeLevels:
     - project
+  - identifier: gitops_agent_view
+    name: View a Gitops Agent
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+       - project
+       - organization
+       - account
+  - identifier: gitops_agent_edit
+    name: Edit a Gitops Agent
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+      - organization
+      - account
+  - identifier: gitops_agent_delete
+    name: Delete a Gitops agent
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+      - organization
+      - account
+  - identifier: gitops_application_view
+    name: View a Gitops Application
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_application_create
+    name: Create a Gitops Application
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_application_edit
+    name: Edit a Gitops Application
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_application_edit
+    name: Delete a Gitops Application
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_application_sync
+    name: Sync a Gitops Application
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_application_overide
+    name: Override a Gitops Application
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_repository_view
+    name: View a Gitops Repository
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_repository_edit
+    name: Edit a Gitops Repository
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_repository_delete
+    name: Delete a Gitops Repository
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_cluster_view
+    name: View a Gitops Cluster
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_cluster_edit
+    name: Edit a Gitops Cluster
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_cluster_delete
+    name: Delete a Gitops Cluster
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_gpgkey_view
+    name: View a Gitops Gpgkey
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_gpgkey_edit
+    name: Edit a Gitops Gpgkey
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_gpgkey_delete
+    name: Delete a Gitops Gpgkey
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_cert_view
+    name: View a Gitops Cert
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_cert_edit
+    name: Edit a Gitops Cert
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project
+  - identifier: gitops_cert_delete
+    name: Delete a Gitops Cert
+    status: STAGING
+    includeInAllRoles: false
+    allowedScopeLevels:
+      - project

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
@@ -97,7 +104,6 @@ import io.harness.pms.plan.creation.PipelineServiceInternalInfoProvider;
 import io.harness.pms.plan.execution.PmsExecutionServiceInfoProvider;
 import io.harness.pms.plan.execution.handlers.ExecutionInfoUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.ExecutionSummaryCreateEventHandler;
-import io.harness.pms.plan.execution.handlers.ExecutionSummaryUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PipelineStatusUpdateEventHandler;
 import io.harness.pms.plan.execution.handlers.PlanStatusEventEmitterHandler;
 import io.harness.pms.sdk.PmsSdkConfiguration;
@@ -352,8 +358,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     initializeGrpcServer(injector);
     registerPmsSdk(appConfig, injector);
     registerMigrations(injector);
+
+    log.info("PipelineServiceApplication DEPLOY_VERSION = " + System.getenv().get(DEPLOY_VERSION));
     if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
       initializePipelineMonitoring(appConfig, injector);
+    } else {
+      log.info("PipelineServiceApplication DEPLOY_VERSION is not COMMUNITY");
     }
 
     MaintenanceController.forceMaintenance(false);
@@ -364,6 +374,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   }
 
   private void initializePipelineMonitoring(PipelineServiceConfiguration appConfig, Injector injector) {
+    log.info("Initializing PipelineMonitoring");
     injector.getInstance(PipelineTelemetryRecordsJob.class).scheduleTasks();
   }
 
@@ -407,9 +418,12 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     } catch (MalformedURLException e) {
       log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
     }
-    Set<String> packages = PipelineServiceConfiguration.getUniquePackagesContainingOpenApiResources();
-    return new SwaggerConfiguration().openAPI(oas).prettyPrint(true).resourcePackages(packages).scannerClass(
-        "io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
+    Set<String> resourceClasses = PipelineServiceConfiguration.getOpenApiResources();
+    return new SwaggerConfiguration()
+        .openAPI(oas)
+        .prettyPrint(true)
+        .resourceClasses(resourceClasses)
+        .scannerClass("io.swagger.v3.jaxrs2.integration.JaxrsAnnotationScanner");
   }
 
   private static void registerObservers(Injector injector) {
@@ -443,14 +457,11 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         injector.getInstance(Key.get(NodeExecutionStatusUpdateEventHandler.class)));
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
-    nodeExecutionService.getStepStatusUpdateSubject().register(
-        injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
+
     nodeExecutionService.getStepStatusUpdateSubject().register(
         injector.getInstance(Key.get(TimeoutInstanceRemover.class)));
 
     // NodeUpdateObservers
-    nodeExecutionService.getNodeUpdateObserverSubject().register(
-        injector.getInstance(Key.get(ExecutionSummaryUpdateEventHandler.class)));
     nodeExecutionService.getNodeUpdateObserverSubject().register(
         injector.getInstance(Key.get(OrchestrationLogPublisher.class)));
 
@@ -559,6 +570,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
         .executionPoolConfig(config.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(config.getPmsSdkOrchestrationEventPoolConfig())
         .planCreatorServiceInternalConfig(config.getPmsPlanCreatorServicePoolConfig())
+        .pipelineSdkRedisEventsConfig(config.getPipelineSdkRedisEventsConfig())
         .build();
   }
 

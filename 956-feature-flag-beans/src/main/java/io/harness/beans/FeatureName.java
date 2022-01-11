@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -21,6 +28,7 @@ public enum FeatureName {
   ARTIFACT_STREAM_REFACTOR,
   ARTIFACT_STREAM_DELEGATE_SCOPING,
   ARTIFACT_STREAM_DELEGATE_TIMEOUT,
+  AUDIT_TRAIL_WEB_INTERFACE,
   AUTO_ACCEPT_SAML_ACCOUNT_INVITES,
   AZURE_US_GOV_CLOUD,
   AZURE_VMSS,
@@ -29,6 +37,7 @@ public enum FeatureName {
   AUDIT_TRAIL_ENHANCEMENT,
   BIND_FETCH_FILES_TASK_TO_DELEGATE,
   BUSINESS_MAPPING,
+  CCM_ENABLE_STATIC_SCHEDULES,
   CDNG_ENABLED,
   CENG_ENABLED,
   CE_AS_KUBERNETES_ENABLED,
@@ -40,6 +49,7 @@ public enum FeatureName {
   CE_AZURE_SUPPORT,
   CFNG_ENABLED,
   CF_CUSTOM_EXTRACTION,
+  CG_RBAC_EXCLUSION,
   CING_ENABLED,
   CI_INDIRECT_LOG_UPLOAD,
   CLOUD_FORMATION_CREATE_REFACTOR,
@@ -216,7 +226,6 @@ public enum FeatureName {
   CVNG_VERIFY_STEP_TO_SINGLE_ACTIVITY,
   FAIL_TASKS_IF_DELEGATE_DIES,
   SSH_JSCH_LOGS,
-  NG_GIT_ERROR_EXPERIENCE,
   RESOLVE_DEPLOYMENT_TAGS_BEFORE_EXECUTION,
   LDAP_USER_ID_SYNC,
   NEW_KUBECTL_VERSION,
@@ -233,7 +242,9 @@ public enum FeatureName {
   ACTIVE_MIGRATION_FROM_LOCAL_TO_GCP_KMS,
   TERRAFORM_AWS_CP_AUTHENTICATION,
   CI_VM_INFRASTRUCTURE,
-  SERVICENOW_NG_INTEGRATION;
+  SERVICENOW_NG_INTEGRATION,
+  OPTIMIZED_TF_PLAN,
+  NG_NATIVE_HELM;
 
   FeatureName() {
     scope = Scope.PER_ACCOUNT;

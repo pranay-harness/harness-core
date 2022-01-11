@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.vm;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -26,17 +33,17 @@ public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
     return type;
   }
 
-  public VmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams) {
+  public VmTaskExecutionResponse executeTaskInternal(CICleanupTaskParams ciCleanupTaskParams, String taskId) {
     CIVmCleanupTaskParams params = (CIVmCleanupTaskParams) ciCleanupTaskParams;
     log.info("Received request to clean VM with stage runtime ID {}", params.getStageRuntimeId());
-    return callRunnerForCleanup(params);
+    return callRunnerForCleanup(params, taskId);
   }
 
-  private VmTaskExecutionResponse callRunnerForCleanup(CIVmCleanupTaskParams params) {
+  private VmTaskExecutionResponse callRunnerForCleanup(CIVmCleanupTaskParams params, String taskId) {
     CommandExecutionStatus executionStatus = CommandExecutionStatus.FAILURE;
     String errMessage = "";
     try {
-      Response<Void> response = httpHelper.cleanupStageWithRetries(convert(params));
+      Response<Void> response = httpHelper.cleanupStageWithRetries(convert(params, taskId));
       if (response.isSuccessful()) {
         executionStatus = CommandExecutionStatus.SUCCESS;
       }
@@ -48,7 +55,11 @@ public class CIVmCleanupTaskHandler implements CICleanupTaskHandler {
     return VmTaskExecutionResponse.builder().errorMessage(errMessage).commandExecutionStatus(executionStatus).build();
   }
 
-  private DestroyVmRequest convert(CIVmCleanupTaskParams params) {
-    return DestroyVmRequest.builder().poolID(params.getPoolId()).id(params.getStageRuntimeId()).build();
+  private DestroyVmRequest convert(CIVmCleanupTaskParams params, String taskId) {
+    return DestroyVmRequest.builder()
+        .poolID(params.getPoolId())
+        .id(params.getStageRuntimeId())
+        .correlationID(taskId)
+        .build();
   }
 }

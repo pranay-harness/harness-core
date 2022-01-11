@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -42,6 +49,7 @@ import io.harness.delegate.beans.connector.gcpconnector.GcpCredentialType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpManualDetailsDTO;
 import io.harness.delegate.task.k8s.K8sInfraDelegateConfig;
 import io.harness.exception.InvalidRequestException;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.logstreaming.ILogStreamingStepClient;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.ng.core.environment.beans.Environment;
@@ -109,6 +117,7 @@ public class InfrastructureStepTest extends CategoryTest {
             .build();
     doReturn(Optional.of(ConnectorResponseDTO.builder()
                              .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorServiceAccount).build())
+                             .entityValidityDetails(EntityValidityDetails.builder().valid(true).build())
                              .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), eq("gcp-sa"));
@@ -251,12 +260,14 @@ public class InfrastructureStepTest extends CategoryTest {
             .build();
     doReturn(Optional.empty()).when(connectorService).get(anyString(), anyString(), anyString(), eq("missing"));
     doReturn(Optional.of(ConnectorResponseDTO.builder()
+                             .entityValidityDetails(EntityValidityDetails.builder().valid(true).build())
                              .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorServiceAccount).build())
                              .build()))
         .when(connectorService)
         .get(anyString(), anyString(), anyString(), eq("gcp-sa"));
     doReturn(
         Optional.of(ConnectorResponseDTO.builder()
+                        .entityValidityDetails(EntityValidityDetails.builder().valid(true).build())
                         .connector(ConnectorInfoDTO.builder().connectorConfig(gcpConnectorInheritFromDelegate).build())
                         .build()))
         .when(connectorService)

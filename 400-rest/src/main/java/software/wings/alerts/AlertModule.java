@@ -1,12 +1,17 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.alerts;
 
 import io.harness.alert.AlertData;
-import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 
 import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
-import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.DeploymentFreezeEventAlert;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
@@ -17,10 +22,6 @@ import software.wings.beans.alert.InstanceUsageLimitAlert;
 import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.beans.alert.ManifestCollectionFailedAlert;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
-import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
@@ -53,13 +54,7 @@ public class AlertModule extends AbstractModule {
 
     mapBinder.addBinding(AlertType.ApprovalNeeded).toInstance(ApprovalNeededAlert.class);
     mapBinder.addBinding(AlertType.ManualInterventionNeeded).toInstance(AlertData.class);
-    mapBinder.addBinding(AlertType.NoActiveDelegates).toInstance(NoActiveDelegatesAlert.class);
-    mapBinder.addBinding(AlertType.NoInstalledDelegates).toInstance(NoInstalledDelegatesAlert.class);
     mapBinder.addBinding(AlertType.DelegatesDown).toInstance(DelegatesDownAlert.class);
-    mapBinder.addBinding(AlertType.DelegatesScalingGroupDownAlert).toInstance(DelegatesScalingGroupDownAlert.class);
-    mapBinder.addBinding(AlertType.DelegateProfileError).toInstance(DelegateProfileErrorAlert.class);
-    mapBinder.addBinding(AlertType.NoEligibleDelegates).toInstance(NoEligibleDelegatesAlert.class);
-    mapBinder.addBinding(AlertType.PerpetualTaskAlert).toInstance(PerpetualTaskAlert.class);
     mapBinder.addBinding(AlertType.InvalidKMS).toInstance(KmsSetupAlert.class);
     mapBinder.addBinding(AlertType.GitSyncError).toInstance(GitSyncErrorAlert.class);
     mapBinder.addBinding(AlertType.GitConnectionError).toInstance(GitConnectionErrorAlert.class);

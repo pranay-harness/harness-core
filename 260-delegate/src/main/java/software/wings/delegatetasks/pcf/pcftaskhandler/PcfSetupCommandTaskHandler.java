@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks.pcf.pcftaskhandler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -34,6 +41,8 @@ import io.harness.delegate.beans.pcf.CfAppSetupTimeDetails;
 import io.harness.delegate.beans.pcf.CfInternalConfig;
 import io.harness.delegate.cf.PcfCommandTaskHandler;
 import io.harness.delegate.cf.apprenaming.AppNamingStrategy;
+import io.harness.delegate.cf.retry.RetryAbleTaskExecutor;
+import io.harness.delegate.cf.retry.RetryPolicy;
 import io.harness.delegate.task.pcf.CfCommandRequest;
 import io.harness.delegate.task.pcf.PcfManifestsPackage;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
@@ -660,6 +669,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
    * 3. Based on count "LastVersopAppsToKeep" provided by user, (default is 3)
    * 4. Keep most recent app as is, and (last LastVersopAppsToKeep - 1) apps will be downsized to 0
    * 5. All apps older than that will be deleted
+   *
    * @param previousReleases
    * @param cfRequestConfig
    * @param activeApplication
@@ -744,6 +754,7 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
                                               .append(encodeColor(applicationSummary.getName()))
                                               .toString());
 
+    RetryAbleTaskExecutor retryAbleTaskExecutor = RetryAbleTaskExecutor.getExecutor();
     if (cfCommandSetupRequest.isUseAppAutoscalar()) {
       appAutoscalarRequestData.setApplicationName(applicationSummary.getName());
       appAutoscalarRequestData.setApplicationGuid(applicationSummary.getId());
@@ -753,42 +764,71 @@ public class PcfSetupCommandTaskHandler extends PcfCommandTaskHandler {
 
     cfRequestConfig.setApplicationName(applicationSummary.getName());
     cfRequestConfig.setDesiredCount(0);
+
+    unMapRoutes(cfRequestConfig, executionLogCallback, retryAbleTaskExecutor);
+    unsetEnvVariables(cfRequestConfig, cfCommandSetupRequest, executionLogCallback, retryAbleTaskExecutor);
+    downsizeApplication(applicationSummary, cfRequestConfig, executionLogCallback, retryAbleTaskExecutor);
+  }
+
+  private void unMapRoutes(
+      CfRequestConfig cfRequestConfig, LogCallback executionLogCallback, RetryAbleTaskExecutor retryAbleTaskExecutor) {
     try {
       ApplicationDetail applicationDetail = pcfDeploymentManager.getApplicationByName(cfRequestConfig);
       // Unmap routes from application having 0 instances
       if (isNotEmpty(applicationDetail.getUrls())) {
-        pcfDeploymentManager.unmapRouteMapForApplication(
-            cfRequestConfig, applicationDetail.getUrls(), executionLogCallback);
+        RetryPolicy retryPolicy =
+            RetryPolicy.builder()
+                .userMessageOnFailure(String.format(
+                    "Failed to un map routes from application - %s", encodeColor(cfRequestConfig.getApplicationName())))
+                .finalErrorMessage(String.format("Please manually unmap the routes for application : %s ",
+                    encodeColor(cfRequestConfig.getApplicationName())))
+                .retry(3)
+                .build();
+
+        retryAbleTaskExecutor.execute(()
+                                          -> pcfDeploymentManager.unmapRouteMapForApplication(
+                                              cfRequestConfig, applicationDetail.getUrls(), executionLogCallback),
+            executionLogCallback, log, retryPolicy);
       }
     } catch (PivotalClientApiException exception) {
-      executionLogCallback.saveExecutionLog(
-          String.format("Failed to un map routes from application - [%s]. Please manually unmap it",
-              cfRequestConfig.getApplicationName()),
-          LogLevel.ERROR);
       log.warn(exception.getMessage());
     }
+  }
 
-    try {
-      // Remove Env Variable "HARNESS__STATUS__IDENTIFIER"
-      if (cfCommandSetupRequest.isBlueGreen()) {
-        pcfDeploymentManager.unsetEnvironmentVariableForAppStatus(cfRequestConfig, executionLogCallback);
-      }
-    } catch (PivotalClientApiException exception) {
-      executionLogCallback.saveExecutionLog(
-          String.format(
-              "Failed to un set env variable for application - [%s]. Please manually un set it to avoid any future issue ",
-              cfRequestConfig.getApplicationName()),
-          LogLevel.ERROR);
-      log.warn(exception.getMessage());
+  private void unsetEnvVariables(CfRequestConfig cfRequestConfig, CfCommandSetupRequest cfCommandSetupRequest,
+      LogCallback executionLogCallback, RetryAbleTaskExecutor retryAbleTaskExecutor) {
+    if (!cfCommandSetupRequest.isBlueGreen()) {
+      return;
     }
 
-    try {
-      pcfDeploymentManager.resizeApplication(cfRequestConfig);
-    } catch (PivotalClientApiException e) {
-      executionLogCallback.saveExecutionLog("Failed while Downsizing application: "
-              + encodeColor(applicationSummary.getName()) + ", Continuing for next one",
-          LogLevel.ERROR);
-      log.warn(e.getMessage());
-    }
+    // Remove Env Variable "HARNESS__STATUS__IDENTIFIER"
+    RetryPolicy retryPolicy =
+        RetryPolicy.builder()
+            .userMessageOnFailure(String.format("Failed to un set env variable for application - %s",
+                encodeColor(cfRequestConfig.getApplicationName())))
+            .finalErrorMessage(String.format(
+                "Failed to un set env variable for application - %s. Please manually un set it to avoid any future issue ",
+                encodeColor(cfRequestConfig.getApplicationName())))
+            .retry(3)
+            .build();
+
+    retryAbleTaskExecutor.execute(
+        ()
+            -> pcfDeploymentManager.unsetEnvironmentVariableForAppStatus(cfRequestConfig, executionLogCallback),
+        executionLogCallback, log, retryPolicy);
+  }
+
+  private void downsizeApplication(ApplicationSummary applicationSummary, CfRequestConfig cfRequestConfig,
+      LogCallback executionLogCallback, RetryAbleTaskExecutor retryAbleTaskExecutor) {
+    RetryPolicy retryPolicy =
+        RetryPolicy.builder()
+            .userMessageOnFailure(
+                String.format("Failed while Downsizing application: %s", encodeColor(applicationSummary.getName())))
+            .finalErrorMessage(String.format("Failed to downsize application: %s. Please downsize it manually",
+                encodeColor(applicationSummary.getName())))
+            .retry(3)
+            .build();
+    retryAbleTaskExecutor.execute(
+        () -> pcfDeploymentManager.resizeApplication(cfRequestConfig), executionLogCallback, log, retryPolicy);
   }
 }

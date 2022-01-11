@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
@@ -51,7 +58,7 @@ public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
     Response<ExecuteStepResponse> executeStepResponse =
         Response.success(ExecuteStepResponse.builder().error("").build());
     when(httpHelper.executeStepWithRetries(any())).thenReturn(executeStepResponse);
-    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params);
+    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -63,7 +70,7 @@ public class CIVMExecuteStepTaskHandlerTest extends CategoryTest {
     Response<ExecuteStepResponse> executeStepResponse =
         Response.success(ExecuteStepResponse.builder().error("exit code 1").build());
     when(httpHelper.executeStepWithRetries(any())).thenReturn(executeStepResponse);
-    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params);
+    VmTaskExecutionResponse response = CIVMExecuteStepTaskHandler.executeTaskInternal(params, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 }

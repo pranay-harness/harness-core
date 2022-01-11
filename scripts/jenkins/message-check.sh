@@ -1,9 +1,13 @@
 #!/bin/bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 set +e
 
 COMMIT_CONTENT="\[feat]|\[fix]|\[techdebt]|feat|fix|techdebt"
-PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIE|PL|SEC|SWAT|GTM|FFM|ONP|LWG|ART|GIT"
+PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIE|PL|SEC|SWAT|GTM|FFM|OPA|ONP|LWG|ART|GIT"
 
 # Check commit message if there's a single commit
 #if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then

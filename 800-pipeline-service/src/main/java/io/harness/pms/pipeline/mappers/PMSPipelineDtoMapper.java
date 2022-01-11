@@ -1,14 +1,25 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import io.harness.EntityType;
 import io.harness.accesscontrol.clients.PermissionCheckDTO;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.IdentifierRef;
 import io.harness.common.NGExpressionUtils;
+import io.harness.encryption.ScopeHelper;
 import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.sdk.EntityGitDetailsMapper;
 import io.harness.gitsync.sdk.EntityValidityDetails;
+import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.pms.pipeline.ExecutionSummaryInfoDTO;
 import io.harness.pms.pipeline.PMSPipelineResponseDTO;
@@ -160,6 +171,21 @@ public class PMSPipelineDtoMapper {
         .resourceType("PIPELINE")
         .resourceIdentifier(pipelineIdentifier)
         .permission(permission)
+        .build();
+  }
+
+  public EntityDetail toEntityDetail(PipelineEntity entity) {
+    return EntityDetail.builder()
+        .name(entity.getName())
+        .type(EntityType.PIPELINES)
+        .entityRef(IdentifierRef.builder()
+                       .accountIdentifier(entity.getAccountIdentifier())
+                       .orgIdentifier(entity.getOrgIdentifier())
+                       .projectIdentifier(entity.getProjectIdentifier())
+                       .scope(ScopeHelper.getScope(
+                           entity.getAccountIdentifier(), entity.getOrgIdentifier(), entity.getProjectIdentifier()))
+                       .identifier(entity.getIdentifier())
+                       .build())
         .build();
   }
 }

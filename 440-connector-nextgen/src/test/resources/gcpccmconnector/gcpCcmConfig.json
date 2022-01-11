@@ -19,7 +19,8 @@
       "projectId": "projectId",
       "serviceAccountEmail": "serviceAccountEmail",
       "billingExportSpec": {
-        "datasetId": "datasetId"
+        "datasetId": "datasetId",
+        "tableId": "tableId"
       }
     }
   }

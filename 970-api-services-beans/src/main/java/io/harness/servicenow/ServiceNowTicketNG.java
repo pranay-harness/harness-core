@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.servicenow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -10,10 +17,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.google.common.collect.Sets;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -31,7 +36,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonDeserialize(using = ServiceNowTicketDeserializer.class)
-public class ServiceNowTicketNG {
+public class ServiceNowTicketNG implements TicketNG {
   @NotNull String url;
   @NotNull String number;
   @NotNull Map<String, ServiceNowFieldValueNG> fields = new HashMap<>();
@@ -45,10 +50,5 @@ public class ServiceNowTicketNG {
     Map<String, JsonNode> names = JsonNodeUtils.getMap(node, "names");
     Map<String, JsonNode> schema = JsonNodeUtils.getMap(node, "schema");
     Map<String, JsonNode> fieldValues = JsonNodeUtils.getMap(node, "fields");
-
-    Set<String> fieldKeys = Sets.intersection(Sets.intersection(names.keySet(), schema.keySet()), fieldValues.keySet());
-    fieldKeys.forEach(key -> addKey(key, names.get(key), schema.get(key), fieldValues.get(key)));
   }
-
-  private void addKey(String key, JsonNode jsonNode, JsonNode jsonNode1, JsonNode jsonNode2) {}
 }

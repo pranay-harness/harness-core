@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.core.fullsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -48,7 +55,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     log.info("Started triggering the git full sync job for the message Id {}", messageId);
     final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
     final ScopeDetails scopeDetails = getScopeDetails(gitConfigScope, messageId);
-    for (Map.Entry<Microservice, FullSyncServiceBlockingStub> fullSyncStubEntry : fullSyncServiceBlockingStubMap.entrySet()) {
+    for (Map.Entry<Microservice, FullSyncServiceBlockingStub> fullSyncStubEntry :
+        fullSyncServiceBlockingStubMap.entrySet()) {
       FullSyncServiceBlockingStub fullSyncServiceBlockingStub = fullSyncStubEntry.getValue();
       Microservice microservice = fullSyncStubEntry.getKey();
       FileChanges entitiesForFullSync = null;
@@ -117,8 +125,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
         projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), yamlGitConfigDTO.getGitConnectorRef());
   }
 
-  private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
-      FileChange entityForFullSync) {
+  private void saveFullSyncEntityInfo(
+      EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice, FileChange entityForFullSync) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())

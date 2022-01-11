@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.app;
 
 import static io.harness.logging.LoggingInitializer.initializeLogging;
@@ -5,12 +12,12 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.harness.delegate.app.health.DelegateHealthMonitor;
 import io.harness.delegate.app.modules.DelegateAgentModule;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.event.client.EventPublisher;
 import io.harness.grpc.pingpong.PingPongClient;
+import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
@@ -128,7 +135,7 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
   private void registerHealthChecks(final Environment environment, final Injector injector) {
     final HealthService healthService = injector.getInstance(HealthService.class);
 
-    healthService.registerMonitor(injector.getInstance(DelegateHealthMonitor.class));
+    healthService.registerMonitor(injector.getInstance(HealthMonitor.class));
     environment.healthChecks().register("DelegateAgentApp", healthService);
   }
 }

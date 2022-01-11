@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
@@ -28,6 +35,7 @@ import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
 import io.harness.maintenance.MaintenanceController;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.modules.MetricsModule;
 import io.harness.migration.MigrationProvider;
 import io.harness.migration.NGMigrationSdkInitHelper;
 import io.harness.migration.NGMigrationSdkModule;
@@ -40,8 +48,10 @@ import io.harness.ng.core.exceptionmappers.NotFoundExceptionMapper;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.request.RequestContextFilter;
+import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.jackson.TemplateServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.template.InspectCommand;
@@ -151,6 +161,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
     NGObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new TemplateServiceJacksonModule());
   }
 
   @Override
@@ -173,6 +184,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
     modules.add(TemplateServiceModule.getInstance(templateServiceConfiguration));
     modules.add(new MetricRegistryModule(metricRegistry));
     modules.add(NGMigrationSdkModule.getInstance());
+    modules.add(new MetricsModule());
     CacheModule cacheModule = new CacheModule(templateServiceConfiguration.getCacheConfig());
     modules.add(cacheModule);
     if (templateServiceConfiguration.isShouldDeployWithGitSync()) {
@@ -271,6 +283,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
         environment.jersey().register(injector.getInstance(resource));
       }
     }
+    environment.jersey().register(injector.getInstance(VersionInfoResource.class));
   }
 
   private void registerScheduledJobs(Injector injector) {

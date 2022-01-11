@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.stateutils.buildstate;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -14,6 +21,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorResourceClient;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
@@ -98,16 +106,19 @@ public class ConnectorUtils {
   private final ConnectorResourceClient connectorResourceClient;
   private final SecretManagerClientService secretManagerClientService;
   private final SecretUtils secretUtils;
+  private final CIExecutionServiceConfig cIExecutionServiceConfig;
 
   private final Duration RETRY_SLEEP_DURATION = Duration.ofSeconds(2);
   private final int MAX_ATTEMPTS = 6;
 
   @Inject
   public ConnectorUtils(ConnectorResourceClient connectorResourceClient, SecretUtils secretUtils,
+      CIExecutionServiceConfig ciExecutionServiceConfig,
       @Named("PRIVILEGED") SecretManagerClientService secretManagerClientService) {
     this.connectorResourceClient = connectorResourceClient;
     this.secretUtils = secretUtils;
     this.secretManagerClientService = secretManagerClientService;
+    this.cIExecutionServiceConfig = ciExecutionServiceConfig;
   }
 
   public Map<String, ConnectorDetails> getConnectorDetailsMap(NGAccess ngAccess, Set<String> connectorNameSet) {
@@ -592,5 +603,18 @@ public class ConnectorUtils {
         .withMaxAttempts(MAX_ATTEMPTS)
         .onFailedAttempt(event -> log.info(failedAttemptMessage, event.getAttemptCount(), event.getLastFailure()))
         .onFailure(event -> log.error(failureMessage, event.getAttemptCount(), event.getFailure()));
+  }
+
+  public ConnectorDetails getDefaultInternalConnector(NGAccess ngAccess) {
+    ConnectorDetails connectorDetails = null;
+    if (isNotEmpty(cIExecutionServiceConfig.getDefaultInternalImageConnector())) {
+      try {
+        connectorDetails = getConnectorDetails(ngAccess, cIExecutionServiceConfig.getDefaultInternalImageConnector());
+      } catch (ConnectorNotFoundException e) {
+        log.info("Default harness image connector does not exist: {}", e.getMessage());
+        connectorDetails = null;
+      }
+    }
+    return connectorDetails;
   }
 }

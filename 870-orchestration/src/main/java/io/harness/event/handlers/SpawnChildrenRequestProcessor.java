@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.event.handlers;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -22,6 +29,7 @@ import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.SdkResponseEventProto;
 import io.harness.pms.contracts.execution.events.SpawnChildrenRequest;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.SdkResponseEventUtils;
 import io.harness.waiter.WaitNotifyEngine;
 
@@ -47,7 +55,8 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     SpawnChildrenRequest request = event.getSpawnChildrenRequest();
-    NodeExecution nodeExecution = nodeExecutionService.get(SdkResponseEventUtils.getNodeExecutionId(event));
+    NodeExecution nodeExecution = nodeExecutionService.getWithFieldsIncluded(
+        SdkResponseEventUtils.getNodeExecutionId(event), NodeProjectionUtils.withAmbiance);
     Ambiance ambiance = nodeExecution.getAmbiance();
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       List<String> callbackIds = new ArrayList<>();
@@ -80,7 +89,7 @@ public class SpawnChildrenRequestProcessor implements SdkResponseProcessor {
       waitNotifyEngine.waitForAllOn(publisherName, callback, callbackIds.toArray(new String[0]));
 
       // Update the parent with executable response
-      nodeExecutionService.update(nodeExecution.getUuid(),
+      nodeExecutionService.updateV2(nodeExecution.getUuid(),
           ops
           -> ops.addToSet(NodeExecutionKeys.executableResponses,
               ExecutableResponse.newBuilder().setChildren(request.getChildren()).build()));

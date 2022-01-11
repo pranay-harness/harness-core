@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.functional.alerts;
 
 import static io.harness.rule.OwnerRule.NATARAJA;
@@ -30,37 +37,6 @@ import org.junit.experimental.categories.Category;
 @Slf4j
 @OwnedBy(HarnessTeam.PL)
 public class AlertsSetupCRUDTest extends AbstractFunctionalTest {
-  @Test
-  @Owner(developers = NATARAJA)
-  @Category(FunctionalTests.class)
-  @Ignore("Functional Flakiness fixing. Needs to be fixed")
-  public void alertsCRUD() {
-    Set<String> userGroups = new HashSet<>();
-    userGroups.add(
-        UserGroupUtils.createUserGroupAndUpdateWithNotificationSettings(getAccount(), bearerToken).getUuid());
-    AlertNotificationRule createdAlert =
-        createAndVerifyAlerts(userGroups, AlertCategory.Setup, AlertType.DelegatesDown);
-
-    log.info("Updating the alerts notification rule");
-    AlertNotificationRule updatedRule = AlertsUtils.createAlertNotificationRule(
-        getAccount().getUuid(), userGroups, AlertCategory.Setup, AlertType.DelegateProfileError);
-    AlertNotificationRule updatedAlert =
-        AlertsRestUtils.updateAlert(getAccount().getUuid(), bearerToken, createdAlert.getUuid(), updatedRule);
-
-    log.info("Verifying the updated alerts notification rule");
-    assertThat(updatedAlert).isNotNull();
-    assertThat(updatedAlert.getAlertCategory().name().equals(createdAlert.getAlertCategory().name())).isTrue();
-    assertThat(
-        updatedAlert.getAlertFilter().getAlertType().name().equals(createdAlert.getAlertFilter().getAlertType().name()))
-        .isFalse();
-
-    log.info("Delete the alert");
-    AlertsRestUtils.deleteAlerts(getAccount().getUuid(), bearerToken, updatedAlert.getUuid());
-    log.info("Verify if the deleted alert does not exist");
-    List<AlertNotificationRule> alertsList = AlertsRestUtils.listAlerts(getAccount().getUuid(), bearerToken);
-    assertThat(AlertsUtils.isAlertAvailable(alertsList, createdAlert)).isFalse();
-  }
-
   @Test
   @Owner(developers = NATARAJA)
   @Category(FunctionalTests.class)

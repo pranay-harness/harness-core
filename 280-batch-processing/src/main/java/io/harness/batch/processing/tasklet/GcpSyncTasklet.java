@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.tasklet;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -110,10 +117,17 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorInfoDTO connectorInfo = connector.getConnector();
         GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
             (GcpCloudCostConnectorDTO) connectorInfo.getConnectorConfig();
+        log.info("ServiceAccountEmail: {}, DatasetId: {}, "
+                + "ProjectId: {}, TableId: {}"
+                + "ConnectorIdentifier: {}",
+            gcpCloudCostConnectorDTO.getServiceAccountEmail(),
+            gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
+            gcpCloudCostConnectorDTO.getBillingExportSpec().getTableId(), connectorInfo.getIdentifier());
         try {
           processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
               gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
-              accountId, connectorInfo.getIdentifier(), endTime);
+              gcpCloudCostConnectorDTO.getBillingExportSpec().getTableId(), accountId, connectorInfo.getIdentifier(),
+              endTime);
         } catch (Exception e) {
           log.error("Exception processing NG GCP Connector: {}", connectorInfo.getIdentifier(), e);
         }
@@ -124,14 +138,14 @@ public class GcpSyncTasklet implements Tasklet {
       log.info("Processing batch size of {} in GCP Sync Job for CG Connectors", gcpBillingAccounts.size());
       for (GcpBillingAccount gcpBillingAccount : gcpBillingAccounts) {
         GcpServiceAccount gcpServiceAccount = cloudToHarnessMappingService.getGcpServiceAccount(accountId);
-        log.info("gcpServiceAccount.getEmail(): {}, gcpBillingAccount.getBqDatasetId(): {}, "
-                + "gcpBillingAccount.getBqProjectId(): {}, "
-                + "gcpBillingAccount.getUuid(): {}",
+        log.info("ServiceAccountEmail: {}, DatasetId: {}, "
+                + "ProjectId: {},"
+                + "ConnectorIdentifier: {}",
             gcpServiceAccount.getEmail(), gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(),
             gcpBillingAccount.getUuid());
         try {
           processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
-              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
+              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), "", accountId,
               gcpBillingAccount.getUuid(), endTime);
         } catch (Exception e) {
           log.error("Exception processing CG GCP Connector: {}", gcpBillingAccount.getUuid(), e);
@@ -142,31 +156,49 @@ public class GcpSyncTasklet implements Tasklet {
   }
 
   private void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig, String serviceAccountEmail,
-      String datasetId, String projectId, String accountId, String connectorId, Long endTime) {
+      String datasetId, String projectId, String tableName, String accountId, String connectorId, Long endTime) {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
     DatasetId datasetIdFullyQualified = DatasetId.of(projectId, datasetId);
     Dataset dataset = bigQuery.getDataset(datasetIdFullyQualified);
-    Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
-    tableList.getValues().forEach(table -> {
-      if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
-        TableId tableId = TableId.of(projectId, datasetId, table.getTableId().getTable());
-        Table tableGranularData = bigQuery.getTable(tableId);
-
-        Long lastModifiedTime = tableGranularData.getLastModifiedTime();
-        lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
-        log.info("Sync condition {} {}", lastModifiedTime, endTime);
-        if (lastModifiedTime > endTime) {
-          CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
-          gcpSyncInfo.get(cacheKey,
-              key
-              -> publishMessage(sourceCredentials, billingDataPipelineConfig.getGcpProjectId(),
-                  billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
-                  datasetId, projectId, accountId, connectorId, table.getTableId().getTable()));
+    if (isEmpty(tableName)) {
+      // Older way to get the tableName
+      Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
+      tableList.getValues().forEach(table -> {
+        if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
+          TableId tableId1 = TableId.of(projectId, datasetId, table.getTableId().getTable());
+          Table tableGranularData = bigQuery.getTable(tableId1);
+          Long lastModifiedTime = tableGranularData.getLastModifiedTime();
+          lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
+          log.info("Sync condition {} {}", lastModifiedTime, endTime);
+          if (lastModifiedTime > endTime) {
+            CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
+            gcpSyncInfo.get(cacheKey,
+                key
+                -> publishMessage(sourceCredentials, billingDataPipelineConfig.getGcpProjectId(),
+                    billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
+                    datasetId, projectId, accountId, connectorId, table.getTableId().getTable()));
+            return;
+          }
         }
+      });
+    } else {
+      log.info("tableName exists in config");
+      TableId tableId = TableId.of(projectId, datasetId, tableName);
+      Table tableGranularData = bigQuery.getTable(tableId);
+      Long lastModifiedTime = tableGranularData.getLastModifiedTime();
+      lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : tableGranularData.getCreationTime();
+      log.info("Sync condition {} {}", lastModifiedTime, endTime);
+      if (lastModifiedTime > endTime) {
+        CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
+        gcpSyncInfo.get(cacheKey,
+            key
+            -> publishMessage(sourceCredentials, billingDataPipelineConfig.getGcpProjectId(),
+                billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
+                datasetId, projectId, accountId, connectorId, tableGranularData.getTableId().getTable()));
       }
-    });
+    }
   }
 
   public List<ConnectorResponseDTO> getNextGenGCPConnectorResponses(String accountId) {
@@ -245,11 +277,9 @@ public class GcpSyncTasklet implements Tasklet {
                                                           .build();
       ObjectMapper objectMapper = new ObjectMapper();
       String message = objectMapper.writeValueAsString(customAttributes);
-      log.info("GCP Sync Pub Sub Event json: {}", message);
       log.info("Sending GCP Sync Pub Sub Event with data: {}", message);
       ByteString data = ByteString.copyFromUtf8(message);
       PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
-
       // Once published, returns a server-assigned message id (unique within the topic)
       ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
       String messageId = messageIdFuture.get();

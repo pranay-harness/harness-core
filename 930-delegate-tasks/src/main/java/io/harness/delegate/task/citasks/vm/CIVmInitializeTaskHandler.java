@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.vm;
 
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
@@ -51,17 +58,17 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
   }
 
   public VmTaskExecutionResponse executeTaskInternal(
-      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient, String taskId) {
     CIVmInitializeTaskParams ciVmInitializeTaskParams = (CIVmInitializeTaskParams) ciInitializeTaskParams;
     log.info(
         "Received request to initialize stage with stage runtime ID {}", ciVmInitializeTaskParams.getStageRuntimeId());
-    return callRunnerForSetup(ciVmInitializeTaskParams);
+    return callRunnerForSetup(ciVmInitializeTaskParams, taskId);
   }
 
-  private VmTaskExecutionResponse callRunnerForSetup(CIVmInitializeTaskParams ciVmInitializeTaskParams) {
+  private VmTaskExecutionResponse callRunnerForSetup(CIVmInitializeTaskParams ciVmInitializeTaskParams, String taskId) {
     String errMessage = "";
     try {
-      Response<SetupVmResponse> response = httpHelper.setupStageWithRetries(convert(ciVmInitializeTaskParams));
+      Response<SetupVmResponse> response = httpHelper.setupStageWithRetries(convert(ciVmInitializeTaskParams, taskId));
       if (response.isSuccessful()) {
         return VmTaskExecutionResponse.builder()
             .ipAddress(response.body().getIpAddress())
@@ -82,7 +89,7 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
         .build();
   }
 
-  private SetupVmRequest convert(CIVmInitializeTaskParams params) {
+  private SetupVmRequest convert(CIVmInitializeTaskParams params, String taskId) {
     Map<String, String> env = new HashMap<>();
     List<String> secrets = new ArrayList<>();
     if (isNotEmpty(params.getSecrets())) {
@@ -138,7 +145,13 @@ public class CIVmInitializeTaskHandler implements CIInitializeTaskHandler {
                                        .tiConfig(tiConfig)
                                        .volumes(getVolumes(params.getVolToMountPath()))
                                        .build();
-    return SetupVmRequest.builder().id(params.getStageRuntimeId()).poolID(params.getPoolID()).config(config).build();
+    return SetupVmRequest.builder()
+        .id(params.getStageRuntimeId())
+        .correlationID(taskId)
+        .poolID(params.getPoolID())
+        .config(config)
+        .logKey(params.getLogKey())
+        .build();
   }
 
   private List<SetupVmRequest.Volume> getVolumes(Map<String, String> volToMountPath) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -46,17 +53,28 @@ import io.harness.delegate.beans.connector.helm.HttpHelmAuthType;
 import io.harness.delegate.beans.connector.helm.HttpHelmAuthenticationDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmConnectorDTO;
 import io.harness.delegate.beans.connector.helm.HttpHelmUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubApiAccessDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubAuthenticationDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpAuthenticationType;
+import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
+import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig.HelmChartManifestDelegateConfigBuilder;
 import io.harness.delegate.task.k8s.K8sTaskHelperBase;
+import io.harness.encryption.SecretRefData;
 import io.harness.exception.GeneralException;
 import io.harness.exception.GitOperationException;
 import io.harness.exception.HelmClientException;
@@ -78,7 +96,10 @@ import io.harness.k8s.model.Release;
 import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.shell.SshSessionConfig;
 
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
@@ -88,6 +109,7 @@ import com.google.common.util.concurrent.FakeTimeLimiter;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.common.util.concurrent.UncheckedTimeoutException;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -114,6 +136,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Mock private KubernetesContainerService kubernetesContainerService;
   @Mock private TimeLimiter mockTimeLimiter; // don't remove; used internally as part of testDeployInstall
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
+  @Mock private SecretDecryptionService secretDecryptionService;
+  @Mock private ScmFetchFilesHelperNG scmFetchFilesHelperNG;
   @InjectMocks HelmDeployServiceImplNG helmDeployService;
 
   private HelmInstallCommandRequestNG helmInstallCommandRequestNG;
@@ -261,6 +285,60 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
+  public void testOptimizedFileFetch() throws IOException {
+    gitStoreDelegateConfig = getGitStoreDelegateConfigForSCM();
+    helmChartManifestDelegateConfig.storeDelegateConfig(gitStoreDelegateConfig);
+    helmInstallCommandRequestNG.setManifestDelegateConfig(helmChartManifestDelegateConfig.build());
+    doReturn(GithubUsernameTokenDTO.builder().build())
+        .when(secretDecryptionService)
+        .decrypt(any(), eq(gitStoreDelegateConfig.getApiAuthEncryptedDataDetails()));
+    doReturn(new SshSessionConfig()).when(gitDecryptionHelper).getSSHSessionConfig(any(), any());
+    doNothing()
+        .when(scmFetchFilesHelperNG)
+        .downloadFilesUsingScm(
+            anyString(), eq(gitStoreDelegateConfig), eq(helmInstallCommandRequestNG.getLogCallback()));
+    when(spyHelmDeployService.getManifestFileNamesInLogFormat(anyString())).thenReturn("abc");
+
+    assertThatCode(()
+                       -> spyHelmDeployService.prepareRepoAndCharts(
+                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()));
+  }
+
+  private GitStoreDelegateConfig getGitStoreDelegateConfigForSCM() {
+    GithubConnectorDTO githubConnectorDTO =
+        GithubConnectorDTO.builder()
+            .authentication(GithubAuthenticationDTO.builder()
+                                .authType(GitAuthType.HTTP)
+                                .credentials(GithubHttpCredentialsDTO.builder()
+                                                 .type(GithubHttpAuthenticationType.USERNAME_AND_PASSWORD)
+                                                 .httpCredentialsSpec(GithubUsernamePasswordDTO.builder()
+                                                                          .username("username")
+                                                                          .passwordRef(SecretRefData.builder().build())
+                                                                          .build())
+                                                 .build())
+                                .build())
+            .apiAccess(GithubApiAccessDTO.builder().spec(GithubTokenSpecDTO.builder().build()).build())
+            .build();
+
+    List<EncryptedDataDetail> encryptionDataDetails = new ArrayList<>();
+    List<EncryptedDataDetail> apiAuthEncryptedDataDetails = new ArrayList<>();
+    SSHKeySpecDTO sshKeySpecDTO = SSHKeySpecDTO.builder().build();
+    return GitStoreDelegateConfig.builder()
+        .branch("master")
+        .fetchType(FetchType.BRANCH)
+        .connectorName("conenctor")
+        .gitConfigDTO(githubConnectorDTO)
+        .path("manifest")
+        .encryptedDataDetails(encryptionDataDetails)
+        .apiAuthEncryptedDataDetails(apiAuthEncryptedDataDetails)
+        .sshKeySpecDTO(sshKeySpecDTO)
+        .optimizedFilesFetch(true)
+        .build();
+  }
+
+  @Test
+  @Owner(developers = ACHYUTH)
+  @Category(UnitTests.class)
   public void testGetContainerInfos() throws Exception {
     setFakeTimeLimiter();
     // getKubectlContainerInfos -- steadyStateCheck pass
@@ -304,6 +382,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   }
 
   private void initForDeploy() throws Exception {
+    helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.install(any())).thenReturn(helmCliResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
@@ -870,7 +949,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   }
 
   private HelmCliResponse getHelmCliResponse() {
-    return HelmCliResponse.builder().build();
+    return HelmCliResponse.builder().output("Some sensible output").build();
   }
 
   private HelmInstallCommandRequestNG createHelmInstallCommandRequestNG() {

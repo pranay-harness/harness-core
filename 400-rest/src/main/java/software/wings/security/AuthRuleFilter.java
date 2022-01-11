@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -113,7 +120,7 @@ public class AuthRuleFilter implements ContainerRequestFilter {
       "account/export", "account/import", "account/delete/", "account/disable", "account/enable", "users/reset-cache",
       "executions/workflow-variables", "executions/nodeSubGraphs", "executions/deployment-metadata",
       "setup-as-code/yaml/internal/template-yaml-sync", "infrastructure-definitions/list",
-      "usageRestrictions/references"};
+      "usageRestrictions/references", "setup/delegates/ng/v2"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
   private static final String X_FORWARDED_FOR = "X-Forwarded-For";

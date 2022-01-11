@@ -1,13 +1,24 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.template.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.TemplateServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
@@ -18,9 +29,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ngexception.NGTemplateException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.persistance.GitSyncSdkService;
+import io.harness.ng.core.dto.OrganizationResponse;
+import io.harness.ng.core.dto.ProjectResponse;
+import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateEntityType;
 import io.harness.ng.core.template.TemplateListType;
+import io.harness.organization.remote.OrganizationClient;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.project.remote.ProjectClient;
 import io.harness.repositories.NGTemplateRepository;
 import io.harness.rule.Owner;
 import io.harness.springdata.TransactionHelper;
@@ -53,6 +69,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+import retrofit2.Call;
+import retrofit2.Response;
 
 @OwnedBy(CDC)
 public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
@@ -61,6 +79,8 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
   @Inject private GitSyncSdkService gitSyncSdkService;
   @Inject private NGTemplateRepository templateRepository;
   @Inject private TransactionHelper transactionHelper;
+  @Mock private ProjectClient projectClient;
+  @Mock private OrganizationClient organizationClient;
 
   @InjectMocks NGTemplateServiceImpl templateService;
 
@@ -85,6 +105,8 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     on(templateService).set("transactionHelper", transactionHelper);
     on(templateService).set("templateServiceHelper", templateServiceHelper);
     on(templateService).set("enforcementClientService", enforcementClientService);
+    on(templateService).set("projectClient", projectClient);
+    on(templateService).set("organizationClient", organizationClient);
 
     doNothing().when(enforcementClientService).checkAvailability(any(), any());
     entity = TemplateEntity.builder()
@@ -100,6 +122,16 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
                  .fullyQualifiedIdentifier("account_id/orgId/projId/template1/version1/")
                  .templateScope(Scope.PROJECT)
                  .build();
+
+    Call<ResponseDTO<Optional<ProjectResponse>>> projectCall = mock(Call.class);
+    when(projectClient.getProject(anyString(), anyString(), anyString())).thenReturn(projectCall);
+    when(projectCall.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(ProjectResponse.builder().build()))));
+
+    Call<ResponseDTO<Optional<OrganizationResponse>>> organizationCall = mock(Call.class);
+    when(organizationClient.getOrganization(anyString(), anyString())).thenReturn(organizationCall);
+    when(organizationCall.execute())
+        .thenReturn(Response.success(ResponseDTO.newResponse(Optional.of(OrganizationResponse.builder().build()))));
   }
 
   @Test
@@ -565,5 +597,46 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     // Testing comments if git sync is not enabled.
     String comments = templateService.getActualComments(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, "COMMENTS");
     assertThat(comments).isEqualTo("COMMENTS");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionWithEmptyOrganizationIdOnProjectLevelTemplate() {
+    TemplateEntity templateEntity = TemplateEntity.builder()
+                                        .accountId(ACCOUNT_ID)
+                                        .projectIdentifier(PROJ_IDENTIFIER)
+                                        .identifier(TEMPLATE_IDENTIFIER)
+                                        .name(TEMPLATE_IDENTIFIER)
+                                        .versionLabel(TEMPLATE_VERSION_LABEL)
+                                        .yaml(yaml)
+                                        .templateEntityType(TemplateEntityType.STEP_TEMPLATE)
+                                        .fullyQualifiedIdentifier("account_id/projId/template1/version1/")
+                                        .templateScope(Scope.PROJECT)
+                                        .build();
+
+    assertThatThrownBy(() -> templateService.create(templateEntity, false, ""))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Project projId specified without the org Identifier");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void shouldThrowExceptionIfTemplateAlreadyExists() {
+    TemplateEntity createdEntity = templateService.create(entity, false, "");
+    assertThat(createdEntity).isNotNull();
+    assertThat(createdEntity.getAccountId()).isEqualTo(ACCOUNT_ID);
+    assertThat(createdEntity.getOrgIdentifier()).isEqualTo(ORG_IDENTIFIER);
+    assertThat(createdEntity.getProjectIdentifier()).isEqualTo(PROJ_IDENTIFIER);
+    assertThat(createdEntity.getIdentifier()).isEqualTo(TEMPLATE_IDENTIFIER);
+    assertThat(createdEntity.getVersion()).isEqualTo(0L);
+
+    assertThatThrownBy(() -> templateService.create(entity, false, ""))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage(String.format(
+            "The template with identifier %s and version label %s already exists in the account %s, org %s, project %s",
+            entity.getIdentifier(), entity.getVersionLabel(), entity.getAccountId(), entity.getOrgIdentifier(),
+            entity.getProjectIdentifier()));
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.yaml;
 
 import static software.wings.beans.EntityType.VERIFICATION_CONFIGURATION;
@@ -282,7 +289,7 @@ public enum YamlType {
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           KUSTOMIZE_PATCHES_FOLDER),
       ManifestFile.class),
-  MANIFEST_FILE_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE(YamlConstants.VALUES,
+  MANIFEST_FILE_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
       generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           KUSTOMIZE_PATCHES_FOLDER, SERVICES_FOLDER, ANY, KUSTOMIZE_PATCHES_FILE),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,

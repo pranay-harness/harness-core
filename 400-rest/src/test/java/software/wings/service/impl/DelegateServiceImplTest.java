@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -11,6 +18,7 @@ import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.GEORGE;
 import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.MARKO;
+import static io.harness.rule.OwnerRule.MARKOM;
 import static io.harness.rule.OwnerRule.NICOLAS;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.UTSAV;
@@ -18,13 +26,16 @@ import static io.harness.rule.OwnerRule.VLAD;
 import static io.harness.rule.OwnerRule.VUK;
 
 import static software.wings.utils.Utils.uuidToIdentifier;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
@@ -44,6 +55,7 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.Delegate.DelegateKeys;
@@ -74,6 +86,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logstreaming.LogStreamingServiceConfig;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.ng.core.ProjectScope;
 import io.harness.ng.core.Resource;
 import io.harness.observer.Subject;
@@ -98,6 +111,7 @@ import io.harness.version.VersionInfoManager;
 
 import software.wings.WingsBaseTest;
 import software.wings.app.MainConfiguration;
+import software.wings.app.PortalConfig;
 import software.wings.app.UrlConfiguration;
 import software.wings.beans.Account;
 import software.wings.beans.CEDelegateStatus;
@@ -186,6 +200,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   @Mock private SubdomainUrlHelper subdomainUrlHelper;
   @Mock private InfraDownloadService infraDownloadService;
   @Mock private DelegateNgTokenService delegateNgTokenService;
+  @Mock private DelegateMetricsService delegateMetricsService;
   @Inject @Spy private MainConfiguration mainConfiguration;
   @InjectMocks @Inject private DelegateServiceImpl delegateService;
   @InjectMocks @Inject private DelegateTaskServiceClassicImpl delegateTaskServiceClassic;
@@ -223,6 +238,56 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenNoDelegateImageProvidedThanDefault() {
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getDelegateDockerImage()).thenReturn(null);
+
+    final String actual = delegateService.getDelegateDockerImage();
+    assertThat(actual).isEqualTo("harness/delegate:latest");
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenNoUpgraderImageProvidedThanDefault() {
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getUpgraderDockerImage()).thenReturn(null);
+
+    final String actual = delegateService.getUpgraderDockerImage();
+    assertThat(actual).isEqualTo("harness/upgrader:latest");
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenDelegateImageProvidedThanReturnIt() {
+    final String delegateImage = "harness/delegate:myimage";
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getDelegateDockerImage()).thenReturn(delegateImage);
+
+    final String actual = delegateService.getDelegateDockerImage();
+    assertThat(actual).isEqualTo(delegateImage);
+  }
+
+  @Test
+  @Owner(developers = MARKOM)
+  @Category(UnitTests.class)
+  public void whenNoUpgraderImageProvidedThanReturnIt() {
+    final String upgraderImage = "harness/upgrader:myimage";
+    final PortalConfig portal = mock(PortalConfig.class);
+    when(mainConfiguration.getPortal()).thenReturn(portal);
+    when(portal.getUpgraderDockerImage()).thenReturn(upgraderImage);
+
+    final String actual = delegateService.getUpgraderDockerImage();
+    assertThat(actual).isEqualTo(upgraderImage);
+  }
+
+  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testRetrieveLogStreamingAccountToken() {
@@ -241,6 +306,11 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldExecuteTask() {
     Delegate delegate = createDelegateBuilder().build();
     persistence.save(delegate);
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
     DelegateTask delegateTask = getDelegateTask();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
     when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
@@ -266,6 +336,10 @@ public class DelegateServiceImplTest extends WingsBaseTest {
       new Thread(delegateSyncService).start();
     });
     thread.start();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+
     DelegateResponseData responseData = delegateTaskServiceClassic.executeTask(delegateTask);
     assertThat(responseData).isInstanceOf(HttpStateExecutionResponse.class);
     HttpStateExecutionResponse httpResponse = (HttpStateExecutionResponse) responseData;
@@ -278,7 +352,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Sync() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -289,7 +364,8 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithPreAssignedDelegateId_Async() {
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(true);
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(delegateTask.getBroadcastCount()).isZero();
     verify(broadcastHelper, times(0)).rebroadcastDelegateTask(any());
   }
@@ -300,12 +376,20 @@ public class DelegateServiceImplTest extends WingsBaseTest {
   public void shouldSaveDelegateTaskWithoutPreAssignedDelegateIdSetToMustExecuteOn() {
     String delegateId = generateUuid();
     String taskId = generateUuid();
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
     DelegateTask delegateTask = getDelegateTask();
     delegateTask.getData().setAsync(false);
     delegateTask.setUuid(taskId);
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
 
-    delegateTaskServiceClassic.saveDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
+    delegateTaskServiceClassic.processDelegateTask(delegateTask, DelegateTask.Status.QUEUED);
     assertThat(persistence.get(DelegateTask.class, taskId).getPreAssignedDelegateId()).isNotEqualTo(delegateId);
   }
 
@@ -347,6 +431,12 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     Delegate delegate = createDelegateBuilder().build();
     doReturn(delegate).when(delegateCache).get(ACCOUNT_ID, delegate.getUuid(), false);
 
+    when(assignDelegateService.getEligibleDelegatesToExecuteTask(
+             any(DelegateTask.class), any(BatchDelegateSelectionLog.class)))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+    when(assignDelegateService.getConnectedDelegateList(any(), anyString(), anyObject()))
+        .thenReturn(new ArrayList<>(singletonList(DELEGATE_ID)));
+
     DelegateTask delegateTask = getDelegateTask();
     doReturn(delegateTask)
         .when(spydelegateTaskServiceClassic)
@@ -359,14 +449,12 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(assignDelegateService.canAssign(any(), anyString(), any())).thenReturn(true);
     when(assignDelegateService.isWhitelisted(any(), anyString())).thenReturn(true);
     when(assignDelegateService.shouldValidate(any(), anyString())).thenReturn(false);
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().build();
-    when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
 
     spydelegateTaskServiceClassic.acquireDelegateTask(ACCOUNT_ID, delegate.getUuid(), "XYZ", null);
-
     verify(spydelegateTaskServiceClassic, times(1))
         .assignTask(anyString(), anyString(), any(DelegateTask.class), anyString());
-    verify(delegateSelectionLogsService).save(batch);
+    verify(spydelegateTaskServiceClassic, times(1))
+        .assignTask(anyString(), anyString(), any(DelegateTask.class), anyString());
   }
 
   @Test

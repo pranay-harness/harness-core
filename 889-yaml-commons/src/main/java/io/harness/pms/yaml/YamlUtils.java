@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -5,6 +12,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 
@@ -85,6 +93,19 @@ public class YamlUtils {
 
   public YamlField getPipelineField(YamlNode rootYamlNode) {
     return (rootYamlNode == null || !rootYamlNode.isObject()) ? null : rootYamlNode.getField("pipeline");
+  }
+
+  public YamlField getTopRootFieldInYaml(YamlNode rootYamlNode) {
+    if (rootYamlNode == null || !rootYamlNode.isObject()) {
+      return null;
+    }
+    for (YamlField field : rootYamlNode.fields()) {
+      if (field.getName().equals(YamlNode.UUID_FIELD_NAME)) {
+        continue;
+      }
+      return field;
+    }
+    throw new InvalidRequestException("No Top root node available in the yaml.");
   }
 
   public YamlField injectUuidWithLeafUuid(String content) throws IOException {
@@ -200,6 +221,15 @@ public class YamlUtils {
   }
 
   /**
+   * Get Qualified Name till the root level
+   * @param yamlNode
+   * @return
+   */
+  public String getFullyQualifiedNameTillRoot(YamlNode yamlNode) {
+    return String.join(".", getQualifiedNameList(yamlNode, "root"));
+  }
+
+  /**
    *
    * Gives the qualified Name till the given field name.
    *
@@ -236,7 +266,10 @@ public class YamlUtils {
   private List<String> getQualifiedNameList(YamlNode yamlNode, String fieldName) {
     if (yamlNode.getParentNode() == null) {
       List<String> qualifiedNameList = new ArrayList<>();
-      qualifiedNameList.add(getQNForNode(yamlNode, null));
+      String qnForNode = getQNForNode(yamlNode, null);
+      if (EmptyPredicate.isNotEmpty(qnForNode)) {
+        qualifiedNameList.add(qnForNode);
+      }
       return qualifiedNameList;
     }
     String qualifiedName = getQNForNode(yamlNode, yamlNode.getParentNode());

@@ -147,8 +147,8 @@ auditClientConfig:
 
 ceNextGenClientConfig:
   baseUrl: http://localhost:7340/api/
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
+  connectTimeOutSeconds: 30
+  readTimeOutSeconds: 200
 
 lightwingClientConfig:
   baseUrl: http://localhost:9595/
@@ -232,7 +232,7 @@ pmsGrpcClientConfig:
   target: localhost:12011
   authority: localhost
 
-shouldConfigureWithPMS: ${SHOULD_CONFIGURE_WITH_PMS:-false}
+shouldConfigureWithPMS: true
 
 ceAwsSetupConfig:
   accessKey: ce_aws_accessKey_placeholder

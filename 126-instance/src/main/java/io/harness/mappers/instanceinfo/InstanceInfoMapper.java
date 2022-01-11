@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.mappers.instanceinfo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -22,8 +29,7 @@ public class InstanceInfoMapper {
       return ReferenceInstanceInfoMapper.toDTO((ReferenceInstanceInfo) instanceInfo);
     } else if (instanceInfo instanceof K8sInstanceInfo) {
       return K8sInstanceInfoMapper.toDTO((K8sInstanceInfo) instanceInfo);
-    }
-    else if (instanceInfo instanceof NativeHelmInstanceInfo) {
+    } else if (instanceInfo instanceof NativeHelmInstanceInfo) {
       return NativeHelmInstanceInfoMapper.toDTO((NativeHelmInstanceInfo) instanceInfo);
     }
     throw new InvalidRequestException("No InstanceInfoMapper toDTO found for instanceInfo : {}" + instanceInfo);
@@ -34,8 +40,7 @@ public class InstanceInfoMapper {
       return ReferenceInstanceInfoMapper.toEntity((ReferenceInstanceInfoDTO) instanceInfoDTO);
     } else if (instanceInfoDTO instanceof K8sInstanceInfoDTO) {
       return K8sInstanceInfoMapper.toEntity((K8sInstanceInfoDTO) instanceInfoDTO);
-    }
-    else if (instanceInfoDTO instanceof NativeHelmInstanceInfoDTO) {
+    } else if (instanceInfoDTO instanceof NativeHelmInstanceInfoDTO) {
       return NativeHelmInstanceInfoMapper.toEntity((NativeHelmInstanceInfoDTO) instanceInfoDTO);
     }
     throw new InvalidRequestException(

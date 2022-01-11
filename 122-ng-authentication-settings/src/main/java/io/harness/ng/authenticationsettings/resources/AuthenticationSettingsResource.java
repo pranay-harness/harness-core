@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.authenticationsettings.resources;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -245,7 +252,7 @@ public class AuthenticationSettingsResource {
       })
   public RestResponse<SSOConfig>
   uploadSamlMetaData(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam("accountId") String accountId,
-      @Parameter(description = "Saml Metadata input file") @FormDataParam("Inputfile") InputStream uploadedInputStream,
+      @Parameter(description = "Saml Metadata input file") @FormDataParam("file") InputStream uploadedInputStream,
       @Parameter(description = "Input file metadata") @FormDataParam(
           "fileMetadata") FormDataContentDisposition fileDetail,
       @Parameter(description = "Display Name of the SAML") @FormDataParam("displayName") String displayName,
@@ -282,7 +289,7 @@ public class AuthenticationSettingsResource {
       })
   public RestResponse<SSOConfig>
   updateSamlMetaData(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotNull String accountId,
-      @Parameter(description = "SAML Metadata input file") @FormDataParam("Inputfile") InputStream uploadedInputStream,
+      @Parameter(description = "SAML Metadata input file") @FormDataParam("file") InputStream uploadedInputStream,
       @Parameter(description = "Input file metadata") @FormDataParam(
           "fileMetadata") FormDataContentDisposition fileDetail,
       @Parameter(description = "Display Name of the SAML") @FormDataParam("displayName") String displayName,

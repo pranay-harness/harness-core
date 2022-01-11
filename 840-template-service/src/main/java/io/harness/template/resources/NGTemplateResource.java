@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.template.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -32,6 +39,11 @@ import io.harness.ng.core.template.TemplateListType;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateReferenceSummary;
 import io.harness.ng.core.template.TemplateSummaryResponseDTO;
+import io.harness.pms.contracts.service.VariableMergeResponseProto;
+import io.harness.pms.contracts.service.VariablesServiceGrpc.VariablesServiceBlockingStub;
+import io.harness.pms.contracts.service.VariablesServiceRequest;
+import io.harness.pms.mappers.VariablesResponseDtoMapper;
+import io.harness.pms.variables.VariableMergeServiceResponse;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.beans.PermissionTypes;
@@ -42,6 +54,7 @@ import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.helpers.TemplateMergeHelper;
+import io.harness.template.helpers.TemplateYamlConversionHelper;
 import io.harness.template.mappers.NGTemplateDtoMapper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
@@ -50,6 +63,7 @@ import io.harness.utils.PageUtils;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -57,6 +71,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashSet;
 import java.util.List;
@@ -79,6 +94,7 @@ import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -127,6 +143,8 @@ public class NGTemplateResource {
   private final NGTemplateServiceHelper templateServiceHelper;
   private final AccessControlClient accessControlClient;
   private final TemplateMergeHelper templateMergeHelper;
+  private final VariablesServiceBlockingStub variablesServiceBlockingStub;
+  private final TemplateYamlConversionHelper templateYamlConversionHelper;
 
   public static final String TEMPLATE_PARAM_MESSAGE = "Template Identifier for the entity";
 
@@ -401,8 +419,8 @@ public class NGTemplateResource {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
         Resource.of(TEMPLATE, null), PermissionTypes.TEMPLATE_VIEW_PERMISSION);
     log.info(String.format("Get List of templates in project: %s, org: %s, account: %s", projectId, orgId, accountId));
-    Criteria criteria = templateServiceHelper.formCriteria(
-        accountId, orgId, projectId, filterIdentifier, filterProperties, false, searchTerm, false);
+    Criteria criteria = templateServiceHelper.formCriteria(accountId, orgId, projectId, filterIdentifier,
+        filterProperties, false, searchTerm, includeAllTemplatesAccessibleAtScope);
 
     // Adding criteria needed for ui homepage
     criteria = templateServiceHelper.formCriteria(criteria, templateListType);
@@ -526,5 +544,59 @@ public class NGTemplateResource {
   public ResponseDTO<NGTemplateConfig> dummyApiForSwaggerSchemaCheck() {
     log.info("Get Template Config schema");
     return ResponseDTO.newResponse(NGTemplateConfig.builder().build());
+  }
+
+  @POST
+  @Path("/variables")
+  @Operation(operationId = "createVariables",
+      summary = "Get all the Variables which can be used as expression in the Template.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns all Variables used that are valid to be used as expression in template.")
+      })
+  @ApiOperation(value = "Create variables for Template", nickname = "createVariables")
+  public ResponseDTO<VariableMergeServiceResponse>
+  createVariables(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE,
+                      required = true) @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE, required = true) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @RequestBody(required = true, description = "Template YAML") @NotNull @ApiParam(hidden = true) String yaml) {
+    log.info("Creating variables for template.");
+    TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountId, orgId, projectId, yaml);
+    String pmsUnderstandableYaml =
+        templateYamlConversionHelper.convertTemplateYamlToPMSUnderstandableYaml(templateEntity);
+    VariablesServiceRequest request = VariablesServiceRequest.newBuilder().setYaml(pmsUnderstandableYaml).build();
+    VariableMergeResponseProto variables = variablesServiceBlockingStub.getVariables(request);
+    VariableMergeServiceResponse variableMergeServiceResponse = VariablesResponseDtoMapper.toDto(variables);
+    return ResponseDTO.newResponse(variableMergeServiceResponse);
+  }
+
+  @GET
+  @Path("validateUniqueIdentifier")
+  @ApiOperation(value = "Validate Identifier is unique", nickname = "validateTheIdentifierIsUnique")
+  @Operation(operationId = "validateTheIdentifierIsUnique",
+      summary =
+          "Validate template identifier is unique by Account Identifier, Organization Identifier, Project Identifier, Template Identifier and Version Label",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "It returns true if the Identifier is unique and false if the Identifier is not unique")
+      })
+  public ResponseDTO<Boolean>
+  validateTheIdentifierIsUnique(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE, required = true)
+                                @NotBlank @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = TEMPLATE_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.IDENTIFIER_KEY) @ResourceIdentifier String templateIdentifier,
+      @Parameter(description = "Version Label") @QueryParam(
+          NGCommonEntityConstants.VERSION_LABEL_KEY) String versionLabel) {
+    return ResponseDTO.newResponse(templateService.validateIdentifierIsUnique(
+        accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel));
   }
 }

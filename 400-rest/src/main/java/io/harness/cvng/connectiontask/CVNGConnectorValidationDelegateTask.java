@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.connectiontask;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -77,33 +84,25 @@ public class CVNGConnectorValidationDelegateTask extends AbstractDelegateRunnabl
       }
     }
     boolean validCredentials = false;
-    try {
-      ConnectorValidationInfo connectorValidationInfo =
-          ConnectorValidationInfo.getConnectorValidationInfo(taskParameters.getConnectorConfigDTO());
-      String dsl = connectorValidationInfo.getConnectionValidationDSL();
-      Instant now = clock.instant();
-      final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
-                                                      .baseUrl(connectorValidationInfo.getBaseUrl())
-                                                      .commonHeaders(connectorValidationInfo.collectionHeaders())
-                                                      .commonOptions(connectorValidationInfo.collectionParams())
-                                                      .otherEnvVariables(connectorValidationInfo.getDslEnvVariables())
-                                                      .endTime(connectorValidationInfo.getEndTime(now))
-                                                      .startTime(connectorValidationInfo.getStartTime(now))
-                                                      .build();
-      validCredentials = ((String) dataCollectionDSLService.execute(dsl, runtimeParameters)).equalsIgnoreCase("true");
-      log.info("connectorValidationInfo {}", connectorValidationInfo);
 
-      return CVConnectorTaskResponse.builder()
-          .valid(validCredentials)
-          .delegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build())
-          .build();
-    } catch (Exception ex) {
-      String errorMessage = ex.getMessage();
-      return CVConnectorTaskResponse.builder()
-          .valid(validCredentials)
-          .delegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build())
-          .errorMessage(ngErrorHelper.getErrorSummary(errorMessage))
-          .build();
-    }
+    ConnectorValidationInfo connectorValidationInfo =
+        ConnectorValidationInfo.getConnectorValidationInfo(taskParameters.getConnectorConfigDTO());
+    String dsl = connectorValidationInfo.getConnectionValidationDSL();
+    Instant now = clock.instant();
+    final RuntimeParameters runtimeParameters = RuntimeParameters.builder()
+                                                    .baseUrl(connectorValidationInfo.getBaseUrl())
+                                                    .commonHeaders(connectorValidationInfo.collectionHeaders())
+                                                    .commonOptions(connectorValidationInfo.collectionParams())
+                                                    .otherEnvVariables(connectorValidationInfo.getDslEnvVariables())
+                                                    .endTime(connectorValidationInfo.getEndTime(now))
+                                                    .startTime(connectorValidationInfo.getStartTime(now))
+                                                    .build();
+    validCredentials = ((String) dataCollectionDSLService.execute(dsl, runtimeParameters)).equalsIgnoreCase("true");
+    log.info("connectorValidationInfo {}", connectorValidationInfo);
+
+    return CVConnectorTaskResponse.builder()
+        .valid(validCredentials)
+        .delegateMetaInfo(DelegateMetaInfo.builder().id(getDelegateId()).build())
+        .build();
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
@@ -76,6 +83,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.product.ci.engine.proto.ExecuteStepRequest;
 import io.harness.product.ci.engine.proto.UnitStep;
+import io.harness.stateutils.buildstate.ConnectorUtils;
 import io.harness.steps.StepUtils;
 import io.harness.steps.executable.AsyncExecutableWithRbac;
 import io.harness.tasks.ResponseData;
@@ -109,6 +117,7 @@ public abstract class AbstractStepExecutable implements AsyncExecutableWithRbac<
   @Inject private CIDelegateTaskExecutor ciDelegateTaskExecutor;
   @Inject private CIExecutionServiceConfig ciExecutionServiceConfig;
   @Inject private VmStepSerializer vmStepSerializer;
+  @Inject private ConnectorUtils connectorUtils;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {

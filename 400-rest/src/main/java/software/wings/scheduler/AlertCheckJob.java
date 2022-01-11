@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.scheduler;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -14,7 +21,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.Delegate;
-import io.harness.delegate.beans.alert.DelegatesScalingGroupDownAlert;
 import io.harness.scheduler.PersistentScheduler;
 
 import software.wings.app.MainConfiguration;
@@ -162,17 +168,15 @@ public class AlertCheckJob implements Job {
       }
     }
 
-    processDelegateWhichBelongsToGroup(accountId, delegates, primaryConnections);
+    processDelegateWhichBelongsToGroup(delegates, primaryConnections);
   }
 
   @VisibleForTesting
-  protected void processDelegateWhichBelongsToGroup(
-      String accountId, List<Delegate> delegates, Set<String> primaryConnections) {
+  protected void processDelegateWhichBelongsToGroup(List<Delegate> delegates, Set<String> primaryConnections) {
     Set<String> connectedScalingGroups = new HashSet<>();
     for (Delegate delegate : delegates) {
       if (primaryConnections.contains(delegate.getUuid()) && isNotEmpty(delegate.getDelegateGroupName())) {
         String delegateGroupName = delegate.getDelegateGroupName();
-        closeDelegateScalingGroupDownAlert(accountId, delegateGroupName);
         connectedScalingGroups.add(delegateGroupName);
       }
     }
@@ -183,10 +187,5 @@ public class AlertCheckJob implements Job {
                                        .collect(Collectors.toSet());
 
     allScalingGroups.removeAll(connectedScalingGroups);
-  }
-
-  private void closeDelegateScalingGroupDownAlert(String accountId, String groupName) {
-    AlertData alertData = DelegatesScalingGroupDownAlert.builder().accountId(accountId).groupName(groupName).build();
-    alertService.closeAlert(accountId, GLOBAL_APP_ID, AlertType.DelegatesScalingGroupDownAlert, alertData);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
@@ -46,6 +53,8 @@ import io.harness.account.ProvisionStep.ProvisionStepKeys;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.AuthenticationInfo;
+import io.harness.authenticationservice.beans.AuthenticationInfo.AuthenticationInfoBuilder;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -146,6 +155,8 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
+import software.wings.security.saml.SSORequest;
+import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -267,6 +278,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
+  @Inject private SamlClientService samlClientService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private UserService userService;
   @Inject private LoginSettingsService loginSettingsService;
@@ -1955,5 +1967,36 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.updateField(Account.class, accountId, DEFAULT_EXPERIENCE, defaultExperience);
     dbCache.invalidate(Account.class, account.getUuid());
     return null;
+  }
+
+  @Override
+  public AuthenticationInfo getAuthenticationInfo(String accountId) {
+    Account account = getFromCacheWithFallback(accountId);
+    if (account == null) {
+      throw new InvalidRequestException("Account not found");
+    }
+
+    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    AuthenticationInfoBuilder builder =
+        AuthenticationInfo.builder().authenticationMechanism(authenticationMechanism).accountId(accountId);
+    builder.oauthEnabled(account.isOauthEnabled());
+    switch (authenticationMechanism) {
+      case SAML:
+        SSORequest ssoRequest = samlClientService.generateSamlRequestFromAccount(account, false);
+        builder.samlRedirectUrl(ssoRequest.getIdpRedirectUrl());
+        break;
+      case USER_PASSWORD:
+      case OAUTH:
+        builder.oauthEnabled(account.isOauthEnabled());
+        if (account.isOauthEnabled()) {
+          OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+          builder.oauthProviders(new ArrayList<>(oauthSettings.getAllowedProviders()));
+        }
+        break;
+      case LDAP: // No need to build anything extra for the response.
+      default:
+        // Nothing to do by default
+    }
+    return builder.build();
   }
 }

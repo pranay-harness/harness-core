@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -15,7 +22,9 @@ import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.validator.constraints.NotEmpty;
 
 @OwnedBy(CDP)
 @Data
@@ -24,6 +33,8 @@ import lombok.Data;
 public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
   @YamlSchemaTypes({runtime})
   @ApiModelProperty(dataType = SwaggerConstants.STRING_LIST_CLASSPATH)
+  @NotNull
+  @NotEmpty
   ParameterField<List<String>> resourceNames;
 
   @Override
@@ -33,7 +44,8 @@ public class DeleteResourceNameSpec implements DeleteResourcesBaseSpec {
 
   @Override
   public String getResourceNamesValue() {
-    List<String> resourceNamesList = resourceNames != null ? resourceNames.getValue() : Collections.emptyList();
+    List<String> resourceNamesList =
+        resourceNames != null && resourceNames.getValue() != null ? resourceNames.getValue() : Collections.emptyList();
     return resourceNamesList.stream().collect(Collectors.joining(","));
   }
 

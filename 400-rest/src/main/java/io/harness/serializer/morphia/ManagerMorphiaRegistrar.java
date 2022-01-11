@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -103,7 +110,6 @@ import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.arm.ARMOutputVariables;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
@@ -273,7 +279,6 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
-import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.DeploymentFreezeEventAlert;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
@@ -285,12 +290,7 @@ import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.beans.alert.ManifestCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.beans.alert.NotificationRulesStatus;
-import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
@@ -1156,7 +1156,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terragrunt.TerragruntProvisionInheritPlanElement", TerragruntProvisionInheritPlanElement.class);
     w.put("api.terragrunt.TerragruntApplyMarkerParam", TerragruntApplyMarkerParam.class);
     w.put("api.TerraformApplyMarkerParam", TerraformApplyMarkerParam.class);
-    w.put("api.TerraformPlanParam", TerraformPlanParam.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
     w.put("api.EcsSetupElement", EcsSetupElement.class);
@@ -1166,7 +1165,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
     w.put("beans.alert.cv.ContinuousVerificationAlertData", ContinuousVerificationAlertData.class);
     w.put("beans.alert.cv.ContinuousVerificationDataCollectionAlert", ContinuousVerificationDataCollectionAlert.class);
-    w.put("beans.alert.DelegateProfileErrorAlert", DelegateProfileErrorAlert.class);
     w.put("beans.alert.DelegatesDownAlert", DelegatesDownAlert.class);
     w.put("beans.alert.DeploymentFreezeEventAlert", DeploymentFreezeEventAlert.class);
     w.put("beans.alert.DeploymentRateApproachingLimitAlert", DeploymentRateApproachingLimitAlert.class);
@@ -1178,11 +1176,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.KmsSetupAlert", KmsSetupAlert.class);
     w.put("beans.alert.ManifestCollectionFailedAlert", ManifestCollectionFailedAlert.class);
     w.put("beans.alert.ManualInterventionNeededAlert", ManualInterventionNeededAlert.class);
-    w.put("beans.alert.NoActiveDelegatesAlert", NoActiveDelegatesAlert.class);
-    w.put("beans.alert.NoInstalledDelegatesAlert", NoInstalledDelegatesAlert.class);
-    w.put("beans.alert.NoEligibleDelegatesAlert", NoEligibleDelegatesAlert.class);
-    w.put("beans.alert.NoEligibleDelegatesAlertReconciliation", NoEligibleDelegatesAlertReconciliation.class);
-    w.put("beans.alert.PerpetualTaskAlert", PerpetualTaskAlert.class);
     w.put("beans.alert.ResourceUsageApproachingLimitAlert", ResourceUsageApproachingLimitAlert.class);
     w.put("beans.alert.SettingAttributeValidationFailedAlert", SettingAttributeValidationFailedAlert.class);
     w.put("beans.alert.SSOSyncFailedAlert", SSOSyncFailedAlert.class);

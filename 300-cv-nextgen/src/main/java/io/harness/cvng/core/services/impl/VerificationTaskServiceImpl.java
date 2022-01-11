@@ -1,3 +1,9 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
 
 package io.harness.cvng.core.services.impl;
 
@@ -28,6 +34,7 @@ import io.harness.persistence.HQuery.QueryChecks;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -41,10 +48,10 @@ import java.util.stream.Collectors;
 import org.apache.groovy.util.Maps;
 import org.mongodb.morphia.query.Query;
 
+@Singleton
 public class VerificationTaskServiceImpl implements VerificationTaskService {
   @Inject private HPersistence hPersistence;
   @Inject private Clock clock;
-
   // TODO: optimize this and add caching support. Since this collection is immutable
   @Override
   public String createLiveMonitoringVerificationTask(String accountId, String cvConfigId, DataSourceType provider) {

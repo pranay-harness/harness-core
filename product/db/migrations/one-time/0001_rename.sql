@@ -1,3 +1,8 @@
+-- Copyright 2021 Harness Inc. All rights reserved.
+-- Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+-- that can be found in the licenses directory at the root of this repository, also available at
+-- https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 -- enable uuid extension in postgresql
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
@@ -90,5 +95,3 @@ comment on column evaluation.test_type is 'type of the test. it can be unit/inte
 comment on column evaluation.stdout is 'stdout of the the test run and it could be relevant for failed tests only';
 comment on column evaluation.stderr is 'stderr of the the test run and it could be relevant for failed tests only';
 comment on column evaluation.criterion is 'why was this test selected/not_selected to run?. It could be one of full_run/source_code_changes/new_test/updated_test/flaky_test';
-
-

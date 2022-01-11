@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.facilitation;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -32,7 +39,7 @@ public class SkipPreFacilitationChecker extends ExpressionEvalPreFacilitationChe
     if (EmptyPredicate.isNotEmpty(skipCondition)) {
       try {
         boolean skipConditionValue = (Boolean) engineExpressionService.evaluateExpression(ambiance, skipCondition);
-        nodeExecutionService.update(nodeExecution.getUuid(), ops -> {
+        nodeExecutionService.updateV2(nodeExecution.getUuid(), ops -> {
           ops.set(NodeExecutionKeys.skipInfo,
               SkipInfo.newBuilder().setEvaluatedCondition(skipConditionValue).setSkipCondition(skipCondition).build());
         });

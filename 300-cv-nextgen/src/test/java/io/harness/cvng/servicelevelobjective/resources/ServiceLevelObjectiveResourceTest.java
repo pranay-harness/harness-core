@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.resources;
 
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -17,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import java.io.IOException;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -69,6 +77,58 @@ public class ServiceLevelObjectiveResourceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testCreate_sloTargetValidation() throws IOException {
+    String sloYaml = getYAML("slo/slo-invalid-target.yaml");
+    Response response = RESOURCES.client()
+                            .target("http://localhost:9998/slo/")
+                            .queryParam("accountId", builderFactory.getContext().getAccountId())
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(convertToJson(sloYaml)));
+    assertThat(response.getStatus()).isEqualTo(400);
+    String jsonResponse = response.readEntity(String.class);
+    // TODO: we need to find a library to assert json responses in a better way.
+    assertThat(jsonResponse).contains("{\"field\":\"sloTarget\",\"message\":\"slo target should be less than 100\"}");
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreate_invalidMonitoredServiceIdentifier() throws IOException {
+    String sloYaml = getYAML("slo/slo-with-rolling-target.yaml", "invalidIdentifier");
+    Response response = RESOURCES.client()
+                            .target("http://localhost:9998/slo/")
+                            .queryParam("accountId", builderFactory.getContext().getAccountId())
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(convertToJson(sloYaml)));
+    assertThat(response.getStatus()).isEqualTo(500);
+    String jsonResponse = response.readEntity(String.class);
+    assertThat(jsonResponse).contains("Monitored Source Entity with identifier invalidIdentifier is not present");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testCreate_duplicateIdentifier() throws IOException {
+    String sloYaml = getYAML("slo/slo-with-rolling-target.yaml");
+    Response response = RESOURCES.client()
+                            .target("http://localhost:9998/slo/")
+                            .queryParam("accountId", builderFactory.getContext().getAccountId())
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(convertToJson(sloYaml)));
+    assertThat(response.getStatus()).isEqualTo(200);
+    response = RESOURCES.client()
+                   .target("http://localhost:9998/slo/")
+                   .queryParam("accountId", builderFactory.getContext().getAccountId())
+                   .request(MediaType.APPLICATION_JSON_TYPE)
+                   .post(Entity.json(convertToJson(sloYaml)));
+    assertThat(response.getStatus()).isEqualTo(500);
+    String jsonResponse = response.readEntity(String.class);
+    assertThat(jsonResponse)
+        .containsPattern(Pattern.compile("serviceLevelObjective with identifier .* is already present"));
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testCreate_withCalenderSLOTarget() throws IOException {
     String sloYaml = getYAML("slo/slo-with-calender-target.yaml");
     Response response = RESOURCES.client()
@@ -106,6 +166,16 @@ public class ServiceLevelObjectiveResourceTest extends CvNextGenTestBase {
     sloYaml = sloYaml.replace("$projectIdentifier", builderFactory.getContext().getProjectIdentifier());
     sloYaml = sloYaml.replace("$orgIdentifier", builderFactory.getContext().getOrgIdentifier());
     sloYaml = sloYaml.replace("$monitoredServiceRef", monitoredServiceDTO.getIdentifier());
+    sloYaml = sloYaml.replace(
+        "$healthSourceRef", monitoredServiceDTO.getSources().getHealthSources().iterator().next().getIdentifier());
+    return sloYaml;
+  }
+
+  private String getYAML(String filePath, String monitoredServiceIdentifier) throws IOException {
+    String sloYaml = getResource(filePath);
+    sloYaml = sloYaml.replace("$projectIdentifier", builderFactory.getContext().getProjectIdentifier());
+    sloYaml = sloYaml.replace("$orgIdentifier", builderFactory.getContext().getOrgIdentifier());
+    sloYaml = sloYaml.replace("$monitoredServiceRef", monitoredServiceIdentifier);
     sloYaml = sloYaml.replace(
         "$healthSourceRef", monitoredServiceDTO.getSources().getHealthSources().iterator().next().getIdentifier());
     return sloYaml;

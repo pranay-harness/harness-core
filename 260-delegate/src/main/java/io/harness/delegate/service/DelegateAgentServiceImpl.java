@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -386,6 +393,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
   private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
   private final AtomicBoolean closingSocket = new AtomicBoolean(false);
+  private final AtomicBoolean sentFirstHeartbeat = new AtomicBoolean(false);
 
   private Client client;
   private Socket socket;
@@ -411,6 +419,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return Optional.ofNullable(delegateId);
   }
 
+  public boolean isHeartbeatHealthy() {
+    return sentFirstHeartbeat.get() && ((clock.millis() - lastHeartbeatSentAt.get()) <= HEARTBEAT_TIMEOUT);
+  }
+
+  public boolean isSocketHealthy() {
+    return socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED;
+  }
+
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean goTemplateInstalled;
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean harnessPywinrmInstalled;
@@ -430,6 +446,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         perpetualTaskWorker.setAccountId(accountId);
       }
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
+      log.info("The deploy mode for delegate is [{}]", System.getenv().get("DEPLOY_MODE"));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
@@ -1644,6 +1661,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
+        sentFirstHeartbeat.set(true);
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending heartbeat", ex);
       } catch (Exception e) {
@@ -1698,7 +1716,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .location(Paths.get("").toAbsolutePath().toString())
               .build();
       lastHeartbeatSentAt.set(clock.millis());
-
+      sentFirstHeartbeat.set(true);
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
           executeRestCall(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
@@ -2053,11 +2071,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
+    // At the moment used to download and render terraform json plan file and keep track of the download tf plans
+    // so we can clean up at the end of the task. Expected mainly to be used in Shell Script Task
+    // but not limited to usage in other tasks
+    DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
+        injector, delegateTaskPackage.getAccountId(), delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
 
     DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
         TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
-        getPostExecutionFunction(
-            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+        getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null),
+            logStreamingTaskClient, delegateExpressionEvaluator),
         getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -2269,8 +2293,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     counter.updateAndGet(value -> Math.max(value, current));
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(
-      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer,
+      ILogStreamingTaskClient logStreamingTaskClient, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     return taskResponse -> {
       if (logStreamingTaskClient != null) {
         try {
@@ -2306,6 +2330,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } finally {
         if (sanitizer != null) {
           delegateLogService.unregisterLogSanitizer(sanitizer);
+        }
+
+        if (delegateExpressionEvaluator != null) {
+          delegateExpressionEvaluator.cleanup();
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
@@ -2611,6 +2639,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     DelegateExpressionEvaluator delegateExpressionEvaluator =
         new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
+  }
+
+  private void applyDelegateExpressionEvaluator(
+      DelegateTaskPackage delegateTaskPackage, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     TaskData taskData = delegateTaskPackage.getData();
     if (taskData.getParameters() != null && taskData.getParameters().length == 1
         && taskData.getParameters()[0] instanceof TaskParameters) {

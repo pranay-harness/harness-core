@@ -1,9 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.core.fullsync.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo.GitFullSyncEntityInfoKeys;
 import io.harness.gitsync.core.fullsync.GitFullSyncEntityService;
 import io.harness.gitsync.core.fullsync.GitFullSyncProcessorService;
@@ -15,6 +21,9 @@ import io.harness.repositories.fullSync.FullSyncJobRepository;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -28,6 +37,8 @@ public class FullSyncJobServiceImpl implements FullSyncJobService {
   FullSyncJobRepository fullSyncJobRepository;
   GitFullSyncEntityService gitFullSyncEntityService;
   GitFullSyncProcessorService gitFullSyncProcessorService;
+  private static final List<SyncStatus> runningStatuses =
+      Arrays.asList(SyncStatus.QUEUED, SyncStatus.FAILED_WITH_RETRIES_LEFT);
 
   @Override
   public GitFullSyncJob save(GitFullSyncJob gitFullSyncJob) {
@@ -56,11 +67,16 @@ public class FullSyncJobServiceImpl implements FullSyncJobService {
   }
 
   @Override
-  public GitFullSyncJob get(String accountIdentifier, String uuid) {
-    GitFullSyncJob fullSyncJob = fullSyncJobRepository.findByAccountIdentifierAndUuid(accountIdentifier, uuid);
-    if (fullSyncJob == null) {
-      throw new InvalidRequestException("No full sync job exists with the id " + uuid);
-    }
-    return fullSyncJob;
+  public Optional<GitFullSyncJob> getRunningJobs(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    Criteria criteria = Criteria.where(GitFullSyncJobKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(GitFullSyncJobKeys.orgIdentifier)
+                            .is(orgIdentifier)
+                            .and(GitFullSyncJobKeys.projectIdentifier)
+                            .is(projectIdentifier)
+                            .and(GitFullSyncJobKeys.syncStatus)
+                            .in(runningStatuses);
+    return Optional.ofNullable(fullSyncJobRepository.find(criteria));
   }
 }

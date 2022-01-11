@@ -82,7 +82,7 @@ spec:
           failureThreshold: 2
         env:
         - name: JAVA_OPTS
-          value: "-XX:+UnlockExperimentalVMOptions -XX:+UseCGroupMemoryLimitForHeap -XX:MaxRAMFraction=2 -Xms64M"
+          value: "-Xms64M"
         - name: ACCOUNT_ID
           value: ACCOUNT_ID
         - name: ACCOUNT_SECRET
@@ -133,8 +133,6 @@ spec:
           value: "desc"
         - name: DELEGATE_TAGS
           value: ""
-        - name: DELEGATE_TASK_LIMIT
-          value: "50"
         - name: DELEGATE_ORG_IDENTIFIER
           value: "9S5HMP0xROugl3_QgO62rQO"
         - name: DELEGATE_PROJECT_IDENTIFIER

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.eventsframework.impl.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -6,9 +13,12 @@ import static io.harness.eventsframework.impl.redis.RedisUtils.REDIS_STREAM_INTE
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractProducer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
+import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTOMapper;
+import io.harness.eventsframework.impl.redis.monitoring.publisher.RedisEventMetricPublisher;
 import io.harness.eventsframework.producer.Message;
 import io.harness.redis.RedisConfig;
 
+import com.google.inject.Inject;
 import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.Retry;
 import io.github.resilience4j.retry.RetryConfig;
@@ -28,8 +38,10 @@ import org.redisson.api.StreamMessageId;
 @Slf4j
 public class RedisProducer extends AbstractProducer {
   private static final String PRODUCER = "producer";
+  private static final String REDIS_PUSH_EVENT_METRIC = "redis_push_event_metric";
   private RStream<String, String> stream;
   private RedissonClient redissonClient;
+  @Inject private RedisEventMetricPublisher redisEventMetricPublisher;
   // This is used when the consumer for the event are no longer accepting due to some failure and
   // the messages are continuously being accumulated in Redis. To come up with this number, it is
   // very important to understand the alerting on the consumers and the scale estimations of a
@@ -38,10 +50,25 @@ public class RedisProducer extends AbstractProducer {
 
   private Retry retry;
 
+  public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize, String producerName,
+      RedisEventMetricPublisher redisEventMetricPublisher) {
+    super(topicName, producerName);
+    RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+    initProducer(topicName, redissonClient, maxTopicSize, redisConfig.getEnvNamespace());
+    this.redisEventMetricPublisher = redisEventMetricPublisher;
+  }
+
   public RedisProducer(String topicName, @NotNull RedisConfig redisConfig, int maxTopicSize, String producerName) {
     super(topicName, producerName);
     RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
     initProducer(topicName, redissonClient, maxTopicSize, redisConfig.getEnvNamespace());
+  }
+
+  public RedisProducer(String topicName, @NotNull RedissonClient redissonClient, int maxTopicSize, String producerName,
+      String envNamespace, RedisEventMetricPublisher redisEventMetricPublisher) {
+    super(topicName, producerName);
+    initProducer(topicName, redissonClient, maxTopicSize, envNamespace);
+    this.redisEventMetricPublisher = redisEventMetricPublisher;
   }
 
   public RedisProducer(String topicName, @NotNull RedissonClient redissonClient, int maxTopicSize, String producerName,
@@ -72,6 +99,8 @@ public class RedisProducer extends AbstractProducer {
     populateOtherProducerSpecificData(redisData);
 
     StreamMessageId messageId = stream.addAll(redisData, maxTopicSize, false);
+    redisEventMetricPublisher.sendMetricWithEventContext(
+        RedisEventMetricDTOMapper.prepareRedisEventMetricDTO(message, getTopicName()), REDIS_PUSH_EVENT_METRIC);
     redisData.remove(REDIS_STREAM_INTERNAL_KEY);
     log.info("Events framework message inserted - messageId: {}, metaData: {}", messageId, redisData);
     return messageId.toString();

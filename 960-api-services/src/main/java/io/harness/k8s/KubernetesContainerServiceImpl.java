@@ -1,6 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.encoding.EncodingUtils.compressString;
+import static io.harness.data.encoding.EncodingUtils.deCompressString;
+import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -26,6 +36,7 @@ import static io.harness.k8s.K8sConstants.OIDC_ID_TOKEN;
 import static io.harness.k8s.K8sConstants.OIDC_ISSUER_URL;
 import static io.harness.k8s.K8sConstants.OIDC_RERESH_TOKEN;
 import static io.harness.k8s.K8sConstants.REFRESH_TOKEN;
+import static io.harness.k8s.KubernetesConvention.CompressedReleaseHistoryFlag;
 import static io.harness.k8s.KubernetesConvention.DASH;
 import static io.harness.k8s.KubernetesConvention.ReleaseHistoryKeyName;
 import static io.harness.k8s.KubernetesConvention.getPrefixFromControllerName;
@@ -79,8 +90,8 @@ import io.harness.logging.Misc;
 import io.harness.oidc.model.OidcTokenRequestData;
 
 import com.github.scribejava.apis.openid.OpenIdOAuth2AccessToken;
+import com.google.api.client.util.Charsets;
 import com.google.common.annotations.VisibleForTesting;
-import com.google.common.base.Charsets;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -145,6 +156,7 @@ import io.kubernetes.client.openapi.auth.HttpBasicAuth;
 import io.kubernetes.client.openapi.auth.HttpBearerAuth;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
 import io.kubernetes.client.openapi.models.V1ConfigMapBuilder;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
@@ -179,6 +191,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.zip.Deflater;
 import javax.validation.constraints.NotNull;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -1854,71 +1867,102 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName)
+      throws IOException {
     V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
-      return configMap.getData().get(ReleaseHistoryKeyName);
+      return fetchReleaseHistoryValue(configMap);
     }
 
     return EMPTY;
   }
 
   @Override
-  public String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String releaseName)
+      throws IOException {
     V1Secret secret = getSecret(kubernetesConfig, releaseName);
     if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
-      return new String(secret.getData().get(ReleaseHistoryKeyName), Charsets.UTF_8);
+      return fetchReleaseHistoryValue(secret);
     }
 
     return EMPTY;
   }
 
   @Override
-  public V1ConfigMap saveReleaseHistoryInConfigMap(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+  public String fetchReleaseHistoryValue(V1ConfigMap configMap) throws IOException {
+    Map<String, String> configMapData = configMap.getData();
+    String releaseHistory = configMapData.get(ReleaseHistoryKeyName);
+
+    if (configMapData.containsKey(CompressedReleaseHistoryFlag)
+        && Boolean.parseBoolean(configMapData.get(CompressedReleaseHistoryFlag))) {
+      return deCompressString(decodeBase64(releaseHistory));
+    }
+    return releaseHistory;
+  }
+
+  @Override
+  public String fetchReleaseHistoryValue(V1Secret secret) throws IOException {
+    Map<String, byte[]> secretData = secret.getData();
+    byte[] releaseHistory = secretData.get(ReleaseHistoryKeyName);
+
+    if (secretData.containsKey(CompressedReleaseHistoryFlag) && secretData.get(CompressedReleaseHistoryFlag)[0] == 1) {
+      return deCompressString(releaseHistory);
+    }
+    return new String(releaseHistory, Charsets.UTF_8);
+  }
+
+  @Override
+  public V1ObjectMeta saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
+      boolean storeInSecrets) throws IOException {
+    if (storeInSecrets) {
+      return saveReleaseHistoryInSecrets(kubernetesConfig, releaseName, releaseHistory).getMetadata();
+    } else {
+      return saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistory).getMetadata();
+    }
+  }
+
+  private V1ConfigMap saveReleaseHistoryInConfigMap(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) throws IOException {
     V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
+    String compressedB64EncodedReleaseHistory = encodeBase64(compressString(releaseHistory, Deflater.BEST_COMPRESSION));
+
     if (configMap == null) {
       configMap = new V1ConfigMapBuilder()
                       .withMetadata(new V1ObjectMetaBuilder()
                                         .withName(releaseName)
                                         .withNamespace(kubernetesConfig.getNamespace())
                                         .build())
-                      .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory))
+                      .withData(ImmutableMap.of(ReleaseHistoryKeyName, compressedB64EncodedReleaseHistory,
+                          CompressedReleaseHistoryFlag, "true"))
                       .build();
     } else {
       Map data = configMap.getData();
-      data.put(ReleaseHistoryKeyName, releaseHistory);
+      data.put(ReleaseHistoryKeyName, compressedB64EncodedReleaseHistory);
+      data.put(CompressedReleaseHistoryFlag, "true");
       configMap.setData(data);
     }
 
     return createOrReplaceConfigMap(kubernetesConfig, configMap);
   }
 
-  @Override
-  public void saveReleaseHistory(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
-    if (storeInSecrets) {
-      saveReleaseHistoryInSecrets(kubernetesConfig, releaseName, releaseHistory);
-    } else {
-      saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistory);
-    }
-  }
-
-  @Override
-  public V1Secret saveReleaseHistoryInSecrets(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) {
+  private V1Secret saveReleaseHistoryInSecrets(
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) throws IOException {
     V1Secret secret = getSecret(kubernetesConfig, releaseName);
+    byte[] compressedReleaseHistory = compressString(releaseHistory, Deflater.BEST_COMPRESSION);
+
     if (secret == null) {
       secret = new V1SecretBuilder()
                    .withMetadata(new V1ObjectMetaBuilder()
                                      .withNamespace(kubernetesConfig.getNamespace())
                                      .withName(releaseName)
                                      .build())
-                   .withData(ImmutableMap.of(ReleaseHistoryKeyName, releaseHistory.getBytes(Charsets.UTF_8)))
+                   .withData(ImmutableMap.of(ReleaseHistoryKeyName, compressedReleaseHistory,
+                       CompressedReleaseHistoryFlag, new byte[] {(byte) 1}))
                    .build();
     } else {
       Map data = secret.getData();
-      data.put(ReleaseHistoryKeyName, releaseHistory.getBytes(Charsets.UTF_8));
+      data.put(ReleaseHistoryKeyName, compressedReleaseHistory);
+      data.put(CompressedReleaseHistoryFlag, new byte[] {(byte) 1});
       secret.setData(data);
     }
 
