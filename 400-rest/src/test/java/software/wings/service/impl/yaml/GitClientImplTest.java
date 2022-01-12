@@ -10,6 +10,7 @@ package software.wings.service.impl.yaml;
 import static io.harness.git.model.ChangeType.RENAME;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.shell.SshSessionConfig.Builder.aSshSessionConfig;
 import static io.harness.shell.SshSessionFactory.getSSHSession;
@@ -23,8 +24,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Fail.fail;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anySet;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -436,6 +440,40 @@ public class GitClientImplTest extends WingsBaseTest {
 
     // CleanUp
     FileUtils.deleteQuietly(rootDirectory);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testEnsureRepoLocallyClonedAndUpdated() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().build();
+
+    when(gitClientHelper.getRepoDirectory(any())).thenReturn("testRepoDir");
+    doReturn(null).when(gitClient).clone(any(), any(), any(), anyBoolean());
+    doReturn(null).when(gitClient).checkout(any());
+
+    gitClient.ensureRepoLocallyClonedAndUpdated(GitOperationContext.builder().gitConfig(gitConfig).build());
+
+    verify(gitClient, times(1)).clone(any(), any(), any(), anyBoolean());
+    verify(gitClient, times(1)).checkout(any());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testEnsureRepoLocallyClonedAndUpdatedErrorThrownAtCheckout() throws Exception {
+    GitConfig gitConfig = GitConfig.builder().branch("branch").build();
+
+    when(gitClientHelper.getRepoDirectory(any())).thenReturn("testRepoDir");
+    doReturn(null).when(gitClient).clone(any(), any(), any(), anyBoolean());
+    doThrow(new IOException()).when(gitClient).checkout(any());
+
+    assertThatThrownBy(
+        () -> gitClient.ensureRepoLocallyClonedAndUpdated(GitOperationContext.builder().gitConfig(gitConfig).build()))
+        .hasMessage("Unable to checkout given reference: branch");
+
+    verify(gitClient, times(1)).clone(any(), any(), any(), anyBoolean());
+    verify(gitClient, times(1)).checkout(any());
   }
 
   private List<GitFileChange> getSampleGitFileChanges() {
