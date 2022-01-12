@@ -30,4 +30,5 @@ public class TriggerFullSyncRequestDTO {
   @NotNull String yamlGitConfigIdentifier;
   boolean isNewBranch;
   String baseBranch;
+  String rootFolder;
 }

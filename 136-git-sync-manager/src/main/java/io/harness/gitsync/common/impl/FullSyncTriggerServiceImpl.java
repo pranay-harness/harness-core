@@ -72,6 +72,7 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
             .yamlGitConfigIdentifier(gitFullSyncConfigDTO.getRepoIdentifier())
             .isNewBranch(gitFullSyncConfigDTO.isNewBranch())
             .baseBranch(gitFullSyncConfigDTO.getBaseBranch())
+            .rootFolder(gitFullSyncConfigDTO.getRootFolder())
             .build();
     final String messageId =
         sendEventForFullSync(accountIdentifier, orgIdentifier, projectIdentifier, triggerFullSyncRequestDTO);
@@ -99,7 +100,8 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
                                                      .setGitConfigScope(entityScopeInfoBuilder.build())
                                                      .setBranch(fullSyncRequest.getBranch())
                                                      .setCreatePr(fullSyncRequest.isCreatePR())
-                                                     .setIsNewBranch(fullSyncRequest.isNewBranch());
+                                                     .setIsNewBranch(fullSyncRequest.isNewBranch())
+                                                     .setRootFolder(fullSyncRequest.getRootFolder());
 
     if (fullSyncRequest.isCreatePR()) {
       builder.setTargetBranch(fullSyncRequest.getTargetBranchForPR()).setPrTitle(fullSyncRequest.getPrTitle());

@@ -31,6 +31,7 @@ public class GitFullSyncConfigMapper {
         .projectIdentifier(gitFullSyncConfig.getProjectIdentifier())
         .targetBranch(gitFullSyncConfig.getTargetBranch())
         .isNewBranch(gitFullSyncConfig.isNewBranch())
+        .rootFolder(gitFullSyncConfig.getRootFolder())
         .build();
   }
 
@@ -47,6 +48,7 @@ public class GitFullSyncConfigMapper {
         .createPullRequest(gitFullSyncConfigRequestDTO.isCreatePullRequest())
         .targetBranch(gitFullSyncConfigRequestDTO.getTargetBranch())
         .isNewBranch(gitFullSyncConfigRequestDTO.isNewBranch())
+        .rootFolder(gitFullSyncConfigRequestDTO.getRootFolder())
         .build();
   }
 }

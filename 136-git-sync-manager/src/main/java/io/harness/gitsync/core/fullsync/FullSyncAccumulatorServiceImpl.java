@@ -77,8 +77,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       int fileNumber = entitiesForFullSync == null ? 0 : emptyIfNull(entitiesForFullSync.getFileChangesList()).size();
       log.info("Saving {} files for the microservice {}", fileNumber, microservice);
       emptyIfNull(entitiesForFullSync.getFileChangesList()).forEach(entityForFullSync -> {
-        saveFullSyncEntityInfo(
-            gitConfigScope, messageId, microservice, entityForFullSync, fullSyncEventRequest.getBranch());
+        saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync,
+            fullSyncEventRequest.getBranch(), fullSyncEventRequest.getRootFolder());
       });
     }
     if (fullSyncEventRequest.getIsNewBranch()) {
@@ -115,7 +115,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
   }
 
   private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
-      FileChange entityForFullSync, String branchName) {
+      FileChange entityForFullSync, String branchName, String rootFolder) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())
@@ -128,6 +128,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
             .syncStatus(QUEUED.name())
             .yamlGitConfigId(entityScopeInfo.getIdentifier())
             .branchName(branchName)
+            .rootFolder(rootFolder)
             .retryCount(0)
             .build();
     gitFullSyncEntityService.save(gitFullSyncEntityInfo);

@@ -57,6 +57,7 @@ public class GitFullSyncConfig {
   private String yamlGitConfigIdentifier;
   private String targetBranch;
   private boolean isNewBranch;
+  private String rootFolder;
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()
