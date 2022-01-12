@@ -59,7 +59,8 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
         entityGitPersistenceHelperService.delete(entityDetailDTO.getEntityRef());
         break;
       case RENAME:
-        entityGitPersistenceHelperService.updateFilePath();
+        entityGitPersistenceHelperService.updateFilePath(
+            changeSet.getAccountId(), yaml, changeSet.getPrevFilePath(), changeSet.getFilePath());
         break;
       case UNRECOGNIZED:
       default:
