@@ -79,6 +79,12 @@ public class DelegateTask
                  .field(DelegateTaskKeys.data_async)
                  .field(DelegateTaskKeys.expiry)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("rebroadcast1")
+                 .field(DelegateTaskKeys.status)
+                 .field(DelegateTaskKeys.delegateId)
+                 .field(DelegateTaskKeys.nextBroadcast)
+                 .build())
         .build();
   }
 
