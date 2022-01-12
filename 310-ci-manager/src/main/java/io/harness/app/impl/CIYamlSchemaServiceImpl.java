@@ -93,7 +93,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   }
 
   @Override
-  public JsonNode getStepYamlSchema(EntityType entityType) {
+  public JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope) {
     return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
   }
 
@@ -128,15 +128,16 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
     removeUnwantedNodes(definitions);
 
     yamlSchemaGenerator.modifyRefsNamespace(integrationStageSchema, CI_NAMESPACE);
-    List<String> enabledFeatureFlags =
+    Set<String> enabledFeatureFlags =
         RestClientUtils.getResponse(accountClient.listAllFeatureFlagsForAccount(accountIdentifier))
             .stream()
             .filter(FeatureFlag::isEnabled)
             .map(FeatureFlag::getName)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
     // Should be after this modifyRefsNamespace call.
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(integrationStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CI_NAMESPACE);
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        CI_NAMESPACE);
     if (stepSchemaWithDetails != null) {
       YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
           integrationStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags);

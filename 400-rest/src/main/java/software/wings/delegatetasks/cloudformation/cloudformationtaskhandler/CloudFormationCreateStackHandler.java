@@ -311,8 +311,10 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
           executionLogCallback.saveExecutionLog("# Stack creation Successful");
           populateInfraMappingPropertiesFromStack(builder, stack,
               ExistingStackInfo.builder().stackExisted(false).build(), executionLogCallback, createRequest);
-          sleep(ofSeconds(30));
-          executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
+          if (!createRequest.isSkipWaitForResources()) {
+            executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
+            sleep(ofSeconds(30));
+          }
           printStackResources(createRequest, stack, executionLogCallback);
           return;
         }
@@ -462,8 +464,10 @@ public class CloudFormationCreateStackHandler extends CloudFormationCommandTaskH
         case "UPDATE_COMPLETE": {
           executionLogCallback.saveExecutionLog("# Update Successful for stack");
           populateInfraMappingPropertiesFromStack(builder, stack, existingStackInfo, executionLogCallback, request);
-          sleep(ofSeconds(30));
-          executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
+          if (!request.isSkipWaitForResources()) {
+            executionLogCallback.saveExecutionLog("# Waiting 30 seconds for resources to come up");
+            sleep(ofSeconds(30));
+          }
           CloudFormationCreateStackResponse cloudFormationCreateStackResponse =
               getCloudFormationCreateStackResponse(builder, stack, existingStackInfo, request);
           builder.commandResponse(cloudFormationCreateStackResponse);

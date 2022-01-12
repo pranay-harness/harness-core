@@ -77,6 +77,8 @@ public class K8sWatchTaskServiceImplTest extends CategoryTest {
                                                           .clusterId("clusterId")
                                                           .clusterName("clusterName")
                                                           .connectorIdentifier("connectorIdentifier")
+                                                          .orgIdentifier("orgIdentifier")
+                                                          .projectIdentifier("projectIdentifier")
                                                           .build();
 
   @Test

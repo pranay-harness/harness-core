@@ -95,6 +95,26 @@ public class YamlUtils {
     return (rootYamlNode == null || !rootYamlNode.isObject()) ? null : rootYamlNode.getField("pipeline");
   }
 
+  public YamlField getTopRootFieldInYaml(String content) throws IOException {
+    YamlField rootYamlField = readTree(content);
+    YamlNode rootYamlNode = rootYamlField.getNode();
+    return Preconditions.checkNotNull(
+        getTopRootFieldInYamlField(rootYamlNode), "Invalid pipeline YAML: root of the yaml needs to be an object");
+  }
+
+  public YamlField getTopRootFieldInYamlField(YamlNode rootYamlNode) {
+    if (rootYamlNode == null || !rootYamlNode.isObject()) {
+      return null;
+    }
+    for (YamlField field : rootYamlNode.fields()) {
+      if (field.getName().equals(YamlNode.UUID_FIELD_NAME)) {
+        continue;
+      }
+      return field;
+    }
+    throw new InvalidRequestException("No Top root node available in the yaml.");
+  }
+
   public YamlField injectUuidWithLeafUuid(String content) throws IOException {
     JsonNode rootJsonNode = mapper.readTree(content);
     if (rootJsonNode == null) {

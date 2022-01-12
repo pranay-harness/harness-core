@@ -26,6 +26,7 @@ import io.harness.cvng.analysis.entities.HealthVerificationPeriod;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
 import io.harness.cvng.beans.job.VerificationJobType;
@@ -162,7 +163,7 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
   @Override
   public void addDemoAnalysisData(
       String verificationTaskId, CVConfig cvConfig, VerificationJobInstance verificationJobInstance) {
-    String demoTemplatePath = getDemoTemplatePath(cvConfig, verificationJobInstance);
+    String demoTemplatePath = getDemoTemplatePath(verificationJobInstance.getVerificationStatus(), cvConfig.getType());
     if (cvConfig.getVerificationType() == VerificationType.TIME_SERIES) {
       deploymentTimeSeriesAnalysisService.addDemoAnalysisData(
           verificationTaskId, cvConfig, verificationJobInstance, demoTemplatePath);
@@ -182,15 +183,12 @@ public class VerificationJobInstanceAnalysisServiceImpl implements VerificationJ
     }
   }
 
-  public String getDemoTemplatePath(CVConfig cvConfig, VerificationJobInstance verificationJobInstance) {
-    String path =
-        DEMO_URL_TEMPLATE_PATH
-            .replace("$status",
-                verificationJobInstance.getVerificationStatus() == ActivityVerificationStatus.VERIFICATION_PASSED
-                    ? "success"
-                    : "failure")
-            .replace("$verification_type", cvConfig.getVerificationType().name().toLowerCase());
-    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
+  public String getDemoTemplatePath(ActivityVerificationStatus verificationStatus, DataSourceType dataSourceType) {
+    String path = DEMO_URL_TEMPLATE_PATH
+                      .replace("$status",
+                          verificationStatus == ActivityVerificationStatus.VERIFICATION_PASSED ? "success" : "failure")
+                      .replace("$verification_type", dataSourceType.getVerificationType().name().toLowerCase());
+    path = path.replace("$provider", dataSourceType.getDemoTemplatePrefix());
     return path;
   }
 

@@ -23,8 +23,10 @@ import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
   private final String payload;
   private final TriggerPayload triggerPayload;
@@ -61,5 +63,16 @@ public class TriggerExpressionEvaluator extends EngineExpressionEvaluator {
   @Override
   protected Object evaluateInternal(@NotNull String expression, @NotNull EngineJexlContext ctx) {
     return evaluateByCreatingScript(expression, ctx);
+  }
+
+  @Override
+  public Object evaluateExpression(String expression) {
+    try {
+      Object result = evaluateExpression(expression, null);
+      return result == null ? "null" : result;
+    } catch (Exception e) {
+      log.warn("Failed to evaluated Trigger expression", e);
+      return "null";
+    }
   }
 }

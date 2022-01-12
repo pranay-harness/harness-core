@@ -57,7 +57,7 @@ public class GitFullSyncJob implements PersistentEntity, PersistentRegularIterab
   @EqualsAndHashCode.Exclude @CreatedDate private long createdAt;
   @EqualsAndHashCode.Exclude @LastModifiedDate private long lastUpdatedAt;
 
-  public enum SyncStatus { QUEUED, COMPLETED, FAILED_WITH_RETRIES_LEFT, FAILED }
+  public enum SyncStatus { QUEUED, RUNNING, COMPLETED, FAILED_WITH_RETRIES_LEFT, FAILED }
 
   @Override
   public Long obtainNextIteration(String fieldName) {

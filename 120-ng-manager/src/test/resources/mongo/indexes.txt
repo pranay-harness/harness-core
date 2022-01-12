@@ -205,6 +205,7 @@ delegateTaskUsageInsights {"name": "timestamp_1", "background": true} {"timestam
 delegateTasks {"name": "index", "background": true} {"status": 1, "expiry": 1}
 delegateTasks {"name": "pulling", "background": true} {"accountId": 1, "status": 1, "data.async": 1, "expiry": 1}
 delegateTasks {"name": "rebroadcast", "background": true} {"version": 1, "status": 1, "delegateId": 1, "nextBroadcast": 1}
+delegateTasks {"name": "rebroadcast1", "background": true} {"status": 1, "delegateId": 1, "nextBroadcast": 1}
 delegateTasks {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 delegateTokens {"name": "byAccountAndName", "unique": true} {"accountId": 1, "name": 1}
 delegateTokens {"name": "byAccountAndStatus", "background": true} {"accountId": 1, "status": 1}
@@ -370,7 +371,7 @@ gitFileActivityNG {"name": "lastUpdatedAt_1", "background": true} {"lastUpdatedA
 gitFileActivitySummary {"name": "gitCommits_createdAt_direction_indx", "background": true} {"accountId": 1, "createdAt": 1, "gitToHarness": 1}
 gitFileActivitySummary {"name": "gitCommits_for_appId_indx", "background": true} {"accountId": 1, "appId": 1, "gitToHarness": 1}
 gitFullSyncConfig {"name": "unique_accountIdentifier_organizationIdentifier_projectIdentifier", "unique": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1}
-gitFullSyncEntityInfo {"name": "account_org_project_entityType_status_filePath_name_repo_branch_idx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "entityDetail.type": 1, "syncStatus": 1, "filePath": 1, "entityDetail.name": 1, "entityDetail.entityRef.repoIdentifier": 1, "entityDetail.entityRef.branch": 1}
+gitFullSyncEntityInfo {"name": "account_org_project_entityType_status_filePath_name_repo_branch_idx", "background": true, "collation": {"locale": "en", "strength": 1}} {"accountIdentifier": 1, "orgIdentifier": 1, "projectIdentifier": 1, "entityDetail.type": 1, "syncStatus": 1, "filePath": 1, "entityDetail.name": 1, "yamlGitConfigId": 1, "branchName": 1}
 gitFullSyncEntityInfo {"name": "nextRuntime_1", "background": true} {"nextRuntime": 1}
 gitFullSyncJob {"name": "messageId_1", "unique": true} {"messageId": 1}
 gitFullSyncJob {"name": "nextRuntime_1", "background": true} {"nextRuntime": 1}

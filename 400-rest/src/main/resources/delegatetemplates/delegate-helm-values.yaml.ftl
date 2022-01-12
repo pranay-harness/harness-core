@@ -39,4 +39,3 @@ delegateCheckLocation: ${delegateCheckLocation}
 cdnUrl: ${cdnUrl}
 jreVersion: ${jreVersion}
 </#if>
-versionCheckDisabled: ${versionCheckDisabled}

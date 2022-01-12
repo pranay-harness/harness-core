@@ -11,8 +11,10 @@ import static io.harness.cvng.CVConstants.SLO_TARGET_TYPE;
 
 import io.harness.cvng.servicelevelobjective.beans.slotargetspec.SLOTargetSpec;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.dropwizard.validation.ValidationMethod;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -30,4 +32,10 @@ public class SLOTarget {
   @Valid
   @NotNull
   SLOTargetSpec spec;
+
+  @ValidationMethod(message = "slo target should be less than 100")
+  @JsonIgnore
+  public boolean isSloTarget() {
+    return sloTargetPercentage < 100;
+  }
 }

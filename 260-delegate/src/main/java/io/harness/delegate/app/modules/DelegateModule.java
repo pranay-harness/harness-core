@@ -25,6 +25,7 @@ import io.harness.azure.client.AzureAutoScaleSettingsClient;
 import io.harness.azure.client.AzureBlueprintClient;
 import io.harness.azure.client.AzureComputeClient;
 import io.harness.azure.client.AzureContainerRegistryClient;
+import io.harness.azure.client.AzureKubernetesClient;
 import io.harness.azure.client.AzureManagementClient;
 import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureNetworkClient;
@@ -34,6 +35,7 @@ import io.harness.azure.impl.AzureAutoScaleSettingsClientImpl;
 import io.harness.azure.impl.AzureBlueprintClientImpl;
 import io.harness.azure.impl.AzureComputeClientImpl;
 import io.harness.azure.impl.AzureContainerRegistryClientImpl;
+import io.harness.azure.impl.AzureKubernetesClientImpl;
 import io.harness.azure.impl.AzureManagementClientImpl;
 import io.harness.azure.impl.AzureMonitorClientImpl;
 import io.harness.azure.impl.AzureNetworkClientImpl;
@@ -136,6 +138,7 @@ import io.harness.delegate.task.aws.AwsDelegateTask;
 import io.harness.delegate.task.aws.AwsValidationHandler;
 import io.harness.delegate.task.azure.appservice.AzureAppServiceTaskParameters.AzureAppServiceTaskType;
 import io.harness.delegate.task.azure.arm.AzureARMTaskParameters;
+import io.harness.delegate.task.azure.resource.operation.AzureResourceProvider;
 import io.harness.delegate.task.cek8s.CEKubernetesTestConnectionDelegateTask;
 import io.harness.delegate.task.cek8s.CEKubernetesValidationHandler;
 import io.harness.delegate.task.cf.PcfCommandTask;
@@ -378,6 +381,10 @@ import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListManagement
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMListSubscriptionLocationsTaskHandler;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureARMRollbackTaskHandler;
 import software.wings.delegatetasks.azure.arm.taskhandler.AzureBlueprintDeploymentTaskHandler;
+import software.wings.delegatetasks.azure.resource.AzureResourceTask;
+import software.wings.delegatetasks.azure.resource.taskhandler.ACRResourceProviderTaskHandler;
+import software.wings.delegatetasks.azure.resource.taskhandler.AbstractAzureResourceTaskHandler;
+import software.wings.delegatetasks.azure.resource.taskhandler.AzureK8sResourceProviderTaskHandler;
 import software.wings.delegatetasks.cloudformation.CloudFormationCommandTask;
 import software.wings.delegatetasks.collect.artifacts.AmazonS3CollectionTask;
 import software.wings.delegatetasks.collect.artifacts.ArtifactoryCollectionTask;
@@ -1082,6 +1089,7 @@ public class DelegateModule extends AbstractModule {
     bind(ScmDelegateClient.class).to(ScmDelegateClientImpl.class);
     bind(ScmServiceClient.class).to(ScmServiceClientImpl.class);
     bind(ManifestCollectionService.class).to(HelmChartCollectionService.class);
+    bind(AzureKubernetesClient.class).to(AzureKubernetesClientImpl.class);
 
     // NG Delegate
     MapBinder<String, K8sRequestHandler> k8sTaskTypeToRequestHandler =
@@ -1159,6 +1167,14 @@ public class DelegateModule extends AbstractModule {
         .to(AzureARMListManagementGroupTaskHandler.class);
     azureARMTaskTypeToTaskHandlerMap.addBinding(AzureARMTaskParameters.AzureARMTaskType.BLUEPRINT_DEPLOYMENT.name())
         .to(AzureBlueprintDeploymentTaskHandler.class);
+
+    // Azure Resource tasks
+    MapBinder<String, AbstractAzureResourceTaskHandler> azureResourceTaskTypeToTaskHandlerMap =
+        MapBinder.newMapBinder(binder(), String.class, AbstractAzureResourceTaskHandler.class);
+    azureResourceTaskTypeToTaskHandlerMap.addBinding(AzureResourceProvider.KUBERNETES.name())
+        .to(AzureK8sResourceProviderTaskHandler.class);
+    azureResourceTaskTypeToTaskHandlerMap.addBinding(AzureResourceProvider.CONTAINER_REGISTRY.name())
+        .to(ACRResourceProviderTaskHandler.class);
 
     registerSecretManagementBindings();
     registerConnectorValidatorsBindings();
@@ -1256,6 +1272,7 @@ public class DelegateModule extends AbstractModule {
     mapBinder.addBinding(TaskType.AZURE_VMSS_COMMAND_TASK).toInstance(AzureVMSSTask.class);
     mapBinder.addBinding(TaskType.AZURE_APP_SERVICE_TASK).toInstance(AzureAppServiceTask.class);
     mapBinder.addBinding(TaskType.AZURE_ARM_TASK).toInstance(AzureARMTask.class);
+    mapBinder.addBinding(TaskType.AZURE_RESOURCE_TASK).toInstance(AzureResourceTask.class);
     mapBinder.addBinding(TaskType.LDAP_TEST_CONN_SETTINGS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.LDAP_TEST_USER_SETTINGS).toInstance(ServiceImplDelegateTask.class);
     mapBinder.addBinding(TaskType.LDAP_TEST_GROUP_SETTINGS).toInstance(ServiceImplDelegateTask.class);

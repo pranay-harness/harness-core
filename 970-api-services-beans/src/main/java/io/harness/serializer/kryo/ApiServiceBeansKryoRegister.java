@@ -41,6 +41,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.helm.HelmCliCommandType;
@@ -392,5 +393,6 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(ServiceNowFieldTypeNG.class, 97105);
     kryo.register(ServiceNowTicketNG.class, 97106);
     kryo.register(ServiceNowFieldValueNG.class, 97107);
+    kryo.register(DelegateTokenGlobalContextData.class, 97108);
   }
 }

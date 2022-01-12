@@ -321,8 +321,11 @@ public class ViewsBillingServiceImpl implements ViewsBillingService {
     if (!includeOthers && !isMetricsQuery(aggregateFunction)) {
       ViewQueryParams queryParamsForGrid = viewsQueryHelper.buildQueryParams(
           queryParams.getAccountId(), false, true, queryParams.isClusterQuery(), false);
-      QLCEViewGridData gridData = getEntityStatsDataPointsNg(
-          bigQuery, filters, groupBy, aggregateFunction, sort, cloudProviderTableName, limit, 0, queryParamsForGrid);
+      List<QLCEViewGroupBy> groupByExcludingGroupByTime =
+          groupBy.stream().filter(g -> g.getEntityGroupBy() != null).collect(Collectors.toList());
+      QLCEViewGridData gridData = getEntityStatsDataPointsNg(bigQuery, filters, groupByExcludingGroupByTime,
+          aggregateFunction, sort, cloudProviderTableName, limit, 0, queryParamsForGrid);
+      log.info("GRID DATA: {}", gridData);
       filters = getModifiedFilters(filters, gridData);
     }
 

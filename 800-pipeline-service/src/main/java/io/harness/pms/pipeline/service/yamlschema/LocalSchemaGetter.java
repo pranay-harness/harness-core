@@ -7,8 +7,13 @@
 
 package io.harness.pms.pipeline.service.yamlschema;
 
+import static java.lang.String.format;
+
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.common.EntityTypeConstants;
+import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.pipeline.service.yamlschema.approval.ApprovalYamlSchemaService;
 import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlService;
@@ -43,8 +48,10 @@ public class LocalSchemaGetter implements SchemaGetter {
   @Override
   public List<PartialSchemaDTO> getSchema(List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     List<PartialSchemaDTO> partialSchemaDTOList = new ArrayList<>();
-    partialSchemaDTOList.add(approvalYamlSchemaService.getApprovalYamlSchema(null, null, null));
-    partialSchemaDTOList.add(featureFlagYamlService.getFeatureFlagYamlSchema(null, null, null));
+    partialSchemaDTOList.add(approvalYamlSchemaService.getApprovalYamlSchema(
+        accountIdentifier, null, null, null, yamlSchemaWithDetailsList));
+    partialSchemaDTOList.add(featureFlagYamlService.getFeatureFlagYamlSchema(
+        accountIdentifier, null, null, null, yamlSchemaWithDetailsList));
     return partialSchemaDTOList;
   }
 
@@ -57,7 +64,22 @@ public class LocalSchemaGetter implements SchemaGetter {
   }
 
   @Override
-  public JsonNode fetchStepYamlSchema(EntityType entityType) {
-    return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
+  public JsonNode fetchStepYamlSchema(String orgIdentifier, String projectIdentifier, Scope scope,
+      EntityType entityType, String yamlGroup, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
+    if (yamlGroup.equals(StepCategory.STAGE.toString())) {
+      if (entityType.getYamlName().equals(EntityTypeConstants.APPROVAL_STAGE)) {
+        return approvalYamlSchemaService
+            .getApprovalYamlSchema(
+                accountIdentifier, projectIdentifier, orgIdentifier, scope, yamlSchemaWithDetailsList)
+            .getSchema();
+      } else if (entityType.getYamlName().equals(EntityTypeConstants.FEATURE_FLAG_STAGE)) {
+        return featureFlagYamlService
+            .getFeatureFlagYamlSchema(
+                accountIdentifier, projectIdentifier, orgIdentifier, scope, yamlSchemaWithDetailsList)
+            .getSchema();
+      }
+      throw new InvalidRequestException(format("stage %s does not exist in module pms", entityType));
+    }
+    return yamlSchemaProvider.getYamlSchema(entityType, orgIdentifier, projectIdentifier, scope);
   }
 }

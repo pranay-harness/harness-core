@@ -48,7 +48,6 @@ public interface MessageConstants {
   String DELEGATE_STOP_ACQUIRING = "stop-acquiring";
   String DELEGATE_GO_AHEAD = "go-ahead";
   String DELEGATE_RESUME = "resume";
-  String DELEGATE_SEND_VERSION_HEADER = "send-version-header";
   String DELEGATE_STOP_GRPC = "stop-grpc";
   String DELEGATE_START_GRPC = "start-grpc";
 

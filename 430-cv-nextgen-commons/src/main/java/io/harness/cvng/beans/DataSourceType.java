@@ -21,9 +21,9 @@ public enum DataSourceType {
   KUBERNETES("Kubernetes", VerificationType.TIME_SERIES, "prometheus"),
   NEW_RELIC("New Relic", VerificationType.TIME_SERIES, "appdynamics"),
   PROMETHEUS("Prometheus", VerificationType.TIME_SERIES, "prometheus"),
-  DATADOG_METRICS("DatadogMetrics", VerificationType.TIME_SERIES, "datadog_metrics"),
-  DATADOG_LOG("DatadogLog", VerificationType.LOG, "datadog_log"),
-  CUSTOM_HEALTH("CustomHealth", VerificationType.TIME_SERIES, "custom_health");
+  DATADOG_METRICS("DatadogMetrics", VerificationType.TIME_SERIES, "prometheus"),
+  DATADOG_LOG("DatadogLog", VerificationType.LOG, "splunk"),
+  CUSTOM_HEALTH("CustomHealth", VerificationType.TIME_SERIES, "prometheus");
 
   private String displayName;
   private VerificationType verificationType;

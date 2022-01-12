@@ -77,6 +77,21 @@ public class ServiceLevelObjectiveResourceTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testCreate_sloTargetValidation() throws IOException {
+    String sloYaml = getYAML("slo/slo-invalid-target.yaml");
+    Response response = RESOURCES.client()
+                            .target("http://localhost:9998/slo/")
+                            .queryParam("accountId", builderFactory.getContext().getAccountId())
+                            .request(MediaType.APPLICATION_JSON_TYPE)
+                            .post(Entity.json(convertToJson(sloYaml)));
+    assertThat(response.getStatus()).isEqualTo(400);
+    String jsonResponse = response.readEntity(String.class);
+    // TODO: we need to find a library to assert json responses in a better way.
+    assertThat(jsonResponse).contains("{\"field\":\"sloTarget\",\"message\":\"slo target should be less than 100\"}");
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testCreate_invalidMonitoredServiceIdentifier() throws IOException {
     String sloYaml = getYAML("slo/slo-with-rolling-target.yaml", "invalidIdentifier");
     Response response = RESOURCES.client()

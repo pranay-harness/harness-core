@@ -8,6 +8,7 @@
 package io.harness.serializer.json;
 
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.serializer.json.serializers.ProtoJsonSerializer;
 
 public class StepTypeSerializer extends ProtoJsonSerializer<StepType> {
   public StepTypeSerializer(Class<StepType> t) {

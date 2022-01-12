@@ -279,6 +279,17 @@ import io.harness.delegate.task.azure.request.AzureVMSSSetupTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSSwitchRouteTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters;
 import io.harness.delegate.task.azure.request.AzureVMSSTaskParameters.AzureVMSSTaskType;
+import io.harness.delegate.task.azure.resource.AzureResourceTaskParameters;
+import io.harness.delegate.task.azure.resource.AzureResourceTaskResponse;
+import io.harness.delegate.task.azure.resource.operation.AzureOperationName;
+import io.harness.delegate.task.azure.resource.operation.AzureResourceOperation;
+import io.harness.delegate.task.azure.resource.operation.AzureResourceOperationResponse;
+import io.harness.delegate.task.azure.resource.operation.AzureResourceProvider;
+import io.harness.delegate.task.azure.resource.operation.acr.ACRListRepositoryTagsOperation;
+import io.harness.delegate.task.azure.resource.operation.acr.ACRListRepositoryTagsOperationResponse;
+import io.harness.delegate.task.azure.resource.operation.k8s.AzureKubernetesClusterDTO;
+import io.harness.delegate.task.azure.resource.operation.k8s.AzureListKubernetesClustersOperation;
+import io.harness.delegate.task.azure.resource.operation.k8s.AzureListKubernetesClustersOperationResponse;
 import io.harness.delegate.task.azure.response.AzureVMInstanceData;
 import io.harness.delegate.task.azure.response.AzureVMSSDeployTaskResponse;
 import io.harness.delegate.task.azure.response.AzureVMSSGetVirtualMachineScaleSetResponse;
@@ -1068,5 +1079,16 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(ServiceNowValidationParams.class, 543457);
     kryo.register(ServiceNowTaskNGResponse.class, 543458);
     kryo.register(ServiceNowTaskNGParameters.class, 543459);
+    kryo.register(AzureResourceTaskParameters.class, 543460);
+    kryo.register(AzureResourceTaskResponse.class, 543461);
+    kryo.register(AzureResourceOperation.class, 543462);
+    kryo.register(AzureResourceOperationResponse.class, 543463);
+    kryo.register(ACRListRepositoryTagsOperation.class, 543464);
+    kryo.register(ACRListRepositoryTagsOperationResponse.class, 543465);
+    kryo.register(AzureListKubernetesClustersOperation.class, 543466);
+    kryo.register(AzureListKubernetesClustersOperationResponse.class, 543467);
+    kryo.register(AzureKubernetesClusterDTO.class, 543468);
+    kryo.register(AzureResourceProvider.class, 543469);
+    kryo.register(AzureOperationName.class, 543470);
   }
 }

@@ -241,16 +241,14 @@ public class DelegateQueueTask implements Runnable {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     long now = clock.millis();
 
-    Query<DelegateTask> unassignedTasksQuery =
-        persistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter(DelegateTaskKeys.status, QUEUED)
-            .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
-            .field(DelegateTaskKeys.nextBroadcast)
-            .lessThan(now)
-            .field(DelegateTaskKeys.expiry)
-            .greaterThan(now)
-            .field(DelegateTaskKeys.delegateId)
-            .doesNotExist();
+    Query<DelegateTask> unassignedTasksQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                   .filter(DelegateTaskKeys.status, QUEUED)
+                                                   .field(DelegateTaskKeys.nextBroadcast)
+                                                   .lessThan(now)
+                                                   .field(DelegateTaskKeys.expiry)
+                                                   .greaterThan(now)
+                                                   .field(DelegateTaskKeys.delegateId)
+                                                   .doesNotExist();
 
     try (HIterator<DelegateTask> iterator = new HIterator<>(unassignedTasksQuery.fetch())) {
       int count = 0;
@@ -266,9 +264,11 @@ public class DelegateQueueTask implements Runnable {
           log.info("No eligible delegates for task {}", delegateTask.getUuid());
           continue;
         }
+
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
         List<String> broadcastToDelegates = Lists.newArrayList();
-        int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
+        int broadcastLimit = Math.min(eligibleDelegatesList.size(), 10);
+
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
 
         while (delegateIdIterator.hasNext() && broadcastLimit > broadcastToDelegates.size()) {
@@ -286,7 +286,7 @@ public class DelegateQueueTask implements Runnable {
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
-          log.info("Cannot find delegate task {}, update failed on broadcast", delegateTask.getUuid());
+          log.info("Cannot find delegate task, update failed on broadcast");
           continue;
         }
         delegateTask.setBroadcastToDelegateIds(broadcastToDelegates);
@@ -303,8 +303,8 @@ public class DelegateQueueTask implements Runnable {
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
           if (delegateTask.getBroadcastCount() > 1) {
-            log.info("Rebroadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
-                delegateTask.getBroadcastCount());
+            log.info("Rebroadcast queued task id {} on broadcast attempt: {} to {} ", delegateTask.getUuid(),
+                delegateTask.getBroadcastCount(), delegateTask.getBroadcastToDelegateIds());
           } else {
             log.debug("Broadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
                 delegateTask.getBroadcastCount());

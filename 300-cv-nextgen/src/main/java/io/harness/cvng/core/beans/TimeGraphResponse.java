@@ -10,18 +10,19 @@ package io.harness.cvng.core.beans;
 import java.util.List;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.NonNull;
-import lombok.Value;
 import lombok.experimental.SuperBuilder;
 
 @Data
+@NoArgsConstructor
 @SuperBuilder
 public class TimeGraphResponse {
   @NonNull Long startTime;
   @NonNull Long endTime;
   List<DataPoints> dataPoints;
 
-  @Value
+  @Data
   @Builder
   public static class DataPoints {
     Double value;

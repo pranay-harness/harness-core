@@ -127,6 +127,9 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .type(slo.getServiceLevelIndicators().get(0).getType())
         .totalErrorBudget(totalErrorBudgetMinutes)
         .timeRemainingDays(timePeriod.getRemainingDays(currentLocalDate).getDays())
+        .burnRate(SLODashboardWidget.BurnRate.builder()
+                      .currentRatePercentage(sloGraphData.dailyBurnRate(serviceLevelObjective.getZoneOffset()))
+                      .build())
         .build();
   }
 

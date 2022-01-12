@@ -21,7 +21,7 @@ func HandleToken(config config.Config) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		h := w.Header()
 		h.Set("Access-Control-Allow-Origin", "*")
-		secret := []byte(config.Secrets.LogSecret)
+		secret := []byte(config.Auth.LogSecret)
 		accountID := r.FormValue(accountIDParam)
 		cookie := authcookie.NewSinceNow(accountID, defaultTokenExpiryTime, secret)
 		io.WriteString(w, cookie)

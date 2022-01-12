@@ -24,6 +24,7 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.Capability;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
 import io.harness.delegate.beans.NoAvailableDelegatesException;
@@ -177,6 +178,10 @@ public class PerpetualTaskRecordHandler implements PerpetualTaskCrudObserver {
         ignoredOnPurpose(exception);
         perpetualTaskService.updateTaskUnassignedReason(
             taskId, PerpetualTaskUnassignedReason.NO_DELEGATE_AVAILABLE, taskRecord.getAssignTryCount());
+      } catch (NoEligibleDelegatesInAccountException exception) {
+        ignoredOnPurpose(exception);
+        perpetualTaskService.updateTaskUnassignedReason(
+            taskId, PerpetualTaskUnassignedReason.NO_ELIGIBLE_DELEGATES, taskRecord.getAssignTryCount());
       } catch (WingsException exception) {
         ExceptionLogger.logProcessedMessages(exception, MANAGER, log);
       } catch (Exception e) {

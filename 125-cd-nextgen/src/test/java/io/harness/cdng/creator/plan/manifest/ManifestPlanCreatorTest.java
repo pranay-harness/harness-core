@@ -60,7 +60,7 @@ public class ManifestPlanCreatorTest extends CDNGTestBase {
             .build();
 
     assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(() -> ManifestsPlanCreator.createPlanForManifestsNode(serviceConfig))
+        .isThrownBy(() -> ManifestsPlanCreator.createPlanForManifestsNode(serviceConfig, "manifestId"))
         .withMessageContaining("Duplicate identifier: [test] in manifests");
   }
 
@@ -86,7 +86,7 @@ public class ManifestPlanCreatorTest extends CDNGTestBase {
                         manifestWith("m3", ManifestConfigType.VALUES)))
                     .build())
             .build();
-    PlanCreationResponse response = ManifestsPlanCreator.createPlanForManifestsNode(serviceConfig);
+    PlanCreationResponse response = ManifestsPlanCreator.createPlanForManifestsNode(serviceConfig, "manifestId");
     assertThat(response.getNodes()
                    .values()
                    .stream()

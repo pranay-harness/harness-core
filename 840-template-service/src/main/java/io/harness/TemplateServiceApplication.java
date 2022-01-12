@@ -1,8 +1,8 @@
 /*
  * Copyright 2022 Harness Inc. All rights reserved.
- * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
  * that can be found in the licenses directory at the root of this repository, also available at
- * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
 package io.harness;
@@ -51,6 +51,7 @@ import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.serializer.jackson.TemplateServiceJacksonModule;
 import io.harness.service.impl.DelegateAsyncServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.template.InspectCommand;
@@ -160,6 +161,7 @@ public class TemplateServiceApplication extends Application<TemplateServiceConfi
 
   public static void configureObjectMapper(final ObjectMapper mapper) {
     NGObjectMapperHelper.configureNGObjectMapper(mapper);
+    mapper.registerModule(new TemplateServiceJacksonModule());
   }
 
   @Override

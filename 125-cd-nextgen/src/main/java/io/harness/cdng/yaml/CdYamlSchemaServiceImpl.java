@@ -93,8 +93,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   }
 
   @Override
-  public JsonNode getStepYamlSchema(EntityType entityType) {
-    return yamlSchemaProvider.getYamlSchema(entityType, null, null, null);
+  public JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope) {
+    return yamlSchemaProvider.getYamlSchema(entityType, orgId, projectId, scope);
   }
 
   @Override
@@ -130,16 +130,17 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
 
     yamlSchemaGenerator.modifyRefsNamespace(deploymentStageSchema, CD_NAMESPACE);
 
-    List<String> enabledFeatureFlags =
+    Set<String> enabledFeatureFlags =
         RestClientUtils.getResponse(accountClient.listAllFeatureFlagsForAccount(accountIdentifier))
             .stream()
             .filter(FeatureFlag::isEnabled)
             .map(FeatureFlag::getName)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
 
     // Should be after this modifyRefsNamespace call.
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), CD_NAMESPACE);
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        CD_NAMESPACE);
     if (stepSchemaWithDetails != null) {
       YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
           deploymentStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags);
