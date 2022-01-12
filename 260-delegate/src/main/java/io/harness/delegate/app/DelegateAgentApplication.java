@@ -137,6 +137,7 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
       }
       log.info("Log manager has been shutdown and logs have been flushed.");
     }));
+    log.info("Delegate agent shutdown hooks registered");
   }
 
   private void registerHealthChecks(final Environment environment, final Injector injector) {
