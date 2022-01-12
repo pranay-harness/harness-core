@@ -48,7 +48,6 @@ import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 
@@ -115,11 +114,6 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
     if (delegateTask != null) {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-          log.debug("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
-              delegateTask.getVersion());
-        }
-
         if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
           RetryDelegate retryDelegate =
               RetryDelegate.builder().delegateId(delegateId).delegateTask(delegateTask).taskQuery(taskQuery).build();
