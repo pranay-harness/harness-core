@@ -2,8 +2,6 @@ module github.com/wings-software/portal/commons/go/lib
 
 go 1.14
 
-replace github.com/wings-software/portal/product/log-service => ../../../product/log-service
-
 require (
 	cloud.google.com/go/storage v1.8.0
 	github.com/aws/aws-sdk-go v1.34.29
@@ -13,6 +11,7 @@ require (
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gofrs/uuid v4.2.0+incompatible
 	github.com/golang/mock v1.4.4
+	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/google/go-containerregistry v0.3.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1
 	github.com/hashicorp/go-multierror v1.1.0
@@ -36,7 +35,7 @@ require (
 	golang.org/x/tools v0.0.0-20201105220310-78b158585360 // indirect
 	google.golang.org/api v0.24.0
 	google.golang.org/grpc v1.29.1
-	google.golang.org/protobuf v1.25.0 // indirect
+	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/DATA-DOG/go-sqlmock.v1 v1.3.0
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect

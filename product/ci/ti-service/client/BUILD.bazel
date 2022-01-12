@@ -11,7 +11,7 @@ go_library(
     deps = [
         "//commons/go/lib/logs",
         "//product/ci/ti-service/types",
-        "@com_github_cenkalti_backoff_v4//:go_default_library",
-        "@org_uber_go_zap//:go_default_library",
+        "@com_github_cenkalti_backoff_v4//:backoff",
+        "@org_uber_go_zap//:zap",
     ],
 )

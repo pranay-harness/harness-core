@@ -38,6 +38,13 @@ http_archive(
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
 
+go_repository(
+    name = "com_github_nbio_st",
+    importpath = "github.com/nbio/st",
+    sum = "h1:W6apQkHrMkS0Muv8G/TipAy/FJl/rCYT0+EuS8+Z0z4=",
+    version = "v0.0.0-20140626010706-e9e8d9816f32",
+)
+
 go_rules_dependencies()
 
 go_register_toolchains(version = "1.17.1")
@@ -454,8 +461,8 @@ go_repository(
 go_repository(
     name = "com_github_golang_protobuf",
     importpath = "github.com/golang/protobuf",
-    sum = "h1:JjCZWpVbqXDqFVmTfYWEVTMIYrL/NPdPSCHPJ0T/raM=",
-    version = "v1.4.3",
+    sum = "h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=",
+    version = "v1.5.2",
 )
 
 go_repository(
@@ -468,8 +475,8 @@ go_repository(
 go_repository(
     name = "com_github_google_go_cmp",
     importpath = "github.com/google/go-cmp",
-    sum = "h1:X2ev0eStA3AbceY54o37/0PQ/UWqKEiiO2dKL5OPaFM=",
-    version = "v0.5.2",
+    sum = "h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=",
+    version = "v0.5.5",
 )
 
 go_repository(
@@ -636,8 +643,8 @@ go_repository(
 go_repository(
     name = "org_golang_google_protobuf",
     importpath = "google.golang.org/protobuf",
-    sum = "h1:Ejskq+SyPohKW+1uil0JJMtmHCgJPJ/qWTxr8qp+R4c=",
-    version = "v1.25.0",
+    sum = "h1:SnqbnDw1V7RiZcXPx5MEeqPv2s79L9i7BJUlG/+RurQ=",
+    version = "v1.27.1",
 )
 
 go_repository(
@@ -853,8 +860,8 @@ go_repository(
 go_repository(
     name = "com_github_gofrs_uuid",
     importpath = "github.com/gofrs/uuid",
-    sum = "h1:y12jRkkFxsd7GpqdSZ+/KCs/fJbqpEXSGd4+jfEaewE=",
-    version = "v3.2.0+incompatible",
+    sum = "h1:yyYWMnhkhrKwwr8gAOcOCYxOOscHgDS9yZgBrnJfGa0=",
+    version = "v4.2.0+incompatible",
 )
 
 go_repository(
@@ -3373,8 +3380,8 @@ go_repository(
 go_repository(
     name = "cc_mvdan_sh_v3",
     importpath = "mvdan.cc/sh/v3",
-    sum = "h1:uQBpiGM+rEuHse3Q+W7ajuJUeOtFVJUN/6GeX4/dUWE=",
-    version = "v3.2.1",
+    sum = "h1:+fZaWcXWRjYAvqzEKoDhDM3DkxdDUykU2iw0VMKFe9s=",
+    version = "v3.2.4",
 )
 
 go_repository(
