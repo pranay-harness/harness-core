@@ -494,9 +494,20 @@ public class GovernanceConfigServiceImpl implements GovernanceConfigService {
         TimeRangeBasedFreezeConfig oldWindow = configMap.get(entry.getName());
         // update scenario, restore uuid and timezone
         entry.setUuid(oldWindow.getUuid());
-
         if (isEmpty(entry.getDescription())) {
           entry.setDescription(null);
+        }
+
+        /*
+          In case of YAML edit, validateTimeRangeYaml method always returning the expires as false.
+          Expires field is readonly property, we are setting the expires value back to previous value
+          to handle the issue.
+         */
+        if (entry.getTimeRange().isExpires() != oldWindow.getTimeRange().isExpires()) {
+          entry.setTimeRange(new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
+              entry.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
+              entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
+              entry.getTimeRange().getFreezeOccurrence(), oldWindow.getTimeRange().isExpires()));
         }
 
         // if any updates to an active window
