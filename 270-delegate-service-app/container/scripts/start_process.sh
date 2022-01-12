@@ -33,6 +33,7 @@ else
 fi
 
 export JAVA_OPTS="-Xms${MEMORY}m -Xmx${MEMORY}m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/heapdump -XX:+PrintGCDetails -XX:+PrintGCDateStamps -Xloggc:mygclogfilename.gc $GC_PARAMS $JAVA_ADVANCED_FLAGS"
+JAVA_OPTS=$JAVA_OPTS" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5005"
 
 
 if [[ "${ENABLE_APPDYNAMICS}" == "true" ]]; then
