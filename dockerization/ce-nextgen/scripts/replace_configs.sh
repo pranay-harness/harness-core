@@ -14,6 +14,28 @@ replace_key_value () {
   fi
 }
 
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 -s <<< "${HOST_AND_PORT[$INDEX]}")
+
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    if [[ "" != "$PORT" ]]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
+  done
+}
+
+write_mongo_params() {
+  IFS='&' read -ra PARAMS <<< "$2"
+  for PARAM_PAIR in "${PARAMS[@]}"; do
+    NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
+    VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
+    yq write -i $CONFIG_FILE $1.params.$NAME "$VALUE"
+  done
+}
+
 #
 yq delete -i $CONFIG_FILE server.adminConnectors
 yq delete -i $CONFIG_FILE 'server.applicationConnectors.(type==https)'
@@ -23,6 +45,17 @@ replace_key_value logging.level $LOGGING_LEVEL
 replace_key_value server.applicationConnectors[0].port $CE_NEXTGEN_PORT
 
 replace_key_value events-mongo.uri "${EVENTS_MONGO_DB_URL//\\&/&}"
+
+if [[ "" != "$EVENTS_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE events-mongo.uri
+  replace_key_value events-mongo.username "$EVENTS_MONGO_USERNAME"
+  replace_key_value events-mongo.password "$EVENTS_MONGO_PASSWORD"
+  replace_key_value events-mongo.database "$EVENTS_MONGO_DATABASE"
+  replace_key_value events-mongo.schema "$EVENTS_MONGO_SCHEMA"
+  write_mongo_hosts_and_ports events-mongo "$EVENTS_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params events-mongo "$EVENTS_MONGO_PARAMS"
+fi
+
 replace_key_value events-mongo.indexManagerMode $EVENTS_MONGO_INDEX_MANAGER_MODE
 
 replace_key_value ngManagerClientConfig.baseUrl $NG_MANAGER_CLIENT_BASEURL
@@ -69,6 +102,9 @@ replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFOR
 
 replace_key_value grpcClient.target "$MANAGER_TARGET"
 replace_key_value grpcClient.authority "$MANAGER_AUTHORITY"
+
+replace_key_value secretsConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
+replace_key_value secretsConfiguration.secretResolutionEnabled  "$RESOLVE_SECRETS"
 
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
