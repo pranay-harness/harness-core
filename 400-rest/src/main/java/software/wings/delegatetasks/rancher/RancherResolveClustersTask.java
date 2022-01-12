@@ -13,8 +13,8 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidArgumentsException;
 
-import software.wings.helpers.ext.k8s.request.RancherResolveClustersTaskParameters;
-import software.wings.helpers.ext.k8s.response.RancherResolveClustersResponse;
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 import software.wings.infra.RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry;
 
 import com.google.inject.Inject;
@@ -29,6 +29,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jose4j.lang.JoseException;
+import software.wings.sm.states.rancher.RancherResolveState;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -49,17 +50,29 @@ public class RancherResolveClustersTask extends AbstractDelegateRunnableTask {
 
   @Override
   public RancherResolveClustersResponse run(TaskParameters parameters) throws IOException, JoseException {
+    LogCallback logCallback = getLogStreamingTaskClient().obtainLogCallback(RancherResolveState.COMMAND_UNIT_NAME);
     if (!(parameters instanceof RancherResolveClustersTaskParameters)) {
       throw new InvalidArgumentsException(
           Pair.of("parameters", "Must be instance of RancherResolveClustersTaskParameters"));
     }
 
     RancherResolveClustersTaskParameters resolveTaskParams = (RancherResolveClustersTaskParameters) parameters;
-
     RancherClusterDataResponse rancherClusterData;
     try {
+      logCallback.saveExecutionLog(
+          "Fetching list of clusters and labels from Rancher: " + resolveTaskParams.getRancherConfig().getRancherUrl(),
+          LogLevel.INFO);
       rancherClusterData = helper.resolveRancherClusters(
           resolveTaskParams.getRancherConfig(), resolveTaskParams.getEncryptedDataDetails());
+
+      if (CollectionUtils.isNotEmpty(rancherClusterData.getData())) {
+        logCallback.saveExecutionLog("Fetched clusters list: "
+                + rancherClusterData.getData()
+                      .stream()
+                      .map(clusterData -> clusterData.getName())
+                      .collect(Collectors.toList()),
+            LogLevel.INFO);
+      }
     } catch (Exception e) {
       log.error("Caught exception while fetching clusters data from rancher", e);
       RancherResolveClustersResponse response =
@@ -72,6 +85,15 @@ public class RancherResolveClustersTask extends AbstractDelegateRunnableTask {
         getClusterSelectionParams(resolveTaskParams.getClusterSelectionCriteria());
     List<String> filteredClusters = filterClustersForCriteria(rancherClusterData, selectionParams);
 
+    if (CollectionUtils.isEmpty(filteredClusters)) {
+      logCallback.saveExecutionLog("No eligible cluster found after filtering", LogLevel.ERROR);
+      return RancherResolveClustersResponse.builder()
+          .executionStatus(ExecutionStatus.FAILED)
+          .build();
+    }
+
+    logCallback.saveExecutionLog(
+        "Eligible clusters list after applying label filters: " + filteredClusters, LogLevel.INFO);
     return RancherResolveClustersResponse.builder()
         .executionStatus(ExecutionStatus.SUCCESS)
         .clusters(filteredClusters)

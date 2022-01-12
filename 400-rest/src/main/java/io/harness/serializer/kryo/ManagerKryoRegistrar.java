@@ -118,6 +118,9 @@ import software.wings.delegatetasks.collect.artifacts.AzureArtifactsCollectionTa
 import software.wings.delegatetasks.event.EventsDeliveryCallback;
 import software.wings.delegatetasks.manifest.ManifestCollectionExecutionResponse;
 import software.wings.delegatetasks.manifest.ManifestCollectionResponse;
+import software.wings.delegatetasks.rancher.RancherResolveClustersResponse;
+import software.wings.delegatetasks.rancher.RancherResolveClustersTaskParameters;
+import software.wings.delegatetasks.rancher.RancherStateExecutionData;
 import software.wings.delegatetasks.validation.capabilities.*;
 import software.wings.expression.ShellScriptEnvironmentVariables;
 import software.wings.helpers.ext.azure.devops.AzureArtifactsFeed;
@@ -1177,5 +1180,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(RancherConfig.class, 50006);
     kryo.register(RancherKubernetesInfrastructure.class, 50007);
     kryo.register(RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry.class, 50008);
+    kryo.register(RancherStateExecutionData.class, 50009);
   }
 }

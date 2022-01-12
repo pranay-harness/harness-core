@@ -7,7 +7,7 @@ import software.wings.sm.states.k8s.K8sRollingDeploy;
 
 public class RancherK8sRollingDeploy extends K8sRollingDeploy {
   public RancherK8sRollingDeploy(String name) {
-    super(name, StateType.RANCHER_K8S_DEPLOYMENT_ROLLING);
+    super(name);
   }
 
   @Override

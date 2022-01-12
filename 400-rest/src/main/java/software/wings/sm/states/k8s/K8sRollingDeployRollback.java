@@ -80,10 +80,6 @@ public class K8sRollingDeployRollback extends AbstractK8sState {
     super(name, K8S_DEPLOYMENT_ROLLING_ROLLBACK.name());
   }
 
-  protected K8sRollingDeployRollback(String name, StateType stateType) {
-    super(name, stateType.name());
-  }
-
   @Override
   public Integer getTimeoutMillis() {
     return StateTimeoutUtils.getTimeoutMillisFromMinutes(stateTimeoutInMinutes);

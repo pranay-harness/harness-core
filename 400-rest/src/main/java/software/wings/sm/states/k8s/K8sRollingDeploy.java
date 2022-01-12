@@ -89,10 +89,6 @@ public class K8sRollingDeploy extends AbstractK8sState {
     super(name, K8S_DEPLOYMENT_ROLLING.name());
   }
 
-  protected K8sRollingDeploy(String name, StateType stateType) {
-    super(name, stateType.name());
-  }
-
   @Override
   public String commandName() {
     return K8S_ROLLING_DEPLOY_COMMAND_NAME;

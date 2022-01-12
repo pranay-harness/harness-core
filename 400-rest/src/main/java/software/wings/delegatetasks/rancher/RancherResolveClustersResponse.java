@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.k8s.response;
+package software.wings.delegatetasks.rancher;
 
 import io.harness.beans.ExecutionStatus;
 import io.harness.delegate.beans.DelegateMetaInfo;

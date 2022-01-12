@@ -9,7 +9,6 @@ import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.SweepingOutputInstance;
-import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
@@ -17,39 +16,36 @@ import io.harness.exception.WingsException;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.tasks.ResponseData;
 
-import software.wings.api.PhaseElement;
 import software.wings.api.RancherClusterElement;
-import software.wings.beans.RancherConfig;
-import software.wings.beans.RancherKubernetesInfrastructureMapping;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.TaskType;
+import software.wings.beans.*;
+import software.wings.beans.command.CommandUnitDetails;
+import software.wings.beans.command.RancherDummyCommandUnit;
 import software.wings.common.RancherK8sClusterProcessor;
-import software.wings.helpers.ext.k8s.request.RancherResolveClustersTaskParameters;
-import software.wings.helpers.ext.k8s.response.RancherResolveClustersResponse;
+import software.wings.delegatetasks.rancher.RancherResolveClustersTaskParameters;
+import software.wings.delegatetasks.rancher.RancherResolveClustersResponse;
+import software.wings.delegatetasks.rancher.RancherStateExecutionData;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.RancherKubernetesInfrastructure;
+import software.wings.service.intfc.ActivityService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExecutionResponse;
-import software.wings.sm.State;
-import software.wings.sm.StateExecutionData;
+import software.wings.sm.*;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
@@ -59,8 +55,12 @@ public class RancherResolveState extends State {
   @Inject private transient SettingsService settingsService;
   @Inject private transient DelegateService delegateService;
   @Inject private transient InfrastructureDefinitionService infrastructureDefinitionService;
+  @Inject private transient ActivityService activityService;
   @Inject private SecretManager secretManager;
   @Getter @Setter @Attributes(title = "Timeout (Minutes)") @DefaultValue("10") private Integer stateTimeoutInMinutes;
+
+  public static final String COMMAND_UNIT_NAME = "Execute";
+  public static final String COMMAND_NAME = "Rancher Cluster Resolve";
 
   public RancherResolveState(String name) {
     super(name, RANCHER_RESOLVE.name());
@@ -69,7 +69,8 @@ public class RancherResolveState extends State {
   @Override
   public ExecutionResponse execute(ExecutionContext context) {
     try {
-      return executeInternal(context);
+      Activity activity = createRancherActivity(context);
+      return executeInternal(context, activity.getUuid());
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
@@ -77,7 +78,7 @@ public class RancherResolveState extends State {
     }
   }
 
-  private ExecutionResponse executeInternal(ExecutionContext context) {
+  private ExecutionResponse executeInternal(ExecutionContext context, String activityId) {
     RancherKubernetesInfrastructureMapping rancherKubernetesInfrastructureMapping =
         rancherStateHelper.fetchRancherKubernetesInfrastructureMapping(context);
 
@@ -96,6 +97,8 @@ public class RancherResolveState extends State {
             .encryptedDataDetails(encryptedDataDetails)
             .clusterSelectionCriteria(((RancherKubernetesInfrastructure) infrastructureDefinition.getInfrastructure())
                                           .getClusterSelectionCriteria())
+            .activityId(activityId)
+            .appId(context.getAppId())
             .build();
 
     String waitId = generateUuid();
@@ -107,14 +110,13 @@ public class RancherResolveState extends State {
                                               .async(true)
                                               .taskType(TaskType.RANCHER_RESOLVE_CLUSTERS.name())
                                               .parameters(new Object[] {rancherResolveClustersTaskParameters})
-                                              // TODO: Update task timeout from state
-                                              .timeout(60000)
+                                              .timeout(stateTimeoutInMinutes * 60 * 1000L)
                                               .build())
                                     .selectionLogsTrackingEnabled(true)
                                     .build();
 
     delegateService.queueTask(delegateTask);
-    StateExecutionData executionData = new StateExecutionData();
+    StateExecutionData executionData = new RancherStateExecutionData(activityId);
 
     return ExecutionResponse.builder()
         .async(true)
@@ -125,9 +127,19 @@ public class RancherResolveState extends State {
 
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
-    RancherResolveClustersResponse rancherResolveClustersResponse =
+    RancherResolveClustersResponse executionResponse =
         (RancherResolveClustersResponse) response.values().iterator().next();
-    List<String> clusterNames = rancherResolveClustersResponse.getClusters();
+
+    activityService.updateStatus(((RancherStateExecutionData)context.getStateExecutionData()).getActivityId(),
+        context.getAppId(), executionResponse.getExecutionStatus());
+
+    if (ExecutionStatus.FAILED == executionResponse.getExecutionStatus()) {
+      return ExecutionResponse.builder()
+          .executionStatus(executionResponse.getExecutionStatus())
+          .stateExecutionData(context.getStateExecutionData())
+          .build();
+    }
+    List<String> clusterNames = executionResponse.getClusters();
     List<RancherClusterElement> clusterElements =
         clusterNames.stream()
             .map(name -> new RancherClusterElement(UUIDGenerator.generateUuid(), name))
@@ -150,5 +162,32 @@ public class RancherResolveState extends State {
   @Override
   public void handleAbortEvent(ExecutionContext context) {
     // NoOp
+  }
+
+  private Activity createRancherActivity(ExecutionContext executionContext) {
+    Application app = ((ExecutionContextImpl) executionContext).fetchRequiredApp();
+    Environment env = ((ExecutionContextImpl) executionContext).fetchRequiredEnvironment();
+
+    Activity activity = Activity.builder()
+                            .applicationName(app.getName())
+                            .appId(app.getUuid())
+                            .commandName(COMMAND_NAME)
+                            .type(Activity.Type.Command)
+                            .workflowType(executionContext.getWorkflowType())
+                            .workflowExecutionName(executionContext.getWorkflowExecutionName())
+                            .stateExecutionInstanceId(executionContext.getStateExecutionInstanceId())
+                            .stateExecutionInstanceName(executionContext.getStateExecutionInstanceName())
+                            .commandType(getStateType())
+                            .workflowExecutionId(executionContext.getWorkflowExecutionId())
+                            .workflowId(executionContext.getWorkflowId())
+                            .commandUnits(Collections.singletonList(new RancherDummyCommandUnit(COMMAND_UNIT_NAME)))
+                            .status(ExecutionStatus.RUNNING)
+                            .commandUnitType(CommandUnitDetails.CommandUnitType.RANCHER)
+                            .environmentId(env.getUuid())
+                            .environmentName(env.getName())
+                            .environmentType(env.getEnvironmentType())
+                            .build();
+
+    return activityService.save(activity);
   }
 }

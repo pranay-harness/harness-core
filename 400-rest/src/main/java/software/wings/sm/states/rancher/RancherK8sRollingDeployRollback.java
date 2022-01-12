@@ -7,7 +7,7 @@ import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 
 public class RancherK8sRollingDeployRollback extends K8sRollingDeployRollback {
   public RancherK8sRollingDeployRollback(String name) {
-    super(name, StateType.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK);
+    super(name);
   }
 
   @Override

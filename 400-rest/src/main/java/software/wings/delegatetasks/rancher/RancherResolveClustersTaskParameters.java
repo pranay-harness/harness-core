@@ -1,4 +1,4 @@
-package software.wings.helpers.ext.k8s.request;
+package software.wings.delegatetasks.rancher;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
@@ -8,6 +8,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.ExecutionCapabilityDemander;
 import io.harness.delegate.task.ActivityAccess;
+import io.harness.delegate.task.Cd1ApplicationAccess;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -23,21 +24,22 @@ import lombok.Data;
 @TargetModule(HarnessModule._950_DELEGATE_TASKS_BEANS)
 @OwnedBy(CDP)
 public class RancherResolveClustersTaskParameters
-    implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander {
+    implements TaskParameters, ActivityAccess, ExecutionCapabilityDemander, Cd1ApplicationAccess {
   private RancherConfig rancherConfig;
   private List<RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry> clusterSelectionCriteria;
   private String activityId;
-
-  List<EncryptedDataDetail> encryptedDataDetails;
+  private String appId;
+  private List<EncryptedDataDetail> encryptedDataDetails;
 
   @Builder
   public RancherResolveClustersTaskParameters(RancherConfig rancherConfig,
       List<RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry> clusterSelectionCriteria,
-      List<EncryptedDataDetail> encryptedDataDetails, String activityId) {
+      List<EncryptedDataDetail> encryptedDataDetails, String activityId, String appId) {
     this.rancherConfig = rancherConfig;
     this.clusterSelectionCriteria = clusterSelectionCriteria;
     this.encryptedDataDetails = encryptedDataDetails;
     this.activityId = activityId;
+    this.appId = appId;
   }
 
   @Override
