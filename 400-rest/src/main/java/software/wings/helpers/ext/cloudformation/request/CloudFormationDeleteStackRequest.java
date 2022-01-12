@@ -30,9 +30,9 @@ public class CloudFormationDeleteStackRequest extends CloudFormationCommandReque
   @Builder
   public CloudFormationDeleteStackRequest(CloudFormationCommandType commandType, String accountId, String appId,
       String activityId, String commandName, String cloudFormationRoleArn, AwsConfig awsConfig, int timeoutInMs,
-      String stackNameSuffix, String region, String customStackName) {
-    super(
-        commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region, cloudFormationRoleArn);
+      String stackNameSuffix, String region, String customStackName, boolean skipWaitForResources) {
+    super(commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region, cloudFormationRoleArn,
+        skipWaitForResources);
     this.stackNameSuffix = stackNameSuffix;
     this.customStackName = customStackName;
   }
