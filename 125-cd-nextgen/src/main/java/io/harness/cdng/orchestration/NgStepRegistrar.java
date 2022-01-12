@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.orchestration;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -6,6 +13,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactsStep;
 import io.harness.cdng.artifact.steps.SidecarsStep;
+import io.harness.cdng.helm.HelmDeployStep;
+import io.harness.cdng.helm.HelmRollbackStep;
 import io.harness.cdng.infra.steps.EnvironmentStep;
 import io.harness.cdng.infra.steps.InfrastructureSectionStep;
 import io.harness.cdng.infra.steps.InfrastructureStep;
@@ -88,6 +97,8 @@ public class NgStepRegistrar {
     engineSteps.put(CDNGExecutionStep.STEP_TYPE, CDNGExecutionStep.class);
     engineSteps.put(CDStepsStep.STEP_TYPE, CDStepsStep.class);
     engineSteps.put(EnvironmentStep.STEP_TYPE, EnvironmentStep.class);
+    engineSteps.put(HelmDeployStep.STEP_TYPE, HelmDeployStep.class);
+    engineSteps.put(HelmRollbackStep.STEP_TYPE, HelmRollbackStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
     return engineSteps;

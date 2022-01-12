@@ -13,13 +13,13 @@
     "infrastructure": {
       "oneOf": [
         {
-          "$ref": "#/definitions/AwsVmInfraYaml"
-        },
-        {
           "$ref": "#/definitions/K8sDirectInfraYaml"
         },
         {
           "$ref": "#/definitions/UseFromStageInfraYaml"
+        },
+        {
+          "$ref": "#/definitions/VmInfraYaml"
         }
       ]
     },
@@ -277,62 +277,6 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "AwsVmBuildJobInfo": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/BuildJobEnvInfo"
-        },
-        {
-          "type": "object",
-          "properties": {
-            "workDir": {
-              "type": "string"
-            }
-          }
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "AwsVmInfraYaml": {
-      "allOf": [
-        {
-          "$ref": "#/definitions/Infrastructure"
-        },
-        {
-          "type": "object",
-          "required": [
-            "spec",
-            "type"
-          ],
-          "properties": {
-            "spec": {
-              "$ref": "#/definitions/AwsVmInfraYamlSpec"
-            },
-            "type": {
-              "type": "string",
-              "enum": [
-                "KubernetesDirect",
-                "UseFromStage",
-                "AwsVm"
-              ]
-            }
-          }
-        }
-      ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "AwsVmInfraYamlSpec": {
-      "type": "object",
-      "required": [
-        "poolId"
-      ],
-      "properties": {
-        "poolId": {
-          "type": "string"
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "BarrierStepInfo": {
       "allOf": [
         {
@@ -371,6 +315,37 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "BranchWebhookEvent": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/WebhookEvent"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "baseAttributes": {
+              "$ref": "#/definitions/WebhookBaseAttributes"
+            },
+            "branchName": {
+              "type": "string"
+            },
+            "commitDetailsList": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommitDetails"
+              }
+            },
+            "link": {
+              "type": "string"
+            },
+            "repository": {
+              "$ref": "#/definitions/Repository"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "Build": {
       "type": "object",
       "required": [
@@ -400,14 +375,48 @@
           "type": "string",
           "enum": [
             "K8",
-            "AWS_VM"
+            "VM"
           ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "BuildNumberDetails": {
+      "type": "object",
+      "required": [
+        "uuid"
+      ],
+      "properties": {
+        "buildNumber": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "uuid": {
+          "type": "string"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "BuildSpec": {
       "type": "object",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CIExecutionArgs": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "buildNumberDetails": {
+          "$ref": "#/definitions/BuildNumberDetails"
+        },
+        "executionSource": {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        "inputSet": {
+          "$ref": "#/definitions/InputSet"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "CIServiceInfo": {
@@ -615,6 +624,34 @@
         },
         "sslVerify": {
           "type": "boolean"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CommitDetails": {
+      "type": "object",
+      "properties": {
+        "commitId": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ownerEmail": {
+          "type": "string"
+        },
+        "ownerId": {
+          "type": "string"
+        },
+        "ownerName": {
+          "type": "string"
+        },
+        "timeStamp": {
+          "type": "integer",
+          "format": "int64"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -847,6 +884,25 @@
           }
         }
       ]
+    },
+    "CustomExecutionSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "DependencyElement": {
       "type": "object",
@@ -1164,6 +1220,21 @@
           },
           "maxItems": 2147483647,
           "minItems": 1
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ExecutionSource": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "WEBHOOK",
+            "MANUAL",
+            "CUSTOM"
+          ]
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -1573,7 +1644,7 @@
           "enum": [
             "KubernetesDirect",
             "UseFromStage",
-            "AwsVm"
+            "VM"
           ]
         }
       },
@@ -1621,6 +1692,20 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "InputSet": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Manual",
+            "Webhook"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "InputSetValidator": {
       "type": "object",
       "properties": {
@@ -1652,13 +1737,13 @@
         "infrastructure": {
           "oneOf": [
             {
-              "$ref": "#/definitions/AwsVmInfraYaml"
-            },
-            {
               "$ref": "#/definitions/K8sDirectInfraYaml"
             },
             {
               "$ref": "#/definitions/UseFromStageInfraYaml"
+            },
+            {
+              "$ref": "#/definitions/VmInfraYaml"
             }
           ]
         },
@@ -2010,7 +2095,7 @@
               "enum": [
                 "KubernetesDirect",
                 "UseFromStage",
-                "AwsVm"
+                "VM"
               ]
             }
           }
@@ -2127,6 +2212,31 @@
           "pattern": "^(([0-9]*[.])?[0-9]+)([GM]i?)$"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ManualExecutionSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "branch": {
+              "type": "string"
+            },
+            "commitSha": {
+              "type": "string"
+            },
+            "prNumber": {
+              "type": "string"
+            },
+            "tag": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "ManualFailureSpecConfig": {
@@ -2407,6 +2517,56 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "PRWebhookEvent": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/WebhookEvent"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "baseAttributes": {
+              "$ref": "#/definitions/WebhookBaseAttributes"
+            },
+            "closed": {
+              "type": "boolean"
+            },
+            "commitDetailsList": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CommitDetails"
+              }
+            },
+            "merged": {
+              "type": "boolean"
+            },
+            "pullRequestBody": {
+              "type": "string"
+            },
+            "pullRequestId": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "pullRequestLink": {
+              "type": "string"
+            },
+            "repository": {
+              "$ref": "#/definitions/Repository"
+            },
+            "sourceBranch": {
+              "type": "string"
+            },
+            "targetBranch": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "PVCParams": {
       "type": "object",
       "properties": {
@@ -2539,6 +2699,7 @@
             "SetFeatureFlagState",
             "SetOnVariation",
             "SetOffVariation",
+            "SetDefaultVariations",
             "AddRule",
             "UpdateRule",
             "AddTargetsToVariationTargetMap",
@@ -2793,6 +2954,36 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "Repository": {
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "httpURL": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "namespace": {
+          "type": "string"
+        },
+        "private": {
+          "type": "boolean"
+        },
+        "slug": {
+          "type": "string"
+        },
+        "sshURL": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ResourceConstraintStepInfo": {
       "allOf": [
         {
@@ -3026,9 +3217,7 @@
         {
           "type": "object",
           "required": [
-            "command",
-            "connectorRef",
-            "image"
+            "command"
           ],
           "properties": {
             "command": {
@@ -3098,7 +3287,8 @@
               "type": "string",
               "enum": [
                 "Sh",
-                "Bash"
+                "Bash",
+                "Powershell"
               ]
             }
           }
@@ -3116,8 +3306,6 @@
           "required": [
             "args",
             "buildTool",
-            "connectorRef",
-            "image",
             "language"
           ],
           "properties": {
@@ -3129,7 +3317,9 @@
               "enum": [
                 "Maven",
                 "Bazel",
-                "Gradle"
+                "Gradle",
+                "Dotnet",
+                "Nunitconsole"
               ]
             },
             "connectorRef": {
@@ -3162,7 +3352,8 @@
             "language": {
               "type": "string",
               "enum": [
-                "Java"
+                "Java",
+                "Csharp"
               ]
             },
             "outputVariables": {
@@ -3215,6 +3406,14 @@
                 {
                   "type": "string"
                 }
+              ]
+            },
+            "shell": {
+              "type": "string",
+              "enum": [
+                "Sh",
+                "Bash",
+                "Powershell"
               ]
             },
             "testAnnotations": {
@@ -3424,6 +3623,101 @@
           "$ref": "#/definitions/Distribution"
         },
         "variation": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceNowApprovalStepInfo":{
+      "allOf":[
+        {
+          "$ref":"#/definitions/StepSpecType"
+        },
+        {
+          "type":"object",
+          "required":[
+            "approvalCriteria",
+            "connectorRef",
+            "ticketNumber",
+            "ticketType"
+          ],
+          "properties":{
+            "approvalCriteria":{
+              "$ref":"#/definitions/CriteriaSpecWrapper"
+            },
+            "connectorRef":{
+              "type":"string"
+            },
+            "delegateSelectors":{
+              "oneOf":[
+                {
+                  "type":"array",
+                  "items":{
+                    "type":"string"
+                  }
+                },
+                {
+                  "type":"string",
+                  "pattern":"^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                  "minLength":1
+                }
+              ]
+            },
+            "rejectionCriteria":{
+              "$ref":"#/definitions/CriteriaSpecWrapper"
+            },
+            "ticketNumber":{
+              "type":"string"
+            },
+            "ticketType":{
+              "type":"string"
+            }
+          }
+        }
+      ],
+      "$schema":"http://json-schema.org/draft-07/schema#"
+    },
+    "SetDefaultVariationsYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/PatchInstruction"
+        },
+        {
+          "type": "object",
+          "required": [
+            "identifier",
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "identifier": {
+              "type": "string"
+            },
+            "spec": {
+              "$ref": "#/definitions/SetDefaultVariationsYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SetDefaultVariations"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SetDefaultVariationsYamlSpec": {
+      "type": "object",
+      "required": [
+        "off",
+        "on"
+      ],
+      "properties": {
+        "off": {
+          "type": "string"
+        },
+        "on": {
           "type": "string"
         }
       },
@@ -3726,410 +4020,394 @@
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "StepElementConfig": {
+      "type": "object",
+      "required": [
+        "identifier",
+        "name",
+        "type"
+      ],
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "failureStrategies": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FailureStrategyConfig"
+          }
+        },
+        "identifier": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
+        },
+        "timeout": {
+          "type": "string",
+          "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
+        },
+        "type": {
+          "type": "string"
+        },
+        "when": {
+          "$ref": "#/definitions/StepWhenCondition"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "oneOf": [
+      "allOf": [
         {
-          "type": "object",
-          "required": [
-            "identifier",
-            "name",
-            "type"
-          ],
-          "properties": {
-            "description": {
-              "type": "string"
-            },
-            "failureStrategies": {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/FailureStrategyConfig"
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ArtifactoryUpload"
               }
-            },
-            "identifier": {
-              "type": "string",
-              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-            },
-            "name": {
-              "type": "string",
-              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-            },
-            "spec": {
-              "$ref": "#/definitions/StepSpecType"
-            },
-            "timeout": {
-              "type": "string",
-              "pattern": "^(([1-9])+\\d+[s])|(((([1-9])+\\d*[mhwd])+([\\s]?\\d+[smhwd])*)|(<\\+input>.*)|(.*<\\+.*>.*))$"
-            },
-            "type": {
-              "type": "string"
-            },
-            "when": {
-              "$ref": "#/definitions/StepWhenCondition"
             }
           },
-          "additionalProperties": false,
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "ArtifactoryUpload"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/UploadToArtifactoryStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "Barrier"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/BarrierStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "BuildAndPushDockerRegistry"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/DockerStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "BuildAndPushECR"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/ECRStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "BuildAndPushGCR"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/GCRStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "FlagConfiguration"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/FlagConfigurationStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "GCSUpload"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/UploadToGCSStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "HarnessApproval"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/HarnessApprovalStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "Http"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/HttpStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "JiraApproval"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/JiraApprovalStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "JiraCreate"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/JiraCreateStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "JiraUpdate"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/JiraUpdateStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "Plugin"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/PluginStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "RestoreCacheGCS"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/RestoreCacheGCSStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "RestoreCacheS3"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/RestoreCacheS3StepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "Run"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/RunStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "RunTests"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/RunTestsStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "S3Upload"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/UploadToS3StepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "SaveCacheGCS"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/SaveCacheGCSStepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "SaveCacheS3"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/SaveCacheS3StepInfo"
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "ShellScript"
-                  }
-                }
-              },
-              "then": {
-                "properties": {
-                  "spec": {
-                    "$ref": "#/definitions/ShellScriptStepInfo"
-                  }
-                }
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/UploadToArtifactoryStepInfo"
               }
             }
-          ]
+          }
         },
         {
-          "type": "object",
-          "required": [
-            "identifier",
-            "name"
-          ],
-          "properties": {
-            "description": {
-              "type": "string"
-            },
-            "identifier": {
-              "type": "string",
-              "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-            },
-            "name": {
-              "type": "string",
-              "pattern": "^[a-zA-Z_][-0-9a-zA-Z_\\s]{0,63}$"
-            },
-            "template": {
-              "$ref": "#/definitions/TemplateLinkConfig"
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Barrier"
+              }
             }
           },
-          "additionalProperties": false
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/BarrierStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "BuildAndPushDockerRegistry"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/DockerStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "BuildAndPushECR"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ECRStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "BuildAndPushGCR"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/GCRStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "FlagConfiguration"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/FlagConfigurationStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "GCSUpload"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/UploadToGCSStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "HarnessApproval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HarnessApprovalStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Http"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/HttpStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JiraApproval"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraApprovalStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JiraCreate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraCreateStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "JiraUpdate"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/JiraUpdateStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Plugin"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/PluginStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RestoreCacheGCS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/RestoreCacheGCSStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RestoreCacheS3"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/RestoreCacheS3StepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Run"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/RunStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "RunTests"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/RunTestsStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "S3Upload"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/UploadToS3StepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SaveCacheGCS"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SaveCacheGCSStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "SaveCacheS3"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/SaveCacheS3StepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if":{
+            "properties":{
+              "type":{
+                "const":"ServiceNowApproval"
+              }
+            }
+          },
+          "then":{
+            "properties":{
+              "spec":{
+                "$ref":"#/definitions/ServiceNowApprovalStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "ShellScript"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ShellScriptStepInfo"
+              }
+            }
+          }
         }
       ]
     },
@@ -4264,26 +4542,6 @@
           }
         }
       ],
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "TemplateLinkConfig": {
-      "type": "object",
-      "required": [
-        "templateRef"
-      ],
-      "properties": {
-        "templateInputs": {
-          "$ref": "#/definitions/JsonNode"
-        },
-        "templateRef": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-        },
-        "versionLabel": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
-        }
-      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "TransitionTo": {
@@ -4559,6 +4817,241 @@
           "format": "int32"
         }
       },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmBuildJobInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/BuildJobEnvInfo"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ciExecutionArgs": {
+              "$ref": "#/definitions/CIExecutionArgs"
+            },
+            "connectorRefs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "stageVars": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/NGVariable"
+              }
+            },
+            "volToMountPath": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "workDir": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmInfraSpec": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "Pool"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmInfraYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Infrastructure"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/VmPoolYaml"
+                }
+              ]
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "KubernetesDirect",
+                "UseFromStage",
+                "VM"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmPoolYaml": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/VmInfraSpec"
+        },
+        {
+          "type": "object",
+          "required": [
+            "spec",
+            "type"
+          ],
+          "properties": {
+            "spec": {
+              "$ref": "#/definitions/VmPoolYamlSpec"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "Pool"
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "VmPoolYamlSpec": {
+      "type": "object",
+      "required": [
+        "identifier"
+      ],
+      "properties": {
+        "identifier": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookBaseAttributes": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        },
+        "authorAvatar": {
+          "type": "string"
+        },
+        "authorEmail": {
+          "type": "string"
+        },
+        "authorLogin": {
+          "type": "string"
+        },
+        "authorName": {
+          "type": "string"
+        },
+        "before": {
+          "type": "string"
+        },
+        "link": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "ref": {
+          "type": "string"
+        },
+        "sender": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookEvent": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "PR",
+            "BRANCH"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookExecutionSource": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ExecutionSource"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "triggerName": {
+              "type": "string"
+            },
+            "user": {
+              "$ref": "#/definitions/WebhookGitUser"
+            },
+            "webhookEvent": {
+              "$ref": "#/definitions/WebhookEvent"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookGitUser": {
+      "type": "object",
+      "properties": {
+        "avatar": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "gitId": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "WebhookTriggerExecutionInputSet": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/InputSet"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "payload": {
+              "type": "string"
+            }
+          }
+        }
+      ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "WeightedVariation": {

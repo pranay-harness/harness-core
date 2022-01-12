@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.entities;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_DATA_LENGTH;
@@ -19,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -68,22 +76,25 @@ public abstract class MetricCVConfig extends CVConfig {
   public Set<TimeSeriesThreshold> getThresholdsToCreateOnSaveForCustomProviders(
       String metricName, TimeSeriesMetricType metricType, List<TimeSeriesThresholdType> thresholdTypes) {
     Set<TimeSeriesThreshold> thresholds = new HashSet<>();
-    metricType.getThresholds().forEach(threshold -> {
-      thresholdTypes.forEach(type -> {
-        Gson gson = new Gson();
-        TimeSeriesThresholdCriteria criteria = gson.fromJson(gson.toJson(threshold), TimeSeriesThresholdCriteria.class);
-        criteria.setThresholdType(type);
-        thresholds.add(TimeSeriesThreshold.builder()
-                           .accountId(getAccountId())
-                           .projectIdentifier(getProjectIdentifier())
-                           .dataSourceType(getType())
-                           .metricType(metricType)
-                           .metricName(metricName)
-                           .action(TimeSeriesThresholdActionType.IGNORE)
-                           .criteria(criteria)
-                           .build());
+    if (Objects.nonNull(metricType) && Objects.nonNull(thresholdTypes)) {
+      metricType.getThresholds().forEach(threshold -> {
+        thresholdTypes.forEach(type -> {
+          Gson gson = new Gson();
+          TimeSeriesThresholdCriteria criteria =
+              gson.fromJson(gson.toJson(threshold), TimeSeriesThresholdCriteria.class);
+          criteria.setThresholdType(type);
+          thresholds.add(TimeSeriesThreshold.builder()
+                             .accountId(getAccountId())
+                             .projectIdentifier(getProjectIdentifier())
+                             .dataSourceType(getType())
+                             .metricType(metricType)
+                             .metricName(metricName)
+                             .action(TimeSeriesThresholdActionType.IGNORE)
+                             .criteria(criteria)
+                             .build());
+        });
       });
-    });
+    }
     return thresholds;
   }
 
@@ -91,8 +102,10 @@ public abstract class MetricCVConfig extends CVConfig {
     Set<TimeSeriesThresholdType> thresholdTypes = new HashSet<>();
     for (MetricPack.MetricDefinition metricDefinition : cvConfig.getMetricPack().getMetrics()) {
       if (metricDefinition.getName().equals(metricName)) {
-        metricDefinition.getThresholds().forEach(
-            threshold -> thresholdTypes.add(threshold.getCriteria().getThresholdType()));
+        if (Objects.nonNull(metricDefinition.getThresholds())) {
+          metricDefinition.getThresholds().forEach(
+              threshold -> thresholdTypes.add(threshold.getCriteria().getThresholdType()));
+        }
       }
     }
     return new ArrayList<>(thresholdTypes);

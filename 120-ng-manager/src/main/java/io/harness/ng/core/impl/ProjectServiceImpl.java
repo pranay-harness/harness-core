@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.impl;
 
 import static io.harness.NGCommonEntityConstants.MONGODB_ID;
@@ -414,6 +421,68 @@ public class ProjectServiceImpl implements ProjectService {
                                  .toArray(Criteria[] ::new);
     criteria.orOperator(subCriteria);
     return projectRepository.findAll(criteria, pageable);
+  }
+
+  @Override
+  public List<ProjectDTO> listPermittedProjects(String accountIdentifier, ProjectFilterDTO projectFilterDTO) {
+    Criteria criteria = createProjectFilterCriteria(
+        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).is(FALSE),
+        projectFilterDTO);
+    List<Scope> projects = projectRepository.findAllProjects(criteria);
+    List<Scope> permittedProjects = scopeAccessHelper.getPermittedScopes(projects);
+
+    if (permittedProjects.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    criteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier);
+    Criteria[] subCriteria = permittedProjects.stream()
+                                 .map(project
+                                     -> Criteria.where(ProjectKeys.orgIdentifier)
+                                            .is(project.getOrgIdentifier())
+                                            .and(ProjectKeys.identifier)
+                                            .is(project.getProjectIdentifier()))
+                                 .toArray(Criteria[] ::new);
+    criteria.orOperator(subCriteria);
+    List<Project> projectsList = projectRepository.findAll(criteria);
+    return projectsList.stream().map(ProjectMapper::writeDTO).collect(Collectors.toList());
+  }
+
+  @Override
+  public ActiveProjectsCountDTO permittedProjectsCount(
+      String accountIdentifier, ProjectFilterDTO projectFilterDTO, long startInterval, long endInterval) {
+    Criteria criteria = createProjectFilterCriteria(
+        Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier).and(ProjectKeys.deleted).is(FALSE),
+        projectFilterDTO);
+    List<Scope> projects = projectRepository.findAllProjects(criteria);
+    List<Scope> permittedProjects = scopeAccessHelper.getPermittedScopes(projects);
+
+    if (permittedProjects.isEmpty()) {
+      return ActiveProjectsCountDTO.builder().count(0).build();
+    }
+
+    criteria = Criteria.where(ProjectKeys.accountIdentifier).is(accountIdentifier);
+    Criteria[] subCriteria = permittedProjects.stream()
+                                 .map(project
+                                     -> Criteria.where(ProjectKeys.orgIdentifier)
+                                            .is(project.getOrgIdentifier())
+                                            .and(ProjectKeys.identifier)
+                                            .is(project.getProjectIdentifier()))
+                                 .toArray(Criteria[] ::new);
+    Criteria accessibleProjectCriteria = criteria.orOperator(subCriteria);
+    Criteria deletedFalseCriteria = Criteria.where(ProjectKeys.createdAt)
+                                        .gt(startInterval)
+                                        .lt(endInterval)
+                                        .andOperator(Criteria.where(ProjectKeys.deleted).is(false));
+    Criteria deletedTrueCriteria =
+        Criteria.where(ProjectKeys.createdAt)
+            .lt(startInterval)
+            .andOperator(new Criteria().andOperator(Criteria.where(ProjectKeys.deleted).is(true)),
+                Criteria.where(ProjectKeys.lastModifiedAt).gt(startInterval).lt(endInterval));
+    return ActiveProjectsCountDTO.builder()
+        .count(projectRepository.count(new Criteria().andOperator(accessibleProjectCriteria, deletedFalseCriteria))
+            - projectRepository.count(new Criteria().andOperator(accessibleProjectCriteria, deletedTrueCriteria)))
+        .build();
   }
 
   @Override

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -16,6 +23,7 @@ import io.harness.pms.filter.creation.FilterCreationResponse.FilterCreationRespo
 import io.harness.pms.pipeline.filter.PipelineFilter;
 import io.harness.pms.sdk.core.filter.creation.beans.FilterCreationContext;
 import io.harness.pms.sdk.core.pipeline.filters.FilterJsonCreator;
+import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
@@ -76,7 +84,8 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
           "Execution section is required in %s stage [%s]. Please add it and try again", stageElementConfig.getType(),
           YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
     }
-    creationResponse.dependencies(getDependencies(filterCreationContext.getCurrentField()));
+    creationResponse.dependencies(
+        DependenciesUtils.toDependenciesProto(getDependencies(filterCreationContext.getCurrentField())));
 
     PipelineFilter filter = getFilter(filterCreationContext, stageElementConfig);
     if (filter != null) {

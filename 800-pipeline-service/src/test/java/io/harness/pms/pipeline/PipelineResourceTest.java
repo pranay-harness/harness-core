@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -83,7 +90,7 @@ public class PipelineResourceTest extends CategoryTest {
   public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
     pipelineResource = new PipelineResource(pmsPipelineService, pmsYamlSchemaService, nodeExecutionService,
-        nodeExecutionToExecutioNodeMapper, pipelineTemplateHelper, mockGovernanceService);
+        nodeExecutionToExecutioNodeMapper, pipelineTemplateHelper, mockGovernanceService, null);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
@@ -157,7 +164,7 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(entityWithVersion).when(pmsPipelineService).create(entity);
     doReturn(GovernanceMetadata.newBuilder().setDeny(true).build())
         .when(mockGovernanceService)
-        .evaluateGovernancePolicies(anyString(), anyString(), anyString(), anyString());
+        .evaluateGovernancePolicies(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     ResponseDTO<PipelineSaveResponse> responseDTO =
         pipelineResource.createPipelineV2(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData().getGovernanceMetadata()).isNotNull();
@@ -248,7 +255,7 @@ public class PipelineResourceTest extends CategoryTest {
     doReturn(entityWithVersion).when(pmsPipelineService).updatePipelineYaml(entity, ChangeType.MODIFY);
     doReturn(GovernanceMetadata.newBuilder().setDeny(true).build())
         .when(mockGovernanceService)
-        .evaluateGovernancePolicies(anyString(), anyString(), anyString(), anyString());
+        .evaluateGovernancePolicies(anyString(), anyString(), anyString(), anyString(), anyString(), anyString());
     ResponseDTO<PipelineSaveResponse> responseDTO = pipelineResource.updatePipelineV2(
         null, ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null, yaml);
     assertThat(responseDTO.getData().getGovernanceMetadata().getDeny()).isTrue();
@@ -342,5 +349,17 @@ public class PipelineResourceTest extends CategoryTest {
     assertThat(responseDTO.getVersion()).isEqualTo(1L);
     assertThat(responseDTO.getNumOfStages()).isEqualTo(1L);
     assertThat(responseDTO.getStageNames().get(0)).isEqualTo("qaStage");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetExpandedPipelineJson() {
+    doReturn("look, a JSON")
+        .when(pmsPipelineService)
+        .fetchExpandedPipelineJSON(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER);
+    ResponseDTO<ExpandedPipelineJsonDTO> expandedPipelineJson = pipelineResource.getExpandedPipelineJson(
+        ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, null);
+    assertThat(expandedPipelineJson.getData().getExpandedJson()).isEqualTo("look, a JSON");
   }
 }

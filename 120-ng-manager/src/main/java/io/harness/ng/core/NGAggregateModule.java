@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -13,6 +20,8 @@ import io.harness.ng.core.api.impl.AggregateAccountResourceServiceImpl;
 import io.harness.ng.core.api.impl.AggregateOrganizationServiceImpl;
 import io.harness.ng.core.api.impl.AggregateProjectServiceImpl;
 import io.harness.ng.core.api.impl.AggregateUserGroupServiceImpl;
+import io.harness.ng.core.service.services.ServiceEntityManagementService;
+import io.harness.ng.core.service.services.ServiceEntityManagementServiceImpl;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
@@ -37,5 +46,6 @@ public class NGAggregateModule extends AbstractModule {
     bind(AggregateOrganizationService.class).to(AggregateOrganizationServiceImpl.class);
     bind(AggregateAccountResourceService.class).to(AggregateAccountResourceServiceImpl.class);
     bind(AggregateUserGroupService.class).to(AggregateUserGroupServiceImpl.class);
+    bind(ServiceEntityManagementService.class).to(ServiceEntityManagementServiceImpl.class);
   }
 }

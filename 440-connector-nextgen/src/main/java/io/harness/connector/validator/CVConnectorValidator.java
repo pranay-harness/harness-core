@@ -1,8 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.connector.validator;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.beans.TaskType.CVNG_CONNECTOR_VALIDATE_TASK;
 
+import io.harness.beans.DecryptableEntity;
 import io.harness.connector.ConnectivityStatus;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskNotifyResponseData;
@@ -18,6 +29,7 @@ import io.harness.service.DelegateGrpcClientWrapper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
@@ -46,11 +58,17 @@ public class CVConnectorValidator extends AbstractConnectorValidator {
   @Override
   public <T extends ConnectorConfigDTO> TaskParameters getTaskParameters(
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    final List<EncryptedDataDetail> encryptionDetail =
-        super.getEncryptionDetail(connectorConfig, accountIdentifier, orgIdentifier, projectIdentifier);
+    List<DecryptableEntity> decryptableEntities = connectorConfig.getDecryptableEntities();
+    List<List<EncryptedDataDetail>> encryptedDetails = new ArrayList<>();
+    if (!isEmpty(decryptableEntities)) {
+      decryptableEntities.forEach(decryptableEntity
+          -> encryptedDetails.add(
+              super.getEncryptionDetail(decryptableEntity, accountIdentifier, orgIdentifier, projectIdentifier)));
+    }
+
     return CVConnectorTaskParams.builder()
         .connectorConfigDTO(connectorConfig)
-        .encryptionDetails(encryptionDetail)
+        .encryptionDetails(encryptedDetails)
         .build();
   }
 
@@ -70,5 +88,11 @@ public class CVConnectorValidator extends AbstractConnectorValidator {
         .errorSummary(cvConnectorTaskResponse.getErrorMessage())
         .delegateId(getDelegateId(cvConnectorTaskResponse))
         .build();
+  }
+
+  @Override
+  public ConnectorValidationResult validate(ConnectorResponseDTO connectorResponseDTO, String accountIdentifier,
+      String orgIdentifier, String projectIdentifier, String identifier) {
+    return null;
   }
 }

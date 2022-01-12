@@ -1,5 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.client.services.impl;
 
+import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.ZHUO;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -83,6 +91,17 @@ public class EnforcementClientServiceImplTest extends CategoryTest {
 
     boolean result = enforcementClientService.isAvailable(featureRestrictionName, accountId);
     assertThat(result).isTrue();
+  }
+
+  @Test
+  @Owner(developers = ARVIND)
+  @Category(UnitTests.class)
+  public void testIsEnforcementEnabled() {
+    boolean result = enforcementClientService.isEnforcementEnabled();
+    assertThat(result).isTrue();
+    when(enforcementClientConfiguration.isEnforcementCheckEnabled()).thenReturn(false);
+    result = enforcementClientService.isEnforcementEnabled();
+    assertThat(result).isFalse();
   }
 
   @Test

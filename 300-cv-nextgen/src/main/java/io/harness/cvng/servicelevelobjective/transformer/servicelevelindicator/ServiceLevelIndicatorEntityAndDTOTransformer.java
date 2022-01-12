@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -11,11 +18,12 @@ import java.util.Map;
 public class ServiceLevelIndicatorEntityAndDTOTransformer {
   @Inject private Map<SLIMetricType, ServiceLevelIndicatorTransformer> serviceLevelIndicatorTransformerMap;
 
-  public ServiceLevelIndicator getEntity(
-      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+  public ServiceLevelIndicator getEntity(ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO,
+      String monitoredServiceIndicator, String healthSourceIndicator) {
     ServiceLevelIndicatorTransformer serviceLevelIndicatorTransformer =
         serviceLevelIndicatorTransformerMap.get(serviceLevelIndicatorDTO.getSpec().getType());
-    return serviceLevelIndicatorTransformer.getEntity(projectParams, serviceLevelIndicatorDTO);
+    return serviceLevelIndicatorTransformer.getEntity(
+        projectParams, serviceLevelIndicatorDTO, monitoredServiceIndicator, healthSourceIndicator);
   }
 
   public ServiceLevelIndicatorDTO getDto(ServiceLevelIndicator serviceLevelIndicator) {

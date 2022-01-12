@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright 2019 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 echo "Executing commands to setup correct directories and its permissions"
 
@@ -60,4 +64,3 @@ chown -R 999 $runtime_dir/mongo/*
 chmod 777 $runtime_dir/mongo/$mongodb_data_dir
 
 echo "##### Created and updated appropriate permissions for mongodb files and directories ######## "
-

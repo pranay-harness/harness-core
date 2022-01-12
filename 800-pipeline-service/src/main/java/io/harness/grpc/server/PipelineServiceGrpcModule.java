@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.grpc.server;
 
 import io.harness.ModuleType;
@@ -7,6 +14,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.interrupts.InterruptGrpcService;
 import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.pms.contracts.expression.RemoteFunctorServiceGrpc;
+import io.harness.pms.contracts.governance.JsonExpansionServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc.PlanCreationServiceBlockingStub;
 import io.harness.pms.plan.execution.data.service.expressions.EngineExpressionGrpcServiceImpl;
@@ -14,6 +22,8 @@ import io.harness.pms.plan.execution.data.service.outcome.OutcomeServiceGrpcServ
 import io.harness.pms.plan.execution.data.service.outputs.SweepingOutputServiceImpl;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.sdk.service.execution.PmsExecutionGrpcService;
+import io.harness.pms.template.EntityReferenceGrpcService;
+import io.harness.pms.template.VariablesServiceImpl;
 
 import com.google.common.util.concurrent.Service;
 import com.google.common.util.concurrent.ServiceManager;
@@ -99,6 +109,21 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     return map;
   }
 
+  @Provides
+  @Singleton
+  public Map<ModuleType, JsonExpansionServiceGrpc.JsonExpansionServiceBlockingStub> getJsonExpansionHandlerClients(
+      PipelineServiceConfiguration configuration) throws SSLException {
+    Map<ModuleType, JsonExpansionServiceGrpc.JsonExpansionServiceBlockingStub> map = new HashMap<>();
+
+    for (Map.Entry<String, GrpcClientConfig> entry : configuration.getGrpcClientConfigs().entrySet()) {
+      map.put(ModuleType.fromString(entry.getKey()),
+          JsonExpansionServiceGrpc.newBlockingStub(getChannel(entry.getValue())));
+    }
+    map.put(ModuleType.PMS,
+        JsonExpansionServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName("pmsSdkInternal").build()));
+    return map;
+  }
+
   private static boolean isValidAuthority(String authority) {
     try {
       GrpcUtil.checkAuthority(authority);
@@ -153,7 +178,8 @@ public class PipelineServiceGrpcModule extends AbstractModule {
   private Set<BindableService> bindableServices(HealthStatusManager healthStatusManager,
       PmsSdkInstanceService pmsSdkInstanceService, PmsExecutionGrpcService pmsExecutionGrpcService,
       SweepingOutputServiceImpl sweepingOutputService, OutcomeServiceGrpcServerImpl outcomeServiceGrpcServer,
-      EngineExpressionGrpcServiceImpl engineExpressionGrpcService, InterruptGrpcService interruptGrpcService) {
+      EngineExpressionGrpcServiceImpl engineExpressionGrpcService, InterruptGrpcService interruptGrpcService,
+      EntityReferenceGrpcService entityReferenceService, VariablesServiceImpl variablesService) {
     Set<BindableService> services = new HashSet<>();
     services.add(healthStatusManager.getHealthService());
     services.add(pmsSdkInstanceService);
@@ -162,6 +188,8 @@ public class PipelineServiceGrpcModule extends AbstractModule {
     services.add(outcomeServiceGrpcServer);
     services.add(engineExpressionGrpcService);
     services.add(interruptGrpcService);
+    services.add(entityReferenceService);
+    services.add(variablesService);
     return services;
   }
 }

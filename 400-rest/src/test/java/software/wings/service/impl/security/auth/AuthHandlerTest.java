@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security.auth;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -81,6 +88,7 @@ import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.security.AccountPermissionSummary;
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.GenericEntityFilter.FilterType;
@@ -257,12 +265,11 @@ public class AuthHandlerTest extends WingsBaseTest {
 
   private AccountPermissions accountPermissions =
       AccountPermissions.builder().permissions(new HashSet<>(accountPermissionTypes)).build();
-  private AppPermission allAppPermission =
-      AppPermission.builder()
-          .permissionType(ALL_APP_ENTITIES)
-          .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-          .actions(new HashSet<>(allActions))
-          .build();
+  private AppPermission allAppPermission = AppPermission.builder()
+                                               .permissionType(ALL_APP_ENTITIES)
+                                               .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
+                                               .actions(new HashSet<>(allActions))
+                                               .build();
 
   @Before
   public void setUp() {
@@ -534,32 +541,31 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     AppPermission envPermission = AppPermission.builder()
                                       .permissionType(ENV)
-                                      .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                      .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                       .entityFilter(envFilter)
                                       .actions(new HashSet<>(allActions))
                                       .build();
 
     AppPermission workflowPermission = AppPermission.builder()
                                            .permissionType(WORKFLOW)
-                                           .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                           .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                            .entityFilter(workflowFilter)
                                            .actions(new HashSet<>(allActions))
                                            .build();
 
     AppPermission pipelinePermission = AppPermission.builder()
                                            .permissionType(PIPELINE)
-                                           .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                           .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                            .entityFilter(envFilter)
                                            .actions(new HashSet<>(allActions))
                                            .build();
 
-    AppPermission deploymentPermission =
-        AppPermission.builder()
-            .permissionType(DEPLOYMENT)
-            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
-            .entityFilter(envFilter)
-            .actions(new HashSet<>(allActions))
-            .build();
+    AppPermission deploymentPermission = AppPermission.builder()
+                                             .permissionType(DEPLOYMENT)
+                                             .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
+                                             .entityFilter(envFilter)
+                                             .actions(new HashSet<>(allActions))
+                                             .build();
 
     List<UserGroup> userGroups = Collections.singletonList(
         UserGroup.builder()
@@ -713,7 +719,7 @@ public class AuthHandlerTest extends WingsBaseTest {
   private AppPermission constructAppPermission(EnvFilter envFilter, PermissionType env) {
     return AppPermission.builder()
         .permissionType(env)
-        .appFilter(GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+        .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
         .entityFilter(envFilter)
         .actions(new HashSet<>(allActions))
         .build();
@@ -723,7 +729,7 @@ public class AuthHandlerTest extends WingsBaseTest {
       GenericEntityFilter genericEntityFilter, PermissionType permissionType) {
     return AppPermission.builder()
         .permissionType(permissionType)
-        .appFilter(GenericEntityFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
+        .appFilter(AppFilter.builder().filterType(FilterType.SELECTED).ids(Sets.newHashSet(APP_ID)).build())
         .entityFilter(genericEntityFilter)
         .actions(new HashSet<>(allActions))
         .build();
@@ -754,7 +760,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     AppPermission workflowPermission1 = AppPermission.builder()
                                             .permissionType(WORKFLOW)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .entityFilter(workflowFilter1)
                                             .actions(Sets.newHashSet(Action.READ))
                                             .build();
@@ -912,7 +918,7 @@ public class AuthHandlerTest extends WingsBaseTest {
 
     AppPermission workflowPermission1 = AppPermission.builder()
                                             .permissionType(WORKFLOW)
-                                            .appFilter(GenericEntityFilter.builder().filterType(FilterType.ALL).build())
+                                            .appFilter(AppFilter.builder().filterType(FilterType.ALL).build())
                                             .entityFilter(workflowFilter1)
                                             .actions(Sets.newHashSet(Action.READ))
                                             .build();

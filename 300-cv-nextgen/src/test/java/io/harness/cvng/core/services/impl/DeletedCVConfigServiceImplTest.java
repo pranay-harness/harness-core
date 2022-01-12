@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -12,6 +19,7 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.VerificationApplication;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.LogRecordDTO;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
@@ -99,8 +107,12 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testTriggerCleanup_deleteVerificationTask() {
     CVConfig cvConfig = createCVConfig();
+    String deploymentVerficationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig.getUuid(), generateUuid(), DataSourceType.APP_DYNAMICS);
     DeletedCVConfig saved = save(createDeletedCVConfig(cvConfig));
-    List<String> verificationTaskIds = verificationTaskService.getVerificationTaskIds(cvConfig.getUuid());
+    List<String> verificationTaskIds =
+        verificationTaskService.getServiceGuardVerificationTaskIds(accountId, cvConfig.getUuid());
+
     LogRecordDTO logRecord1 = LogRecordDTO.builder()
                                   .verificationTaskId(verificationTaskIds.get(0))
                                   .accountId(accountId)
@@ -109,7 +121,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
                                   .host("host")
                                   .build();
     LogRecordDTO logRecord2 = LogRecordDTO.builder()
-                                  .verificationTaskId(generateUuid())
+                                  .verificationTaskId(deploymentVerficationTaskId)
                                   .accountId(accountId)
                                   .timestamp(Instant.now().toEpochMilli())
                                   .log("log message")
@@ -119,7 +131,7 @@ public class DeletedCVConfigServiceImplTest extends CvNextGenTestBase {
     deletedCVConfigServiceWithMocks.triggerCleanup(saved);
     List<LogRecord> logRecords = hPersistence.createQuery(LogRecord.class).asList();
     assertThat(logRecords).hasSize(1);
-    assertThat(logRecords.get(0).getVerificationTaskId()).isEqualTo(logRecord2.getVerificationTaskId());
+    assertThat(logRecords.get(0).getVerificationTaskId()).isEqualTo(deploymentVerficationTaskId);
   }
 
   @Test

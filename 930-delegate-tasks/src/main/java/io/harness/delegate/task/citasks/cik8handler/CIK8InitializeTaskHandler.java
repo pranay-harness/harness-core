@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.cik8handler;
 
 /**
@@ -49,7 +56,7 @@ import com.google.inject.Inject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Event;
+import io.kubernetes.client.openapi.models.CoreV1Event;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.util.Watch;
@@ -90,7 +97,7 @@ public class CIK8InitializeTaskHandler implements CIInitializeTaskHandler {
   }
 
   public K8sTaskExecutionResponse executeTaskInternal(
-      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient) {
+      CIInitializeTaskParams ciInitializeTaskParams, ILogStreamingTaskClient logStreamingTaskClient, String taskId) {
     Stopwatch timer = Stopwatch.createStarted();
     CIK8InitializeTaskParams cik8InitializeTaskParams = (CIK8InitializeTaskParams) ciInitializeTaskParams;
     String cik8BuildTaskParamsStr = cik8InitializeTaskParams.toString();
@@ -124,7 +131,7 @@ public class CIK8InitializeTaskHandler implements CIInitializeTaskHandler {
         V1Pod pod = podSpecBuilder.createSpec(podParams).build();
         log.info("Creating pod with spec: {}", pod);
         cik8JavaClientHandler.createOrReplacePodWithRetries(coreV1Api, pod, namespace);
-        Watch<V1Event> watch =
+        Watch<CoreV1Event> watch =
             k8EventHandler.startAsyncPodEventWatch(kubernetesConfig, namespace, podName, logStreamingTaskClient);
         PodStatus podStatus = cik8JavaClientHandler.waitUntilPodIsReady(
             coreV1Api, podName, namespace, cik8InitializeTaskParams.getPodMaxWaitUntilReadySecs());

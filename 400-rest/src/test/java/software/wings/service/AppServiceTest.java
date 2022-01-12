@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 /**
  *
  */
@@ -40,10 +47,12 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -95,11 +104,13 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
+import software.wings.yaml.gitSync.YamlGitConfig;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -245,6 +256,13 @@ public class AppServiceTest extends WingsBaseTest {
     PageResponse<Application> pageResponse = new PageResponse<>();
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
+    Query mockQuery = mock(Query.class);
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    when(wingsPersistence.createQuery(YamlGitConfig.class)).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyObject())).thenReturn(mockQuery);
+    when(mockQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.in(anyObject())).thenReturn(mockQuery);
+    when(mockQuery.asList()).thenReturn(Collections.emptyList());
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
     PageResponse<Application> applications = appService.list(pageRequest);
     assertThat(applications).containsAll(asList(application));
@@ -258,6 +276,13 @@ public class AppServiceTest extends WingsBaseTest {
     PageResponse<Application> pageResponse = new PageResponse<>();
     PageRequest<Application> pageRequest = new PageRequest<>();
     pageResponse.setResponse(asList(application));
+    Query mockQuery = mock(Query.class);
+    FieldEnd fieldEnd = mock(FieldEnd.class);
+    when(wingsPersistence.createQuery(YamlGitConfig.class)).thenReturn(mockQuery);
+    when(mockQuery.filter(anyString(), anyObject())).thenReturn(mockQuery);
+    when(mockQuery.field(anyString())).thenReturn(fieldEnd);
+    when(fieldEnd.in(anyObject())).thenReturn(mockQuery);
+    when(mockQuery.asList()).thenReturn(Collections.emptyList());
     when(wingsPersistence.query(Application.class, pageRequest)).thenReturn(pageResponse);
     PageResponse<Application> applications = appService.list(pageRequest);
     assertThat(applications).containsAll(asList(application));
@@ -535,6 +560,7 @@ public class AppServiceTest extends WingsBaseTest {
     when(wingsPersistence.get(Application.class, APP_ID))
         .thenReturn(anApplication().name(APP_NAME).uuid(APP_ID).accountId(ACCOUNT_ID).build());
     when(workflowExecutionService.runningExecutionsForApplication(APP_ID)).thenReturn(null);
+    when(wingsPersistence.delete(Application.class, APP_ID)).thenReturn(true);
     appService.delete(APP_ID, false);
     verify(yamlPushService).pushYamlChangeSet(anyString(), any(), any(), any(), anyBoolean(), anyBoolean());
     verify(usageRestrictionsService).removeAppEnvReferences(anyString(), anyString(), anyString());

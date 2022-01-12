@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.interrupts.handlers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -19,6 +26,7 @@ import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.inject.Inject;
@@ -46,7 +54,8 @@ public abstract class MarkStatusInterruptHandler implements InterruptHandler {
       throw new InvalidRequestException("NodeExecutionId Cannot be empty for MARK_SUCCESS interrupt");
     }
 
-    NodeExecution nodeExecution = nodeExecutionService.get(interrupt.getNodeExecutionId());
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(interrupt.getNodeExecutionId(), NodeProjectionUtils.withStatus);
     if (!StatusUtils.brokeStatuses().contains(nodeExecution.getStatus())
         && nodeExecution.getStatus() != INTERVENTION_WAITING) {
       throw new InvalidRequestException(

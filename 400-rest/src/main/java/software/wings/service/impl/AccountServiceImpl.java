@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
@@ -46,6 +53,8 @@ import io.harness.account.ProvisionStep.ProvisionStepKeys;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.AuthenticationInfo;
+import io.harness.authenticationservice.beans.AuthenticationInfo.AuthenticationInfoBuilder;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
@@ -60,6 +69,7 @@ import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.utils.DelegateRingConstants;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentGroupEventJobService;
@@ -88,11 +98,14 @@ import io.harness.network.Http;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.ng.core.account.DefaultExperience;
 import io.harness.ng.core.account.OauthProviderType;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
+import io.harness.service.intfc.DelegateNgTokenService;
+import io.harness.validation.SuppressValidation;
 import io.harness.version.VersionInfoManager;
 
 import software.wings.app.MainConfiguration;
@@ -142,6 +155,8 @@ import software.wings.security.AppPermissionSummary.EnvInfo;
 import software.wings.security.PermissionAttribute.Action;
 import software.wings.security.UserThreadLocal;
 import software.wings.security.authentication.AccountSettingsResponse;
+import software.wings.security.saml.SSORequest;
+import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.analysis.CVEnabledService;
 import software.wings.service.impl.event.AccountEntityEvent;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -263,6 +278,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private SampleDataProviderService sampleDataProviderService;
   @Inject private GovernanceConfigService governanceConfigService;
   @Inject private SSOSettingServiceImpl ssoSettingService;
+  @Inject private SamlClientService samlClientService;
   @Inject private MainConfiguration mainConfiguration;
   @Inject private UserService userService;
   @Inject private LoginSettingsService loginSettingsService;
@@ -280,6 +296,8 @@ public class AccountServiceImpl implements AccountService {
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
   @Inject private DelegateService delegateService;
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
+  @Inject private DelegateNgTokenService delegateNgTokenService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -299,7 +317,9 @@ public class AccountServiceImpl implements AccountService {
 
     account.setCompanyName(account.getCompanyName().trim());
     account.setAccountName(account.getAccountName().trim());
-
+    if (isEmpty(account.getRingName())) {
+      account.setRingName(DelegateRingConstants.DEFAULT_RING_NAME);
+    }
     if (isEmpty(account.getUuid())) {
       log.info("Creating a new account '{}'.", account.getAccountName());
       account.setUuid(UUIDGenerator.generateUuid());
@@ -314,7 +334,11 @@ public class AccountServiceImpl implements AccountService {
     accountDao.save(account);
 
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
+      // Both subject and remote Observer are needed since in few places DMS might not be present
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountCreated, account);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountCreated", Account.class),
+          AccountServiceImpl.class, account);
 
       // When an account is just created for import, no need to create default account entities.
       // As the import process will do all these instead.
@@ -456,8 +480,15 @@ public class AccountServiceImpl implements AccountService {
 
     enableFeatureFlags(account, fromDataGen);
     if (shouldCreateSampleApp) {
-      sampleDataProviderService.createK8sV2SampleApp(account);
+      if (account.isCreatedFromNG()) {
+        // Asynchronous creates the sample app in NG
+        executorService.submit(() -> sampleDataProviderService.createK8sV2SampleApp(account));
+      } else {
+        sampleDataProviderService.createK8sV2SampleApp(account);
+      }
     }
+
+    delegateNgTokenService.upsertDefaultToken(account.getUuid(), null, false);
   }
 
   private void enableFeatureFlags(@NotNull Account account, boolean fromDataGen) {
@@ -885,6 +916,9 @@ public class AccountServiceImpl implements AccountService {
     publishAccountChangeEvent(updatedAccount);
     try (AutoLogContext logContext = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
       accountCrudSubject.fireInform(AccountCrudObxxxxxxxx:onAccountUpdated, updatedAccount);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(AccountCrudObserver.class, "onAccountUpdated", Account.class),
+          AccountServiceImpl.class, updatedAccount);
     }
     return updatedAccount;
   }
@@ -946,12 +980,8 @@ public class AccountServiceImpl implements AccountService {
                     .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
                     .project("delegateConfiguration", true)
                     .get();
-      return account.getDelegateConfiguration();
     }
-    return DelegateConfiguration.builder()
-        .accountVersion(true)
-        .delegateVersions(account.getDelegateConfiguration().getDelegateVersions())
-        .build();
+    return account.getDelegateConfiguration();
   }
 
   @Override
@@ -1008,6 +1038,7 @@ public class AccountServiceImpl implements AccountService {
   }
 
   @Override
+  @SuppressValidation
   public void updateFeatureFlagsForOnPremAccount() {
     Optional<Account> onPremAccount = getOnPremAccount();
     if (!onPremAccount.isPresent()) {
@@ -1128,6 +1159,7 @@ public class AccountServiceImpl implements AccountService {
     updateMigratedToClusterUrl(account, migratedToClusterUrl);
     // Also need to prevent all existing users in the migration account from logging in after completion of migration.
     setUserStatusInAccount(accountId, false);
+    delegateNgTokenService.revokeDelegateToken(accountId, null, delegateNgTokenService.DEFAULT_TOKEN_NAME);
     return setAccountStatusInternal(account, AccountStatus.INACTIVE);
   }
 
@@ -1135,6 +1167,7 @@ public class AccountServiceImpl implements AccountService {
   public boolean enableAccount(String accountId) {
     Account account = get(accountId);
     setUserStatusInAccount(accountId, true);
+    delegateNgTokenService.upsertDefaultToken(accountId, null, true);
     return setAccountStatusInternal(account, AccountStatus.ACTIVE);
   }
 
@@ -1930,5 +1963,36 @@ public class AccountServiceImpl implements AccountService {
     wingsPersistence.updateField(Account.class, accountId, DEFAULT_EXPERIENCE, defaultExperience);
     dbCache.invalidate(Account.class, account.getUuid());
     return null;
+  }
+
+  @Override
+  public AuthenticationInfo getAuthenticationInfo(String accountId) {
+    Account account = getFromCacheWithFallback(accountId);
+    if (account == null) {
+      throw new InvalidRequestException("Account not found");
+    }
+
+    AuthenticationMechanism authenticationMechanism = account.getAuthenticationMechanism();
+    AuthenticationInfoBuilder builder =
+        AuthenticationInfo.builder().authenticationMechanism(authenticationMechanism).accountId(accountId);
+    builder.oauthEnabled(account.isOauthEnabled());
+    switch (authenticationMechanism) {
+      case SAML:
+        SSORequest ssoRequest = samlClientService.generateSamlRequestFromAccount(account, false);
+        builder.samlRedirectUrl(ssoRequest.getIdpRedirectUrl());
+        break;
+      case USER_PASSWORD:
+      case OAUTH:
+        builder.oauthEnabled(account.isOauthEnabled());
+        if (account.isOauthEnabled()) {
+          OauthSettings oauthSettings = ssoSettingService.getOauthSettingsByAccountId(accountId);
+          builder.oauthProviders(new ArrayList<>(oauthSettings.getAllowedProviders()));
+        }
+        break;
+      case LDAP: // No need to build anything extra for the response.
+      default:
+        // Nothing to do by default
+    }
+    return builder.build();
   }
 }

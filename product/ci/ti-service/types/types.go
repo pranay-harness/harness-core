@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package types
 
 type Status string
@@ -169,6 +174,11 @@ type SelectionOverview struct {
 type File struct {
 	Name   string     `json:"name"`
 	Status FileStatus `json:"status"`
+}
+
+type DownloadLink struct {
+	URL     string `json:"url"`
+	RelPath string `json:"rel_path"` // this is the relative path to the artifact from the base URL
 }
 
 // This is a yaml file which may or may not exist in the root of the source code

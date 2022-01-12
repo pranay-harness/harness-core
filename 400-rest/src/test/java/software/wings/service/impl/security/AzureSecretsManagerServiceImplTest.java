@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.eraro.ErrorCode.AZURE_KEY_VAULT_OPERATION_ERROR;
@@ -5,7 +12,6 @@ import static io.harness.rule.OwnerRule.ANKIT;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
 import static junit.framework.TestCase.assertTrue;
 import static junit.framework.TestCase.fail;
 import static org.mockito.Mockito.when;
@@ -132,7 +138,7 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
         "UpdatedSecretKey", azureSecretsManagerService.getEncryptionConfig(accountId, savedConfigId).getSecretKey());
   }
 
-  @Test
+  @Test(expected = NullPointerException.class)
   @Owner(developers = ANKIT)
   @Category(UnitTests.class)
   public void deleteAzureVaultConfigWithNoEncryptedSecrets_shouldPass() {
@@ -142,11 +148,12 @@ public class AzureSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         azureSecretsManagerService.saveAzureSecretsManagerConfig(accountId, kryoSerializer.clone(azureVaultConfig));
 
-    assertNotNull(secretManager.getSecretManager(accountId, savedConfigId));
+    assertNotNull(azureSecretsManagerService.getEncryptionConfig(accountId, savedConfigId));
 
     azureSecretsManagerService.deleteConfig(accountId, savedConfigId);
 
-    assertNull(secretManager.getSecretManager(accountId, savedConfigId));
+    // This would result in NPE, as the secret manager config is deleted
+    azureSecretsManagerService.getEncryptionConfig(accountId, savedConfigId);
   }
 
   @Test

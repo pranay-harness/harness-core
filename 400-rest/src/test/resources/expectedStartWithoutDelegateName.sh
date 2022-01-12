@@ -1,4 +1,8 @@
 #!/bin/bash -e
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 mkdir -p logs
 (
@@ -260,7 +264,7 @@ else
   sed -i.bak "s|^upgradeCheckLocation:.*$|upgradeCheckLocation: http://localhost:8888/watcherci.txt|" config-watcher.yml
 fi
 if ! `grep upgradeCheckIntervalSeconds config-watcher.yml > /dev/null`; then
-  echo "upgradeCheckIntervalSeconds: 43200" >> config-watcher.yml
+  echo "upgradeCheckIntervalSeconds: 1200" >> config-watcher.yml
 fi
 if ! `grep delegateCheckLocation config-watcher.yml > /dev/null`; then
   echo "delegateCheckLocation: http://localhost:8888/delegateci.txt" >> config-watcher.yml

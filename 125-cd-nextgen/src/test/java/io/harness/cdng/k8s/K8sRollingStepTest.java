@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.k8s;
 
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
@@ -20,6 +27,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.cdng.CDStepHelper;
 import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.instance.outcome.DeploymentInfoOutcome;
 import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
@@ -150,7 +158,7 @@ public class K8sRollingStepTest extends AbstractK8sStepExecutorTestBase {
 
     K8sRollingDeployRequest request = executeTask(stepElementParameters, K8sRollingDeployRequest.class);
     assertThat(request.isSkipDryRun()).isFalse();
-    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(K8sStepHelper.getTimeoutInMin(stepElementParameters));
+    assertThat(request.getTimeoutIntervalInMin()).isEqualTo(CDStepHelper.getTimeoutInMin(stepElementParameters));
     assertThat(request.isSkipResourceVersioning()).isTrue();
   }
 

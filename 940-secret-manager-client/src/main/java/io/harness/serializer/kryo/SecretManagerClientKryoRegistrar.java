@@ -1,9 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.SSHTaskParams;
+import io.harness.ng.core.DecryptableEntityWithEncryptionConsumers;
 import io.harness.ng.core.NGAccessWithEncryptionConsumer;
 import io.harness.ng.core.entities.SampleEncryptableSettingImplementation;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
@@ -57,7 +65,7 @@ public class SecretManagerClientKryoRegistrar implements KryoRegistrar {
 
     kryo.register(SampleEncryptableSettingImplementation.class, 54322);
     kryo.register(NGAccessWithEncryptionConsumer.class, 54323);
-
+    kryo.register(DecryptableEntityWithEncryptionConsumers.class, 54326);
     kryo.register(AwsKmsConfigDTO.class, 643283);
     kryo.register(AwsKmsConfigUpdateDTO.class, 643284);
     kryo.register(BaseAwsKmsConfigDTO.class, 543287);

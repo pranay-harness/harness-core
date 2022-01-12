@@ -16,7 +16,7 @@
               "alignmentPeriod": "60s",
               "crossSeriesReducer": "REDUCE_PERCENTILE_99",
               "groupByFields": [
-                "metric.label.\"accountId\""
+                "metric.label.\"environment\""
               ],
               "perSeriesAligner": "ALIGN_DELTA"
             }

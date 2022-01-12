@@ -1345,7 +1345,9 @@
             "NewRelic",
             "Datadog",
             "SumoLogic",
-            "PagerDuty"
+            "PagerDuty",
+            "CustomHealth",
+            "ServiceNow"
           ]
         }
       },
@@ -1523,6 +1525,22 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AwsCodeCommitConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "CustomHealth"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/CustomHealthConnectorDTO"
               }
             }
           }
@@ -1803,6 +1821,22 @@
           "if": {
             "properties": {
               "type": {
+                "const":"ServiceNow"
+              }
+            }
+          },
+          "then":{
+            "properties":{
+              "spec":{
+                "$ref":"#/definitions/ServiceNowConnector"
+              }
+            }
+          }
+        },
+        {
+          "if":{
+            "properties":{
+              "type":{
                 "const": "Splunk"
               }
             }
@@ -1860,6 +1894,79 @@
         },
         "externalId": {
           "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CustomHealthConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "baseURL",
+            "method"
+          ],
+          "properties": {
+            "baseURL": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "headers": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CustomHealthKeyAndValue"
+              }
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "GET",
+                "POST"
+              ]
+            },
+            "params": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CustomHealthKeyAndValue"
+              }
+            },
+            "validationBody": {
+              "type": "string"
+            },
+            "validationPath": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "CustomHealthKeyAndValue": {
+      "type": "object",
+      "required": [
+        "key"
+      ],
+      "properties": {
+        "encryptedValueRef": {
+          "$ref": "#/definitions/SecretRefData"
+        },
+        "key": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string"
+        },
+        "valueEncrypted": {
+          "type": "boolean"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2047,10 +2154,14 @@
     "GcpBillingExportSpec": {
       "type": "object",
       "required": [
-        "datasetId"
+        "datasetId",
+        "tableId"
       ],
       "properties": {
         "datasetId": {
+          "type": "string"
+        },
+        "tableId": {
           "type": "string"
         }
       },
@@ -2250,6 +2361,9 @@
               "items": {
                 "type": "string"
               }
+            },
+            "executeOnDelegate": {
+              "type": "boolean"
             },
             "type": {
               "type": "string",
@@ -3720,6 +3834,83 @@
               "type": "string"
             }
           }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "SecretRefData": {
+      "type": "object",
+      "properties": {
+        "decryptedValue": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "identifier": {
+          "type": "string"
+        },
+        "null": {
+          "type": "boolean"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "account",
+            "org",
+            "project",
+            "unknown"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ServiceNowConnector": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "passwordRef",
+            "serviceNowUrl"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "passwordRef": {
+              "type": "string"
+            },
+            "serviceNowUrl": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "usernameRef": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "oneOf": [
+            {
+              "required": [
+                "usernameRef"
+              ]
+            },
+            {
+              "required": [
+                "username"
+              ]
+            }
+          ]
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"

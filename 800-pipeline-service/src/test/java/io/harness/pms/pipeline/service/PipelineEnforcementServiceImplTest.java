@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.service;
 
 import static io.harness.rule.OwnerRule.SAHIL;
@@ -79,7 +86,6 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST5);
-    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH);
 
     Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap = Maps.of(FeatureRestrictionName.TEST1, true);
     Mockito.when(pmsSdkInstanceService.getSdkSteps()).thenReturn(sdkSteps);
@@ -112,10 +118,9 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST5);
-    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH);
 
     Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap =
-        Maps.of(FeatureRestrictionName.TEST5, false, FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, false);
+        Maps.of(FeatureRestrictionName.TEST5, false);
     Mockito.when(pmsSdkInstanceService.getSdkSteps()).thenReturn(sdkSteps);
     Mockito
         .when(enforcementClientService.getAvailabilityForRemoteFeatures(
@@ -126,7 +131,7 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
         () -> pipelineEnforcementService.validatePipelineExecutionRestriction(accountId, Sets.newHashSet(stepType)))
         .isInstanceOf(FeatureNotSupportedException.class)
         .hasMessage(
-            "Your current plan does not support the use of following steps: [test 5].You have exceeded max number of deployments.Please upgrade your plan.");
+            "Your current plan does not support the use of following steps: [test 5].Please upgrade your plan.");
 
     Mockito.verify(enforcementClientService)
         .getAvailabilityForRemoteFeatures(new ArrayList<>(featureRestrictionNames), accountId);
@@ -150,20 +155,15 @@ public class PipelineEnforcementServiceImplTest extends PipelineServiceTestBase 
 
     Set<FeatureRestrictionName> featureRestrictionNames = Sets.newHashSet();
     featureRestrictionNames.add(FeatureRestrictionName.TEST5);
-    featureRestrictionNames.add(FeatureRestrictionName.DEPLOYMENTS_PER_MONTH);
 
-    Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap =
-        Maps.of(FeatureRestrictionName.TEST5, true, FeatureRestrictionName.DEPLOYMENTS_PER_MONTH, false);
+    Map<FeatureRestrictionName, Boolean> featureRestrictionNameBooleanMap = Maps.of(FeatureRestrictionName.TEST5, true);
     Mockito.when(pmsSdkInstanceService.getSdkSteps()).thenReturn(sdkSteps);
     Mockito
         .when(enforcementClientService.getAvailabilityForRemoteFeatures(
             new ArrayList<>(featureRestrictionNames), accountId))
         .thenReturn(featureRestrictionNameBooleanMap);
 
-    assertThatThrownBy(
-        () -> pipelineEnforcementService.validatePipelineExecutionRestriction(accountId, Sets.newHashSet(stepType)))
-        .isInstanceOf(FeatureNotSupportedException.class)
-        .hasMessage("You have exceeded max number of deployments.Please upgrade your plan.");
+    pipelineEnforcementService.validatePipelineExecutionRestriction(accountId, Sets.newHashSet(stepType));
 
     Mockito.verify(enforcementClientService)
         .getAvailabilityForRemoteFeatures(new ArrayList<>(featureRestrictionNames), accountId);

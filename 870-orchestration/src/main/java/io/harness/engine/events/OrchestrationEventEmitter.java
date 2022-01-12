@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.events;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -28,7 +35,7 @@ public class OrchestrationEventEmitter {
       eventSender.sendEvent(
           event.getAmbiance(), event.toByteString(), PmsEventCategory.ORCHESTRATION_EVENT, serviceName, true);
     } catch (Exception ex) {
-      log.error("Failed to create orchestration event", ex);
+      log.error("Failed to create orchestration event of type {}", event.getEventType(), ex);
       throw ex;
     }
   }

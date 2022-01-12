@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.service.impl;
 
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.CREATE_ACTION;
@@ -10,6 +17,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.aws.AwsClient;
 import io.harness.ccm.CENextGenConfiguration;
+import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.beans.config.AwsConfig;
 import io.harness.ccm.commons.beans.config.GcpConfig;
 import io.harness.ccm.commons.dao.AWSConnectorToBucketMappingDao;
@@ -36,6 +44,8 @@ import com.amazonaws.services.organizations.model.AWSOrganizationsNotInUseExcept
 import com.amazonaws.services.organizations.model.AccessDeniedException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.ServiceAccountCredentials;
 import com.google.cloud.pubsub.v1.Publisher;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
@@ -57,6 +67,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
   public static final String AWS_CROSS_ACCOUNT_ROLE_ARN = "awsCrossAccountRoleArn";
   public static final String CONNECTOR_ID = "connectorId";
   public static final String ACTION = "action";
+  private static final String GOOGLE_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
   @Inject ConnectorResourceClient connectorResourceClient;
   @Inject AWSOrganizationHelperService awsOrganizationHelperService;
   @Inject AWSBucketPolicyHelperService awsBucketPolicyHelperService;
@@ -64,6 +75,7 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
   @Inject CECloudAccountDao cloudAccountDao;
   @Inject AwsClient awsClient;
   @Inject AWSConnectorToBucketMappingDao awsConnectorToBucketMappingDao;
+  @Inject BigQueryService bigQueryService;
 
   @Override
   public boolean processAWSEntityChangeEvent(EntityChangeDTO entityChangeDTO, String action) {
@@ -225,12 +237,15 @@ public class AwsEntityChangeEventServiceImpl implements AwsEntityChangeEventServ
     GcpConfig gcpConfig = configuration.getGcpConfig();
     String harnessGcpProjectId = gcpConfig.getGcpProjectId();
     String inventoryPubSubTopic = gcpConfig.getGcpAwsConnectorCrudPubSubTopic();
+    ServiceAccountCredentials sourceGcpCredentials = bigQueryService.getCredentials(GOOGLE_CREDENTIALS_PATH);
     TopicName topicName = TopicName.of(harnessGcpProjectId, inventoryPubSubTopic);
     Publisher publisher = null;
     log.info("Publishing event to topic: {}", topicName);
     try {
       // Create a publisher instance with default settings bound to the topic
-      publisher = Publisher.newBuilder(topicName).build();
+      publisher = Publisher.newBuilder(topicName)
+                      .setCredentialsProvider(FixedCredentialsProvider.create(sourceGcpCredentials))
+                      .build();
       ObjectMapper objectMapper = new ObjectMapper();
       String message = objectMapper.writeValueAsString(entityChangeEvents);
       ByteString data = ByteString.copyFromUtf8(message);

@@ -1,10 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.provision.terraform;
 
+import static io.harness.cdng.provision.terraform.TerraformPlanCommand.APPLY;
 import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.provision.TerraformConstants.TF_DESTROY_NAME_PREFIX;
 import static io.harness.provision.TerraformConstants.TF_NAME_PREFIX;
 import static io.harness.validation.Validator.notEmptyCheck;
 
+import static java.lang.String.format;
 import static org.apache.commons.lang3.StringUtils.trimToEmpty;
 
 import io.harness.EntityType;
@@ -41,6 +50,7 @@ import io.harness.delegate.task.terraform.InlineTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.RemoteTerraformVarFileInfo;
 import io.harness.delegate.task.terraform.TerraformTaskNGResponse;
 import io.harness.delegate.task.terraform.TerraformVarFileInfo;
+import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.EntityDetail;
@@ -87,6 +97,7 @@ import org.mongodb.morphia.query.Sort;
 @OwnedBy(HarnessTeam.CDP)
 public class TerraformStepHelper {
   private static final String INHERIT_OUTPUT_FORMAT = "tfInheritOutput_%s";
+  private static final String TF_INHERIT_OUTPUT_FORMAT = "tfInheritOutput_%s_%s";
   public static final String TF_CONFIG_FILES = "TF_CONFIG_FILES";
   public static final String TF_VAR_FILES = "TF_VAR_FILES_%d";
 
@@ -125,12 +136,11 @@ public class TerraformStepHelper {
 
   public String generateFullIdentifier(String provisionerIdentifier, Ambiance ambiance) {
     if (Pattern.matches(NGRegexValidatorConstants.IDENTIFIER_PATTERN, provisionerIdentifier)) {
-      return String.format("%s/%s/%s/%s", AmbianceUtils.getAccountId(ambiance),
-          AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance),
-          provisionerIdentifier);
+      return format("%s/%s/%s/%s", AmbianceUtils.getAccountId(ambiance), AmbianceUtils.getOrgIdentifier(ambiance),
+          AmbianceUtils.getProjectIdentifier(ambiance), provisionerIdentifier);
     } else {
-      throw new InvalidRequestException(String.format(
-          "Provisioner Identifier cannot contain special characters or spaces: [%s]", provisionerIdentifier));
+      throw new InvalidRequestException(
+          format("Provisioner Identifier cannot contain special characters or spaces: [%s]", provisionerIdentifier));
     }
   }
 
@@ -147,7 +157,7 @@ public class TerraformStepHelper {
             ParameterFieldHelper.getParameterFieldValue(gitStoreConfig.getCommitId()));
         break;
       default:
-        throw new InvalidRequestException(String.format("Unrecognized git fetch type: [%s]", gitFetchType.name()));
+        throw new InvalidRequestException(format("Unrecognized git fetch type: [%s]", gitFetchType.name()));
     }
   }
 
@@ -160,7 +170,7 @@ public class TerraformStepHelper {
     if (identifier.equals(TerraformStepHelper.TF_CONFIG_FILES)) {
       validationMessage = "Config Files";
     } else {
-      validationMessage = String.format("Var Files with identifier: %s", identifier);
+      validationMessage = format("Var Files with identifier: %s", identifier);
     }
     // TODO: fix manifest part, remove k8s dependency
     k8sStepHelper.validateManifest(store.getKind(), connectorDTO, validationMessage);
@@ -209,14 +219,19 @@ public class TerraformStepHelper {
     return purgedRepoUrl + "/" + purgedRepoName;
   }
 
-  public TerraformInheritOutput getSavedInheritOutput(String provisionerIdentifier, Ambiance ambiance) {
+  public TerraformInheritOutput getSavedInheritOutput(String provisionerIdentifier, String command, Ambiance ambiance) {
     String fullEntityId = generateFullIdentifier(provisionerIdentifier, ambiance);
-    String inheritOutputName = String.format(INHERIT_OUTPUT_FORMAT, fullEntityId);
     OptionalSweepingOutput output = executionSweepingOutputService.resolveOptional(
-        ambiance, RefObjectUtils.getSweepingOutputRefObject(inheritOutputName));
+        ambiance, RefObjectUtils.getSweepingOutputRefObject(format(TF_INHERIT_OUTPUT_FORMAT, command, fullEntityId)));
+    if (!output.isFound()) {
+      // This is for backward compatibility as after we release this, there may be IN PROGRESS workflows which saved
+      // inherit output  with old name. To be removed after some time.
+      output = executionSweepingOutputService.resolveOptional(
+          ambiance, RefObjectUtils.getSweepingOutputRefObject(format(INHERIT_OUTPUT_FORMAT, fullEntityId)));
+    }
     if (!output.isFound()) {
       throw new InvalidRequestException(
-          String.format("Did not find any Plan step for provisioner identifier: [%s]", provisionerIdentifier));
+          format("Did not find any Plan step for provisioner identifier: [%s]", provisionerIdentifier));
     }
 
     return (TerraformInheritOutput) output.getOutput();
@@ -241,13 +256,14 @@ public class TerraformStepHelper {
         .planName(getTerraformPlanName(planStepParameters.getConfiguration().getCommand(), ambiance));
     String fullEntityId = generateFullIdentifier(
         ParameterFieldHelper.getParameterFieldValue(planStepParameters.getProvisionerIdentifier()), ambiance);
-    String inheritOutputName = String.format(INHERIT_OUTPUT_FORMAT, fullEntityId);
+    String inheritOutputName =
+        format(TF_INHERIT_OUTPUT_FORMAT, planStepParameters.getConfiguration().command.name(), fullEntityId);
     executionSweepingOutputService.consume(ambiance, inheritOutputName, builder.build(), StepOutcomeGroup.STAGE.name());
   }
 
-  private String getTerraformPlanName(TerraformPlanCommand terraformPlanCommand, Ambiance ambiance) {
+  public String getTerraformPlanName(TerraformPlanCommand terraformPlanCommand, Ambiance ambiance) {
     String prefix = TerraformPlanCommand.DESTROY == terraformPlanCommand ? TF_DESTROY_NAME_PREFIX : TF_NAME_PREFIX;
-    return String.format(prefix, ambiance.getPlanExecutionId());
+    return format(prefix, ambiance.getPlanExecutionId()).replaceAll("_", "-");
   }
 
   public EncryptionConfig getEncryptionConfig(Ambiance ambiance, TerraformPlanStepParameters planStepParameters) {
@@ -303,7 +319,7 @@ public class TerraformStepHelper {
         break;
       }
       default: {
-        log.warn(String.format("Unknown store kind: [%s]", storeConfig.getKind()));
+        log.warn(format("Unknown store kind: [%s]", storeConfig.getKind()));
         break;
       }
     }
@@ -312,7 +328,7 @@ public class TerraformStepHelper {
 
   public void saveRollbackDestroyConfigInherited(TerraformApplyStepParameters stepParameters, Ambiance ambiance) {
     TerraformInheritOutput inheritOutput = getSavedInheritOutput(
-        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), ambiance);
+        ParameterFieldHelper.getParameterFieldValue(stepParameters.getProvisionerIdentifier()), APPLY.name(), ambiance);
 
     TerraformConfig terraformConfig =
         TerraformConfig.builder()
@@ -423,7 +439,7 @@ public class TerraformStepHelper {
             .order(Sort.descending(TerraformConfigKeys.createdAt));
     TerraformConfig terraformConfig = terraformConfigDAL.getTerraformConfig(query, ambiance);
     if (terraformConfig == null) {
-      throw new InvalidRequestException(String.format("Terraform config for Last Apply not found: [%s]", entityId));
+      throw new InvalidRequestException(format("Terraform config for Last Apply not found: [%s]", entityId));
     }
     return terraformConfig;
   }
@@ -449,7 +465,7 @@ public class TerraformStepHelper {
     try {
       return RestClientUtils.getResponse(fileService.get().getLatestFileId(entityId, FileBucket.TERRAFORM_STATE));
     } catch (Exception exception) {
-      String message = String.format("Unable to call fileservice to fetch latest file id for entityId: [%s]", entityId);
+      String message = format("Unable to call fileservice to fetch latest file id for entityId: [%s]", entityId);
       throw new InvalidRequestException(message, exception);
     }
   }
@@ -477,8 +493,10 @@ public class TerraformStepHelper {
       RestClientUtils.getResponse(fileService.get().updateParentEntityIdAndVersion(
           URLEncoder.encode(entityId, "UTF-8"), stateFileId, FileBucket.TERRAFORM_STATE));
     } catch (Exception ex) {
+      log.error(format("EntityId and Version update failed for entityId: [%s], with error %s: ", entityId,
+          ExceptionUtils.getMessage(ex)));
       throw new InvalidRequestException(
-          String.format("Unable to update entityId and Version for entityId: [%s]", entityId));
+          format("Unable to update StateFile version for entityId: [%s], Please try re-running pipeline", entityId));
     }
   }
 
@@ -503,7 +521,7 @@ public class TerraformStepHelper {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();
               GitFetchFilesConfig gitFetchFilesConfig =
-                  getGitFetchFilesConfig(storeConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i));
+                  getGitFetchFilesConfig(storeConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
               varFileInfo.add(RemoteTerraformVarFileInfo.builder().gitFetchFilesConfig(gitFetchFilesConfig).build());
             }
           }
@@ -534,7 +552,7 @@ public class TerraformStepHelper {
               i++;
               StoreConfig storeConfig = storeConfigWrapper.getSpec();
               GitStoreConfigDTO gitStoreConfigDTO = getStoreConfigAtCommitId(
-                  storeConfig, response.getCommitIdForConfigFilesMap().get(String.format(TF_VAR_FILES, i)))
+                  storeConfig, response.getCommitIdForConfigFilesMap().get(format(TF_VAR_FILES, i)))
                                                         .toGitStoreConfigDTO();
               varFileConfigs.add(TerraformRemoteVarFileConfig.builder().gitStoreConfigDTO(gitStoreConfigDTO).build());
             }
@@ -561,7 +579,7 @@ public class TerraformStepHelper {
           GitStoreConfig gitStoreConfig =
               ((TerraformRemoteVarFileConfig) fileConfig).getGitStoreConfigDTO().toGitStoreConfig();
           GitFetchFilesConfig gitFetchFilesConfig =
-              getGitFetchFilesConfig(gitStoreConfig, ambiance, String.format(TerraformStepHelper.TF_VAR_FILES, i));
+              getGitFetchFilesConfig(gitStoreConfig, ambiance, format(TerraformStepHelper.TF_VAR_FILES, i));
           varFileInfo.add(RemoteTerraformVarFileInfo.builder().gitFetchFilesConfig(gitFetchFilesConfig).build());
         }
       }

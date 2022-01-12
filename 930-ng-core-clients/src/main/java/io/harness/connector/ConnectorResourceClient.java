@@ -1,8 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.connector;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
-import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.serializer.kryo.KryoResponse;
@@ -32,7 +39,7 @@ public interface ConnectorResourceClient {
 
   @GET(CONNECTORS_API + "/{identifier}/validation-params")
   @KryoResponse
-  Call<ResponseDTO<ConnectorValidationParams>> getConnectorValidationParams(
+  Call<ResponseDTO<ConnectorValidationParameterResponse>> getConnectorValidationParams(
       @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
       @NotNull @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
@@ -46,4 +53,11 @@ public interface ConnectorResourceClient {
       @Query(NGResourceFilterConstants.PAGE_KEY) int page, @Query(NGResourceFilterConstants.SIZE_KEY) int size,
       @Body ConnectorFilterPropertiesDTO connectorListFilter,
       @Query("getDistinctFromBranches") Boolean getDistinctFromBranches);
+
+  @POST(CONNECTORS_API + "/testConnectionInternal/{identifier}")
+  Call<ResponseDTO<ConnectorValidationResult>> testConnectionInternal(
+      @Path(NGCommonEntityConstants.IDENTIFIER_KEY) String connectorIdentifier,
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
+      @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier);
 }

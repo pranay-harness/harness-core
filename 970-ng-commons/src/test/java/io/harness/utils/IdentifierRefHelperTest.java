@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.utils;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -10,6 +18,7 @@ import io.harness.CategoryTest;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import org.junit.Test;
@@ -175,5 +184,55 @@ public class IdentifierRefHelperTest extends CategoryTest {
     assertThat(IdentifierRefHelper.getIdentifier(identifierRefAccount)).isEqualTo("identifier");
     assertThat(IdentifierRefHelper.getIdentifier(identifierRefOrg)).isEqualTo("identifier");
     assertThat(IdentifierRefHelper.getIdentifier(identifierRefProj)).isEqualTo("identifier");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testProjectLevelScopeIdentifierRefThrowExceptionWithEmptyIdentifiers() {
+    String accountIdentifier = "accountIdentifier";
+    String orgIdentifier = "orgIdentifier";
+    String projectIdentifier = "projectIdentifier";
+    String identifier = "identifier";
+
+    assertThatThrownBy(() -> IdentifierRefHelper.getIdentifierRef(identifier, accountIdentifier, orgIdentifier, ""))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("ProjectIdentifier cannot be empty for PROJECT scope");
+
+    assertThatThrownBy(() -> IdentifierRefHelper.getIdentifierRef(identifier, accountIdentifier, "", projectIdentifier))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("OrgIdentifier cannot be empty for PROJECT scope");
+
+    assertThatThrownBy(() -> IdentifierRefHelper.getIdentifierRef(identifier, "", orgIdentifier, projectIdentifier))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("AccountIdentifier cannot be empty for PROJECT scope");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testOrgLevelScopeIdentifierRefThrowExceptionWithEmptyIdentifiers() {
+    String accountIdentifier = "accountIdentifier";
+    String orgIdentifier = "orgIdentifier";
+    String identifier = "identifier";
+
+    assertThatThrownBy(() -> IdentifierRefHelper.getIdentifierRef("org." + identifier, accountIdentifier, "", null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("OrgIdentifier cannot be empty for ORG scope");
+
+    assertThatThrownBy(() -> IdentifierRefHelper.getIdentifierRef("org." + identifier, "", orgIdentifier, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("AccountIdentifier cannot be empty for ORG scope");
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testAccountLevelScopeIdentifierRefThrowExceptionWithEmptyIdenifiers() {
+    String identifier = "identifier";
+
+    assertThatThrownBy(() -> IdentifierRefHelper.getIdentifierRef("account." + identifier, null, null, null))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("AccountIdentifier cannot be empty for ACCOUNT scope");
   }
 }

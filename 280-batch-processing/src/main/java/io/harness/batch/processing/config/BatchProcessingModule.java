@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.config;
 
 import static io.harness.AuthorizationServiceHeader.BATCH_PROCESSING;
@@ -9,6 +16,7 @@ import io.harness.batch.processing.metrics.CeCloudMetricsService;
 import io.harness.batch.processing.metrics.CeCloudMetricsServiceImpl;
 import io.harness.batch.processing.metrics.ProductMetricsService;
 import io.harness.batch.processing.metrics.ProductMetricsServiceImpl;
+import io.harness.batch.processing.svcmetrics.BatchProcessingMetricsPublisher;
 import io.harness.batch.processing.tasklet.util.ClusterHelper;
 import io.harness.batch.processing.tasklet.util.ClusterHelperImpl;
 import io.harness.ccm.anomaly.service.impl.AnomalyServiceImpl;
@@ -18,11 +26,17 @@ import io.harness.ccm.billing.bigquery.BigQueryServiceImpl;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudService;
 import io.harness.ccm.commons.dao.recommendation.RecommendationCrudServiceImpl;
 import io.harness.ccm.commons.service.impl.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.EntityMetadataServiceImpl;
 import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
 import io.harness.ccm.commons.service.intf.ClusterRecordService;
+import io.harness.ccm.commons.service.intf.EntityMetadataService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CESlackWebhookService;
 import io.harness.ccm.communication.CESlackWebhookServiceImpl;
+import io.harness.ccm.graphql.core.budget.BudgetCostService;
+import io.harness.ccm.graphql.core.budget.BudgetCostServiceImpl;
+import io.harness.ccm.graphql.core.budget.BudgetService;
+import io.harness.ccm.graphql.core.budget.BudgetServiceImpl;
 import io.harness.ccm.views.businessMapping.service.impl.BusinessMappingServiceImpl;
 import io.harness.ccm.views.businessMapping.service.intf.BusinessMappingService;
 import io.harness.ccm.views.service.CEViewService;
@@ -38,6 +52,8 @@ import io.harness.govern.ProviderMethodInterceptor;
 import io.harness.instanceng.InstanceNGResourceClientModule;
 import io.harness.lock.PersistentLocker;
 import io.harness.lock.noop.PersistentNoopLocker;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.MongoConfig;
 import io.harness.persistence.HPersistence;
 import io.harness.pricing.client.CloudInfoPricingClientModule;
@@ -70,6 +86,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BatchProcessingModule extends AbstractModule {
   BatchMainConfig batchMainConfig;
+
   BatchProcessingModule(BatchMainConfig batchMainConfig) {
     this.batchMainConfig = batchMainConfig;
   }
@@ -81,8 +98,8 @@ public class BatchProcessingModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("gcpConfig")
-  public io.harness.ccm.commons.beans.config.GcpConfig noOpDummyConfig() {
-    return io.harness.ccm.commons.beans.config.GcpConfig.builder().build();
+  public io.harness.ccm.commons.beans.config.GcpConfig gcpConfig() {
+    return batchMainConfig.getGcpConfig();
   }
 
   @Override
@@ -111,6 +128,12 @@ public class BatchProcessingModule extends AbstractModule {
     bind(ClusterRecordService.class).to(ClusterRecordServiceImpl.class);
     bind(RecommendationCrudService.class).to(RecommendationCrudServiceImpl.class);
     bind(ClusterHelper.class).to(ClusterHelperImpl.class);
+    bind(BudgetCostService.class).to(BudgetCostServiceImpl.class);
+    bind(EntityMetadataService.class).to(EntityMetadataServiceImpl.class);
+    bind(BudgetService.class).to(BudgetServiceImpl.class);
+
+    install(new MetricsModule());
+    bind(MetricsPublisher.class).to(BatchProcessingMetricsPublisher.class).in(Scopes.SINGLETON);
 
     bindPricingServices();
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
@@ -33,7 +40,6 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +110,7 @@ public class DelegateNgTokenResource {
           NGCommonEntityConstants.ORG_KEY) String orgId,
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectId,
-      @Parameter(description = "Delegate Token name") @PathParam("tokenName") @NotNull String tokenName) {
+      @Parameter(description = "Delegate Token name") @QueryParam("tokenName") @NotNull String tokenName) {
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     delegateTokenService.revokeDelegateToken(accountId, owner, tokenName);
     return new RestResponse<>();
@@ -132,5 +138,31 @@ public class DelegateNgTokenResource {
       DelegateTokenStatus status) {
     DelegateEntityOwner owner = DelegateEntityOwnerHelper.buildOwner(orgId, projectId);
     return new RestResponse<>(delegateTokenService.getDelegateTokens(accountId, owner, status));
+  }
+
+  @PUT
+  @Path("default")
+  @Timed
+  @ExceptionMetered
+  @AuthRule(permissionType = MANAGE_DELEGATES)
+  @Operation(operationId = "upsertDefaultToken",
+      summary = "Creates or a default Delegate Token for account, org and project. "
+          + "If default token already exists its value will be re-generated.",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "200 Ok response if successfully created default token")
+      })
+  public RestResponse<Void>
+  upsertDefaultToken(@Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @QueryParam(
+                         "accountId") @NotNull String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) String orgId,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) String projectId,
+      @Parameter(description = "skipIfExists") @QueryParam("skipIfExists") Boolean skipIfExists) {
+    delegateTokenService.upsertDefaultToken(
+        accountId, DelegateEntityOwnerHelper.buildOwner(orgId, projectId), skipIfExists);
+    return new RestResponse<>();
   }
 }

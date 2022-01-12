@@ -1,28 +1,44 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
+import io.harness.cvng.beans.AppDynamicsDataCollectionInfo.AppMetricInfoDTO;
 import io.harness.cvng.beans.AppdynamicsValidationResponse;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
+import io.harness.cvng.beans.CustomHealthDataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
+import io.harness.cvng.beans.DataCollectionInfo;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.DatadogLogDataCollectionInfo;
+import io.harness.cvng.beans.DatadogMetricsDataCollectionInfo;
 import io.harness.cvng.beans.K8ActivityDataCollectionInfo;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.MetricPackDTO.MetricDefinitionDTO;
+import io.harness.cvng.beans.NewRelicDataCollectionInfo;
+import io.harness.cvng.beans.PrometheusDataCollectionInfo;
+import io.harness.cvng.beans.SplunkDataCollectionInfo;
 import io.harness.cvng.beans.SplunkSavedSearch;
 import io.harness.cvng.beans.SplunkValidationResponse;
 import io.harness.cvng.beans.SplunkValidationResponse.SplunkSampleResponse;
 import io.harness.cvng.beans.StackdriverDataCollectionInfo;
 import io.harness.cvng.beans.StackdriverLogDataCollectionInfo;
+import io.harness.cvng.beans.SyncDataCollectionRequest;
 import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
 import io.harness.cvng.beans.TimeSeriesCustomThresholdActions;
+import io.harness.cvng.beans.TimeSeriesDataCollectionInfo;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.TimeSeriesThresholdActionType;
 import io.harness.cvng.beans.TimeSeriesThresholdComparisonType;
@@ -42,14 +58,18 @@ import io.harness.cvng.beans.appd.AppDynamicsFetchTiersRequest;
 import io.harness.cvng.beans.appd.AppDynamicsFileDefinition;
 import io.harness.cvng.beans.appd.AppDynamicsMetricDataValidationRequest;
 import io.harness.cvng.beans.appd.AppDynamicsTier;
+import io.harness.cvng.beans.customhealth.CustomHealthFetchSampleDataRequest;
+import io.harness.cvng.beans.customhealth.TimestampInfo;
 import io.harness.cvng.beans.datadog.DatadogActiveMetricsRequest;
 import io.harness.cvng.beans.datadog.DatadogDashboardDetailsRequest;
 import io.harness.cvng.beans.datadog.DatadogDashboardListRequest;
+import io.harness.cvng.beans.datadog.DatadogLogDefinition;
 import io.harness.cvng.beans.datadog.DatadogLogIndexesRequest;
 import io.harness.cvng.beans.datadog.DatadogLogSampleDataRequest;
 import io.harness.cvng.beans.datadog.DatadogMetricTagsRequest;
 import io.harness.cvng.beans.datadog.DatadogTimeSeriesPointsRequest;
 import io.harness.cvng.beans.newrelic.NewRelicApplicationFetchRequest;
+import io.harness.cvng.beans.newrelic.NewRelicFetchSampleDataRequest;
 import io.harness.cvng.beans.newrelic.NewRelicMetricPackValidationRequest;
 import io.harness.cvng.beans.pagerduty.PagerDutyRegisterWebhookRequest;
 import io.harness.cvng.beans.pagerduty.PagerDutyServicesRequest;
@@ -65,6 +85,7 @@ import io.harness.cvng.beans.splunk.SplunkSavedSearchRequest;
 import io.harness.cvng.beans.stackdriver.StackDriverMetricDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardDetailsRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverDashboardRequest;
+import io.harness.cvng.beans.stackdriver.StackdriverLogDefinition;
 import io.harness.cvng.beans.stackdriver.StackdriverLogSampleDataRequest;
 import io.harness.cvng.beans.stackdriver.StackdriverSampleDataRequest;
 import io.harness.cvng.models.VerificationType;
@@ -147,5 +168,20 @@ public class CvNextGenCommonsBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(DatadogLogSampleDataRequest.class, 9073);
     kryo.register(DatadogLogDataCollectionInfo.class, 9074);
     kryo.register(DatadogLogIndexesRequest.class, 9075);
+    kryo.register(NewRelicFetchSampleDataRequest.class, 9076);
+    kryo.register(SyncDataCollectionRequest.class, 9077);
+    kryo.register(TimeSeriesDataCollectionInfo.class, 9078);
+    kryo.register(DataCollectionInfo.class, 9079);
+    kryo.register(AppMetricInfoDTO.class, 9080);
+    kryo.register(CustomHealthFetchSampleDataRequest.class, 9081);
+    kryo.register(TimestampInfo.class, 9082);
+    kryo.register(TimestampInfo.TimestampFormat.class, 9083);
+    kryo.register(PrometheusDataCollectionInfo.class, 9084);
+    kryo.register(SplunkDataCollectionInfo.class, 9085);
+    kryo.register(StackdriverLogDefinition.class, 9086);
+    kryo.register(DatadogLogDefinition.class, 9087);
+    kryo.register(DatadogMetricsDataCollectionInfo.class, 9088);
+    kryo.register(NewRelicDataCollectionInfo.class, 9089);
+    kryo.register(CustomHealthDataCollectionInfo.class, 9090);
   }
 }

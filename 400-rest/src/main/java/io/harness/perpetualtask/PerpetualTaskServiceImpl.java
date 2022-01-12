@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask;
 
 import static io.harness.delegate.message.ManagerMessageConstants.UPDATE_PERPETUAL_TASK;
@@ -12,9 +19,11 @@ import io.harness.grpc.auth.DelegateAuthServerInterceptor;
 import io.harness.grpc.utils.HTimestamps;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecordDao;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.service.intfc.PerpetualTaskStateObserver;
 
 import software.wings.app.MainConfiguration;
@@ -55,6 +64,7 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
   @Inject private MainConfiguration mainConfiguration;
   @Inject private DelegateServiceClassicGrpcClient delegateServiceClassicGrpcClient;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Inject
   public PerpetualTaskServiceImpl(PerpetualTaskRecordDao perpetualTaskRecordDao,
@@ -75,8 +85,12 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
 
     broadcastAggregateSet.add(Pair.of(accountId, delegateId));
 
+    // Both subject and remote Observer are needed since in few places DMS might not be present
     perpetualTaskStateObserverSubject.fireInform(
         PerpetualTaskStateObxxxxxxxx:onPerpetualTaskAssigned, accountId, taskId, delegateId);
+    remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(PerpetualTaskStateObserver.class,
+                                         "onPerpetualTaskAssigned", String.class, String.class, String.class),
+        PerpetualTaskServiceImpl.class, accountId, taskId, delegateId);
   }
 
   public void broadcastToDelegate() {
@@ -131,6 +145,9 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
                                        .build();
 
       perpetualTaskCrudSubject.fireInform(PerpetualTaskCrudObxxxxxxxx:onPerpetualTaskCreated);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(PerpetualTaskCrudObserver.class, "onPerpetualTaskCreated"),
+          PerpetualTaskServiceImpl.class);
       String taskId = perpetualTaskRecordDao.save(record);
       try (AutoLogContext ignore1 = new PerpetualTaskLogContext(taskId, OVERRIDE_ERROR)) {
         log.info("Created a perpetual task with id={}.", taskId);
@@ -281,6 +298,8 @@ public class PerpetualTaskServiceImpl implements PerpetualTaskService, DelegateO
   public void onDisconnected(String accountId, String delegateId) {
     perpetualTaskRecordDao.markAllTasksOnDelegateForReassignment(accountId, delegateId);
     perpetualTaskCrudSubject.fireInform(PerpetualTaskCrudObxxxxxxxx:onRebalanceRequired);
+    remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(PerpetualTaskCrudObserver.class, "onRebalanceRequired"),
+        PerpetualTaskServiceImpl.class);
   }
 
   @Override

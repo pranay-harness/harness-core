@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.core.managerConfiguration;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -14,7 +21,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.persistence.HPersistence;
+import io.harness.mongo.MongoPersistence;
 import io.harness.queue.QueueController;
 import io.harness.version.VersionInfoManager;
 
@@ -39,7 +46,7 @@ import org.apache.commons.codec.binary.StringUtils;
 @TargetModule(HarnessModule._960_PERSISTENCE)
 @BreakDependencyOn("software.wings.beans.ManagerConfiguration")
 public class ConfigurationController implements Managed, QueueController {
-  @Inject private HPersistence persistence;
+  @Inject private MongoPersistence persistence;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private ExecutorService executorService;
 

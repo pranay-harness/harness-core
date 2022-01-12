@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.accesscontrol.roleassignments.api;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -16,8 +23,11 @@ import lombok.Value;
 @ApiModel(value = "RoleAssignmentValidationRequest")
 @Schema(name = "RoleAssignmentValidationRequest")
 public class RoleAssignmentValidationRequestDTO {
-  @NotNull @Valid RoleAssignmentDTO roleAssignment;
-  boolean validatePrincipal;
-  boolean validateRole;
-  boolean validateResourceGroup;
+  @Schema(description = "Role Assignment to validate", required = true)
+  @NotNull
+  @Valid
+  RoleAssignmentDTO roleAssignment;
+  @Schema(description = "Set it to true if the principal needs to be validated") boolean validatePrincipal;
+  @Schema(description = "Set it to true if the role needs to be validated") boolean validateRole;
+  @Schema(description = "Set it to true if the resource group needs to be validated") boolean validateResourceGroup;
 }

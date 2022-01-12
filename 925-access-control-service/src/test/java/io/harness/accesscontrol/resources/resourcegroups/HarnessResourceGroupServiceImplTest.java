@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.accesscontrol.resources.resourcegroups;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -83,9 +90,8 @@ public class HarnessResourceGroupServiceImplTest extends AccessControlTestBase {
     harnessResourceGroupService.sync(identifier, scope);
 
     verify(resourceGroupClient, times(1)).getResourceGroup(any(), any(), any(), any());
-    verify(resourceGroupFactory, times(1)).buildResourceGroup(any(), any());
     verify(resourceGroupFactory, times(1)).buildResourceGroup(any());
-    verify(resourceGroupService, times(2)).upsert(any());
+    verify(resourceGroupService, times(1)).upsert(any());
   }
 
   @Test
@@ -107,9 +113,8 @@ public class HarnessResourceGroupServiceImplTest extends AccessControlTestBase {
     harnessResourceGroupService.sync(identifier, null);
 
     verify(resourceGroupClient, times(1)).getResourceGroup(any(), any(), any(), any());
-    verify(resourceGroupFactory, times(1)).buildResourceGroup(any(), any());
     verify(resourceGroupFactory, times(1)).buildResourceGroup(any());
-    verify(resourceGroupService, times(2)).upsert(any());
+    verify(resourceGroupService, times(1)).upsert(any());
   }
 
   @Test

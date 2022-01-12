@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -455,6 +462,10 @@ public class ExecutionController {
 
     HelmChart helmChart =
         helmChartService.getByChartVersion(service.getAppId(), service.getUuid(), appManifestName, versionNumber);
+    if (helmChart == null) {
+      helmChart = helmChartService.fetchByChartVersion(
+          service.getAccountId(), service.getAppId(), service.getUuid(), appManifestName, versionNumber);
+    }
     notNullCheck("Cannot find helm chart for specified version number: " + versionNumber, helmChart, USER);
     return helmChart;
   }

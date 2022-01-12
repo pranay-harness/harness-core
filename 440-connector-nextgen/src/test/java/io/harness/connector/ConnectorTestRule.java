@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.connector;
 
 import static io.harness.ConnectorConstants.CONNECTOR_DECORATOR_SERVICE;
@@ -9,6 +16,8 @@ import static org.mockito.Mockito.mock;
 import io.harness.AccessControlClientConfiguration;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.callback.DelegateCallbackToken;
+import io.harness.connector.helper.DecryptionHelper;
+import io.harness.connector.helper.DecryptionHelperViaManager;
 import io.harness.connector.impl.ConnectorActivityServiceImpl;
 import io.harness.connector.services.ConnectorActivityService;
 import io.harness.connector.services.ConnectorService;
@@ -17,6 +26,7 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.gitsync.clients.YamlGitConfigClient;
 import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.testing.GitSyncablePersistenceTestModule;
@@ -39,6 +49,7 @@ import io.harness.remote.CEGcpSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.InjectorRuleMixin;
 import io.harness.secretmanagerclient.services.api.SecretManagerClientService;
+import io.harness.secrets.remote.SecretNGManagerClient;
 import io.harness.serializer.ConnectorNextGenRegistrars;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
@@ -104,6 +115,8 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         bind(OrganizationService.class).toInstance(mock(OrganizationService.class));
         bind(NGActivityService.class).toInstance(mock(NGActivityService.class));
         bind(SecretManagerClientService.class).toInstance(mock(SecretManagerClientService.class));
+        bind(DecryptionHelper.class).toInstance(mock(DecryptionHelperViaManager.class));
+        bind(SecretNGManagerClient.class).toInstance(mock(SecretNGManagerClient.class));
         bind(DelegateServiceGrpcClient.class).toInstance(mock(DelegateServiceGrpcClient.class));
         bind(SecretCrudService.class).toInstance(mock(SecretCrudService.class));
         bind(NGSecretManagerService.class).toInstance(mock(NGSecretManagerService.class));
@@ -118,12 +131,15 @@ public class ConnectorTestRule implements InjectorRuleMixin, MethodRule, MongoRu
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(GitAwarePersistence.class).to(NoOpGitAwarePersistenceImpl.class);
         bind(GitSyncSdkService.class).toInstance(mock(GitSyncSdkService.class));
+        bind(YamlGitConfigClient.class).toInstance(mock(YamlGitConfigClient.class));
       }
     });
     modules.add(mongoTypeModule(annotations));
     modules.add(TestMongoModule.getInstance());
     modules.add(new GitSyncablePersistenceTestModule());
-    modules.add(ConnectorModule.getInstance());
+    modules.add(ConnectorModule.getInstance(
+        io.harness.remote.NextGenConfig.builder().ceNextGenServiceSecret("test_secret").build(),
+        ServiceHttpClientConfig.builder().baseUrl("http://localhost:7457/").build()));
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
     modules.add(new EntitySetupUsageClientModule(

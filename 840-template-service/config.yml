@@ -36,7 +36,7 @@ mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
-  transactionsEnabled: true
+  transactionsEnabled: false
   aliasDBName:  template-harness
   traceMode: DISABLED
 
@@ -114,3 +114,10 @@ managerAuthority: localhost
 hostname: ${HOSTNAME:-localhost}
 
 basePathPrefix: ${BASE_PATH_PREFIX:-""}
+
+enforcementClientConfiguration:
+  enforcementCheckEnabled: ${ENFORCEMENT_CHECK_ENABLED:-false}
+
+pmsGrpcClientConfig:
+  target: localhost:12011
+  authority: localhost

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.template;
 
 import static io.harness.data.structure.CollectionUtils.trimmedLowercaseSet;
@@ -35,6 +42,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
+import io.harness.validation.SuppressValidation;
 import io.harness.validation.Update;
 
 import software.wings.beans.Base;
@@ -244,6 +252,7 @@ public class TemplateFolderServiceImpl implements TemplateFolderService {
   }
 
   @Override
+  @SuppressValidation
   public void loadDefaultTemplateFolders() {
     TemplateGallery templateGallery = templateGalleryService.get(GLOBAL_ACCOUNT_ID, HARNESS_GALLERY);
     notNullCheck("Harness Template gallery was deleted", templateGallery, SRE);

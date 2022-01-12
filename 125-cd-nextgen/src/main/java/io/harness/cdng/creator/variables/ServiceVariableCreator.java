@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.creator.variables;
 
 import static io.harness.cdng.manifest.ManifestStoreType.isInGitSubset;
@@ -77,9 +84,10 @@ public class ServiceVariableCreator {
     if (typeField != null) {
       switch (typeField.getNode().getCurrJsonNode().textValue()) {
         case ServiceSpecType.KUBERNETES:
+        case ServiceSpecType.NATIVE_HELM:
           YamlField specNode = serviceDefNode.getNode().getField(YamlTypes.SERVICE_SPEC);
           if (specNode != null) {
-            addVariablesForKubernetesServiceSpec(specNode, yamlPropertiesMap);
+            addVariablesForKubernetesHelmServiceSpec(specNode, yamlPropertiesMap);
           }
           break;
         default:
@@ -88,7 +96,7 @@ public class ServiceVariableCreator {
     }
   }
 
-  private void addVariablesForKubernetesServiceSpec(
+  private void addVariablesForKubernetesHelmServiceSpec(
       YamlField serviceSpecNode, Map<String, YamlProperties> yamlPropertiesMap) {
     YamlField artifactsNode = serviceSpecNode.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
     if (VariableCreatorHelper.isNotYamlFieldEmpty(artifactsNode)) {

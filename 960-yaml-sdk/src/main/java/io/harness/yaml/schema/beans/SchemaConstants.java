@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.yaml.schema.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -12,6 +19,8 @@ public class SchemaConstants {
   public static final String ANY_OF_NODE = "anyOf";
   public static final String PROPERTIES_NODE = "properties";
   public static final String DEFINITIONS_NODE = "definitions";
+  public static final String EXECUTION_WRAPPER_CONFIG_NODE = "ExecutionWrapperConfig";
+  public static final String STEP_NODE = "step";
   public static final String SCHEMA_NODE = "$schema";
   public static final String REF_NODE = "$ref";
   public static final String CONST_NODE = "const";

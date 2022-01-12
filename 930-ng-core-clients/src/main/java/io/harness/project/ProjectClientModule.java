@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.project;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -19,6 +26,7 @@ import com.google.inject.name.Names;
 
 @OwnedBy(PL)
 public class ProjectClientModule extends AbstractModule {
+  private static ProjectClientModule instance;
   private final ServiceHttpClientConfig projectManagerClientConfig;
   private final String serviceSecret;
   private final String clientId;
@@ -28,6 +36,15 @@ public class ProjectClientModule extends AbstractModule {
     this.projectManagerClientConfig = projectManagerClientConfig;
     this.serviceSecret = serviceSecret;
     this.clientId = clientId;
+  }
+
+  public static ProjectClientModule getInstance(
+      ServiceHttpClientConfig serviceHttpClientConfig, String serviceSecret, String clientId) {
+    if (instance == null) {
+      instance = new ProjectClientModule(serviceHttpClientConfig, serviceSecret, clientId);
+    }
+
+    return instance;
   }
 
   @Provides

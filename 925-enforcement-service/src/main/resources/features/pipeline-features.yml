@@ -19,6 +19,9 @@ features:
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: true
   - name: INTEGRATED_APPROVALS_WITH_JIRA
     description: Support for Integrated approvals with Harness JIRA
     restrictions:
@@ -28,6 +31,24 @@ features:
       TEAM:
         restrictionType: AVAILABILITY
         enabled: true
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
+  - name: TEMPLATE_SERVICE
+    description: Support for Templates with Harness
+    restrictions:
+      FREE:
+        restrictionType: AVAILABILITY
+        enabled: false
+      TEAM:
+        restrictionType: AVAILABILITY
+        enabled: false
+      COMMUNITY:
+        restrictionType: AVAILABILITY
+        enabled: false
       ENTERPRISE:
         restrictionType: AVAILABILITY
         enabled: true

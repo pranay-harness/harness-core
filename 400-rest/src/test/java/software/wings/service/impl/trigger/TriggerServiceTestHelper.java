@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.trigger;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -162,7 +169,7 @@ public class TriggerServiceTestHelper {
         .uuid(TRIGGER_ID)
         .appId(APP_ID)
         .name(TRIGGER_NAME)
-        .condition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
+        .condition(ScheduledTriggerCondition.builder().cronExpression("0/5 0 ? * * *").build())
         .build();
   }
 
@@ -239,7 +246,7 @@ public class TriggerServiceTestHelper {
         .appId(APP_ID)
         .workflowType(ORCHESTRATION)
         .name(TRIGGER_NAME)
-        .condition(ScheduledTriggerCondition.builder().cronExpression("* * * * ?").build())
+        .condition(ScheduledTriggerCondition.builder().cronExpression("0/5 0 ? * * *").build())
         .build();
   }
 

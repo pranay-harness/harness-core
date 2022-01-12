@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.service.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -12,6 +19,7 @@ import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ReferencedEntityException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.DuplicateKeyExceptionParser;
 import io.harness.ng.core.EntityDetail;
@@ -232,9 +240,10 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
           "Error while deleting the Service as was not able to check entity reference records.");
     }
     if (EmptyPredicate.isNotEmpty(referredByEntities)) {
-      throw new InvalidRequestException(String.format(
-          "Could not delete the Service %s as it is referenced by other entities - " + referredByEntities.toString(),
-          serviceEntity.getIdentifier()));
+      throw new ReferencedEntityException(String.format(
+          "The service %s cannot be deleted because it is being referenced in %d %s. To delete your service, please remove the reference service from these entities.",
+          serviceEntity.getIdentifier(), referredByEntities.size(),
+          referredByEntities.size() > 1 ? "entities" : "entity"));
     }
   }
 
@@ -281,7 +290,13 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
 
   @Override
   public List<ServiceEntity> getAllServices(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return getAllServices(accountIdentifier, orgIdentifier, projectIdentifier, QUERY_PAGE_SIZE);
+    return getAllServices(accountIdentifier, orgIdentifier, projectIdentifier, QUERY_PAGE_SIZE, true);
+  }
+
+  @Override
+  public List<ServiceEntity> getAllNonDeletedServices(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return getAllServices(accountIdentifier, orgIdentifier, projectIdentifier, QUERY_PAGE_SIZE, false);
   }
 
   @Override
@@ -333,8 +348,8 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
   }
 
   @VisibleForTesting
-  List<ServiceEntity> getAllServices(
-      String accountIdentifier, String orgIdentifier, String projectIdentifier, Integer pageSize) {
+  List<ServiceEntity> getAllServices(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      Integer pageSize, boolean includeDeletedServices) {
     List<ServiceEntity> serviceEntityList = new ArrayList<>();
 
     Criteria criteria = Criteria.where(ServiceEntityKeys.accountId)
@@ -343,6 +358,10 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
                             .is(orgIdentifier)
                             .and(ServiceEntityKeys.projectIdentifier)
                             .is(projectIdentifier);
+
+    if (!includeDeletedServices) {
+      criteria.and(ServiceEntityKeys.deleted).is(false);
+    }
 
     int pageNum = 0;
     // Query in batches of 10k

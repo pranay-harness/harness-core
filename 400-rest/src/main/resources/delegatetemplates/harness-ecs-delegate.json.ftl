@@ -43,6 +43,10 @@
           "value": "${delegateProfile}"
         },
         {
+          "name": "INIT_SCRIPT",
+          "value": ""
+        },
+        {
           "name": "DEPLOY_MODE",
           "value": "${deployMode}"
         },
@@ -113,10 +117,6 @@
         {
           "name": "INSTALL_CLIENT_TOOLS_IN_BACKGROUND",
           "value": "true"
-        },
-        {
-          "name": "VERSION_CHECK_DISABLED",
-          "value": "${versionCheckDisabled}"
         }
       ],
       "memory": 6144,

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
@@ -158,14 +165,14 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   static void publishClusterSyncEvent(DefaultK8sMetricsClient client, EventPublisher eventPublisher,
       K8sWatchTaskParams watchTaskParams, Instant pollTime) throws ApiException {
-    Map<String, String> nodeUidNameMap = client.listNode(null, null, null, null, null, null, null, null, null)
+    Map<String, String> nodeUidNameMap = client.listNode(null, null, null, null, null, null, null, null, null, null)
                                              .getItems()
                                              .stream()
                                              .map(V1Node::getMetadata)
                                              .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName));
 
     Map<String, String> podUidNameMap =
-        client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
+        client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null, null)
             .getItems()
             .stream()
             .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
@@ -175,7 +182,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     Map<String, String> pvUidNameMap = new HashMap<>();
     // optional as of now, will remove when the permission is mandatory.
     try {
-      pvUidNameMap.putAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
+      pvUidNameMap.putAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null, null)
                               .getItems()
                               .stream()
                               .map(V1PersistentVolume::getMetadata)

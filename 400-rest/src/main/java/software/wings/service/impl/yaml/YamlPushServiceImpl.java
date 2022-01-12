@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.govern.Switch.unhandled;
@@ -8,6 +15,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.persistence.UuidAware;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.beans.Application;
 import software.wings.beans.Event.Type;
@@ -33,7 +41,8 @@ public class YamlPushServiceImpl implements YamlPushService {
   @Inject private ExecutorService executorService;
   @Inject private YamlHelper yamlHelper;
   @Inject private FeatureFlagService featureFlagService;
-  @Getter private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<EntityCrudOperationObserver> entityCrudSubject = new Subject<>();
 
   @Override
   public <T> Future<?> pushYamlChangeSet(

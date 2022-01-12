@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -82,6 +89,8 @@ public class ServiceTemplate extends Base {
   @Getter @Setter private transient ApplicationManifest valuesOverrideAppManifest;
   @Getter @Setter private transient ApplicationManifest helmChartOverride;
   @Getter @Setter private transient ManifestFile valuesOverrideManifestFile;
+  @Getter @Setter private transient ApplicationManifest kustomizePatchesOverrideAppManifest;
+  @Getter @Setter private transient ManifestFile kustomizePatchesOverrideManifestFile;
   @Getter @Setter private transient ApplicationManifest ocParamsOverrideAppManifest;
   @Getter @Setter private transient ManifestFile ocParamsOverrideFile;
   @Getter @Setter private transient ApplicationManifest appSettingOverrideManifest;
@@ -307,6 +316,8 @@ public class ServiceTemplate extends Base {
         && Objects.equals(this.helmValueYamlOverride, other.helmValueYamlOverride)
         && Objects.equals(this.valuesOverrideAppManifest, other.valuesOverrideAppManifest)
         && Objects.equals(this.valuesOverrideManifestFile, other.valuesOverrideManifestFile)
+        && Objects.equals(this.kustomizePatchesOverrideAppManifest, other.kustomizePatchesOverrideAppManifest)
+        && Objects.equals(this.kustomizePatchesOverrideManifestFile, other.kustomizePatchesOverrideManifestFile)
         && Objects.equals(this.helmChartOverride, other.helmChartOverride)
         && Objects.equals(this.defaultServiceTemplate, other.defaultServiceTemplate)
         && Objects.equals(this.ocParamsOverrideAppManifest, other.ocParamsOverrideAppManifest)
@@ -330,6 +341,8 @@ public class ServiceTemplate extends Base {
         .add("defaultServiceTemplate", defaultServiceTemplate)
         .add("ocParamsOverrideAppManifest", ocParamsOverrideAppManifest)
         .add("ocParamsOverrideFile", ocParamsOverrideFile)
+        .add("kustomizePatchesOverrideAppManifest", kustomizePatchesOverrideAppManifest)
+        .add("kustomizePatchesOverrideManifestFile", kustomizePatchesOverrideManifestFile)
         .toString();
   }
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -7,8 +14,8 @@ import io.harness.beans.build.PublishedArtifact;
 import io.harness.beans.dependencies.CIServiceInfo;
 import io.harness.beans.dependencies.DependencyElement;
 import io.harness.beans.dependencies.ServiceDependency;
-import io.harness.beans.environment.AwsVmBuildJobInfo;
 import io.harness.beans.environment.K8BuildJobEnvInfo;
+import io.harness.beans.environment.VmBuildJobInfo;
 import io.harness.beans.environment.pod.PodSetupInfo;
 import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
@@ -29,6 +36,7 @@ import io.harness.beans.executionargs.CIExecutionArgs;
 import io.harness.beans.inputset.WebhookTriggerExecutionInputSet;
 import io.harness.beans.outcomes.DependencyOutcome;
 import io.harness.beans.outcomes.LiteEnginePodDetailsOutcome;
+import io.harness.beans.outcomes.VmDetailsOutcome;
 import io.harness.beans.steps.outcome.CIStepOutcome;
 import io.harness.beans.steps.outcome.StepArtifacts;
 import io.harness.beans.steps.stepinfo.BuildEnvSetupStepInfo;
@@ -48,7 +56,6 @@ import io.harness.beans.steps.stepinfo.TestStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
-import io.harness.beans.sweepingoutputs.AwsVmStageInfraDetails;
 import io.harness.beans.sweepingoutputs.ContainerPortDetails;
 import io.harness.beans.sweepingoutputs.ContextElement;
 import io.harness.beans.sweepingoutputs.K8PodDetails;
@@ -57,15 +64,18 @@ import io.harness.beans.sweepingoutputs.PodCleanupDetails;
 import io.harness.beans.sweepingoutputs.StageDetails;
 import io.harness.beans.sweepingoutputs.StageInfraDetails;
 import io.harness.beans.sweepingoutputs.StepTaskDetails;
+import io.harness.beans.sweepingoutputs.VmStageInfraDetails;
 import io.harness.beans.yaml.extended.CustomSecretVariable;
 import io.harness.beans.yaml.extended.CustomTextVariable;
 import io.harness.beans.yaml.extended.CustomVariable;
-import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml;
-import io.harness.beans.yaml.extended.infrastrucutre.AwsVmInfraYaml.AwsVmInfraYamlSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.Infrastructure;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml;
 import io.harness.beans.yaml.extended.infrastrucutre.K8sDirectInfraYaml.K8sDirectInfraYamlSpec;
 import io.harness.beans.yaml.extended.infrastrucutre.UseFromStageInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraSpec;
+import io.harness.beans.yaml.extended.infrastrucutre.VmInfraYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml;
+import io.harness.beans.yaml.extended.infrastrucutre.VmPoolYaml.VmPoolYamlSpec;
 import io.harness.ci.beans.entities.BuildNumberDetails;
 import io.harness.ci.stdvars.BuildStandardVariables;
 import io.harness.ci.stdvars.GitVariables;
@@ -147,11 +157,15 @@ public class CIBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(PublishedFileArtifact.class, 100092);
     kryo.register(PublishedImageArtifact.class, 100093);
     kryo.register(StageDetails.class, 100094);
-    kryo.register(AwsVmBuildJobInfo.class, 100095);
-    kryo.register(AwsVmInfraYaml.class, 100096);
-    kryo.register(AwsVmInfraYamlSpec.class, 100097);
-    kryo.register(AwsVmStageInfraDetails.class, 100098);
+    kryo.register(VmBuildJobInfo.class, 100095);
+    kryo.register(VmInfraYaml.class, 100096);
+    kryo.register(VmStageInfraDetails.class, 100098);
     kryo.register(StageInfraDetails.class, 100099);
     kryo.register(K8StageInfraDetails.class, 100100);
+
+    kryo.register(VmDetailsOutcome.class, 110101); // quantum change in order because 100101 is already assigned.
+    kryo.register(VmInfraSpec.Type.class, 110102);
+    kryo.register(VmPoolYaml.class, 110103);
+    kryo.register(VmPoolYamlSpec.class, 110104);
   }
 }

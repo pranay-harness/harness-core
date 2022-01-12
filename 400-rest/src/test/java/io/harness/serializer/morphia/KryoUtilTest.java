@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import static io.harness.packages.HarnessPackages.IO_HARNESS;
@@ -7,11 +14,11 @@ import static io.harness.rule.OwnerRule.ABHINAV;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.connector.scm.github.GithubConnectorDTO;
 import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.WingsBaseTest;
+import software.wings.beans.appmanifest.ApplicationManifest;
 
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
@@ -27,7 +34,7 @@ import org.reflections.Reflections;
 public class KryoUtilTest extends WingsBaseTest {
   @Inject KryoSerializer kryoSerializer;
 
-  Class<?> classToRunTest = GithubConnectorDTO.class;
+  Class<?> classToRunTest = ApplicationManifest.class;
 
   @Test
   @Owner(developers = ABHINAV)
@@ -50,6 +57,7 @@ public class KryoUtilTest extends WingsBaseTest {
     if (classesInvolved.contains(clazz)) {
       return;
     }
+    classesInvolved.add(clazz);
     // if class has subtypes traverse them.
     Set<Class<?>> subTypesOf = reflections.getSubTypesOf((Class<Object>) clazz);
     if (!subTypesOf.isEmpty()) {
@@ -69,10 +77,8 @@ public class KryoUtilTest extends WingsBaseTest {
       }
       if (checkIfClassShouldBeTraversed(type)) {
         getAllInvolvedClasses(classesInvolved, type, reflections);
-        classesInvolved.add(type);
       }
     }
-    classesInvolved.add(clazz);
   }
 
   private boolean isAbstractOrInterface(Class<?> clazz) {
@@ -81,7 +87,10 @@ public class KryoUtilTest extends WingsBaseTest {
 
   public boolean checkIfClassShouldBeTraversed(Class<?> clazz) {
     // Generating only for harness classes hence checking if package is software.wings or io.harness.
-    return !clazz.isPrimitive() && !clazz.isEnum()
+    if (clazz.getCanonicalName() == null) {
+      return false;
+    }
+    return !clazz.isPrimitive()
         && (clazz.getCanonicalName().startsWith("io.harness") || clazz.getCanonicalName().startsWith("software.wings"));
   }
 }

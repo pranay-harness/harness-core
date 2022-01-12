@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.grpc;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -144,7 +151,7 @@ public class DelegateServiceGrpcImpl extends DelegateServiceImplBase {
       DelegateTask task = taskBuilder.build();
 
       if (task.getData().isParked()) {
-        delegateService.saveDelegateTask(task, DelegateTask.Status.PARKED);
+        delegateTaskServiceClassic.processDelegateTask(task, DelegateTask.Status.PARKED);
       } else {
         if (task.getData().isAsync()) {
           delegateService.queueTask(task);

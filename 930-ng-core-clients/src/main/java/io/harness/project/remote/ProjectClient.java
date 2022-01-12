@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.project.remote;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -9,6 +16,8 @@ import io.harness.NGCommonEntityConstants;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.beans.PageResponse;
+import io.harness.ng.core.dto.ActiveProjectsCountDTO;
+import io.harness.ng.core.dto.ProjectDTO;
 import io.harness.ng.core.dto.ProjectRequest;
 import io.harness.ng.core.dto.ProjectResponse;
 import io.harness.ng.core.dto.ResponseDTO;
@@ -68,4 +77,13 @@ public interface ProjectClient {
       @Path(value = NGCommonEntityConstants.IDENTIFIER_KEY) String identifier,
       @Path(value = NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Path(value = NGCommonEntityConstants.ORG_KEY) String orgIdentifier);
+
+  @GET(PROJECTS_API + "/all-projects")
+  Call<ResponseDTO<List<ProjectDTO>>> getProjectList(
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier);
+
+  @GET(PROJECTS_API + "/projects-count")
+  Call<ResponseDTO<ActiveProjectsCountDTO>> getAccessibleProjectsCount(
+      @Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Query(value = "startTime") long startInterval, @Query(value = "endTime") long endInterval);
 }

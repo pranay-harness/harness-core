@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -35,11 +42,11 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchServiceDelegate;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.serializer.KryoSerializer;
 
 import software.wings.delegatetasks.cvng.K8InfoDataService;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -49,6 +56,8 @@ import io.kubernetes.client.informer.SharedInformerFactory;
 import io.kubernetes.client.openapi.ApiClient;
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.commons.lang3.reflect.FieldUtils;
@@ -126,10 +135,14 @@ public class K8ActivityCollectionPerpetualTaskExecutorTest extends DelegateTestB
   }
 
   private void createTaskParams() {
+    List<List<EncryptedDataDetail>> encryptedDataDetailList = new ArrayList<>();
+    encryptedDataDetailList.add(new ArrayList());
+    encryptedDataDetailList.get(0).add(EncryptedDataDetail.builder().build());
+
     K8ActivityDataCollectionInfo k8ActivityDataCollectionInfo =
         K8ActivityDataCollectionInfo.builder()
             .connectorConfigDTO(kubernetesClusterConfigDTO)
-            .encryptedDataDetails(Lists.newArrayList())
+            .encryptedDataDetails(encryptedDataDetailList)
             .dataCollectionType(DataCollectionType.KUBERNETES)
             .activitySourceDTO(KubernetesActivitySourceDTO.builder()
                                    .activitySourceConfigs(Sets.newHashSet(

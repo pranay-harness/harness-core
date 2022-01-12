@@ -1,8 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.mappers;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.dtos.InstanceDTO;
+import io.harness.dtos.instanceinfo.K8sInstanceInfoDTO;
 import io.harness.models.InstanceDetailsDTO;
 import io.harness.service.instancesynchandler.AbstractInstanceSyncHandler;
 import io.harness.service.instancesynchandlerfactory.InstanceSyncHandlerFactoryService;
@@ -30,7 +39,7 @@ public class InstanceDetailsMapper {
 
   private InstanceDetailsDTO toInstanceDetailsDTO(InstanceDTO instanceDTO) {
     AbstractInstanceSyncHandler instanceSyncHandler =
-        instanceSyncHandlerFactoryService.getInstanceSyncHandler(instanceDTO.getInfrastructureKind());
+        instanceSyncHandlerFactoryService.getInstanceSyncHandler(getInstanceInfoDTOType(instanceDTO));
     return InstanceDetailsDTO.builder()
         .artifactName(instanceDTO.getPrimaryArtifact().getTag())
         .connectorRef(instanceDTO.getConnectorRef())
@@ -42,5 +51,12 @@ public class InstanceDetailsMapper {
         .podName(instanceDTO.getInstanceInfoDTO().getPodName())
         // TODO set terraform instance
         .build();
+  }
+
+  private String getInstanceInfoDTOType(InstanceDTO instanceDTO) {
+    if (instanceDTO.getInstanceInfoDTO() instanceof K8sInstanceInfoDTO) {
+      return ServiceSpecType.KUBERNETES;
+    }
+    return ServiceSpecType.NATIVE_HELM; // as of now either K8s or NativeHelm
   }
 }

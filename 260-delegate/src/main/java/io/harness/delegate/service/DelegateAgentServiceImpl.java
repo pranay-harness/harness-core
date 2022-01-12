@@ -1,8 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.data.structure.UUIDGenerator.generateTimeBasedUuid;
+import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.app.DelegateApplication.getProcessId;
 import static io.harness.delegate.configuration.InstallUtils.installChartMuseum;
 import static io.harness.delegate.configuration.InstallUtils.installGoTemplateTool;
@@ -29,7 +37,6 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
@@ -124,6 +131,7 @@ import io.harness.delegate.task.DelegateRunnableTask;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.validation.DelegateConnectionResultDetail;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.exception.UnexpectedException;
 import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.filesystem.FileIo;
@@ -136,7 +144,6 @@ import io.harness.logstreaming.LogStreamingSanitizer;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.DelegateAgentManagerClientFactory;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.perpetualtask.PerpetualTaskWorker;
@@ -308,10 +315,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final int delegateTaskLimit = isNotBlank(System.getenv().get("DELEGATE_TASK_LIMIT"))
       ? Integer.parseInt(System.getenv().get("DELEGATE_TASK_LIMIT"))
       : 0;
-
+  private final String delegateTokenName = System.getenv().get("DELEGATE_TOKEN_NAME");
   public static final String JAVA_VERSION = "java.version";
 
   private static volatile String delegateId;
+  private static volatile String delegateInstanceId = generateUuid();
 
   @Inject
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting }))
@@ -353,6 +361,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject DelegateTaskFactory delegateTaskFactory;
   @Inject(optional = true) @Nullable private DelegateServiceGrpcAgentClient delegateServiceGrpcAgentClient;
   @Inject private KryoSerializer kryoSerializer;
+  @Nullable @Inject(optional = true) private ChronicleEventTailer chronicleEventTailer;
 
   private final AtomicBoolean waiter = new AtomicBoolean(true);
 
@@ -382,6 +391,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
   private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
   private final AtomicBoolean closingSocket = new AtomicBoolean(false);
+  private final AtomicBoolean sentFirstHeartbeat = new AtomicBoolean(false);
 
   private Client client;
   private Socket socket;
@@ -407,6 +417,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     return Optional.ofNullable(delegateId);
   }
 
+  public boolean isHeartbeatHealthy() {
+    return sentFirstHeartbeat.get() && ((clock.millis() - lastHeartbeatSentAt.get()) <= HEARTBEAT_TIMEOUT);
+  }
+
+  public boolean isSocketHealthy() {
+    return socket.status() == STATUS.OPEN || socket.status() == STATUS.REOPENED;
+  }
+
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean goTemplateInstalled;
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean harnessPywinrmInstalled;
@@ -426,14 +444,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         perpetualTaskWorker.setAccountId(accountId);
       }
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
+      log.info("The deploy mode for delegate is [{}]", System.getenv().get("DEPLOY_MODE"));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
-      if (delegateConfiguration.isVersionCheckDisabled()) {
-        DelegateAgentManagerClientFactory.setSendVersionHeader(false);
-      }
+
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
@@ -518,6 +535,14 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
+      log.info("Delegate configs: type: [{}], use_cdn: [{}], USE_CDN: [{}]",
+          isNotBlank(DELEGATE_TYPE) ? DELEGATE_TYPE : "UNKNOWN TYPE", delegateConfiguration.isUseCdn(),
+          System.getenv().get("USE_CDN"));
+
+      if (isNotEmpty(delegateTokenName)) {
+        log.info("Registering Delegate with Token: {}", delegateTokenName);
+      }
+
       final DelegateParamsBuilder builder =
           DelegateParams.builder()
               .ip(getLocalHostAddress())
@@ -540,7 +565,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                              : emptyList())
               .sampleDelegate(isSample)
               .location(Paths.get("").toAbsolutePath().toString())
-              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")));
+              .ceEnabled(Boolean.parseBoolean(System.getenv("ENABLE_CE")))
+              .delegateTokenName(delegateTokenName);
 
       delegateId = registerDelegate(builder);
       log.info("[New] Delegate registered in {} ms", clock.millis() - start);
@@ -591,6 +617,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         startKeepAlivePacket(builder, socket);
       }
 
+      startChroniqleQueueMonitor();
       startTaskPolling();
       startHeartbeatWhenPollingEnabled(builder);
       startKeepAliveRequestWhenPollingEnabled(builder);
@@ -720,11 +747,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       URI uri = uriBuilder.build();
 
       // Stream the request body
-      RequestBuilder requestBuilder =
-          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
-      if (delegateConfiguration.isVersionCheckDisabled()) {
-        requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
-      }
+      RequestBuilder requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
@@ -1043,7 +1066,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                             .description(delegateConfiguration.getDescription())
                                             //.proxy(set to true if there is a system proxy)
                                             .pollingModeEnabled(delegateConfiguration.isPollForTasks())
-                                            .ceEnabled(Boolean.parseBoolean(System.getenv("ENABlE_CE")))
+                                            .ceEnabled(Boolean.parseBoolean(System.getenv("ENABLE_CE")))
                                             .build();
         restResponse = executeRestCall(delegateAgentManagerClient.registerDelegate(accountId, delegateParams));
       } catch (Exception e) {
@@ -1237,9 +1260,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             handleStopAcquiringMessage(message.getFromProcess());
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
-          } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
-            DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
-            delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
             startGrpcService();
           } else if (DELEGATE_STOP_GRPC.equals(message.getMessage())) {
@@ -1339,6 +1359,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
     if (perpetualTaskWorker != null) {
       perpetualTaskWorker.start();
+    }
+  }
+
+  private void startChroniqleQueueMonitor() {
+    if (chronicleEventTailer != null) {
+      chronicleEventTailer.startAsync().awaitRunning();
+      Runtime.getRuntime().addShutdownHook(new Thread(() -> chronicleEventTailer.stopAsync().awaitTerminated()));
     }
   }
 
@@ -1487,6 +1514,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       statusData.put(DELEGATE_SHUTDOWN_PENDING, !acquireTasks.get());
       if (switchStorage.get() && !switchStorageMsgSent) {
         statusData.put(DELEGATE_SWITCH_STORAGE, TRUE);
+        log.info("Switch storage message sent");
         switchStorageMsgSent = true;
       }
       if (sendJreInformationToWatcher) {
@@ -1622,6 +1650,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         HTimeLimiter.callInterruptible21(
             timeLimiter, Duration.ofSeconds(15), () -> socket.fire(JsonUtils.asJson(delegateParams)));
         lastHeartbeatSentAt.set(clock.millis());
+        sentFirstHeartbeat.set(true);
       } catch (UncheckedTimeoutException ex) {
         log.warn("Timed out sending heartbeat", ex);
       } catch (Exception e) {
@@ -1676,7 +1705,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .location(Paths.get("").toAbsolutePath().toString())
               .build();
       lastHeartbeatSentAt.set(clock.millis());
-
+      sentFirstHeartbeat.set(true);
       RestResponse<DelegateHeartbeatResponse> delegateParamsResponse =
           executeRestCall(delegateAgentManagerClient.delegateHeartbeat(accountId, delegateParams));
       long now = clock.millis();
@@ -1717,6 +1746,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void setSwitchStorage(boolean useCdn) {
     boolean usingCdn = delegateConfiguration.isUseCdn();
     if (usingCdn != useCdn) {
+      log.info("Switch storage - usingCdn: [{}], useCdn: [{}]", usingCdn, useCdn);
       switchStorage.set(true);
     }
   }
@@ -1872,8 +1902,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.debug("Try to acquire DelegateTask - accountId: {}", accountId);
       }
 
-      DelegateTaskPackage delegateTaskPackage =
-          executeRestCall(delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId));
+      DelegateTaskPackage delegateTaskPackage = executeRestCall(
+          delegateAgentManagerClient.acquireTask(delegateId, delegateTaskId, accountId, delegateInstanceId));
       if (delegateTaskPackage == null || delegateTaskPackage.getData() == null) {
         if (log.isDebugEnabled()) {
           log.debug("Delegate task data not available - accountId: {}", delegateTaskEvent.getAccountId());
@@ -1966,9 +1996,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         boolean validated = results.stream().allMatch(DelegateConnectionResult::isValidated);
         log.info("Validation {} for task", validated ? "succeeded" : "failed");
         try {
-          DelegateTaskPackage delegateTaskPackage =
-              execute(delegateAgentManagerClient.reportConnectionResults(delegateId,
-                  delegateTaskEvent.getDelegateTaskId(), accountId, getDelegateConnectionResultDetails(results)));
+          DelegateTaskPackage delegateTaskPackage = execute(
+              delegateAgentManagerClient.reportConnectionResults(delegateId, delegateTaskEvent.getDelegateTaskId(),
+                  accountId, delegateInstanceId, getDelegateConnectionResultDetails(results)));
 
           if (delegateTaskPackage != null && delegateTaskPackage.getData() != null
               && delegateId.equals(delegateTaskPackage.getDelegateId())) {
@@ -2030,11 +2060,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
+    // At the moment used to download and render terraform json plan file and keep track of the download tf plans
+    // so we can clean up at the end of the task. Expected mainly to be used in Shell Script Task
+    // but not limited to usage in other tasks
+    DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
+        injector, delegateTaskPackage.getAccountId(), delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
 
     DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
         TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
-        getPostExecutionFunction(
-            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+        getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null),
+            logStreamingTaskClient, delegateExpressionEvaluator),
         getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -2246,8 +2282,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     counter.updateAndGet(value -> Math.max(value, current));
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(
-      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer,
+      ILogStreamingTaskClient logStreamingTaskClient, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     return taskResponse -> {
       if (logStreamingTaskClient != null) {
         try {
@@ -2262,16 +2298,16 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       try {
         response = HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(30), () -> {
           Response<ResponseBody> resp = null;
-          int retries = 3;
-          while (retries-- > 0) {
+          int retries = 5;
+          for (int attempt = 0; attempt < retries; attempt++) {
             resp = delegateAgentManagerClient.sendTaskStatus(delegateId, taskId, accountId, taskResponse).execute();
             if (resp != null && resp.code() >= 200 && resp.code() <= 299) {
               log.info("Task {} response sent to manager", taskId);
               return resp;
             } else {
-              log.warn("Response received for sent task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
+              log.warn("Failed to send response for task {}: {}. {}", taskId, resp == null ? "null" : resp.code(),
                   retries > 0 ? "Retrying." : "Giving up.");
-              sleep(ofMillis(200));
+              sleep(ofSeconds(FibonacciBackOff.getFibonacciElement(attempt)));
             }
           }
           return resp;
@@ -2283,6 +2319,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } finally {
         if (sanitizer != null) {
           delegateLogService.unregisterLogSanitizer(sanitizer);
+        }
+
+        if (delegateExpressionEvaluator != null) {
+          delegateExpressionEvaluator.cleanup();
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
@@ -2588,6 +2628,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     DelegateExpressionEvaluator delegateExpressionEvaluator =
         new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
+  }
+
+  private void applyDelegateExpressionEvaluator(
+      DelegateTaskPackage delegateTaskPackage, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     TaskData taskData = delegateTaskPackage.getData();
     if (taskData.getParameters() != null && taskData.getParameters().length == 1
         && taskData.getParameters()[0] instanceof TaskParameters) {

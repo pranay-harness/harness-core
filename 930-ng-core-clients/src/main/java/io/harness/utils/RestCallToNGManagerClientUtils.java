@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -21,8 +28,11 @@ public class RestCallToNGManagerClientUtils {
     try {
       Response<ResponseDTO<T>> response = request.execute();
       if (response.isSuccessful()) {
+        log.info("response raw {}, body {}", response.raw(), response.body().getData());
         return response.body().getData();
       } else {
+        log.error("response {}, request {}, request body {}", response.body(), request.request(),
+            request.request().body().toString());
         // todo @Nikhil Add the error message here, currently the error message is not stored in responsedto ?
         throw new InvalidRequestException("Error occurred while performing this operation");
       }

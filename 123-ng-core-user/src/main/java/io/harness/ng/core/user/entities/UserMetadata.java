@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.user.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -50,6 +57,8 @@ public class UserMetadata implements PersistentEntity {
   @NotEmpty String email;
   String name;
   @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean locked;
+  @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean disabled;
+  @Getter(value = AccessLevel.PRIVATE) @NotEmpty Boolean externallyManaged;
 
   @CreatedDate Long createdAt;
   @LastModifiedDate Long lastModifiedAt;
@@ -57,5 +66,13 @@ public class UserMetadata implements PersistentEntity {
 
   public Boolean isLocked() {
     return this.locked;
+  }
+
+  public boolean isDisabled() {
+    return Boolean.TRUE.equals(disabled);
+  }
+
+  public boolean isExternallyManaged() {
+    return Boolean.TRUE.equals(externallyManaged);
   }
 }

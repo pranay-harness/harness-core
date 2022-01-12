@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -29,7 +36,7 @@ import org.mockito.MockitoAnnotations;
 
 public class CIExecuteTaskTest extends CategoryTest {
   @Mock @Named(CITaskConstants.EXECUTE_STEP_K8) private CIExecuteStepTaskHandler ciK8ExecuteStepTaskHandler;
-  @Mock @Named(CITaskConstants.EXECUTE_STEP_AWS_VM) private CIExecuteStepTaskHandler ciAwsVmExecuteStepTaskHandler;
+  @Mock @Named(CITaskConstants.EXECUTE_STEP_VM) private CIExecuteStepTaskHandler ciVmExecuteStepTaskHandler;
 
   @InjectMocks
   private final CIExecuteStepTask task =
@@ -50,7 +57,7 @@ public class CIExecuteTaskTest extends CategoryTest {
   public void runWithTaskParams() {
     CIExecuteStepTaskParams params = CIK8ExecuteStepTaskParams.builder().build();
     K8sTaskExecutionResponse response = mock(K8sTaskExecutionResponse.class);
-    when(ciK8ExecuteStepTaskHandler.executeTaskInternal(params)).thenReturn(response);
+    when(ciK8ExecuteStepTaskHandler.executeTaskInternal(params, task.getTaskId())).thenReturn(response);
     assertEquals(task.run(params), response);
   }
 

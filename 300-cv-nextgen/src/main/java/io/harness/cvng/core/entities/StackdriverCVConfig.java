@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.entities;
 
 import static io.harness.cvng.core.utils.ErrorMessageUtils.generateErrorMessageFromParam;
@@ -68,10 +75,8 @@ public class StackdriverCVConfig extends MetricCVConfig {
   protected void validateParams() {
     checkNotNull(metricInfoList, generateErrorMessageFromParam(StackdriverCVConfigKeys.metricInfoList));
 
-    metricInfoList.forEach(metricInfo -> {
-      StackDriverMetricDefinition.extractFromJson(metricInfo.getJsonMetricDefinition());
-      checkNotNull(metricInfo.getMetricType(), generateErrorMessageFromParam("metricType"));
-    });
+    metricInfoList.forEach(
+        metricInfo -> { StackDriverMetricDefinition.extractFromJson(metricInfo.getJsonMetricDefinition()); });
   }
 
   public void fromStackdriverDefinitions(
@@ -94,6 +99,7 @@ public class StackdriverCVConfig extends MetricCVConfig {
       metricInfoList.add(
           MetricInfo.builder()
               .metricName(definition.getMetricName())
+              .identifier(definition.getIdentifier())
               .jsonMetricDefinition(JsonUtils.asJson(definition.getJsonMetricDefinition()))
               .metricType(metricType)
               .tags(definition.getMetricTags())

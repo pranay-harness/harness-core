@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.yaml;
 
 import static software.wings.beans.EntityType.VERIFICATION_CONFIGURATION;
@@ -26,6 +33,8 @@ import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.KUSTOMIZE_PATCHES_FILE;
+import static software.wings.beans.yaml.YamlConstants.KUSTOMIZE_PATCHES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_EXPRESSION;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
@@ -243,6 +252,48 @@ public enum YamlType {
           VALUES_FOLDER, SERVICES_FOLDER, ANY, VALUES_YAML_KEY),
       generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
           VALUES_FOLDER, SERVICES_FOLDER, ANY),
+      ManifestFile.class),
+
+  // PATCHES_INDEX_FILE
+  APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, INDEX_YAML),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, KUSTOMIZE_PATCHES_FOLDER),
+      ApplicationManifest.class),
+
+  APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER),
+      ApplicationManifest.class),
+
+  APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, SERVICES_FOLDER, ANY, INDEX_YAML),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, SERVICES_FOLDER, ANY),
+      ApplicationManifest.class),
+
+  // PATCHES_FILE
+  MANIFEST_FILE_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, KUSTOMIZE_PATCHES_FILE),
+      generatePath(
+          PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, SERVICES_FOLDER, ANY, KUSTOMIZE_PATCHES_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_KUSTOMIZE_PATCHES_ENV_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, KUSTOMIZE_PATCHES_FILE),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER),
+      ManifestFile.class),
+  MANIFEST_FILE_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE(YamlConstants.KUSTOMIZE_PATCHES_ENTITY,
+      generatePath(PATH_DELIMITER, false, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, SERVICES_FOLDER, ANY, KUSTOMIZE_PATCHES_FILE),
+      generatePath(PATH_DELIMITER, true, SETUP_FOLDER, APPLICATIONS_FOLDER, ANY, ENVIRONMENTS_FOLDER, ANY,
+          KUSTOMIZE_PATCHES_FOLDER, SERVICES_FOLDER, ANY),
       ManifestFile.class),
 
   // PARAMS_INDEX_FILE

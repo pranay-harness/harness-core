@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ci.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
@@ -6,6 +13,7 @@ import static io.harness.common.CIExecutionConstants.PLUGIN_ARTIFACT_FILE_VALUE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.plugin.compatible.PluginCompatibleStep;
 import io.harness.beans.steps.CIStepInfoUtils;
+import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.callback.DelegateCallbackToken;
 import io.harness.ci.config.CIExecutionServiceConfig;
 import io.harness.exception.ngexception.CIStageExecutionException;
@@ -41,13 +49,13 @@ public class PluginCompatibleStepSerializer implements ProtobufStepSerializer<Pl
 
     StepContext stepContext = StepContext.newBuilder().setExecutionTimeoutSecs(timeout).build();
     Map<String, String> envVarMap =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(pluginCompatibleStep, identifier, timeout);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(pluginCompatibleStep, identifier, timeout, Type.K8);
     PluginStep pluginStep =
         PluginStep.newBuilder()
             .setContainerPort(port)
-            .setImage(CIStepInfoUtils.getPluginCustomStepImage(pluginCompatibleStep, ciExecutionServiceConfig))
+            .setImage(CIStepInfoUtils.getPluginCustomStepImage(pluginCompatibleStep, ciExecutionServiceConfig, Type.K8))
             .addAllEntrypoint(
-                CIStepInfoUtils.getPluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
+                CIStepInfoUtils.getK8PluginCustomStepEntrypoint(pluginCompatibleStep, ciExecutionServiceConfig))
             .setContext(stepContext)
             .putAllEnvironment(envVarMap)
             .setArtifactFilePath(PLUGIN_ARTIFACT_FILE_VALUE)

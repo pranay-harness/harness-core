@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.registries;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -15,9 +22,11 @@ import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
 import io.harness.pms.sdk.core.registries.FunctorRegistry;
+import io.harness.pms.sdk.core.registries.JsonExpansionHandlerRegistry;
 import io.harness.pms.sdk.core.registries.OrchestrationEventHandlerRegistry;
 import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
@@ -88,6 +97,17 @@ public class PmsSdkRegistryModule extends AbstractModule {
       sdkFunctors.forEach((functorKey, v) -> { functorRegistry.register(functorKey, injector.getInstance(v)); });
     }
     return functorRegistry;
+  }
+
+  @Provides
+  @Singleton
+  JsonExpansionHandlerRegistry providesJsonExpansionHandlerRegistry(Injector injector) {
+    JsonExpansionHandlerRegistry jsonExpansionHandlerRegistry = new JsonExpansionHandlerRegistry();
+    Map<String, Class<? extends JsonExpansionHandler>> expansionHandlers = config.getJsonExpansionHandlers();
+    if (EmptyPredicate.isNotEmpty(expansionHandlers)) {
+      expansionHandlers.forEach((k, v) -> jsonExpansionHandlerRegistry.register(k, injector.getInstance(v)));
+    }
+    return jsonExpansionHandlerRegistry;
   }
 
   @Provides

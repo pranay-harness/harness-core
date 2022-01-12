@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.overviewdashboard.dashboardaggregateservice.impl;
 
 import static io.harness.overviewdashboard.bean.OverviewDashboardRequestType.GET_ACTIVE_DEPLOYMENTS_INFO;
@@ -62,8 +69,8 @@ import io.harness.overviewdashboard.rbac.impl.DashboardRBACServiceImpl;
 import io.harness.overviewdashboard.remote.ParallelRestCallExecutor;
 import io.harness.pipeline.dashboards.PMSLandingDashboardResourceClient;
 import io.harness.pms.dashboards.PipelinesCount;
+import io.harness.project.remote.ProjectClient;
 import io.harness.rule.Owner;
-import io.harness.userng.remote.UserNGClient;
 
 import dashboards.CDLandingDashboardResourceClient;
 import java.util.ArrayList;
@@ -107,7 +114,7 @@ public class OverviewDashboardServiceImplTest {
   @InjectMocks OverviewDashboardServiceImpl overviewDashboardService;
   @Mock ParallelRestCallExecutor parallelRestCallExecutor;
   @Mock DashboardRBACServiceImpl dashboardRBACService;
-  @Mock UserNGClient userNGClient;
+  @Mock ProjectClient projectClient;
   @Mock CDLandingDashboardResourceClient cdLandingDashboardResourceClient;
   @Mock PMSLandingDashboardResourceClient pmsLandingDashboardResourceClient;
 
@@ -248,7 +255,7 @@ public class OverviewDashboardServiceImplTest {
         .thenReturn(requestEnvCount);
     when(pmsLandingDashboardResourceClient.getPipelinesCount(anyString(), eq(startTime1), eq(endTime1), any()))
         .thenReturn(requestPipelinesCount);
-    when(userNGClient.getAccessibleProjectsCount(anyString(), anyString(), eq(startTime1), eq(endTime1)))
+    when(projectClient.getAccessibleProjectsCount(anyString(), eq(startTime1), eq(endTime1)))
         .thenReturn(requestProjectsCount);
     when(parallelRestCallExecutor.executeRestCalls(anyList())).thenReturn(restCallResponseListForCountOverview1);
 

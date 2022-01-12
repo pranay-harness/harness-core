@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -75,24 +82,11 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   @Inject private DelegateCache delegateCache;
   @Inject private FeatureFlagService featureFlagService;
 
-  private static final String WAITING_FOR_APPROVAL = "Waiting for Approval";
   private static final String DISCONNECTED = "Disconnected";
   private static final String REJECTED = "Rejected";
   private static final String SELECTED = "Selected";
   private static final String ACCEPTED = "Accepted";
-
-  private static final String CAN_ASSIGN_GROUP_ID = "CAN_ASSIGN_GROUP_ID";
-  private static final String NO_INCLUDE_SCOPE_MATCHED_GROUP_ID = "NO_INCLUDE_SCOPE_MATCHED_GROUP_ID";
-  private static final String EXCLUDE_SCOPE_MATCHED_GROUP_ID = "EXCLUDE_SCOPE_MATCHED_GROUP_ID";
-  private static final String MISSING_SELECTOR_GROUP_ID = "MISSING_SELECTOR_GROUP_ID";
-  private static final String MISSING_ALL_SELECTORS_GROUP_ID = "MISSING_ALL_SELECTORS_GROUP_ID";
-  private static final String DISCONNECTED_GROUP_ID = "DISCONNECTED_GROUP_ID";
-  private static final String WAITING_ON_APPROVAL_GROUP_ID = "WAITING_ON_APPROVAL_GROUP_ID";
-  private static final String TASK_ASSIGNED_GROUP_ID = "TASK_ASSIGNED_GROUP_ID";
-  private static final String PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID = "PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID";
-  private static final String TARGETED_DELEGATE_MATCHED_GROUP_ID = "TARGETED_DELEGATE_MATCHED_GROUP_ID";
-  private static final String TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID = "TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID";
-  private static final String TARGETED_OWNER_NOT_MATCHED_GROUP_ID = "TARGETED_OWNER_MATCHED_GROUP_ID";
+  private static final String INFO = "Info";
 
   private final LoadingCache<ImmutablePair<String, String>, String> setupAbstractionsCache =
       CacheBuilder.newBuilder()
@@ -123,21 +117,17 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
   @Override
   public void save(BatchDelegateSelectionLog batch) {
-    if (batch == null || batch.getDelegateSelectionLogs().isEmpty()) {
+    if (batch == null || isEmpty(batch.getDelegateSelectionLogs())) {
       return;
     }
 
-    final String accountId = batch.getTaskMetadata().getAccountId();
+    String accountId = batch.getDelegateSelectionLogs().get(0).getAccountId();
     if (featureFlagService.isEnabled(FeatureName.DELEGATE_SELECTION_LOGS_DISABLED, accountId)) {
       return;
     }
 
-    batch.getTaskMetadata().setSetupAbstractions(
-        processSetupAbstractions(batch.getTaskMetadata().getSetupAbstractions()));
-
     try {
       persistence.saveIgnoringDuplicateKeys(batch.getDelegateSelectionLogs());
-      persistence.insertIgnoringDuplicateKeys(batch.getTaskMetadata());
     } catch (Exception exception) {
       log.error("Error while saving into Database ", exception);
     }
@@ -151,51 +141,63 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
 
     boolean isTaskNg =
         !isEmpty(task.getSetupAbstractions()) && Boolean.parseBoolean(task.getSetupAbstractions().get(NG));
-
-    return BatchDelegateSelectionLog.builder()
-        .taskId(task.getUuid())
-        .taskMetadata(DelegateSelectionLogTaskMetadata.builder()
-                          .taskId(task.getUuid())
-                          .accountId(task.getAccountId())
-                          .setupAbstractions(task.getSetupAbstractions())
-                          .build())
-        .isTaskNg(isTaskNg)
-        .build();
-  }
-
-  @Override
-  public void logCanAssign(
-      @Nullable final BatchDelegateSelectionLog batch, final String accountId, final String delegateId) {
-    final String message = "Successfully matched required delegate capabilities";
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, ACCEPTED, CAN_ASSIGN_GROUP_ID);
+    return BatchDelegateSelectionLog.builder().taskId(task.getUuid()).isTaskNg(isTaskNg).build();
   }
 
   @Override
   public void logTaskAssigned(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId, final String delegateId) {
     final String message = "Delegate assigned for task execution";
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, SELECTED, TASK_ASSIGNED_GROUP_ID);
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, SELECTED);
   }
 
   @Override
   public void logNoIncludeScopeMatched(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId, final String delegateId) {
-    final String message = "No matching include scope";
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, NO_INCLUDE_SCOPE_MATCHED_GROUP_ID);
+    final String message = "The delegate is not scoped to execute this task";
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED);
   }
 
   @Override
   public void logExcludeScopeMatched(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
       final String delegateId, final String scopeName) {
-    final String message = String.format("Matched exclude scope %s", scopeName);
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, EXCLUDE_SCOPE_MATCHED_GROUP_ID);
+    final String message =
+        String.format("Delegate is excluded to execute this task because of exclusion scope %s", scopeName);
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED);
   }
 
   @Override
   public void logOwnerRuleNotMatched(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
-      final String delegateId, @Nullable final DelegateEntityOwner owner) {
+      Set<String> delegateIds, @Nullable final DelegateEntityOwner owner) {
     final String message = String.format("No matching owner: %s", owner != null ? owner.getIdentifier() : "null");
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, TARGETED_OWNER_NOT_MATCHED_GROUP_ID);
+    logBatch(batch, accountId, delegateIds, message, REJECTED);
+  }
+
+  @Override
+  public void logNoEligibleDelegatesToExecuteTask(
+      @Nullable final BatchDelegateSelectionLog batch, final String accountId) {
+    final String message = "No eligible delegates in account to execute task";
+    logBatch(batch, accountId, Sets.newHashSet(), message, REJECTED);
+  }
+
+  @Override
+  public void logNoEligibleDelegatesAvailableToExecuteTask(
+      @Nullable final BatchDelegateSelectionLog batch, final String accountId) {
+    final String message = "No eligible delegates in account available to execute task";
+    logBatch(batch, accountId, Sets.newHashSet(), message, REJECTED);
+  }
+
+  @Override
+  public void logEligibleDelegatesToExecuteTask(
+      BatchDelegateSelectionLog batch, final Set<String> delegateIds, String accountId) {
+    final String message = "Delegate eligible to execute task";
+    logBatch(batch, accountId, delegateIds, message, INFO);
+  }
+
+  @Override
+  public void logBroadcastToDelegate(BatchDelegateSelectionLog batch, Set<String> delegateIds, String accountId) {
+    final String message = "Broadcasting to delegate";
+    logBatch(batch, accountId, delegateIds, message, INFO);
   }
 
   @Override
@@ -213,58 +215,42 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     final Map<String, DelegateSelectionLogMetadata> delegateMetadata = new HashMap<>();
     delegateMetadata.put(delegateId, metadata);
 
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), delegateMetadata, message, REJECTED,
-        PROFILE_SCOPE_RULE_NOT_MATCHED_GROUP_ID);
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), delegateMetadata, message, REJECTED);
   }
 
   @Override
-  public void logMissingSelector(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
-      final String delegateId, final String selector, final String selectorOrigin) {
-    final String message = String.format(
-        "The selector %s is configured in %s, but is not attached to this Delegate.", selector, selectorOrigin);
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, MISSING_SELECTOR_GROUP_ID);
-  }
-
-  @Override
-  public void logMissingAllSelectors(
+  public void logMissingSelector(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId, final String delegateId) {
-    final String message = "Missing all selectors";
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, MISSING_ALL_SELECTORS_GROUP_ID);
+    final String message = "The delegate selector tags are not part of the task selector tags";
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED);
   }
 
   @Override
   public void logDisconnectedDelegate(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId, final Set<String> delegateIds) {
-    final String message = "Delegate was disconnected";
-    logBatch(batch, accountId, delegateIds, message, DISCONNECTED, DISCONNECTED_GROUP_ID);
-  }
-
-  @Override
-  public void logWaitingForApprovalDelegate(
-      @Nullable final BatchDelegateSelectionLog batch, final String accountId, final Set<String> delegateIds) {
-    final String message = "Delegate was waiting for approval";
-    logBatch(batch, accountId, delegateIds, message, WAITING_FOR_APPROVAL, WAITING_ON_APPROVAL_GROUP_ID);
+    final String message = "Not broadcasting to delegate(s) since disconnected";
+    logBatch(batch, accountId, delegateIds, message, INFO);
   }
 
   @Override
   public void logDisconnectedScalingGroup(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
       final Set<String> disconnectedScalingGroup, final String groupName) {
     final String message = String.format("Delegate scaling group: %s was disconnected", groupName);
-    logBatch(batch, accountId, disconnectedScalingGroup, message, DISCONNECTED, DISCONNECTED_GROUP_ID);
+    logBatch(batch, accountId, disconnectedScalingGroup, message, DISCONNECTED);
   }
 
   @Override
   public void logMustExecuteOnDelegateMatched(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId, final String delegateId) {
     final String message = "Delegate was targeted for profile script execution";
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, ACCEPTED, TARGETED_DELEGATE_MATCHED_GROUP_ID);
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, ACCEPTED);
   }
 
   @Override
   public void logMustExecuteOnDelegateNotMatched(
       @Nullable final BatchDelegateSelectionLog batch, final String accountId, final String delegateId) {
     final String message = "Delegate was not targeted for profile script execution";
-    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED, TARGETED_DELEGATE_NOT_MATCHED_GROUP_ID);
+    logBatch(batch, accountId, Sets.newHashSet(delegateId), message, REJECTED);
   }
 
   @Override
@@ -277,7 +263,11 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
     List<DelegateSelectionLogParams> delegateSelectionLogs = new ArrayList<>();
 
     for (DelegateSelectionLog logObject : delegateSelectionLogsList) {
-      delegateSelectionLogs.addAll(buildDelegateSelectionLogParamsList(logObject));
+      if (logObject.getConclusion() != null && logObject.getConclusion().equals(INFO)) {
+        delegateSelectionLogs.add(buildDelegateSelectionLogInfo(logObject));
+      } else {
+        delegateSelectionLogs.addAll(buildDelegateSelectionLogParamsList(logObject));
+      }
     }
 
     return delegateSelectionLogs;
@@ -352,15 +342,15 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   }
 
   private void logBatch(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
-      final Set<String> delegateIds, final String message, final String conclusion, final String groupId) {
-    logBatch(batch, accountId, delegateIds, new HashMap<>(), message, conclusion, groupId);
+      final Set<String> delegateIds, final String message, final String conclusion) {
+    logBatch(batch, accountId, delegateIds, new HashMap<>(), message, conclusion);
   }
 
   private void logBatch(@Nullable final BatchDelegateSelectionLog batch, final String accountId,
       final Set<String> delegateIds, final Map<String, DelegateSelectionLogMetadata> metadata, final String message,
-      final String conclusion, final String groupId) {
+      final String conclusion) {
     if (batch == null) {
-      log.debug("SelectionLog (no taskId): {}, Conclusion {}, groupId {}", message, conclusion, groupId);
+      log.debug("SelectionLog (no taskId): {}, Conclusion {}", message, conclusion);
       return;
     }
 
@@ -368,8 +358,7 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
         selectionLogBuilder(accountId, batch.getTaskId(), delegateIds)
             .conclusion(conclusion)
             .message(message)
-            .eventTimestamp(System.currentTimeMillis())
-            .groupId(groupId);
+            .eventTimestamp(System.currentTimeMillis());
 
     if (!metadata.isEmpty()) {
       selectionLogBuilder.delegateMetadata(metadata);
@@ -381,6 +370,25 @@ public class DelegateSelectionLogsServiceImpl implements DelegateSelectionLogsSe
   private DelegateSelectionLogBuilder selectionLogBuilder(
       final String accountId, final String taskId, final Set<String> delegateIds) {
     return DelegateSelectionLog.builder().accountId(accountId).taskId(taskId).delegateIds(delegateIds);
+  }
+
+  private DelegateSelectionLogParams buildDelegateSelectionLogInfo(DelegateSelectionLog selectionLog) {
+    StringBuilder message = new StringBuilder(selectionLog.getMessage());
+    if (!isEmpty(selectionLog.getDelegateIds())) {
+      message.append(" {");
+      for (String delegateId : selectionLog.getDelegateIds()) {
+        Delegate delegate = delegateCache.get(selectionLog.getAccountId(), delegateId, false);
+        String delegateName = Optional.ofNullable(delegate).map(delegateService::obtainDelegateName).orElse(delegateId);
+        message.append(delegateName);
+        message.append(", ");
+      }
+      message.append(" }");
+    }
+    return DelegateSelectionLogParams.builder()
+        .conclusion(selectionLog.getConclusion())
+        .message(message.toString())
+        .eventTimestamp(selectionLog.getEventTimestamp())
+        .build();
   }
 
   private List<DelegateSelectionLogParams> buildDelegateSelectionLogParamsList(DelegateSelectionLog selectionLog) {

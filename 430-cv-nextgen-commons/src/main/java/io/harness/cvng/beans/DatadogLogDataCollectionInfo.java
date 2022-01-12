@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
+
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.cvng.beans.datadog.DatadogLogDefinition;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
@@ -15,14 +24,17 @@ import lombok.Value;
 @Builder
 @EqualsAndHashCode(callSuper = true)
 public class DatadogLogDataCollectionInfo extends LogDataCollectionInfo<DatadogConnectorDTO> {
-  public static final long LOG_MAX_LIMIT = 1000;
+  public static final long LOG_MAX_LIMIT = 500;
   DatadogLogDefinition logDefinition;
 
   @Override
   public Map<String, Object> getDslEnvVariables(DatadogConnectorDTO connectorConfigDTO) {
     Map<String, Object> dslEnvVariables = new HashMap<>();
     dslEnvVariables.put("query", logDefinition.getQuery());
-    String indexesParam = String.join(",", logDefinition.getIndexes());
+    String indexesParam = null;
+    if (isNotEmpty(logDefinition.getIndexes())) {
+      indexesParam = String.join(",", logDefinition.getIndexes());
+    }
     dslEnvVariables.put("indexes", indexesParam);
     dslEnvVariables.put("limit", LOG_MAX_LIMIT);
     dslEnvVariables.put("serviceInstanceIdentifier", logDefinition.getServiceInstanceIdentifier());

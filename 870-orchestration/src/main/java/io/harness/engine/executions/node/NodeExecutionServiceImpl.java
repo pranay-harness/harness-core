@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -43,17 +50,21 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.triggers.TriggerPayload;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -70,6 +81,7 @@ import org.springframework.data.mongodb.core.query.Update;
 @Slf4j
 @OwnedBy(PIPELINE)
 public class NodeExecutionServiceImpl implements NodeExecutionService {
+  private static Set<String> DEFAULT_FIELDS = ImmutableSet.of(NodeExecutionKeys.oldRetry);
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationEventEmitter eventEmitter;
   @Inject private PlanExecutionMetadataService planExecutionMetadataService;
@@ -78,9 +90,29 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Getter private final Subject<NodeExecutionStartObserver> nodeExecutionStartSubject = new Subject<>();
   @Getter private final Subject<NodeUpdateObserver> nodeUpdateObserverSubject = new Subject<>();
 
+  /**
+   * This is deprecated, use function
+   * @param nodeExecutionId
+   * @return
+   */
   @Override
+  @Deprecated
   public NodeExecution get(String nodeExecutionId) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
+    if (nodeExecution == null) {
+      throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
+    }
+    return nodeExecution;
+  }
+
+  @Override
+  public NodeExecution getWithFieldsIncluded(String nodeExecutionId, Set<String> fieldsToInclude) {
+    fieldsToInclude.addAll(DEFAULT_FIELDS);
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    for (String field : fieldsToInclude) {
+      query.fields().include(field);
+    }
     NodeExecution nodeExecution = mongoTemplate.findOne(query, NodeExecution.class);
     if (nodeExecution == null) {
       throw new InvalidRequestException("Node Execution is null for id: " + nodeExecutionId);
@@ -158,6 +190,9 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     return mongoTemplate.find(query, NodeExecution.class);
   }
 
+  /**
+   * This is deprecated, use below update to get only required fields
+   */
   @Override
   public NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops) {
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
@@ -168,9 +203,36 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
       throw new NodeExecutionUpdateFailedException(
           "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
     }
+
     nodeUpdateObserverSubject.fireInform(
         NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
     return updated;
+  }
+
+  @Override
+  public NodeExecution update(
+      @NonNull String nodeExecutionId, @NonNull Consumer<Update> ops, Set<String> fieldsToBeIncluded) {
+    Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId));
+    fieldsToBeIncluded.addAll(NodeProjectionUtils.fieldsForNodeUpdateObserver);
+    fieldsToBeIncluded.addAll(DEFAULT_FIELDS);
+    for (String field : fieldsToBeIncluded) {
+      query.fields().include(field);
+    }
+    Update updateOps = new Update().set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
+    ops.accept(updateOps);
+    NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);
+    if (updated == null) {
+      throw new NodeExecutionUpdateFailedException(
+          "Node Execution Cannot be updated with provided operations" + nodeExecutionId);
+    }
+    nodeUpdateObserverSubject.fireInform(
+        NodeUpdateObxxxxxxxx:onNodeUpdate, NodeUpdateInfo.builder().nodeExecution(updated).build());
+    return updated;
+  }
+
+  @Override
+  public void updateV2(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops) {
+    update(nodeExecutionId, ops, NodeProjectionUtils.fieldsForNodeUpdateObserver);
   }
 
   @Override
@@ -221,12 +283,34 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public NodeExecution updateStatusWithOpsV2(@NonNull String nodeExecutionId, @NonNull Status status,
+      Consumer<Update> ops, EnumSet<Status> overrideStatusSet, Set<String> fieldsToBeIncluded) {
+    Update updateOps = new Update();
+    if (ops != null) {
+      ops.accept(updateOps);
+    }
+    return updateStatusWithUpdate(nodeExecutionId, status, updateOps, overrideStatusSet, fieldsToBeIncluded, true);
+  }
+
+  @Override
   public NodeExecution updateStatusWithUpdate(
       @NotNull String nodeExecutionId, @NotNull Status status, Update ops, EnumSet<Status> overrideStatusSet) {
+    return updateStatusWithUpdate(nodeExecutionId, status, ops, overrideStatusSet, new HashSet<>(), false);
+  }
+
+  @Override
+  public NodeExecution updateStatusWithUpdate(@NotNull String nodeExecutionId, @NotNull Status status, Update ops,
+      EnumSet<Status> overrideStatusSet, Set<String> includedFields, boolean shouldUseProjections) {
     EnumSet<Status> allowedStartStatuses =
         isEmpty(overrideStatusSet) ? StatusUtils.nodeAllowedStartSet(status) : overrideStatusSet;
     Query query = query(where(NodeExecutionKeys.uuid).is(nodeExecutionId))
                       .addCriteria(where(NodeExecutionKeys.status).in(allowedStartStatuses));
+    if (shouldUseProjections) {
+      includedFields.addAll(DEFAULT_FIELDS);
+      for (String field : includedFields) {
+        query.fields().include(field);
+      }
+    }
     Update updateOps =
         ops.set(NodeExecutionKeys.status, status).set(NodeExecutionKeys.lastUpdatedAt, System.currentTimeMillis());
     NodeExecution updated = mongoTemplate.findAndModify(query, updateOps, returnNewOptions, NodeExecution.class);

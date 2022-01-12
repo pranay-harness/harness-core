@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -27,6 +34,7 @@ import static io.harness.provision.TfVarSource.TfVarSourceType;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.delegatetasks.validation.terraform.TerraformTaskUtils.fetchAllTfVarFilesArgument;
+import static software.wings.service.impl.aws.model.AwsConstants.AWS_DEFAULT_REGION;
 
 import static java.lang.String.format;
 import static java.time.Duration.ofSeconds;
@@ -37,6 +45,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionStatus;
 import io.harness.cli.CliResponse;
 import io.harness.cli.LogCallbackOutputStream;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.beans.DelegateFile;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
@@ -61,6 +70,7 @@ import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.terraform.TerraformHelperUtils;
+import io.harness.terraform.expression.TerraformPlanExpressionInterface;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import software.wings.api.TerraformExecutionData;
@@ -77,10 +87,17 @@ import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.delegation.TerraformProvisionParameters;
 import software.wings.beans.yaml.GitFetchFilesRequest;
 import software.wings.delegatetasks.validation.terraform.TerraformTaskUtils;
+import software.wings.service.impl.AwsHelperService;
 import software.wings.service.impl.yaml.GitClientHelper;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSSessionCredentials;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
@@ -97,6 +114,7 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -128,6 +146,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   @Inject private DelegateFileManager delegateFileManager;
   @Inject private EncryptDecryptHelper planEncryptDecryptHelper;
   @Inject private TerraformBaseHelper terraformBaseHelper;
+  @Inject private AwsHelperService awsHelperService;
+
+  private static final String AWS_ACCESS_KEY_ID = "AWS_ACCESS_KEY_ID";
+  private static final String AWS_SECRET_ACCESS_KEY = "AWS_SECRET_ACCESS_KEY";
+  private static final String AWS_SESSION_TOKEN = "AWS_SESSION_TOKEN";
 
   public TerraformProvisionTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
@@ -223,15 +246,27 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
 
     File tfVariablesFile = null, tfBackendConfigsFile = null;
+    String tfPlanJsonFilePath = null;
 
     try (ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters, logCallback);
          LogCallbackOutputStream logCallbackOutputStream = new LogCallbackOutputStream(logCallback);
-         PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
+         PlanJsonLogOutputStream planJsonLogOutputStream =
+             new PlanJsonLogOutputStream(parameters.isUseOptimizedTfPlanJson())) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = parameters.getCommitId() != null
           ? parameters.getCommitId()
           : getLatestCommitSHAFromLocalRepo(gitOperationContext);
-      final Map<String, String> envVars = getEnvironmentVariables(parameters);
+
+      Map<String, String> awsAuthEnvVariables = null;
+      if (parameters.getAwsConfig() != null && parameters.getAwsConfigEncryptionDetails() != null) {
+        try {
+          awsAuthEnvVariables = getAwsAuthVariables(parameters);
+        } catch (Exception e) {
+          throw new InvalidRequestException(e.getMessage());
+        }
+      }
+
+      final Map<String, String> envVars = getEnvironmentVariables(parameters, awsAuthEnvVariables);
       saveExecutionLog(format("Environment variables: [%s]", collectEnvVarKeys(envVars)),
           CommandExecutionStatus.RUNNING, INFO, logCallback);
 
@@ -419,6 +454,25 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
+      String tfPlanJsonFileId = null;
+      if (code == 0 && parameters.isSaveTerraformJson() && parameters.isUseOptimizedTfPlanJson()) {
+        String planName = getPlanName(parameters);
+        saveExecutionLog(format("Uploading terraform %s json representation", planName), CommandExecutionStatus.RUNNING,
+            INFO, logCallback);
+        // We're going to read content from json plan file and ideally no one should write anything into output
+        // stream at this stage. Just in case let's flush everything from buffer and close output stream
+        // We have enough guards at different layers to prevent repeat close as result of autocloseable
+        planJsonLogOutputStream.flush();
+        planJsonLogOutputStream.close();
+        tfPlanJsonFilePath = planJsonLogOutputStream.getTfPlanJsonLocalPath();
+        tfPlanJsonFileId = terraformBaseHelper.uploadTfPlanJson(parameters.getAccountId(), getDelegateId(), getTaskId(),
+            parameters.getEntityId(), planName, tfPlanJsonFilePath);
+        saveExecutionLog(format("Path to '%s' json representation is available via expression %s %n", planName,
+                             parameters.getCommand() == APPLY ? TerraformPlanExpressionInterface.EXAMPLE_USAGE
+                                                              : TerraformPlanExpressionInterface.DESTROY_EXAMPLE_USAGE),
+            CommandExecutionStatus.RUNNING, INFO, logCallback);
+      }
+
       if (code == 0 && !parameters.isRunPlanOnly()) {
         saveExecutionLog(
             format("Waiting: [%s] seconds for resources to be ready", String.valueOf(RESOURCE_READY_WAIT_TIME_SECONDS)),
@@ -461,8 +515,24 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         byte[] terraformPlanFile = getTerraformPlanFile(scriptDirectory, parameters);
         saveExecutionLog(color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold),
             CommandExecutionStatus.RUNNING, INFO, logCallback);
-        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
-            terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+
+        if (parameters.isUseOptimizedTfPlanJson()) {
+          DelegateFile planDelegateFile =
+              aDelegateFile()
+                  .withAccountId(parameters.getAccountId())
+                  .withDelegateId(getDelegateId())
+                  .withTaskId(getTaskId())
+                  .withEntityId(parameters.getEntityId())
+                  .withBucket(FileBucket.TERRAFORM_PLAN)
+                  .withFileName(format(TERRAFORM_PLAN_FILE_OUTPUT_NAME, getPlanName(parameters)))
+                  .build();
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptFile(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig(), planDelegateFile);
+
+        } else {
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+        }
       }
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
@@ -470,6 +540,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
               .tfPlanJson(planJsonLogOutputStream.getPlanJson())
+              .tfPlanJsonFiledId(tfPlanJsonFileId)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(parameters.getRawVariables())
@@ -482,7 +553,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .executionStatus(code == 0 ? ExecutionStatus.SUCCESS : ExecutionStatus.FAILED)
               .errorMessage(code == 0 ? null : "The terraform command exited with code " + code)
               .workspace(parameters.getWorkspace())
-              .encryptedTfPlan(encryptedTfPlan);
+              .encryptedTfPlan(encryptedTfPlan)
+              .awsConfigId(parameters.getAwsConfigId())
+              .awsRoleArn(parameters.getAwsRoleArn())
+              .awsRegion(parameters.getAwsRegion());
 
       if (parameters.getCommandUnit() != TerraformCommandUnit.Destroy
           && commandExecutionStatus == CommandExecutionStatus.SUCCESS && !parameters.isRunPlanOnly()) {
@@ -505,6 +579,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(new File(workingDir));
       FileUtils.deleteQuietly(new File(baseDir));
+      if (tfPlanJsonFilePath != null) {
+        FileUtils.deleteQuietly(new File(tfPlanJsonFilePath));
+      }
+
       if (parameters.getEncryptedTfPlan() != null) {
         try {
           boolean isSafelyDeleted = planEncryptDecryptHelper.deleteEncryptedRecord(
@@ -523,6 +601,34 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
     }
+  }
+
+  private Map<String, String> getAwsAuthVariables(TerraformProvisionParameters parameters) {
+    encryptionService.decrypt(parameters.getAwsConfig(), parameters.getAwsConfigEncryptionDetails(), false);
+    Map<String, String> awsAuthEnvVariables = new HashMap<>();
+    if (isNotEmpty(parameters.getAwsRoleArn())) {
+      String region = isNotEmpty(parameters.getAwsRegion()) ? parameters.getAwsRegion() : AWS_DEFAULT_REGION;
+      AWSSecurityTokenServiceClient awsSecurityTokenServiceClient =
+          awsHelperService.getAmazonAWSSecurityTokenServiceClient(parameters.getAwsConfig(), region);
+
+      AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest();
+      assumeRoleRequest.setRoleArn(parameters.getAwsRoleArn());
+      assumeRoleRequest.setRoleSessionName(UUIDGenerator.generateUuid());
+      AssumeRoleResult assumeRoleResult = awsSecurityTokenServiceClient.assumeRole(assumeRoleRequest);
+      awsAuthEnvVariables.put(AWS_SECRET_ACCESS_KEY, assumeRoleResult.getCredentials().getSecretAccessKey());
+      awsAuthEnvVariables.put(AWS_ACCESS_KEY_ID, assumeRoleResult.getCredentials().getAccessKeyId());
+      awsAuthEnvVariables.put(AWS_SESSION_TOKEN, assumeRoleResult.getCredentials().getSessionToken());
+    } else {
+      AWSCredentialsProvider awsCredentialsProvider =
+          awsHelperService.getAWSCredentialsProvider(parameters.getAwsConfig());
+      AWSCredentials awsCredentials = awsCredentialsProvider.getCredentials();
+      awsAuthEnvVariables.put(AWS_SECRET_ACCESS_KEY, awsCredentials.getAWSSecretKey());
+      awsAuthEnvVariables.put(AWS_ACCESS_KEY_ID, awsCredentials.getAWSAccessKeyId());
+      if (awsCredentials instanceof AWSSessionCredentials) {
+        awsAuthEnvVariables.put(AWS_SESSION_TOKEN, ((AWSSessionCredentials) awsCredentials).getSessionToken());
+      }
+    }
+    return awsAuthEnvVariables;
   }
 
   private int executeWithTerraformClient(TerraformProvisionParameters parameters, File tfBackendConfigsFile,
@@ -549,9 +655,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .encryptionConfig(parameters.getSecretManagerConfig())
             .isSkipRefreshBeforeApplyingPlan(parameters.isSkipRefreshBeforeApplyingPlan())
             .isSaveTerraformJson(parameters.isSaveTerraformJson())
+            .useOptimizedTfPlan(parameters.isUseOptimizedTfPlanJson())
             .logCallback(logCallback)
             .planJsonLogOutputStream(planJsonLogOutputStream)
             .timeoutInMillis(parameters.getTimeoutInMillis())
+            .accountId(parameters.getAccountId())
             .build();
     switch (parameters.getCommand()) {
       case APPLY: {
@@ -639,16 +747,18 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     saveExecutionLog(command, CommandExecutionStatus.RUNNING, INFO, logCallback);
     int code = executeShellCommand(command, scriptDirectory, parameters, envVars, planJsonLogOutputStream);
     if (code == 0) {
-      saveExecutionLog(
-          format("%nJson representation of %s is exported as a variable %s %n", planName,
-              terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
-          CommandExecutionStatus.RUNNING, INFO, logCallback);
+      if (!parameters.isUseOptimizedTfPlanJson()) {
+        saveExecutionLog(
+            format("%nJson representation of %s is exported as a variable %s %n", planName,
+                terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
+            CommandExecutionStatus.RUNNING, INFO, logCallback);
+      }
     }
     return code;
   }
 
-  private ImmutableMap<String, String> getEnvironmentVariables(TerraformProvisionParameters parameters)
-      throws IOException {
+  private ImmutableMap<String, String> getEnvironmentVariables(
+      TerraformProvisionParameters parameters, Map<String, String> awsAuthEnvVariables) throws IOException {
     ImmutableMap.Builder<String, String> envVars = ImmutableMap.builder();
     if (isNotEmpty(parameters.getEnvironmentVariables())) {
       envVars.putAll(parameters.getEnvironmentVariables());
@@ -658,6 +768,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         String value = String.valueOf(encryptionService.getDecryptedValue(entry.getValue(), false));
         envVars.put(entry.getKey(), value);
       }
+    }
+    if (isNotEmpty(awsAuthEnvVariables)) {
+      envVars.putAll(awsAuthEnvVariables);
     }
     return envVars.build();
   }
@@ -783,10 +896,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
-
+    EncryptedRecordData encryptedRecordData = parameters.getEncryptedTfPlan();
     byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedContent(
-        parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
-
+        parameters.getSecretManagerConfig(), encryptedRecordData, parameters.getAccountId());
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 

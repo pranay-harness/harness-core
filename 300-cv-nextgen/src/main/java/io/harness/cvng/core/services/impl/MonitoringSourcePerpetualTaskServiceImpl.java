@@ -1,9 +1,17 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
 import io.harness.cvng.client.VerificationManagerService;
@@ -11,7 +19,6 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.MonitoringSourcePerpetualTaskKeys;
 import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask.VerificationType;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
-import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoPerpetualTaskService;
 import io.harness.encryption.Scope;
@@ -19,8 +26,10 @@ import io.harness.persistence.HPersistence;
 
 import com.google.api.client.util.Charsets;
 import com.google.inject.Inject;
+import com.hazelcast.util.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.UUID;
 import org.mongodb.morphia.query.Query;
@@ -32,7 +41,6 @@ public class MonitoringSourcePerpetualTaskServiceImpl
   @Inject private HPersistence hPersistence;
   @Inject private VerificationManagerService verificationManagerService;
   @Inject private CVNGDemoPerpetualTaskService cvngDemoPerpetualTaskService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Override
   public void createPerpetualTask(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask) {
@@ -149,6 +157,22 @@ public class MonitoringSourcePerpetualTaskServiceImpl
       String connectorIdentifier, String monitoringSourceIdentifier) {
     return getWorkerId(accountId, orgIdentifier, projectIdentifier, connectorIdentifier, monitoringSourceIdentifier,
         VerificationType.DEPLOYMENT);
+  }
+
+  @Override
+  public Optional<CVNGPerpetualTaskDTO> getPerpetualTaskStatus(String dataCollectionWorkerId) {
+    MonitoringSourcePerpetualTask monitoringSourcePerpetualTask =
+        hPersistence.createQuery(MonitoringSourcePerpetualTask.class, excludeAuthority)
+            .filter(MonitoringSourcePerpetualTaskKeys.dataCollectionWorkerId, dataCollectionWorkerId)
+            .get();
+    Preconditions.checkNotNull(monitoringSourcePerpetualTask,
+        "No Monitoring Source Perpetual Task exists with dataCollectionWorkerId:" + dataCollectionWorkerId);
+    CVNGPerpetualTaskDTO cvngPerpetualTaskDTO;
+    if (monitoringSourcePerpetualTask.isDemo()) {
+      return Optional.empty();
+    }
+    return Optional.of(
+        verificationManagerService.getPerpetualTaskStatus(monitoringSourcePerpetualTask.getPerpetualTaskId()));
   }
 
   private String getWorkerId(MonitoringSourcePerpetualTask monitoringSourcePerpetualTask) {

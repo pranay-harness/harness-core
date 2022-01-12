@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
@@ -305,7 +312,7 @@ public class UserServiceImpl implements UserService {
    * The Executor service.
    */
   @Inject ExecutorService executorService;
-  @Inject private software.wings.service.impl.UserServiceLimitChecker userServiceLimitChecker;
+  @Inject private UserServiceLimitChecker userServiceLimitChecker;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private EmailNotificationService emailNotificationService;
   @Inject private MainConfiguration configuration;
@@ -537,7 +544,7 @@ public class UserServiceImpl implements UserService {
                                .licenseUnits(50)
                                .build());
 
-    Account createdAccount = accountService.save(account, false);
+    Account createdAccount = accountService.save(account, false, false);
 
     // create user
     User user = User.Builder.anUser()
@@ -1352,6 +1359,8 @@ public class UserServiceImpl implements UserService {
 
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, null, user, createNewUser ? Type.CREATE : Type.UPDATE);
+    userGroups.forEach(userGroupAdded
+        -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userGroupAdded, Type.ADD));
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
 
     return USER_INVITED_SUCCESSFULLY;
@@ -1735,7 +1744,7 @@ public class UserServiceImpl implements UserService {
     if (!validateNgInvite(userInvite)) {
       throw new InvalidRequestException("User invite token invalid");
     }
-    completeNGInvite(userInvite);
+    completeNGInvite(userInvite, false);
     return authenticationManager.defaultLogin(userInvite.getEmail(), userInvite.getPassword());
   }
 
@@ -1795,7 +1804,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public void completeNGInvite(UserInviteDTO userInvite) {
+  public void completeNGInvite(UserInviteDTO userInvite, boolean isScimInvite) {
     String accountId = userInvite.getAccountId();
     limitCheck(accountId, userInvite.getEmail());
     Account account = accountService.get(accountId);
@@ -1809,6 +1818,11 @@ public class UserServiceImpl implements UserService {
       user.setAppId(GLOBAL_APP_ID);
       user.setAccounts(new ArrayList<>(Collections.singletonList(account)));
     }
+
+    if (isScimInvite) {
+      user.setImported(true);
+    }
+
     String name = userInvite.getName().trim();
     user.setName(name);
     if (userInvite.getPassword() != null) {
@@ -2447,8 +2461,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User createUser(User user, String accountId) {
+    boolean isExistingUser = user.getUuid() != null;
     user = wingsPersistence.saveAndGet(User.class, user);
-    evictUserFromCache(user.getUuid());
+    if (isExistingUser) {
+      evictUserFromCache(user.getUuid());
+    }
     eventPublishHelper.publishSetupRbacEvent(accountId, user.getUuid(), EntityType.USER);
     publishUserEvent(null, user);
     return user;
@@ -3765,7 +3782,7 @@ public class UserServiceImpl implements UserService {
                                           .name(email.trim())
                                           .token(userInvite.getUuid())
                                           .build();
-        completeNGInvite(userInviteDTO);
+        completeNGInvite(userInviteDTO, false);
         return ACCOUNT_INVITE_ACCEPTED;
       }
     } else {

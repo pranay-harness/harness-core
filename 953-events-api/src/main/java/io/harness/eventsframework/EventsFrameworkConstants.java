@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.eventsframework;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -27,6 +34,7 @@ public final class EventsFrameworkConstants {
   public static final String NG_ACCOUNT_SETUP = "ng_account_setup";
   public static final String INSTANCE_SYNC_PERPETUAL_TASK_RESPONSE_STREAM = "instance_sync_perpetual_task_stream";
   public static final String INSTANCE_STATS = "instance_stats";
+  public static final String GIT_FULL_SYNC_STREAM = "full_sync_stream";
   public static final String OBSERVER_EVENT_CHANNEL = "observer_event_channel";
 
   // created for git sdk, dont use outside sdk.
@@ -102,11 +110,12 @@ public final class EventsFrameworkConstants {
   public static final int GIT_PR_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_BRANCH_HOOK_EVENT_STREAM_MAX_TOPIC_SIZE = 10000;
   public static final int GIT_CONFIG_STREAM_MAX_TOPIC_SIZE = 10000;
+  public static final int FULL_SYNC_STREAM_MAX_TOPIC_SIZE = 10000;
 
   public static final Duration DEFAULT_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
   public static final Duration ENTITY_CRUD_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration NG_ACCOUNT_SETUP_MAX_PROCESSING_TIME = Duration.ofSeconds(10);
-  public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration WEBHOOK_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(150);
   public static final Duration POLLING_EVENTS_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PUSH_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration GIT_PR_EVENT_STREAM_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
@@ -116,6 +125,7 @@ public final class EventsFrameworkConstants {
   public static final Duration ENTITY_ACTIVITY_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration HARNESS_TO_GIT_PUSH_MAX_PROCESSING_TIME = Duration.ofSeconds(50);
   public static final Duration GIT_CONFIG_STREAM_PROCESSING_TIME = Duration.ofSeconds(20);
+  public static final Duration FULL_SYNC_STREAM_PROCESSING_TIME = Duration.ofSeconds(20);
   public static final Duration ORCHESTRATION_LOG_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration PLAN_NOTIFY_EVENT_MAX_PROCESSING_TIME = Duration.ofMinutes(10);
   public static final Duration CD_DEPLOYMENT_EVENT_MAX_PROCESSING_TIME = Duration.ofSeconds(20);
@@ -129,7 +139,8 @@ public final class EventsFrameworkConstants {
   public static final int ENTITY_ACTIVITY_READ_BATCH_SIZE = 50;
   public static final int HARNESS_TO_GIT_PUSH_READ_BATCH_SIZE = 50;
   public static final int GIT_CONFIG_STREAM_READ_BATCH_SIZE = 50;
-  public static final int WEBHOOK_EVENTS_STREAM_BATCH_SIZE = 50;
+  public static final int FULL_SYNC_STREAM_READ_BATCH_SIZE = 20;
+  public static final int WEBHOOK_EVENTS_STREAM_BATCH_SIZE = 20;
   public static final int POLLING_EVENTS_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PUSH_EVENT_STREAM_BATCH_SIZE = 50;
   public static final int GIT_PR_EVENT_STREAM_BATCH_SIZE = 50;

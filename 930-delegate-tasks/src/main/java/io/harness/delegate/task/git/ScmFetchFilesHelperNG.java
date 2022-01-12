@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.git;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -35,6 +42,7 @@ import java.io.IOException;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -47,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ScmFetchFilesHelperNG {
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
+  private static final List<String> ROOT_DIRECTORY_PATHS = Arrays.asList(".", "/");
 
   public FetchFilesResult fetchFilesFromRepoWithScm(
       GitStoreDelegateConfig gitStoreDelegateConfig, List<String> filePathList) {
@@ -112,7 +121,7 @@ public class ScmFetchFilesHelperNG {
     FileContentBatchResponse fileBatchContentResponse = getFileContentBatchResponseByFolder(
         gitStoreDelegateConfig, Collections.singleton(filePath), gitStoreDelegateConfig.getGitConfigDTO());
     boolean useBranch = gitStoreDelegateConfig.getFetchType() == FetchType.BRANCH;
-    boolean relativize = true;
+    boolean relativize = !ROOT_DIRECTORY_PATHS.contains(filePath);
     if (isEmpty(fileBatchContentResponse.getFileBatchContentResponse().getFileContentsList())) {
       fileBatchContentResponse =
           fetchFilesByFilePaths(useBranch, gitStoreDelegateConfig.getBranch(), gitStoreDelegateConfig.getCommitId(),

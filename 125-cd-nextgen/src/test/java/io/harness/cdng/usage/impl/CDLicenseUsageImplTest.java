@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.usage.impl;
 
 import static java.util.Collections.emptyList;
@@ -34,6 +41,7 @@ import java.time.Instant;
 import java.time.Period;
 import java.util.ArrayList;
 import java.util.List;
+import org.jooq.Table;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -53,6 +61,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   private static final String projectIdentifier = "PROJECT_ID";
   private static final String instanceKey = "INSTANCE";
   private static final String serviceIdentifier = "SERVICE";
+  private static final String envIdentifier = "ENV_ID";
   private static final long timestamp = 1632066423L;
 
   @Before
@@ -70,7 +79,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
         ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesModifiedInInterval(eq(accountIdentifier),
+        .getInstancesDeployedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
     assertActiveInstanceUsageDTOOutput(cdServiceUsageDTO);
@@ -114,7 +123,7 @@ public class CDLicenseUsageImplTest extends CategoryTest {
             CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICE_INSTANCES).build());
 
     verify(instanceService, times(1))
-        .getInstancesModifiedInInterval(eq(accountIdentifier),
+        .getInstancesDeployedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
 
     assertThat(cdServiceInstanceUsageDTO.getActiveServiceInstances()).isNotNull();
@@ -142,20 +151,20 @@ public class CDLicenseUsageImplTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testGetLicenseUsageEmptyAggregateServiceUsageInfo() {
     when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
-             anyString(), anyDouble(), anyLong(), anyLong()))
+             anyString(), anyDouble(), anyLong(), anyLong(), any(Table.class)))
         .thenReturn(emptyList());
 
     ServiceUsageDTO serviceTypeLicenseUsage = (ServiceUsageDTO) cdLicenseUsage.getLicenseUsage(accountIdentifier,
         ModuleType.CD, timestamp, CDUsageRequestParams.builder().cdLicenseType(CDLicenseType.SERVICES).build());
 
     verify(instanceService, times(1))
-        .getInstancesModifiedInInterval(eq(accountIdentifier),
+        .getInstancesDeployedInInterval(eq(accountIdentifier),
             eq(Instant.ofEpochMilli(timestamp).minus(Period.ofDays(30)).toEpochMilli()), eq(timestamp));
     verify(serviceEntityService, times(0)).find(anyString(), anyString(), anyString(), anyString(), anyBoolean());
 
     assertThat(serviceTypeLicenseUsage.getActiveServices().getCount()).isZero();
     assertThat(serviceTypeLicenseUsage.getActiveServiceInstances().getCount()).isZero();
-    assertThat(serviceTypeLicenseUsage.getServiceLicenses().getCount()).isZero();
+    assertThat(serviceTypeLicenseUsage.getServiceLicenses()).isNull();
   }
 
   private void prepareTestData() {
@@ -164,11 +173,13 @@ public class CDLicenseUsageImplTest extends CategoryTest {
     List<AggregateServiceUsageInfo> testServiceUsageInfoData = createTestServiceUsageInfoData(3);
 
     when(cdLicenseUsageHelper.getActiveServicesInfoWithPercentileServiceInstanceCount(
-             anyString(), anyDouble(), anyLong(), anyLong()))
+             anyString(), anyDouble(), anyLong(), anyLong(), any(Table.class)))
         .thenReturn(testServiceUsageInfoData);
-    when(instanceService.getInstancesModifiedInInterval(anyString(), anyLong(), anyLong()))
+    when(instanceService.getInstancesDeployedInInterval(anyString(), anyLong(), anyLong()))
         .thenReturn(testInstanceDTOData);
     when(cdLicenseUsageHelper.getServiceEntities(any(), any())).thenReturn(testServiceData);
+    when(cdLicenseUsageHelper.getOrgProjectServiceTableFromInstances(any())).thenCallRealMethod();
+    when(cdLicenseUsageHelper.getOrgProjectServiceRows(any())).thenCallRealMethod();
   }
 
   private ReferenceDTO getExpectedActiveServiceReference() {
@@ -199,6 +210,8 @@ public class CDLicenseUsageImplTest extends CategoryTest {
                               .accountIdentifier(accountIdentifier + i)
                               .projectIdentifier(projectIdentifier + i)
                               .orgIdentifier(orgIdentifier + i)
+                              .envIdentifier(envIdentifier + i)
+                              .serviceIdentifier(serviceIdentifier + i)
                               .build());
     }
     return instanceDTOList;

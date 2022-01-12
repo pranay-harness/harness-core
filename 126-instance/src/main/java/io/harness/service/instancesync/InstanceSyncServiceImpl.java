@@ -1,9 +1,18 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.instancesync;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.cdng.service.beans.ServiceSpecType;
 import io.harness.delegate.beans.instancesync.InstanceSyncPerpetualTaskResponse;
 import io.harness.delegate.beans.instancesync.ServerInstanceInfo;
+import io.harness.delegate.beans.instancesync.info.K8sServerInstanceInfo;
 import io.harness.dtos.DeploymentSummaryDTO;
 import io.harness.dtos.InfrastructureMappingDTO;
 import io.harness.dtos.InstanceDTO;
@@ -84,7 +93,7 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
                  InstanceSyncConstants.INSTANCE_SYNC_LOCK_TIMEOUT, InstanceSyncConstants.INSTANCE_SYNC_WAIT_TIMEOUT)) {
           AbstractInstanceSyncHandler abstractInstanceSyncHandler =
               instanceSyncHandlerFactoryService.getInstanceSyncHandler(
-                  infrastructureMappingDTO.getInfrastructureKind());
+                  deploymentSummaryDTO.getDeploymentInfoDTO().getType());
           // check if existing instance sync perpetual task info record exists or not for incoming infrastructure
           // mapping
           Optional<InstanceSyncPerpetualTaskInfoDTO> instanceSyncPerpetualTaskInfoDTOOptional =
@@ -217,8 +226,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
       InstanceSyncPerpetualTaskInfoDTO instanceSyncPerpetualTaskInfoDTO,
       InfrastructureMappingDTO infrastructureMappingDTO, List<ServerInstanceInfo> serverInstanceInfoList,
       boolean isNewDeploymentSync) {
-    AbstractInstanceSyncHandler instanceSyncHandler =
-        instanceSyncHandlerFactoryService.getInstanceSyncHandler(infrastructureMappingDTO.getInfrastructureKind());
+    AbstractInstanceSyncHandler instanceSyncHandler = instanceSyncHandlerFactoryService.getInstanceSyncHandler(
+        getServerInstanceInfoType(serverInstanceInfoList.get(0)));
     List<InstanceDTO> instancesInDB = instanceService.getActiveInstancesByInfrastructureMappingId(
         infrastructureMappingDTO.getAccountIdentifier(), infrastructureMappingDTO.getOrgIdentifier(),
         infrastructureMappingDTO.getProjectIdentifier(), infrastructureMappingDTO.getId(), System.currentTimeMillis());
@@ -287,8 +296,8 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     prepareInstancesToBeDeleted(instancesToBeModified, instancesInDBMap, instanceInfosFromServerMap);
     prepareInstancesToBeAdded(instanceSyncHandler, infrastructureMappingDTO, instancesInDB, instanceSyncKey,
         instancesToBeModified, instancesInDBMap, instanceInfosFromServerMap, !isNewDeploymentSync);
-    prepareInstancesToBeUpdated(
-        instanceSyncHandler, instancesInDBMap, instanceInfosFromServerMap, instancesToBeModified);
+    prepareInstancesToBeUpdated(instanceSyncHandler, instancesInDBMap, instanceInfosFromServerMap,
+        instancesToBeModified, instanceSyncKey, isNewDeploymentSync);
   }
 
   private void prepareInstancesToBeDeleted(Map<OperationsOnInstances, List<InstanceDTO>> instancesToBeModified,
@@ -317,9 +326,17 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
 
   private void prepareInstancesToBeUpdated(AbstractInstanceSyncHandler instanceSyncHandler,
       Map<String, InstanceDTO> instancesInDBMap, Map<String, InstanceInfoDTO> instanceInfosFromServerMap,
-      Map<OperationsOnInstances, List<InstanceDTO>> instancesToBeModified) {
+      Map<OperationsOnInstances, List<InstanceDTO>> instancesToBeModified, String instanceSyncKey,
+      boolean isNewDeploymentSync) {
     Sets.SetView<String> instancesToBeUpdated =
         Sets.intersection(instanceInfosFromServerMap.keySet(), instancesInDBMap.keySet());
+
+    // updating deployedAt field in accordance with pipeline execution time
+    if (isNewDeploymentSync) {
+      long deployedAt = getDeploymentSummaryFromDB(instanceSyncKey).getDeployedAt();
+      instancesToBeUpdated.forEach(instanceKey -> instancesInDBMap.get(instanceKey).setLastDeployedAt(deployedAt));
+    }
+
     instancesToBeUpdated.forEach(instanceKey
         -> instancesToBeModified.get(OperationsOnInstances.UPDATE)
                .add(instanceSyncHandler.updateInstance(
@@ -573,5 +590,13 @@ public class InstanceSyncServiceImpl implements InstanceSyncService {
     serverInstanceInfoList.forEach(
         serverInstanceInfo -> stringBuilder.append(serverInstanceInfo.toString()).append(" :: "));
     log.info("Server Instances in the perpetual task response : {}", stringBuilder.toString());
+  }
+
+  private String getServerInstanceInfoType(ServerInstanceInfo serverInstanceInfo) {
+    if (serverInstanceInfo instanceof K8sServerInstanceInfo) {
+      return ServiceSpecType.KUBERNETES;
+    }
+
+    return ServiceSpecType.NATIVE_HELM; // as of now only 2 types K8s and Native Helm
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.approval;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -18,6 +25,8 @@ import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.entities.ApprovalInstance.ApprovalInstanceKeys;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalHelperService;
+import io.harness.steps.approval.step.servicenow.entities.ServiceNowApprovalInstance;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -34,14 +43,17 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
   private final MongoTemplate mongoTemplate;
   private final PersistenceIteratorFactory persistenceIteratorFactory;
   private final PipelineServiceIteratorsConfig iteratorsConfig;
+  private final ServiceNowApprovalHelperService serviceNowApprovalHelperService;
 
   @Inject
   public ApprovalInstanceHandler(JiraApprovalHelperService jiraApprovalHelperService, MongoTemplate mongoTemplate,
-      PersistenceIteratorFactory persistenceIteratorFactory, PipelineServiceIteratorsConfig iteratorsConfig) {
+      PersistenceIteratorFactory persistenceIteratorFactory, PipelineServiceIteratorsConfig iteratorsConfig,
+      ServiceNowApprovalHelperService serviceNowApprovalHelperService) {
     this.jiraApprovalHelperService = jiraApprovalHelperService;
     this.mongoTemplate = mongoTemplate;
     this.persistenceIteratorFactory = persistenceIteratorFactory;
     this.iteratorsConfig = iteratorsConfig;
+    this.serviceNowApprovalHelperService = serviceNowApprovalHelperService;
   }
 
   public void registerIterators() {
@@ -70,7 +82,7 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
                 -> query.addCriteria(Criteria.where(ApprovalInstanceKeys.status)
                                          .is(ApprovalStatus.WAITING)
                                          .and(ApprovalInstanceKeys.type)
-                                         .in(ApprovalType.JIRA_APPROVAL)))
+                                         .in(ApprovalType.JIRA_APPROVAL, ApprovalType.SERVICENOW_APPROVAL)))
             .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceRequiredProvider<>(mongoTemplate))
             .redistribute(true));
@@ -82,6 +94,11 @@ public class ApprovalInstanceHandler implements MongoPersistenceIterator.Handler
       case JIRA_APPROVAL:
         JiraApprovalInstance jiraApprovalInstance = (JiraApprovalInstance) entity;
         jiraApprovalHelperService.handlePollingEvent(jiraApprovalInstance);
+        break;
+      case SERVICENOW_APPROVAL:
+        ServiceNowApprovalInstance serviceNowApprovalInstance = (ServiceNowApprovalInstance) entity;
+        log.info("Executing ServiceNow approval instance with id: {}", serviceNowApprovalInstance.getId());
+        serviceNowApprovalHelperService.handlePollingEvent(serviceNowApprovalInstance);
         break;
       default:
         log.warn("ApprovalInstance without registered handler encountered. Id: {}", entity.getId());

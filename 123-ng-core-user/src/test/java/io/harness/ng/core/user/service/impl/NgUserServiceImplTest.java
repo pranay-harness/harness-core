@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.user.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -308,7 +315,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     assertEquals(
         AddUserResponse.USER_ADDED_SUCCESSFULLY, response.getAddUserResponseMap().get(emailAlreadyPartOfAccount));
 
-    verify(userGroupService, times(1)).list(any());
+    verify(userGroupService, times(1)).list(any(UserGroupFilterDTO.class));
     verify(userMetadataRepository, times(1)).findAll(any(), any());
     verify(ngUserService, times(1)).getUsersAtScope(any(), any());
 
@@ -352,7 +359,7 @@ public class NgUserServiceImplTest extends CategoryTest {
                    userId, UserMembershipUpdateSource.USER, parentScope, getDefaultRoleIdentifier(parentScope)));
     doNothing()
         .when(ngUserService)
-        .createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId));
+        .createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId, scope));
 
     UserGroupFilterDTO userGroupFilterDTO =
         UserGroupFilterDTO.builder()
@@ -401,7 +408,7 @@ public class NgUserServiceImplTest extends CategoryTest {
     verify(userMetadataRepository, times(userIds.size())).findDistinctByUserId(any());
     verify(ngUserService, times(userIds.size() * getRank(scope))).addUserToScopeInternal(any(), any(), any(), any());
     verify(ngUserService, times(userIds.size())).createRoleAssignments(any(), any(), any());
-    verify(userGroupService, times(isEmpty(userGroups) ? 0 : userIds.size())).list(any());
+    verify(userGroupService, times(isEmpty(userGroups) ? 0 : userIds.size())).list(any(UserGroupFilterDTO.class));
     verify(userGroupService, times(userIds.size())).addUserToUserGroups(any(Scope.class), any(), any());
   }
 

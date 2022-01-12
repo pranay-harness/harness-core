@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.k8s.manifest;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -21,6 +28,7 @@ import io.harness.k8s.model.Kind;
 import io.harness.k8s.model.KubernetesResource;
 import io.harness.k8s.model.KubernetesResourceId;
 import io.harness.k8s.model.ListKind;
+import io.harness.yaml.BooleanPatchedRepresenter;
 
 import com.esotericsoftware.yamlbeans.YamlException;
 import com.esotericsoftware.yamlbeans.YamlReader;
@@ -83,16 +91,10 @@ public class ManifestHelper {
   }
 
   private List<KubernetesResource> getKubernetesResources(Map map, ListKind listKind) {
-    List<KubernetesResource> resources = getItems(map)
-                                             .stream()
-                                             .map(item -> {
-                                               try {
-                                                 return getKubernetesResource(ObjectYamlUtils.toYaml(item), item);
-                                               } catch (YamlException e) {
-                                                 throw new KubernetesYamlException(e.getMessage(), e.getCause());
-                                               }
-                                             })
-                                             .collect(Collectors.toList());
+    org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
+        new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
+    List<KubernetesResource> resources =
+        getItems(map).stream().map(item -> getKubernetesResource(yaml.dump(item), item)).collect(Collectors.toList());
 
     resources.forEach(resource -> {
       if (listKind.getItemKind() != null

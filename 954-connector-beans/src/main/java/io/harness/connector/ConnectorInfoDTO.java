@@ -1,9 +1,18 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.connector;
 
 import static io.harness.ConnectorConstants.CONNECTOR_TYPES;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
+import io.harness.ConnectorConstants;
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
@@ -29,16 +38,23 @@ import org.hibernate.validator.constraints.NotBlank;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @OwnedBy(DX)
-@Schema(name = "ConnectorInfo", description = "This is the view of the ConnectorInfo entity defined in Harness")
+@Schema(name = "ConnectorInfo", description = "This has the Connector details defined in Harness")
 public class ConnectorInfoDTO {
-  @NotNull @NotBlank @NGEntityName String name;
-  @NotNull @NotBlank @EntityIdentifier String identifier;
-  String description;
-  String orgIdentifier;
-  String projectIdentifier;
-  Map<String, String> tags;
+  @NotNull @NotBlank @NGEntityName @Schema(description = ConnectorConstants.CONNECTOR_NAME) String name;
+  @NotNull
+  @NotBlank
+  @EntityIdentifier
+  @Schema(description = ConnectorConstants.CONNECTOR_IDENTIFIER_MSG)
+  String identifier;
+  @Schema(description = NGCommonEntityConstants.DESCRIPTION) String description;
+  @Schema(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) String orgIdentifier;
+  @Schema(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier;
+  @Schema(description = NGCommonEntityConstants.TAGS) Map<String, String> tags;
 
-  @NotNull @JsonProperty(CONNECTOR_TYPES) io.harness.delegate.beans.connector.ConnectorType connectorType;
+  @NotNull
+  @JsonProperty(CONNECTOR_TYPES)
+  @Schema(description = ConnectorConstants.CONNECTOR_TYPE)
+  io.harness.delegate.beans.connector.ConnectorType connectorType;
 
   @JsonProperty("spec")
   @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = CONNECTOR_TYPES, include = JsonTypeInfo.As.EXTERNAL_PROPERTY,

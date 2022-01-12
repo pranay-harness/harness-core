@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.handlers.impl;
 
 import static io.harness.rule.OwnerRule.ZHUO;
@@ -81,7 +88,7 @@ public class StaticLimitRestrictionHandlerTest extends CategoryTest {
   @Owner(developers = ZHUO)
   @Category(UnitTests.class)
   public void testGetMetadataDTO() {
-    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction);
+    RestrictionMetadataDTO metadataDTO = handler.getMetadataDTO(restriction, null, null);
 
     StaticLimitRestrictionMetadataDTO dto = (StaticLimitRestrictionMetadataDTO) metadataDTO;
     assertThat(dto.getRestrictionType()).isEqualTo(RestrictionType.STATIC_LIMIT);

@@ -1,9 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.services.impl;
 
 import io.harness.ModuleType;
 import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
 import io.harness.enforcement.bases.Restriction;
+import io.harness.enforcement.beans.details.AvailabilityRestrictionDTO;
 import io.harness.enforcement.beans.details.FeatureRestrictionDetailsDTO;
 import io.harness.enforcement.beans.internal.RestrictionMetadataMapResponseDTO;
 import io.harness.enforcement.beans.metadata.FeatureRestrictionMetadataDTO;
@@ -33,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class EnforcementServiceImpl implements EnforcementService {
   private final Map<FeatureRestrictionName, FeatureRestriction> featureRestrictionMap;
-  private final io.harness.enforcement.handlers.RestrictionHandlerFactory restrictionHandlerFactory;
+  private final RestrictionHandlerFactory restrictionHandlerFactory;
   private final LicenseService licenseService;
 
   private static final AvailabilityRestriction DISABLED_RESTRICTION =
@@ -88,7 +96,7 @@ public class EnforcementServiceImpl implements EnforcementService {
     }
     FeatureRestriction featureRestriction = featureRestrictionMap.get(featureRestrictionName);
     Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-    return toFeatureMetadataDTO(featureRestriction, edition);
+    return toFeatureMetadataDTO(featureRestriction, edition, accountIdentifier);
   }
 
   @Override
@@ -100,7 +108,8 @@ public class EnforcementServiceImpl implements EnforcementService {
       FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
       Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
 
-      FeatureRestrictionMetadataDTO featureRestrictionMetadataDTO = toFeatureMetadataDTO(featureRestriction, edition);
+      FeatureRestrictionMetadataDTO featureRestrictionMetadataDTO =
+          toFeatureMetadataDTO(featureRestriction, edition, accountIdentifier);
       metadataDTOMap.put(name, featureRestrictionMetadataDTO);
     }
     return RestrictionMetadataMapResponseDTO.builder().metadataMap(metadataDTOMap).build();
@@ -110,7 +119,7 @@ public class EnforcementServiceImpl implements EnforcementService {
   public List<FeatureRestrictionMetadataDTO> getAllFeatureRestrictionMetadata() {
     return featureRestrictionMap.values()
         .stream()
-        .map(featureRestriction -> toFeatureMetadataDTO(featureRestriction, null))
+        .map(featureRestriction -> toFeatureMetadataDTO(featureRestriction, null, null))
         .collect(Collectors.toList());
   }
 
@@ -121,8 +130,15 @@ public class EnforcementServiceImpl implements EnforcementService {
       throw new InvalidRequestException(String.format("Feature [%s] is not defined", featureRestrictionName));
     }
     FeatureRestriction featureRestriction = featureRestrictionMap.get(featureRestrictionName);
-    Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-    return toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition);
+    try {
+      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+      return toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition);
+    } catch (FeatureNotSupportedException e) {
+      log.error(String.format("Invalid license state on account [%s] and moduleType [%s]", accountIdentifier,
+                    featureRestriction.getModuleType()),
+          e);
+      return toDisallowedFeatureDetailsDTO(featureRestriction);
+    }
   }
 
   @Override
@@ -135,8 +151,13 @@ public class EnforcementServiceImpl implements EnforcementService {
         throw new InvalidRequestException(String.format("Feature [%s] is not defined", name));
       }
       FeatureRestriction featureRestriction = featureRestrictionMap.get(name);
-      Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
-      result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
+
+      try {
+        Edition edition = getLicenseEdition(accountIdentifier, featureRestriction.getModuleType());
+        result.add(toFeatureDetailsDTO(accountIdentifier, featureRestriction, edition));
+      } catch (FeatureNotSupportedException e) {
+        result.add(toDisallowedFeatureDetailsDTO(featureRestriction));
+      }
     }
     return result;
   }
@@ -219,7 +240,19 @@ public class EnforcementServiceImpl implements EnforcementService {
     return featureDetailsDTO;
   }
 
-  private FeatureRestrictionMetadataDTO toFeatureMetadataDTO(FeatureRestriction feature, Edition edition) {
+  private FeatureRestrictionDetailsDTO toDisallowedFeatureDetailsDTO(FeatureRestriction feature) {
+    return FeatureRestrictionDetailsDTO.builder()
+        .name(feature.getName())
+        .moduleType(feature.getModuleType())
+        .description(feature.getDescription())
+        .allowed(false)
+        .restrictionType(RestrictionType.AVAILABILITY)
+        .restriction(AvailabilityRestrictionDTO.builder().enabled(false).build())
+        .build();
+  }
+
+  private FeatureRestrictionMetadataDTO toFeatureMetadataDTO(
+      FeatureRestriction feature, Edition edition, String accountIdentifier) {
     FeatureRestrictionMetadataDTO featureDetailsDTO = FeatureRestrictionMetadataDTO.builder()
                                                           .name(feature.getName())
                                                           .moduleType(feature.getModuleType())
@@ -227,15 +260,16 @@ public class EnforcementServiceImpl implements EnforcementService {
                                                           .build();
 
     Map<Edition, RestrictionMetadataDTO> restrictionMetadataDTOMap =
-        feature.getRestrictions().entrySet().stream().collect(
-            Collectors.toMap(Map.Entry::getKey, entry -> toRestrictionMetadataDTO(entry.getValue())));
+        feature.getRestrictions().entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
+            entry -> toRestrictionMetadataDTO(entry.getValue(), accountIdentifier, feature.getModuleType())));
     featureDetailsDTO.setRestrictionMetadata(restrictionMetadataDTOMap);
     return featureDetailsDTO;
   }
 
-  private RestrictionMetadataDTO toRestrictionMetadataDTO(Restriction restriction) {
+  private RestrictionMetadataDTO toRestrictionMetadataDTO(
+      Restriction restriction, String accountIdentifer, ModuleType moduleType) {
     RestrictionHandler handler = restrictionHandlerFactory.getHandler(restriction.getRestrictionType());
-    return handler.getMetadataDTO(restriction);
+    return handler.getMetadataDTO(restriction, accountIdentifer, moduleType);
   }
 
   private Restriction getRestriction(FeatureRestriction feature, Edition edition) {

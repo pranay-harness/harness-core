@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -10,6 +17,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.JiraClientException;
 import io.harness.network.Http;
 import io.harness.network.SafeHttpCall;
+import io.harness.validation.Validator;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +76,9 @@ public class JiraClient {
    * @return the list of projects
    */
   public List<JiraProjectBasicNG> getProjects() {
-    return executeCall(restClient.getProjects(), "fetching projects");
+    List<JiraProjectBasicNG> projects = executeCall(restClient.getProjects(), "fetching projects");
+    Validator.notEmptyCheck("Project list is empty", projects);
+    return projects;
   }
 
   /**

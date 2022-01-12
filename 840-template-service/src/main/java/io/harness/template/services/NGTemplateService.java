@@ -1,9 +1,17 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.services;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.Scope;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.git.model.ChangeType;
 import io.harness.template.entity.TemplateEntity;
 
@@ -23,6 +31,9 @@ public interface NGTemplateService {
   Optional<TemplateEntity> get(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel, boolean deleted);
 
+  Optional<TemplateEntity> getOrThrowExceptionIfInvalid(String accountId, String orgIdentifier,
+      String projectIdentifier, String templateIdentifier, String versionLabel, boolean deleted);
+
   boolean delete(String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier,
       String versionLabel, Long version, String comments);
 
@@ -33,9 +44,17 @@ public interface NGTemplateService {
       String projectIdentifier, Boolean getDistinctFromBranches);
 
   TemplateEntity updateStableTemplateVersion(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      String templateIdentifier, String newStableTemplateVersion);
+      String templateIdentifier, String newStableTemplateVersion, String comments);
 
   boolean updateTemplateSettings(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, Scope currentScope, Scope updateScope, String updateStableTemplateVersion,
       Boolean getDistinctFromBranches);
+
+  boolean markEntityInvalid(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel, String invalidYaml);
+
+  TemplateEntity fullSyncTemplate(EntityDetailProtoDTO entityDetailProtoDTO);
+
+  boolean validateIdentifierIsUnique(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      String templateIdentifier, String versionLabel);
 }

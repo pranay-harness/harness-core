@@ -72,10 +72,12 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+#not needed for dms, keeping it for dependency injection
 segmentConfiguration:
   enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
+  certValidationRequired: false
 
 distributedLockImplementation: MONGO
 
@@ -199,7 +201,7 @@ deployVariant: SAAS
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 72f01538
+scmVersion: 0e23b6f1
 
 portal:
   url: https://localhost:8000
@@ -234,7 +236,9 @@ cfClientConfig:
   eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
   analyticsEnabled: true
   connectionTimeout: 10000
-  readTimeout: 30000
+  readTimeout: 45000
+  retries: 6
+  sleepInterval: 5000
 
 featureFlagConfig:
   featureFlagSystem: LOCAL
@@ -373,3 +377,11 @@ ldapSyncJobConfig:
   defaultCronExpression: "0 0/15 * 1/1 * ? *"
 
 fileStorageMode: MONGO
+
+totp:
+  secOpsEmail: secops.fake.email@mailnator.com
+  incorrectAttemptsUntilSecOpsNotified: 1000
+  limit:
+    count: 10
+    duration: 5
+    durationUnit: MINUTES

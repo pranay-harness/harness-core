@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.bases;
 
 import io.harness.enforcement.constants.RestrictionType;
@@ -18,6 +25,8 @@ import lombok.NoArgsConstructor;
           @JsonSubTypes.Type(value = RateLimitRestriction.class, name = "RATE_LIMIT"),
           @JsonSubTypes.Type(value = CustomRestriction.class, name = "CUSTOM"),
           @JsonSubTypes.Type(value = DurationRestriction.class, name = "DURATION"),
+          @JsonSubTypes.Type(value = LicenseRateLimitRestriction.class, name = "LICENSE_RATE_LIMIT"),
+          @JsonSubTypes.Type(value = LicenseStaticLimitRestriction.class, name = "LICENSE_STATIC_LIMIT"),
     })
 public abstract class Restriction {
   protected RestrictionType restrictionType;

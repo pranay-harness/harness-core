@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 CONFIG_FILE=/opt/harness/cv-nextgen-config.yml
 REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
 
@@ -162,3 +167,7 @@ replace_key_value cfClientConfig.readTimeout "$CF_CLIENT_READ_TIMEOUT"
 replace_key_value featureFlagConfig.featureFlagSystem "$FEATURE_FLAG_SYSTEM"
 replace_key_value featureFlagConfig.syncFeaturesToCF "$SYNC_FEATURES_TO_CF"
 replace_key_value notificationClient.secrets.notificationClientSecret "$PLATFORM_SERVICE_SECRET"
+
+replace_key_value accessControlClientConfig.enableAccessControl "$ACCESS_CONTROL_ENABLED"
+replace_key_value accessControlClientConfig.accessControlServiceConfig.baseUrl "$ACCESS_CONTROL_BASE_URL"
+replace_key_value accessControlClientConfig.accessControlServiceSecret "$ACCESS_CONTROL_SECRET"

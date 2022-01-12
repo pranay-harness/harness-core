@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.connector;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_KEY;
@@ -15,7 +22,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.category.element.UnitTests;
 import io.harness.connector.ConnectorResourceClient;
-import io.harness.delegate.beans.connector.ConnectorValidationParams;
+import io.harness.delegate.beans.connector.ConnectorValidationParameterResponse;
 import io.harness.delegate.beans.connector.scm.GitAuthType;
 import io.harness.delegate.beans.connector.scm.ScmValidationParams;
 import io.harness.delegate.beans.connector.scm.genericgitconnector.GitConfigDTO;
@@ -47,7 +54,7 @@ public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
   @Inject private KryoSerializer kryoSerializer;
   @Mock private ConnectorResourceClient connectorResourceClient;
   @Mock private SecretManagerClientService ngSecretManagerService;
-  @Mock private Call<ResponseDTO<ConnectorValidationParams>> call;
+  @Mock private Call<ResponseDTO<ConnectorValidationParameterResponse>> call;
   @InjectMocks ConnectorHeartbeatPerpetualTaskClient connectorHeartbeatPerpetualTaskClient;
   private static final String accountIdentifier = "accountIdentifier";
   private static final String orgIdentifier = "orgIdentifier";
@@ -66,7 +73,12 @@ public class ConnectorHeartbeatPerpetualTaskClientTest extends WingsBaseTest {
         ScmValidationParams.builder()
             .gitConfigDTO(GitConfigDTO.builder().gitAuthType(GitAuthType.HTTP).build())
             .build();
-    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(gitValidationParameters)));
+    ConnectorValidationParameterResponse connectorValidationParameterResponse =
+        ConnectorValidationParameterResponse.builder()
+            .connectorValidationParams(gitValidationParameters)
+            .isInvalid(false)
+            .build();
+    when(call.execute()).thenReturn(Response.success(ResponseDTO.newResponse(connectorValidationParameterResponse)));
     FieldUtils.writeField(connectorHeartbeatPerpetualTaskClient, "kryoSerializer", kryoSerializer, true);
     Map<String, String> connectorDetails = ImmutableMap.of(ACCOUNT_KEY, accountIdentifier, ORG_KEY, orgIdentifier,
         PROJECT_KEY, projectIdentifier, CONNECTOR_IDENTIFIER_KEY, identifier);

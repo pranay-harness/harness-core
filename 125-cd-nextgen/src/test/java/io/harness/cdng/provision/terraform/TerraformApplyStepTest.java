@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.provision.terraform;
 
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
@@ -311,7 +318,7 @@ public class TerraformApplyStepTest extends CategoryTest {
 
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     TaskRequest taskRequest = terraformApplyStep.obtainTaskAfterRbac(ambiance, stepElementParameters, stepInputPackage);
     assertThat(taskRequest).isNotNull();
     PowerMockito.verifyStatic(StepUtils.class, times(1));
@@ -349,7 +356,7 @@ public class TerraformApplyStepTest extends CategoryTest {
 
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     String message = "Unknown configuration Type: [InheritFromApply]";
     try {
       terraformApplyStep.obtainTaskAfterRbac(ambiance, stepElementParameters, stepInputPackage);
@@ -389,7 +396,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
     TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder()
@@ -432,7 +439,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
     TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder()
@@ -482,7 +489,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
     TerraformTaskNGResponse terraformTaskNGResponse = TerraformTaskNGResponse.builder()
@@ -529,7 +536,7 @@ public class TerraformApplyStepTest extends CategoryTest {
     doReturn(gitFetchFilesConfig).when(terraformStepHelper).getGitFetchFilesConfig(any(), any(), any());
     TerraformInheritOutput inheritOutput =
         TerraformInheritOutput.builder().backendConfig("back-content").workspace("w1").planName("plan").build();
-    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any());
+    doReturn(inheritOutput).when(terraformStepHelper).getSavedInheritOutput(any(), any(), any());
     List<UnitProgress> unitProgresses = Collections.singletonList(UnitProgress.newBuilder().build());
     UnitProgressData unitProgressData = UnitProgressData.builder().unitProgresses(unitProgresses).build();
 

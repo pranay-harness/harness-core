@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.executions.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -21,6 +28,9 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
 
   PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops);
 
+  PlanExecution updateStatusForceful(
+      @NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops, boolean forced);
+
   PlanExecution get(String planExecutionId);
 
   PlanExecution save(PlanExecution planExecution);
@@ -37,4 +47,7 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
   Status calculateStatusExcluding(String planExecutionId, String excludedNodeExecutionId);
 
   List<PlanExecution> findByStatusWithProjections(Set<Status> statuses, Set<String> fieldNames);
+
+  List<PlanExecution> findAllByAccountIdAndOrgIdAndProjectIdAndLastUpdatedAtInBetweenTimestamps(
+      String accountId, String orgId, String projectId, long startTS, long endTS);
 }

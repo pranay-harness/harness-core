@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.views.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
+import static io.harness.ccm.views.entities.ViewFieldIdentifier.CLUSTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
@@ -193,8 +201,8 @@ public class CEViewServiceImpl implements CEViewService {
     if (ceView.getViewRules() != null) {
       for (ViewRule rule : ceView.getViewRules()) {
         for (ViewCondition condition : rule.getViewConditions()) {
-          if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.CLUSTER) {
-            viewFieldIdentifierSet.add(ViewFieldIdentifier.CLUSTER);
+          if (((ViewIdCondition) condition).getViewField().getIdentifier() == CLUSTER) {
+            viewFieldIdentifierSet.add(CLUSTER);
           }
           if (((ViewIdCondition) condition).getViewField().getIdentifier() == ViewFieldIdentifier.AWS) {
             viewFieldIdentifierSet.add(ViewFieldIdentifier.AWS);
@@ -398,8 +406,21 @@ public class CEViewServiceImpl implements CEViewService {
         .awsViewId(getViewId(views, ViewFieldIdentifier.AWS))
         .azureViewId(getViewId(views, ViewFieldIdentifier.AZURE))
         .gcpViewId(getViewId(views, ViewFieldIdentifier.GCP))
-        .clusterViewId(getViewId(views, ViewFieldIdentifier.CLUSTER))
+        .clusterViewId(getViewId(views, CLUSTER))
         .build();
+  }
+
+  @Override
+  public void updateDefaultClusterViewVisualization(String viewId) {
+    try {
+      CEView view = ceViewDao.get(viewId);
+      ViewVisualization viewVisualization =
+          getDefaultViewVisualization(DEFAULT_CLUSTER_FIELD_ID, DEFAULT_CLUSTER_FIELD_NAME, CLUSTER);
+      view.setViewVisualization(viewVisualization);
+      ceViewDao.update(view);
+    } catch (Exception e) {
+      log.error("Error while updating ViewVisualization of default cluster perspective {}", e);
+    }
   }
 
   private String getViewId(List<CEView> views, ViewFieldIdentifier viewFieldIdentifier) {

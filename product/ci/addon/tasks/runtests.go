@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package tasks
 
 import (
@@ -14,6 +19,7 @@ import (
 	"github.com/wings-software/portal/commons/go/lib/filesystem"
 	"github.com/wings-software/portal/commons/go/lib/utils"
 	"github.com/wings-software/portal/product/ci/addon/testintelligence"
+	"github.com/wings-software/portal/product/ci/addon/testintelligence/csharp"
 	"github.com/wings-software/portal/product/ci/addon/testintelligence/java"
 	"github.com/wings-software/portal/product/ci/common/external"
 	pb "github.com/wings-software/portal/product/ci/engine/proto"
@@ -263,6 +269,15 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 		default:
 			return "", fmt.Errorf("build tool: %s is not supported for Java", r.buildTool)
 		}
+	case "csharp":
+		{
+			switch r.buildTool {
+			case "dotnet":
+				runner = csharp.NewDotnetRunner(r.log, r.fs, r.cmdContextFactory)
+			default:
+				return "", fmt.Errorf("build tool: %s is not supported for csharp", r.buildTool)
+			}
+		}
 	default:
 		return "", fmt.Errorf("language %s is not suported", r.language)
 	}
@@ -285,6 +300,8 @@ func (r *runTestsTask) getCmd(ctx context.Context, outputVarFile string) (string
 	}
 
 	// TMPDIR needs to be set for some build tools like bazel
+	// TODO: (Vistaar) These commands need to be handled for Windows as well. We should move this out to the tool
+	// implementations and check for OS there.
 	command := fmt.Sprintf("set -xe\nexport TMPDIR=%s\nexport HARNESS_JAVA_AGENT=%s\n%s\n%s\n%s%s", r.tmpFilePath, agentArg, r.preCommand, testCmd, r.postCommand, outputVarCmd)
 	resolvedCmd, err := resolveExprInCmd(command)
 	if err != nil {

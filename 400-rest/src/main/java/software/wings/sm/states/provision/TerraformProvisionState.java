@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -5,6 +12,7 @@ import static io.harness.beans.EnvironmentType.ALL;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
+import static io.harness.beans.FeatureName.TERRAFORM_AWS_CP_AUTHENTICATION;
 import static io.harness.beans.OrchestrationWorkflowType.BUILD;
 import static io.harness.context.ContextElementType.TERRAFORM_INHERIT_PLAN;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -59,6 +67,8 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
+import io.harness.beans.terraform.TerraformPlanParam;
+import io.harness.beans.terraform.TerraformPlanParam.TerraformPlanParamBuilder;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
@@ -75,6 +85,7 @@ import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ResponseData;
 
@@ -82,7 +93,6 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
@@ -91,18 +101,23 @@ import software.wings.beans.Activity;
 import software.wings.beans.Activity.ActivityBuilder;
 import software.wings.beans.Activity.Type;
 import software.wings.beans.Application;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.Environment;
 import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileConfig;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.PhaseStep;
+import software.wings.beans.SettingAttribute;
+import software.wings.beans.TemplateExpression;
 import software.wings.beans.TerraformInfrastructureProvisioner;
 import software.wings.beans.command.Command.Builder;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.delegation.TerraformProvisionParameters;
+import software.wings.beans.delegation.TerraformProvisionParameters.TerraformProvisionParametersBuilder;
 import software.wings.beans.infrastructure.TerraformConfig;
 import software.wings.beans.infrastructure.TerraformConfig.TerraformConfigKeys;
+import software.wings.common.TemplateExpressionProcessor;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -118,6 +133,7 @@ import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
+import software.wings.settings.SettingVariableTypes;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionContextImpl;
 import software.wings.sm.ExecutionResponse;
@@ -185,6 +201,7 @@ public abstract class TerraformProvisionState extends State {
   @Inject protected SweepingOutputService sweepingOutputService;
   @Inject protected TerraformPlanHelper terraformPlanHelper;
   @Inject protected transient MainConfiguration configuration;
+  @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
 
   @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -205,6 +222,9 @@ public abstract class TerraformProvisionState extends State {
   @Getter @Setter private boolean exportPlanToApplyStep;
   @Getter @Setter private String workspace;
   @Getter @Setter private String delegateTag;
+  @Attributes(title = "awsConfigId") @Getter @Setter private String awsConfigId;
+  @Attributes(title = "awsRoleArn") @Getter @Setter private String awsRoleArn;
+  @Attributes(title = "awsRegion") @Getter @Setter private String awsRegion;
 
   static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
 
@@ -268,6 +288,7 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+    boolean useOptimizedTfPlan = featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId());
     if (exportPlanToApplyStep || (runPlanOnly && TerraformCommand.DESTROY == command())) {
       String planName = getPlanName(context);
       terraformPlanHelper.saveEncryptedTfPlanToSweepingOutput(
@@ -275,7 +296,7 @@ public abstract class TerraformProvisionState extends State {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
           terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
     }
-    saveTerraformPlanJson(terraformExecutionData.getTfPlanJson(), context, command());
+    saveTerraformPlanJson(terraformExecutionData, context, command());
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
@@ -291,7 +312,11 @@ public abstract class TerraformProvisionState extends State {
             .backendConfigs(terraformExecutionData.getBackendConfigs())
             .environmentVariables(terraformExecutionData.getEnvironmentVariables())
             .workspace(terraformExecutionData.getWorkspace())
-            .encryptedTfPlan(terraformExecutionData.getEncryptedTfPlan())
+            // In case of OPTIMIZED_TF_PLAN FF enabled we don't want to store encryptedTfPlan record in context element
+            // We're ending in storing 3 times, since the encryptedValue for KMS secret manager will be the value itself
+            // it will reduce the max encrypted plan size to 5mb. Will use sweeping output for getting encrypted tf plan
+            .encryptedTfPlan(useOptimizedTfPlan ? null : terraformExecutionData.getEncryptedTfPlan())
+            .tfPlanJsonFileId(terraformExecutionData.getTfPlanJsonFiledId())
             .build();
 
     return ExecutionResponse.builder()
@@ -304,7 +329,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private void saveTerraformPlanJson(
-      String terraformPlan, ExecutionContext context, TerraformCommand terraformCommand) {
+      TerraformExecutionData executionData, ExecutionContext context, TerraformCommand terraformCommand) {
     if (featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId())) {
       String variableName = terraformCommand == TerraformCommand.APPLY ? TF_APPLY_VAR_NAME : TF_DESTROY_VAR_NAME;
       // if the plan variable exists overwrite it
@@ -312,13 +337,25 @@ public abstract class TerraformProvisionState extends State {
           sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(variableName).build());
       if (sweepingOutputInstance != null) {
         sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
+
+        if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+          TerraformPlanParam existingTerraformPlanJson = (TerraformPlanParam) sweepingOutputInstance.getValue();
+          if (isNotEmpty(existingTerraformPlanJson.getTfPlanJsonFileId())) {
+            fileService.deleteFile(existingTerraformPlanJson.getTfPlanJsonFileId(), FileBucket.TERRAFORM_PLAN_JSON);
+          }
+        }
+      }
+
+      TerraformPlanParamBuilder tfPlanParamBuilder = TerraformPlanParam.builder();
+      if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+        tfPlanParamBuilder.tfPlanJsonFileId(executionData.getTfPlanJsonFiledId());
+      } else {
+        tfPlanParamBuilder.tfplan(format("'%s'", JsonUtils.prettifyJsonString(executionData.getTfPlanJson())));
       }
 
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PIPELINE)
                                      .name(variableName)
-                                     .value(TerraformPlanParam.builder()
-                                                .tfplan(format("'%s'", JsonUtils.prettifyJsonString(terraformPlan)))
-                                                .build())
+                                     .value(tfPlanParamBuilder.build())
                                      .build());
     }
   }
@@ -326,6 +363,10 @@ public abstract class TerraformProvisionState extends State {
   private String getPlanName(ExecutionContext context) {
     String planPrefix = TerraformCommand.DESTROY == command() ? TF_DESTROY_NAME_PREFIX : TF_NAME_PREFIX;
     return String.format(planPrefix, context.getWorkflowExecutionId());
+  }
+
+  private String getEncryptedPlanName(ExecutionContext context) {
+    return getPlanName(context).replaceAll("_", "-");
   }
 
   protected String getMarkerName() {
@@ -360,6 +401,17 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     if (!(this instanceof DestroyTerraformProvisionState)) {
       markApplyExecutionCompleted(context);
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+      context.getContextElementList(TERRAFORM_INHERIT_PLAN)
+          .stream()
+          .map(TerraformProvisionInheritPlanElement.class ::cast)
+          .filter(element -> element.getProvisionerId().equals(provisionerId))
+          .filter(element -> isNotEmpty(element.getTfPlanJsonFileId()))
+          .findFirst()
+          .map(TerraformProvisionInheritPlanElement::getTfPlanJsonFileId)
+          .ifPresent(tfPlanJsonFileId -> fileService.deleteFile(tfPlanJsonFileId, FileBucket.TERRAFORM_PLAN_JSON));
     }
 
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
@@ -673,8 +725,13 @@ public abstract class TerraformProvisionState extends State {
       }
     }
 
+    EncryptedRecordData encryptedTfPlan =
+        featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())
+        ? terraformPlanHelper.getEncryptedTfPlanFromSweepingOutput(context, getPlanName(context))
+        : element.getEncryptedTfPlan();
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
-    TerraformProvisionParameters parameters =
+    TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         TerraformProvisionParameters.builder()
             .accountId(executionContext.getApp().getAccountId())
             .timeoutInMillis(defaultIfNullTimeout(TimeUnit.MINUTES.toMillis(TIMEOUT_IN_MINUTES)))
@@ -704,15 +761,19 @@ public abstract class TerraformProvisionState extends State {
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
-            .encryptedTfPlan(element.getEncryptedTfPlan())
+            .encryptedTfPlan(encryptedTfPlan)
             .secretManagerConfig(secretManagerConfig)
-            .planName(getPlanName(context))
+            .planName(getEncryptedPlanName(context))
             .useTfClient(
                 featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .isGitHostConnectivityCheck(
-                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()))
-            .build();
-    return createAndRunTask(activityId, executionContext, parameters, element.getDelegateTag());
+                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()));
+
+    if (featureFlagService.isEnabled(TERRAFORM_AWS_CP_AUTHENTICATION, context.getAccountId())) {
+      setAWSAuthParamsIfPresent(context, terraformProvisionParametersBuilder);
+    }
+    return createAndRunTask(
+        activityId, executionContext, terraformProvisionParametersBuilder.build(), element.getDelegateTag());
   }
 
   private List<String> getRenderedTaskTags(String rawTag, ExecutionContextImpl executionContext) {
@@ -914,7 +975,7 @@ public abstract class TerraformProvisionState extends State {
       exportPlanToApplyStep = true;
     }
 
-    TerraformProvisionParameters parameters =
+    TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         TerraformProvisionParameters.builder()
             .accountId(executionContext.getApp().getAccountId())
             .activityId(activityId)
@@ -940,6 +1001,7 @@ public abstract class TerraformProvisionState extends State {
             .runPlanOnly(runPlanOnly)
             .exportPlanToApplyStep(exportPlanToApplyStep)
             .saveTerraformJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId()))
+            .useOptimizedTfPlanJson(featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId()))
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)
@@ -947,14 +1009,30 @@ public abstract class TerraformProvisionState extends State {
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .secretManagerConfig(secretManagerConfig)
             .encryptedTfPlan(null)
-            .planName(getPlanName(context))
+            .planName(getEncryptedPlanName(context))
             .useTfClient(
                 featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .isGitHostConnectivityCheck(
-                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()))
-            .build();
+                featureFlagService.isEnabled(GIT_HOST_CONNECTIVITY, executionContext.getApp().getAccountId()));
 
-    return createAndRunTask(activityId, executionContext, parameters, delegateTag);
+    if (featureFlagService.isEnabled(TERRAFORM_AWS_CP_AUTHENTICATION, context.getAccountId())) {
+      setAWSAuthParamsIfPresent(context, terraformProvisionParametersBuilder);
+    }
+    return createAndRunTask(activityId, executionContext, terraformProvisionParametersBuilder.build(), delegateTag);
+  }
+
+  protected void setAWSAuthParamsIfPresent(
+      ExecutionContext context, TerraformProvisionParametersBuilder terraformProvisionParametersBuilder) {
+    SettingAttribute settingAttribute = resolveAwsConfig(context);
+    if (settingAttribute != null) {
+      AwsConfig awsConfig = (AwsConfig) settingAttribute.getValue();
+      terraformProvisionParametersBuilder.awsConfig(awsConfig)
+          .awsConfigId(settingAttribute.getUuid())
+          .awsConfigEncryptionDetails(
+              secretManager.getEncryptionDetails(awsConfig, context.getAppId(), context.getWorkflowExecutionId()))
+          .awsRoleArn(context.renderExpression(getAwsRoleArn()))
+          .awsRegion(getAwsRegion());
+    }
   }
 
   protected TfVarSource getTfVarSource(ExecutionContext context) {
@@ -1079,6 +1157,9 @@ public abstract class TerraformProvisionState extends State {
             .command(executionData.getCommandExecuted())
             .appId(context.getAppId())
             .accountId(context.getAccountId())
+            .awsConfigId(executionData.getAwsConfigId())
+            .awsRoleArn(executionData.getAwsRoleArn())
+            .awsRegion(executionData.getAwsRegion())
             .build();
     wingsPersistence.save(terraformConfig);
   }
@@ -1199,6 +1280,32 @@ public abstract class TerraformProvisionState extends State {
   SecretManagerConfig getSecretManagerContainingTfPlan(String secretManagerId, String accountId) {
     return isEmpty(secretManagerId) ? secretManagerConfigService.getDefaultSecretManager(accountId)
                                     : secretManagerConfigService.getSecretManager(accountId, secretManagerId, false);
+  }
+
+  protected SettingAttribute resolveAwsConfig(ExecutionContext context) {
+    SettingAttribute settingAttribute = null;
+    final List<TemplateExpression> templateExpressions = getTemplateExpressions();
+    if (isNotEmpty(templateExpressions)) {
+      TemplateExpression configIdExpression =
+          templateExpressionProcessor.getTemplateExpression(templateExpressions, "awsConfigId");
+      if (configIdExpression != null) {
+        settingAttribute = templateExpressionProcessor.resolveSettingAttributeByNameOrId(
+            context, configIdExpression, SettingVariableTypes.AWS);
+      } else if (isNotEmpty(getAwsConfigId())) {
+        settingAttribute = getAwsConfigSettingAttribute(getAwsConfigId());
+      }
+    } else if (isNotEmpty(getAwsConfigId())) {
+      settingAttribute = getAwsConfigSettingAttribute(getAwsConfigId());
+    }
+    return settingAttribute;
+  }
+
+  protected SettingAttribute getAwsConfigSettingAttribute(String awsConfigId) {
+    SettingAttribute awsSettingAttribute = settingsService.get(awsConfigId);
+    if (!(awsSettingAttribute.getValue() instanceof AwsConfig)) {
+      throw new InvalidRequestException("Setting attribute is not of type AwsConfig");
+    }
+    return awsSettingAttribute;
   }
 
   @Override

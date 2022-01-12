@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.licensing.services;
 
 import static io.harness.licensing.interfaces.ModuleLicenseImpl.TRIAL_DURATION;
@@ -40,6 +47,7 @@ import io.harness.telemetry.Destination;
 import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import java.time.Instant;
 import java.util.Collection;
@@ -75,6 +83,8 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   static final String SUCCEED_START_TRIAL_OPERATION = "NEW_TRIAL";
   static final String SUCCEED_EXTEND_TRIAL_OPERATION = "EXTEND_TRIAL";
   static final String TRIAL_ENDED = "TRIAL_ENDED";
+
+  private static final Set<Edition> TRIAL_SUPPORTED_EDITION = Sets.newHashSet(Edition.ENTERPRISE, Edition.TEAM);
 
   @Inject
   public DefaultLicenseServiceImpl(ModuleLicenseRepository moduleLicenseRepository,
@@ -228,14 +238,17 @@ public class DefaultLicenseServiceImpl implements LicenseService {
   @Override
   public ModuleLicenseDTO startTrialLicense(String accountIdentifier, StartTrialDTO startTrialRequestDTO) {
     Edition edition = startTrialRequestDTO.getEdition();
-    ModuleLicenseDTO trialLicenseDTO =
-        licenseInterface.generateTrialLicense(edition, accountIdentifier, startTrialRequestDTO.getModuleType());
+    if (!checkTrialSupported(edition)) {
+      throw new InvalidRequestException("Edition doesn't support trial");
+    }
 
     AccountDTO accountDTO = accountService.getAccount(accountIdentifier);
     if (accountDTO == null) {
       throw new InvalidRequestException(String.format("Account [%s] doesn't exists", accountIdentifier));
     }
 
+    ModuleLicenseDTO trialLicenseDTO =
+        licenseInterface.generateTrialLicense(edition, accountIdentifier, startTrialRequestDTO.getModuleType());
     ModuleLicense trialLicense = licenseObjectConverter.toEntity(trialLicenseDTO);
     trialLicense.setCreatedBy(EmbeddedUser.builder().email(getEmailFromPrincipal()).build());
 
@@ -502,6 +515,10 @@ public class DefaultLicenseServiceImpl implements LicenseService {
         log.error("Unable to sync license info in CG CCM", e);
       }
     }
+  }
+
+  private boolean checkTrialSupported(Edition edition) {
+    return TRIAL_SUPPORTED_EDITION.contains(edition);
   }
 
   private ModuleLicense saveLicense(ModuleLicense moduleLicense) {

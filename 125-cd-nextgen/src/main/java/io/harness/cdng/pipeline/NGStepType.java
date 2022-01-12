@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -31,6 +38,14 @@ public enum NGStepType {
   @JsonProperty(StepSpecTypeConstants.K8S_ROLLING_ROLLBACK)
   K8S_ROLLING_ROLLBACK("K8s Rolling Rollback", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",
       StepSpecTypeConstants.K8S_ROLLING_ROLLBACK),
+
+  // helm steps
+  @JsonProperty(StepSpecTypeConstants.HELM_DEPLOY)
+  HELM_DEPLOY("Helm Deploy", Arrays.asList(ServiceDefinitionType.NATIVE_HELM), "Native Helm",
+      StepSpecTypeConstants.HELM_DEPLOY),
+  @JsonProperty(StepSpecTypeConstants.HELM_ROLLBACK)
+  HELM_ROLLBACK("Helm Rollback", Arrays.asList(ServiceDefinitionType.NATIVE_HELM), "Native Helm",
+      StepSpecTypeConstants.HELM_ROLLBACK),
 
   @JsonProperty(StepSpecTypeConstants.K8S_BG_SWAP_SERVICES)
   SWAP_SELECTORS("Swap Selectors", Arrays.asList(ServiceDefinitionType.KUBERNETES), "Kubernetes",

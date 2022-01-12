@@ -1,12 +1,23 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.resources;
 
+import io.harness.accesscontrol.AccountIdentifier;
+import io.harness.accesscontrol.NGAccessControlCheck;
+import io.harness.accesscontrol.OrgIdentifier;
+import io.harness.accesscontrol.ProjectIdentifier;
 import io.harness.annotations.ExposeInternalException;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyDTO;
 import io.harness.cvng.servicelevelobjective.beans.UserJourneyResponse;
-import io.harness.cvng.servicelevelobjective.services.UserJourneyService;
+import io.harness.cvng.servicelevelobjective.services.api.UserJourneyService;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.rest.RestResponse;
@@ -36,6 +47,9 @@ import retrofit2.http.Body;
 public class UserJourneyResource {
   @Inject UserJourneyService userJourneyService;
 
+  public static final String SLO = "SLO";
+  public static final String VIEW_PERMISSION = "chi_slo_view";
+
   @POST
   @Timed
   @ExceptionMetered
@@ -58,10 +72,12 @@ public class UserJourneyResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all user journeys", nickname = "getAllJourneys")
+  @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public ResponseDTO<PageResponse<UserJourneyResponse>> getAllJourneys(
-      @NotNull @QueryParam("accountId") String accountId, @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull String projectIdentifier, @QueryParam("offset") @NotNull Integer offset,
-      @QueryParam("pageSize") @NotNull Integer pageSize) {
+      @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @QueryParam("orgIdentifier") @NotNull @OrgIdentifier String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull @ProjectIdentifier String projectIdentifier,
+      @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)

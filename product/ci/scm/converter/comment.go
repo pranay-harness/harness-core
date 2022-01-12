@@ -1,9 +1,14 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package converter
 
 import (
 	"github.com/drone/go-scm/scm"
-	"github.com/golang/protobuf/ptypes"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ConvertIssueCommentHook converts scm.IssueCommentHook to protobuf object
@@ -48,15 +53,8 @@ func convertComment(c *scm.Comment) (*pb.Comment, error) {
 		return nil, err
 	}
 
-	createTS, err := ptypes.TimestampProto(c.Created)
-	if err != nil {
-		return nil, err
-	}
-
-	updateTS, err := ptypes.TimestampProto(c.Updated)
-	if err != nil {
-		return nil, err
-	}
+	createTS := timestamppb.New(c.Created)
+	updateTS := timestamppb.New(c.Updated)
 
 	return &pb.Comment{
 		Id:      int32(c.ID),
@@ -74,15 +72,8 @@ func convertIssue(i *scm.Issue) (*pb.Issue, error) {
 		return nil, err
 	}
 
-	createTS, err := ptypes.TimestampProto(i.Created)
-	if err != nil {
-		return nil, err
-	}
-
-	updateTS, err := ptypes.TimestampProto(i.Updated)
-	if err != nil {
-		return nil, err
-	}
+	createTS := timestamppb.New(i.Created)
+	updateTS := timestamppb.New(i.Updated)
 
 	pr, err := ConvertPR(&i.PullRequest)
 	if err != nil {

@@ -1,21 +1,27 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
 import static io.harness.beans.EnvironmentType.PROD;
-import static io.harness.beans.FeatureName.NG_CG_TASK_ASSIGNMENT_ISOLATION;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.DelegateInstanceStatus.ENABLED;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator.buildHttpConnectionExecutionCapability;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.ARPIT;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BRETT;
 import static io.harness.rule.OwnerRule.GEORGE;
-import static io.harness.rule.OwnerRule.LUCAS;
+import static io.harness.rule.OwnerRule.JENNY;
 import static io.harness.rule.OwnerRule.MARKO;
 import static io.harness.rule.OwnerRule.PRASHANT;
-import static io.harness.rule.OwnerRule.PUNEET;
 import static io.harness.rule.OwnerRule.SANJA;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.VUK;
@@ -29,19 +35,20 @@ import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCA
 import static software.wings.service.impl.AssignDelegateServiceImpl.WHITELIST_TTL;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.MATCHING_CRITERIA;
 import static software.wings.service.impl.AssignDelegateServiceImplTest.CriteriaType.NOT_MATCHING_CRITERIA;
+import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
+import static software.wings.utils.WingsTestConstants.DELEGATE_ID;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singletonList;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,12 +57,12 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskBuilder;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
-import io.harness.delegate.beans.DelegateActivity;
 import io.harness.delegate.beans.DelegateEntityOwner;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateProfile;
@@ -71,7 +78,6 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 import io.harness.selection.log.BatchDelegateSelectionLog;
-import io.harness.service.dto.RetryDelegate;
 import io.harness.service.intfc.DelegateCache;
 
 import software.wings.WingsBaseTest;
@@ -92,6 +98,7 @@ import com.google.common.cache.CacheLoader.InvalidCacheLoadException;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.time.Clock;
 import java.time.Instant;
@@ -102,6 +109,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -113,13 +121,13 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mongodb.morphia.query.Query;
 
 @TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(HarnessTeam.DEL)
@@ -150,6 +158,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   private static final String WRONG_INFRA_MAPPING_ID = "WRONG_INFRA_MAPPING_ID";
 
   private static final String VERSION = "1.0.0";
+
+  private static final List<String> supportedTasks = Arrays.stream(TaskType.values()).map(Enum::name).collect(toList());
 
   @Before
   public void setUp() throws IllegalAccessException, ExecutionException {
@@ -238,14 +248,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .build())
             .build();
 
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .accountId("ACCOUNT_ID")
-            .setupAbstraction("appId", "APP_ID")
-            .setupAbstraction("envId", "ENV_ID")
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", "APP_ID")
+                                                  .setupAbstraction("envId", "ENV_ID")
+                                                  .data(TaskData.builder()
+                                                            .async(true)
+                                                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                            .taskType(TaskType.HTTP.name())
+                                                            .build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
+                                          .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()));
 
     for (DelegateScopeTestData test : tests) {
       Delegate delegate =
@@ -268,14 +284,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testAssignByDelegateIncludeScopesWithWildcard() {
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .accountId("ACCOUNT_ID")
-            .setupAbstraction("appId", SCOPE_WILDCARD)
-            .setupAbstraction("envId", "ENV_ID")
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", SCOPE_WILDCARD)
+                                                  .setupAbstraction("envId", "ENV_ID")
+                                                  .data(TaskData.builder()
+                                                            .async(true)
+                                                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                            .taskType(TaskType.HTTP.name())
+                                                            .build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
+                                          .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()));
 
     Delegate delegate = delegateBuilder
                             .includeScopes(ImmutableList.of(
@@ -304,14 +326,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = TATHAGAT)
   @Category(UnitTests.class)
   public void testAssignByDelegateExcludeScopesWithWildcard() {
-    DelegateTaskBuilder delegateTaskBuilder =
-        DelegateTask.builder()
-            .accountId("ACCOUNT_ID")
-            .setupAbstraction("appId", SCOPE_WILDCARD)
-            .setupAbstraction("envId", "ENV_ID")
-            .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build());
+    DelegateTaskBuilder delegateTaskBuilder = DelegateTask.builder()
+                                                  .accountId("ACCOUNT_ID")
+                                                  .setupAbstraction("appId", SCOPE_WILDCARD)
+                                                  .setupAbstraction("envId", "ENV_ID")
+                                                  .data(TaskData.builder()
+                                                            .async(true)
+                                                            .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                                            .taskType(TaskType.HTTP.name())
+                                                            .build());
 
-    DelegateBuilder delegateBuilder = Delegate.builder().accountId("ACCOUNT_ID").uuid("DELEGATE_ID");
+    DelegateBuilder delegateBuilder = Delegate.builder()
+                                          .accountId("ACCOUNT_ID")
+                                          .uuid("DELEGATE_ID")
+                                          .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()));
 
     Delegate delegate = delegateBuilder
                             .excludeScopes(ImmutableList.of(
@@ -394,6 +422,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -414,7 +443,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                      .numOfProfileScopeNotMatchedInvocations(0)
                      .build())
             .add(DelegateProfileScopeTestData.builder()
-                     .delegate(Delegate.builder().accountId(accountId).uuid(generateUuid()).build())
+                     .delegate(Delegate.builder()
+                                   .accountId(accountId)
+                                   .uuid(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                                   .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
                                .accountId(accountId)
@@ -433,6 +466,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -453,6 +487,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -475,6 +510,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -498,6 +534,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -522,6 +559,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -545,6 +583,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .build())
                      .task(DelegateTask.builder()
                                .uuid(generateUuid())
@@ -573,6 +612,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                    .accountId(accountId)
                                    .uuid(generateUuid())
                                    .delegateProfileId(generateUuid())
+                                   .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                                    .ng(true)
                                    .build())
                      .task(DelegateTask.builder()
@@ -616,8 +656,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     }
 
     // Case to cover non-existing delegate profile
-    Delegate delegateWithNonExistingProfile =
-        Delegate.builder().accountId(accountId).uuid(generateUuid()).delegateProfileId(generateUuid()).build();
+    Delegate delegateWithNonExistingProfile = Delegate.builder()
+                                                  .accountId(accountId)
+                                                  .uuid(generateUuid())
+                                                  .delegateProfileId(generateUuid())
+                                                  .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                                                  .build();
     when(delegateCache.get(accountId, delegateWithNonExistingProfile.getUuid(), false))
         .thenReturn(delegateWithNonExistingProfile);
     assertThat(assignDelegateService.canAssign(null, delegateWithNonExistingProfile.getUuid(),
@@ -803,6 +847,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                           .hostName("a.b.c.")
                                           .delegateName("testDelegateName")
                                           .delegateProfileId(delegateProfile.getUuid())
+                                          .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
                                           .includeScopes(emptyList())
                                           .excludeScopes(emptyList());
 
@@ -815,11 +860,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
       DelegateTask delegateTask = delegateTaskBuilder.executionCapabilities(test.getExecutionCapabilities()).build();
       BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
       assertThat(assignDelegateService.canAssign(batch, "DELEGATE_ID", delegateTask)).isEqualTo(test.isAssignable());
-
-      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingAllSelectorsInvocations()))
-          .logMissingAllSelectors(batch, "ACCOUNT_ID", "DELEGATE_ID");
-      verify(delegateSelectionLogsService, Mockito.times(test.getNumOfMissingSelectorInvocations()))
-          .logMissingSelector(eq(batch), eq("ACCOUNT_ID"), eq("DELEGATE_ID"), anyString(), anyString());
     }
 
     delegateTaskBuilder.setupAbstraction("envId", "ENV_ID");
@@ -898,6 +938,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                           .accountId("ACCOUNT_ID")
                                           .uuid("DELEGATE_ID")
                                           .includeScopes(emptyList())
+                                          .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
                                           .excludeScopes(emptyList());
 
     for (NameTestData test : tests) {
@@ -1005,8 +1046,8 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetConnectedWhitelistedDelegates() throws ExecutionException {
     DelegateTask delegateTask = createDelegateTask(true, MATCHING_CRITERIA);
+    delegateTask.setEligibleToExecuteDelegateIds(new LinkedList<>(Arrays.asList("DELEGATE_ID")));
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
-
     assertThat(delegateIds.size()).isEqualTo(1);
     assertThat(delegateIds.get(0)).isEqualTo("DELEGATE_ID");
   }
@@ -1019,6 +1060,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
 
     when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
@@ -1124,42 +1166,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .status(ENABLED)
                             .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.SPOTINST_COMMAND_TASK.name()))
                             .build();
+    delegateTask.setEligibleToExecuteDelegateIds(new LinkedList<>(Arrays.asList(delegate.getUuid())));
     when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
     List<String> delegateIds = assignDelegateService.connectedWhitelistedDelegates(delegateTask);
     assertThat(delegateIds).containsExactly(delegate.getUuid());
-  }
-
-  @Test
-  @Owner(developers = GEORGE)
-  @Category(UnitTests.class)
-  public void shouldGetNullFirstAttemptDelegate() {
-    Object[] params = {HttpTaskParameters.builder().url("criteria-other").build()};
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId("ACCOUNT_ID")
-                                    .data(TaskData.builder()
-                                              .async(true)
-                                              .taskType(TaskType.HTTP.name())
-                                              .parameters(params)
-                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
-                                              .build())
-                                    .build();
-
-    String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
-
-    assertThat(delegateId).isEqualTo(null);
-  }
-
-  @Test
-  @Owner(developers = PUNEET)
-  @Category(UnitTests.class)
-  public void shouldGetFirstAttemptDelegate() throws ExecutionException {
-    DelegateTask delegateTask = createDelegateTask(true, MATCHING_CRITERIA);
-
-    String delegateId = assignDelegateService.pickFirstAttemptDelegate(delegateTask);
-
-    assertThat(delegateId).isEqualTo("DELEGATE_ID");
   }
 
   @Test
@@ -1170,13 +1183,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId("ACCOUNT_ID")
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.HTTP.name())
+                                              .build())
                                     .build();
     Delegate delegate = Delegate.builder()
                             .accountId("ACCOUNT_ID")
                             .uuid("DELEGATE_ID")
                             .includeScopes(singletonList(null))
                             .excludeScopes(emptyList())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1191,7 +1209,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId("ACCOUNT_ID")
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.HTTP.name())
+                                              .build())
                                     .build();
 
     Delegate delegate = Delegate.builder()
@@ -1199,6 +1221,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .includeScopes(emptyList())
                             .excludeScopes(singletonList(null))
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1213,7 +1236,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .accountId("ACCOUNT_ID")
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.HTTP.name())
+                                              .build())
                                     .build();
 
     List<DelegateScope> includeScopes = new ArrayList<>();
@@ -1225,6 +1252,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .uuid("DELEGATE_ID")
                             .includeScopes(includeScopes)
                             .excludeScopes(emptyList())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
@@ -1261,7 +1289,11 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                     .setupAbstraction("appId", "APP_ID")
                                     .setupAbstraction("envId", "ENV_ID")
                                     .setupAbstraction("infrastructureMappingId", infrastructureMapping.getUuid())
-                                    .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                    .data(TaskData.builder()
+                                              .async(true)
+                                              .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                              .taskType(TaskType.SCRIPT.name())
+                                              .build())
                                     .build();
 
     DelegateTask delegateTask2 = DelegateTask.builder()
@@ -1269,13 +1301,18 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                                      .setupAbstraction("appId", "APP_ID")
                                      .setupAbstraction("envId", "ENV_ID")
                                      .setupAbstraction("infrastructureMappingId", WRONG_INFRA_MAPPING_ID)
-                                     .data(TaskData.builder().async(true).timeout(DEFAULT_ASYNC_CALL_TIMEOUT).build())
+                                     .data(TaskData.builder()
+                                               .async(true)
+                                               .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                                               .taskType(TaskType.SCRIPT.name())
+                                               .build())
                                      .build();
     Delegate delegate = Delegate.builder()
                             .accountId("ACCOUNT_ID")
                             .uuid("DELEGATE_ID")
                             .includeScopes(scopes)
                             .excludeScopes(emptyList())
+                            .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
                             .build();
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(delegateTask.getUuid()).build();
     when(infrastructureMappingService.get("APP_ID", "infraMapping_Id")).thenReturn(infrastructureMapping);
@@ -1436,7 +1473,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
         .thenReturn(asList(activeDelegate1, activeDelegate2, disconnectedDelegate, wapprDelegate, deletedDelegate,
             delegateInScalingGroup));
 
-    // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION disabled
     BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
     List<String> activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
@@ -1444,310 +1480,13 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     assertThat(activeDelegates.size()).isEqualTo(2);
     assertThat(activeDelegates.containsAll(asList(activeDelegate1Id, activeDelegate2Id))).isTrue();
 
-    Set<String> disconnectedDelegates = new HashSet<>();
-    disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService).logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
-
-    Set<String> disconnectedScalingGroup = new HashSet<>();
-    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService)
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
-
-    // Test with FF NG_CG_TASK_ASSIGNMENT_ISOLATION enabled
     activeDelegate1.setNg(true);
-    when(featureFlagService.isEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
     batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
 
     activeDelegates = assignDelegateService.retrieveActiveDelegates(accountId, batch);
     assertThat(activeDelegates).isNotNull();
     assertThat(activeDelegates.size()).isEqualTo(1);
     assertThat(activeDelegates).containsExactly(activeDelegate2Id);
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldLogDisconnectedDelegate() throws ExecutionException {
-    String accountId = generateUuid();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate disconnectedDelegate = createDelegateBuilder()
-                                        .accountId(accountId)
-                                        .uuid(generateUuid())
-                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                        .build();
-
-    when(accountDelegatesCache.get(accountId)).thenReturn(asList(disconnectedDelegate));
-
-    List<Delegate> delegates = new ArrayList<>();
-    delegates.add(disconnectedDelegate);
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-    delegatesMap.put(DelegateActivity.DISCONNECTED, delegates);
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> disconnectedDelegates = new HashSet<>();
-    disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldLogDisconnectedScalingGroup() throws ExecutionException {
-    String accountId = generateUuid();
-    String groupName = generateUuid();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate delegateInScalingGroup = Delegate.builder()
-                                          .accountId(accountId)
-                                          .uuid(generateUuid())
-                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                          .delegateGroupName(groupName)
-                                          .build();
-
-    when(accountDelegatesCache.get(accountId)).thenReturn(asList(delegateInScalingGroup));
-
-    List<Delegate> delegates = new ArrayList<>();
-    delegates.add(delegateInScalingGroup);
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-    delegatesMap.put(DelegateActivity.DISCONNECTED, delegates);
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> disconnectedScalingGroup = new HashSet<>();
-    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, times(1))
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldLogWaitingForApprovalDelegate() throws ExecutionException {
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate waitForApprovalDelegate = createDelegateBuilder()
-                                           .uuid(delegateId)
-                                           .accountId(accountId)
-                                           .uuid(generateUuid())
-                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
-                                           .build();
-
-    when(accountDelegatesCache.get(accountId)).thenReturn(asList(waitForApprovalDelegate));
-
-    List<Delegate> delegates = new ArrayList<>();
-    delegates.add(waitForApprovalDelegate);
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-    delegatesMap.put(DelegateActivity.WAITING_FOR_APPROVAL, delegates);
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> delegateIds = new HashSet<>();
-    delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotLogDisconnectedDelegate() throws ExecutionException {
-    String accountId = generateUuid();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate disconnectedDelegate = createDelegateBuilder()
-                                        .accountId(accountId)
-                                        .uuid(generateUuid())
-                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                        .build();
-
-    when(accountDelegatesCache.get(accountId)).thenReturn(asList(disconnectedDelegate));
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> disconnectedDelegates = new HashSet<>();
-    disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotLogDisconnectedScalingGroup() throws ExecutionException {
-    String accountId = generateUuid();
-    String groupName = generateUuid();
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate delegateInScalingGroup = Delegate.builder()
-                                          .accountId(accountId)
-                                          .uuid(generateUuid())
-                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                          .delegateGroupName(groupName)
-                                          .build();
-
-    when(accountDelegatesCache.get(accountId)).thenReturn(asList(delegateInScalingGroup));
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> disconnectedScalingGroup = new HashSet<>();
-    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldNotLogWaitingForApprovalDelegate() throws ExecutionException {
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate waitForApprovalDelegate = createDelegateBuilder()
-                                           .uuid(delegateId)
-                                           .accountId(accountId)
-                                           .uuid(generateUuid())
-                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
-                                           .build();
-
-    when(accountDelegatesCache.get(accountId)).thenReturn(asList(waitForApprovalDelegate));
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> delegateIds = new HashSet<>();
-    delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldOnlyLogWaitingForApprovalDelegate() throws ExecutionException {
-    String groupName = generateUuid();
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate waitForApprovalDelegate = createDelegateBuilder()
-                                           .uuid(delegateId)
-                                           .accountId(accountId)
-                                           .uuid(generateUuid())
-                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
-                                           .build();
-
-    Delegate delegateInScalingGroup = Delegate.builder()
-                                          .accountId(accountId)
-                                          .uuid(generateUuid())
-                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                          .delegateGroupName(groupName)
-                                          .build();
-
-    Delegate disconnectedDelegate = createDelegateBuilder()
-                                        .accountId(accountId)
-                                        .uuid(generateUuid())
-                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                        .build();
-
-    when(accountDelegatesCache.get(accountId))
-        .thenReturn(asList(waitForApprovalDelegate, delegateInScalingGroup, disconnectedDelegate));
-
-    List<Delegate> delegates = new ArrayList<>();
-    delegates.add(waitForApprovalDelegate);
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-    delegatesMap.put(DelegateActivity.WAITING_FOR_APPROVAL, delegates);
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> delegateIds = new HashSet<>();
-    delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
-
-    Set<String> disconnectedScalingGroup = new HashSet<>();
-    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
-
-    Set<String> disconnectedDelegates = new HashSet<>();
-    disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
-  }
-
-  @Test
-  @Owner(developers = VUK)
-  @Category(UnitTests.class)
-  public void shouldOnlyLogDisconnectedDelegate() throws ExecutionException {
-    String groupName = generateUuid();
-    String accountId = generateUuid();
-    String delegateId = generateUuid();
-
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId(generateUuid()).build();
-
-    Delegate waitForApprovalDelegate = createDelegateBuilder()
-                                           .uuid(delegateId)
-                                           .accountId(accountId)
-                                           .uuid(generateUuid())
-                                           .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
-                                           .build();
-
-    Delegate delegateInScalingGroup = Delegate.builder()
-                                          .accountId(accountId)
-                                          .uuid(generateUuid())
-                                          .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                          .delegateGroupName(groupName)
-                                          .build();
-
-    Delegate disconnectedDelegate = createDelegateBuilder()
-                                        .accountId(accountId)
-                                        .uuid(generateUuid())
-                                        .lastHeartBeat(System.currentTimeMillis() - 500000L)
-                                        .build();
-
-    when(accountDelegatesCache.get(accountId))
-        .thenReturn(asList(waitForApprovalDelegate, delegateInScalingGroup, disconnectedDelegate));
-
-    List<Delegate> delegates = new ArrayList<>();
-    delegates.add(disconnectedDelegate);
-
-    Map<DelegateActivity, List<Delegate>> delegatesMap = new HashMap<>();
-    delegatesMap.put(DelegateActivity.DISCONNECTED, delegates);
-
-    assignDelegateService.logInactiveDelegates(batch, accountId, delegatesMap);
-
-    Set<String> disconnectedDelegates = new HashSet<>();
-    disconnectedDelegates.add(disconnectedDelegate.getUuid());
-    verify(delegateSelectionLogsService, times(1))
-        .logDisconnectedDelegate(eq(batch), eq(accountId), eq(disconnectedDelegates));
-
-    Set<String> delegateIds = new HashSet<>();
-    delegateIds.add(waitForApprovalDelegate.getUuid());
-    verify(delegateSelectionLogsService, never())
-        .logWaitingForApprovalDelegate(eq(batch), eq(accountId), eq(delegateIds));
-
-    Set<String> disconnectedScalingGroup = new HashSet<>();
-    disconnectedScalingGroup.add(delegateInScalingGroup.getDelegateGroupName());
-    verify(delegateSelectionLogsService, never())
-        .logDisconnectedScalingGroup(eq(batch), eq(accountId), eq(disconnectedScalingGroup), eq(groupName));
   }
 
   @Test
@@ -1889,7 +1628,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     connectionResult.setValidated(true);
     connectionResult.setLastUpdatedAt(clock.millis());
 
-    Delegate delegate2 = Delegate.builder().uuid(generateUuid()).status(ENABLED).lastHeartBeat(clock.millis()).build();
+    Delegate delegate2 = Delegate.builder()
+                             .uuid(generateUuid())
+                             .status(ENABLED)
+                             .lastHeartBeat(clock.millis())
+                             .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                             .build();
 
     DelegateConnectionResult connectionResult2 = connectionResultBuilder.build();
     connectionResult2.setDelegateId(delegate2.getUuid());
@@ -1904,7 +1648,9 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
 
     when(accountDelegatesCache.get(accountId)).thenReturn(Collections.emptyList()).thenReturn(Arrays.asList(delegate2));
     when(delegateCache.get(task.getAccountId(), delegate2.getUuid(), false))
-        .thenReturn(Delegate.builder().uuid(delegateId).build());
+        .thenReturn(
+            Delegate.builder().uuid(delegateId).supportedTaskTypes(Arrays.asList(TaskType.HTTP.name())).build());
+    task.setEligibleToExecuteDelegateIds(new LinkedList<>(Arrays.asList(delegate2.getUuid())));
     assertThat(assignDelegateService.shouldValidate(task, delegateId)).isFalse();
 
     // test case: connection result present, validated, not expired, delegate connected
@@ -1924,55 +1670,25 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
-  public void testCanAssignWithMustExecuteOnDelegate() {
-    String accountId = generateUuid();
-    String delegateId1 = generateUuid();
-    BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
-
-    // Test matching mustExecuteOnDelegateId
-    Delegate delegate = Mockito.mock(Delegate.class);
-    when(delegateCache.get(accountId, delegateId1, false)).thenReturn(delegate);
-
-    assertThat(assignDelegateService.canAssign(batch, delegateId1,
-                   DelegateTask.builder().accountId(accountId).mustExecuteOnDelegateId(delegateId1).build()))
-        .isTrue();
-    verify(delegateSelectionLogsService).logMustExecuteOnDelegateMatched(batch, accountId, delegateId1);
-    verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
-
-    // Test not matching mustExecuteOnDelegateId
-    String delegateId2 = generateUuid();
-    when(delegateCache.get(accountId, delegateId2, false)).thenReturn(delegate);
-
-    assertThat(assignDelegateService.canAssign(batch, delegateId2,
-                   DelegateTask.builder().accountId(accountId).mustExecuteOnDelegateId(delegateId1).build()))
-        .isFalse();
-    verify(delegateSelectionLogsService).logMustExecuteOnDelegateNotMatched(batch, accountId, delegateId2);
-    verify(delegateSelectionLogsService, never()).logCanAssign(batch, accountId, delegateId1);
-  }
-
-  @Test
-  @Owner(developers = MARKO)
-  @Category(UnitTests.class)
   public void testCanAssignCgNg() {
     String accountId = generateUuid();
     String delegateId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
-                                    .data(TaskData.builder().build())
+                                    .status(DelegateTask.Status.QUEUED)
+                                    .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
                                     .executionCapabilities(emptyList())
                                     .build();
-    Delegate delegate =
-        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .uuid(delegateId)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.HTTP.name()))
+                            .build();
 
     BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
     when(delegateCache.get(accountId, delegateId, false)).thenReturn(delegate);
-
-    // Test FF disabled
-    when(featureFlagService.isNotEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(true);
-    canAssignCgNgAssert(delegateTask, batch, delegate, true, null, true);
-
-    // Test FF disabled
-    when(featureFlagService.isNotEnabled(NG_CG_TASK_ASSIGNMENT_ISOLATION, accountId)).thenReturn(false);
 
     // Test delegate cg and task cg
     canAssignCgNgAssert(delegateTask, batch, delegate, false, null, true);
@@ -2006,13 +1722,22 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testCanAssignOwner() {
-    TaskData taskData = TaskData.builder().build();
+    TaskData taskData = TaskData.builder().taskType(TaskType.SCRIPT.name()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
-    DelegateTask delegateTask =
-        DelegateTask.builder().accountId(accountId).data(taskData).executionCapabilities(emptyList()).build();
-    Delegate delegate =
-        Delegate.builder().accountId(accountId).uuid(delegateId).status(ENABLED).lastHeartBeat(clock.millis()).build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
+                                    .data(taskData)
+                                    .executionCapabilities(emptyList())
+                                    .build();
+    Delegate delegate = Delegate.builder()
+                            .accountId(accountId)
+                            .uuid(delegateId)
+                            .status(ENABLED)
+                            .lastHeartBeat(clock.millis())
+                            .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name()))
+                            .build();
 
     BatchDelegateSelectionLog batch = Mockito.mock(BatchDelegateSelectionLog.class);
     // Test matching mustExecuteOnDelegateId
@@ -2078,60 +1803,6 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   }
 
   @Test
-  @Owner(developers = LUCAS)
-  @Category(UnitTests.class)
-  public void onPossibleRetryTest() throws ExecutionException {
-    Set<String> selectors = Stream.of("a", "b").collect(Collectors.toSet());
-    HttpConnectionExecutionCapability connectionExecutionCapability =
-        HttpConnectionExecutionCapability.builder().url("localhost").build();
-    SelectorCapability selectorCapability = SelectorCapability.builder().selectors(selectors).build();
-    List<ExecutionCapability> executionCapabilityList = asList(selectorCapability, connectionExecutionCapability);
-    BatchDelegateSelectionLog batch = BatchDelegateSelectionLog.builder().taskId("TASK_ID_1").build();
-
-    TaskData taskData = TaskData.builder().taskType(TaskType.HTTP.name()).build();
-    Set<String> alreadyTriedDelegates = new HashSet<>();
-    alreadyTriedDelegates.add("DELEGATE_ID_2");
-
-    DelegateTask delegateTask = DelegateTask.builder()
-                                    .accountId("ACCOUNT_ID")
-                                    .data(taskData)
-                                    .executionCapabilities(executionCapabilityList)
-                                    .mustExecuteOnDelegateId("DELEGATE_ID")
-                                    .alreadyTriedDelegates(alreadyTriedDelegates)
-                                    .build();
-
-    Delegate delegate = Delegate.builder()
-                            .accountId("ACCOUNT_ID")
-                            .uuid("DELEGATE_ID")
-                            .status(ENABLED)
-                            .lastHeartBeat(clock.millis())
-                            .build();
-
-    Optional<DelegateConnectionResult> trueResult =
-        Optional.of(DelegateConnectionResult.builder().validated(true).lastUpdatedAt(10).build());
-
-    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
-    when(delegateCache.get("ACCOUNT_ID", "DELEGATE_ID", false)).thenReturn(delegate);
-    when(delegateSelectionLogsService.createBatch(delegateTask)).thenReturn(batch);
-    when(delegateConnectionResultCache.get(ImmutablePair.of("DELEGATE_ID", any()))).thenReturn(trueResult);
-
-    Query<DelegateTask> taskQuery =
-        persistence.createQuery(DelegateTask.class).filter("accountId", "ACCOUNT_ID").filter("uuid", "TASK_ID_1");
-
-    RetryDelegate retryDelegate = RetryDelegate.builder()
-                                      .delegateId("DELEGATE_ID_2")
-                                      .taskQuery(taskQuery)
-                                      .delegateTask(delegateTask)
-                                      .retryPossible(true)
-                                      .build();
-
-    retryDelegate = assignDelegateService.onPossibleRetry(retryDelegate);
-
-    assertThat(retryDelegate).isNotNull();
-    assertThat(retryDelegate.isRetryPossible()).isEqualTo(true);
-  }
-
-  @Test
   @Owner(developers = MARKO)
   @Category(UnitTests.class)
   public void testGetAccountDelegates() throws ExecutionException {
@@ -2170,5 +1841,226 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(accountDelegatesCache.get(accountId)).thenThrow(InvalidCacheLoadException.class);
 
     assertThat(assignDelegateService.getAccountDelegates(accountId)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = ARPIT)
+  @Category(UnitTests.class)
+  public void testDelegateSupportsGivenTaskType() {
+    String delegateId1 = "delegateId1";
+    String delegateId2 = "delegateId2";
+
+    Delegate delegate1 = Delegate.builder()
+                             .uuid(delegateId1)
+                             .delegateName("delegateName")
+                             .accountId("accountId")
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .supportedTaskTypes(Arrays.asList(TaskType.SCRIPT.name(), TaskType.HTTP.name()))
+                             .build();
+
+    Delegate delegate2 = Delegate.builder()
+                             .uuid(delegateId2)
+                             .delegateName("delegateName")
+                             .accountId("accountId")
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+
+    persistence.save(delegate1);
+    persistence.save(delegate2);
+    when(delegateCache.get("accountId", delegateId1, false)).thenReturn(delegate1);
+    when(delegateCache.get("accountId", delegateId2, false)).thenReturn(delegate2);
+    DelegateTask asyncTask = DelegateTask.builder()
+                                 .uuid(generateUuid())
+                                 .status(DelegateTask.Status.QUEUED)
+                                 .accountId("accountId")
+                                 .data(TaskData.builder().async(true).taskType(TaskType.SCRIPT.name()).build())
+                                 .build();
+    DelegateTask syncTask = DelegateTask.builder()
+                                .uuid(generateUuid())
+                                .accountId("accountId")
+                                .status(DelegateTask.Status.QUEUED)
+                                .data(TaskData.builder().async(false).taskType(TaskType.HTTP.name()).build())
+                                .build();
+    DelegateTask wrongAsyncTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
+            .accountId("accountId")
+            .data(TaskData.builder().async(true).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
+            .build();
+
+    DelegateTask wrongSyncTask =
+        DelegateTask.builder()
+            .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
+            .accountId("accountId")
+            .data(TaskData.builder().async(false).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
+            .build();
+
+    assertThat(assignDelegateService.canAssign(null, delegateId1, asyncTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(null, delegateId1, syncTask)).isTrue();
+    assertThat(assignDelegateService.canAssign(null, delegateId2, asyncTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(null, delegateId2, syncTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(null, delegateId1, wrongAsyncTask)).isFalse();
+    assertThat(assignDelegateService.canAssign(null, delegateId1, wrongSyncTask)).isFalse();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetAccountEligibleDelegatesToExecuteTask() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    DelegateTask task = constructDelegateTask(false, Collections.emptySet(), DelegateTask.Status.QUEUED);
+    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
+    when(delegateCache.get(ACCOUNT_ID, delegate.getUuid(), false)).thenReturn(delegate);
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task, null)).isNotEmpty();
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task, null)).contains(delegate.getUuid());
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetAccountEligibleDelegatesToExecuteTaskWithCriteraMatch() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    DelegateTask task = constructDelegateTask(false, Collections.emptySet(), DelegateTask.Status.QUEUED);
+
+    when(accountDelegatesCache.get(ACCOUNT_ID)).thenReturn(asList(delegate));
+    when(delegateCache.get(ACCOUNT_ID, delegate.getUuid(), false)).thenReturn(delegate);
+    DelegateConnectionResult connectionResult = DelegateConnectionResult.builder()
+                                                    .accountId(ACCOUNT_ID)
+                                                    .delegateId(delegate.getUuid())
+                                                    .criteria("https://www.google.com")
+                                                    .validated(true)
+                                                    .build();
+    when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), connectionResult.getCriteria())))
+        .thenReturn(of(connectionResult));
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task, null)).isNotEmpty();
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task, null)).contains(delegate.getUuid());
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetEligibleDelegatesToExecuteTaskWithNoActiveDelegates() throws ExecutionException {
+    DelegateTask task = constructDelegateTask(false, Collections.emptySet(), DelegateTask.Status.QUEUED);
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task, null)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetEligibleDelegatesWhenOwnerMismatch() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    delegate.setOwner(DelegateEntityOwner.builder().build());
+    DelegateTask task = constructDelegateTask(false, Collections.emptySet(), DelegateTask.Status.QUEUED);
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", delegate.getUuid(), false)).thenReturn(delegate);
+    assertThat(assignDelegateService.getEligibleDelegatesToExecuteTask(task, null)).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetConnectedDelegatesFromlist() throws ExecutionException {
+    Delegate delegate = createAccountDelegate();
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(asList(delegate));
+    when(delegateCache.get("ACCOUNT_ID", delegate.getUuid(), false)).thenReturn(delegate);
+    assertThat(assignDelegateService.getConnectedDelegateList(Arrays.asList(delegate.getUuid()), ACCOUNT_ID, null))
+        .isNotEmpty();
+    assertThat(assignDelegateService.getConnectedDelegateList(Arrays.asList(delegate.getUuid()), ACCOUNT_ID, null))
+        .contains(delegate.getUuid());
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testGetActiveEligibleDelegatesForTask() throws ExecutionException {
+    List<Delegate> delegates = createAccountDelegates();
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(delegates);
+    List<String> delegateIds = delegates.stream().map(delegate -> delegate.getUuid()).collect(toList());
+    assertThat(assignDelegateService.fetchActiveDelegates("ACCOUNT_ID").size() == 2);
+  }
+
+  private DelegateTask constructDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
+    DelegateTask delegateTask =
+        DelegateTask.builder()
+            .accountId(ACCOUNT_ID)
+            .waitId(generateUuid())
+            .setupAbstraction(Cd1SetupFields.APP_ID_FIELD, "APP_ID")
+            .version(VERSION)
+            .data(TaskData.builder()
+                      .async(async)
+                      .taskType(TaskType.HTTP.name())
+                      .parameters(new Object[] {HttpTaskParameters.builder().url("https://www.google.com").build()})
+                      .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
+                      .build())
+            .validatingDelegateIds(validatingTaskIds)
+            .validationCompleteDelegateIds(ImmutableSet.of(DELEGATE_ID))
+            .build();
+    return delegateTask;
+  }
+
+  private Delegate createAccountDelegate() {
+    Delegate delegate = Delegate.builder()
+                            .accountId(ACCOUNT_ID)
+                            .ip("127.0.0.1")
+                            .hostName("localhost")
+                            .delegateName("testDelegateName")
+                            .version(VERSION)
+                            .status(DelegateInstanceStatus.ENABLED)
+                            .supportedTaskTypes(supportedTasks)
+                            .lastHeartBeat(System.currentTimeMillis())
+                            .build();
+    persistence.save(delegate);
+    return delegate;
+  }
+
+  private List<Delegate> createAccountDelegates() {
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate1);
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate2);
+    Delegate delegate3 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate3);
+    // non connected delegate
+    Delegate delegate4 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(26))
+                             .build();
+    persistence.save(delegate4);
+    return Lists.newArrayList(delegate1, delegate2, delegate3, delegate4);
   }
 }

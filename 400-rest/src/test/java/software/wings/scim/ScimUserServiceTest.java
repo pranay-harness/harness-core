@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.scim;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -13,12 +20,16 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
+import io.harness.scim.OktaReplaceOperation;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
+import io.harness.scim.service.ScimUserService;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.User;
 import software.wings.beans.UserInvite;
-import software.wings.beans.scim.ScimUser;
 import software.wings.beans.security.UserGroup;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.UserService;

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.ce.exportData;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -69,6 +76,7 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
   @Inject QLBillingStatsHelper statsHelper;
   @Inject K8sWorkloadDao dao;
   @Inject CeAccountExpirationChecker accountChecker;
+  @Inject CEExportDataNodeAndPodDetailsHelper nodeAndPodDetailsHelper;
   private static final int LIMIT_THRESHOLD = 1000;
   private static final String SELECT = "select";
   private static final String DEFAULT_SELECTED_LABEL = "-";
@@ -137,6 +145,12 @@ public class CeClusterBillingDataDataFetcher extends AbstractStatsDataFetcherWit
 
     // adding filters to exclude unallocated cost rows
     addFiltersToExcludeUnallocatedRows(filters, groupByEntityList);
+
+    // checking if node/pod query
+    if (nodeAndPodDetailsHelper.isNodeAndPodQuery(groupByEntityList)) {
+      return nodeAndPodDetailsHelper.getNodeAndPodData(
+          accountId, aggregateFunction, filters, groupByList, sortCriteria, limit, offset, skipRoundOff);
+    }
 
     queryData = queryBuilder.formQuery(accountId, filters, aggregateFunction, groupByEntityList, groupByTime,
         sortCriteria, limit, offset, selectedFields);

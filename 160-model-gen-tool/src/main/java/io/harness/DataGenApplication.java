@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -20,6 +27,7 @@ import io.harness.delegate.authenticator.DelegateTokenAuthenticatorImpl;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.event.EventsModule;
 import io.harness.event.handler.segment.SegmentConfig;
 import io.harness.exception.WingsException;
@@ -29,6 +37,10 @@ import io.harness.maintenance.MaintenanceController;
 import io.harness.manage.GlobalContextManager;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.persistence.UserProvider;
 import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.serializer.KryoRegistrar;
@@ -78,6 +90,7 @@ import io.dropwizard.Application;
 import io.dropwizard.setup.Environment;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -203,7 +216,7 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new AlertModule());
     modules.add(new CapabilityModule());
-    modules.add(new WingsModule(configuration));
+    modules.add(new WingsModule(configuration, StartupMode.MANAGER));
     modules.add(new TotpModule());
     modules.add(new ProviderModule() {
       @Provides
@@ -235,7 +248,22 @@ public class DataGenApplication extends Application<MainConfiguration> {
     modules.add(new SignupModule());
     modules.add(new GcpMarketplaceIntegrationModule());
     modules.add(new AuthModule());
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     Injector injector = Guice.createInjector(modules);
 
     registerObservers(injector);

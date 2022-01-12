@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.filter.creation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -8,18 +15,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.FilterCreationResponse;
 import io.harness.pms.contracts.plan.SetupMetadata;
-import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.exception.PmsExceptionUtils;
 import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreationResponseWrapperBuilder;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
-import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
@@ -49,33 +55,25 @@ public class FilterCreatorMergeService {
   private final PmsSdkHelper pmsSdkHelper;
   private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
-  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public FilterCreatorMergeService(PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper,
-      PmsGitSyncHelper pmsGitSyncHelper, PMSPipelineTemplateHelper pipelineTemplateHelper) {
+  public FilterCreatorMergeService(
+      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper, PmsGitSyncHelper pmsGitSyncHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
     this.pmsGitSyncHelper = pmsGitSyncHelper;
-    this.pipelineTemplateHelper = pipelineTemplateHelper;
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
-    Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
-    String yaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
-    String processedYaml = YamlUtils.injectUuid(yaml);
-    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
-    Map<String, YamlFieldBlob> dependencies = new HashMap<>();
-    dependencies.put(pipelineField.getNode().getUuid(), pipelineField.toFieldBlob());
+    Map<String, PlanCreatorServiceInfo> services = getServices();
+    Dependencies dependencies = getDependencies(pipelineEntity.getYaml());
 
     Map<String, String> filters = new HashMap<>();
-    SetupMetadata.Builder setupMetadataBuilder = SetupMetadata.newBuilder()
-                                                     .setAccountId(pipelineEntity.getAccountId())
-                                                     .setProjectId(pipelineEntity.getProjectIdentifier())
-                                                     .setOrgId(pipelineEntity.getOrgIdentifier());
+    SetupMetadata.Builder setupMetadataBuilder = getSetupMetadataBuilder(
+        pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier());
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
     if (gitSyncBranchContext != null) {
       setupMetadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
@@ -91,49 +89,68 @@ public class FilterCreatorMergeService {
         .build();
   }
 
+  public SetupMetadata.Builder getSetupMetadataBuilder(String accountId, String orgId, String projectId) {
+    return SetupMetadata.newBuilder().setAccountId(accountId).setProjectId(projectId).setOrgId(orgId);
+  }
+
+  public Map<String, PlanCreatorServiceInfo> getServices() {
+    return pmsSdkHelper.getServices();
+  }
+
+  public Dependencies getDependencies(String yaml) throws IOException {
+    String processedYaml = YamlUtils.injectUuid(yaml);
+    YamlField topRootFieldInYaml = YamlUtils.getTopRootFieldInYaml(processedYaml);
+
+    return Dependencies.newBuilder()
+        .setYaml(processedYaml)
+        .putDependencies(topRootFieldInYaml.getNode().getUuid(), topRootFieldInYaml.getNode().getYamlPath())
+        .build();
+  }
+
   @VisibleForTesting
   public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) throws IOException {
-    if (isNotEmpty(response.getDependenciesMap())) {
-      throw new InvalidRequestException(
-          PmsExceptionUtils.getUnresolvedDependencyErrorMessage(response.getDependenciesMap().values()));
+    if (isNotEmpty(response.getDeps().getDependenciesMap())) {
+      throw new InvalidRequestException(PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(response.getDeps()));
     }
   }
 
   @VisibleForTesting
   public FilterCreationBlobResponse obtainFiltersRecursively(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> dependencies, Map<String, String> filters, SetupMetadata setupMetadata)
-      throws IOException {
-    FilterCreationBlobResponse.Builder responseBuilder =
-        FilterCreationBlobResponse.newBuilder().putAllDependencies(dependencies);
+      Dependencies initialDependencies, Map<String, String> filters, SetupMetadata setupMetadata) throws IOException {
+    Dependencies initialDependenciesWithoutTemplates =
+        FilterCreationBlobResponseUtils.removeTemplateDependencies(initialDependencies);
+    FilterCreationBlobResponse.Builder finalResponseBuilder =
+        FilterCreationBlobResponse.newBuilder().setDeps(initialDependenciesWithoutTemplates);
 
-    if (isEmpty(services) || isEmpty(dependencies)) {
-      return responseBuilder.build();
+    if (isEmpty(services) || isEmpty(initialDependenciesWithoutTemplates.getDependenciesMap())) {
+      return finalResponseBuilder.build();
     }
 
-    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(responseBuilder.getDependenciesMap()); i++) {
+    for (int i = 0; i < MAX_DEPTH && EmptyPredicate.isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap());
+         i++) {
       FilterCreationBlobResponse currIterResponse =
-          obtainFiltersPerIteration(services, responseBuilder.getDependenciesMap(), filters, setupMetadata);
+          obtainFiltersPerIteration(services, finalResponseBuilder, filters, setupMetadata);
 
-      FilterCreationBlobResponseUtils.mergeResolvedDependencies(responseBuilder, currIterResponse);
-      if (isNotEmpty(responseBuilder.getDependenciesMap())) {
+      FilterCreationBlobResponseUtils.mergeResolvedDependencies(finalResponseBuilder, currIterResponse);
+      if (isNotEmpty(finalResponseBuilder.getDeps().getDependenciesMap())) {
         throw new InvalidRequestException(
-            PmsExceptionUtils.getUnresolvedDependencyErrorMessage(responseBuilder.getDependenciesMap().values()));
+            PmsExceptionUtils.getUnresolvedDependencyPathsErrorMessage(finalResponseBuilder.getDeps()));
       }
-      FilterCreationBlobResponseUtils.mergeDependencies(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.updateStageCount(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.mergeReferredEntities(responseBuilder, currIterResponse);
-      FilterCreationBlobResponseUtils.mergeStageNames(responseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeDependencies(finalResponseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.updateStageCount(finalResponseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeReferredEntities(finalResponseBuilder, currIterResponse);
+      FilterCreationBlobResponseUtils.mergeStageNames(finalResponseBuilder, currIterResponse);
     }
 
-    return responseBuilder.build();
+    return finalResponseBuilder.build();
   }
 
   @VisibleForTesting
   public FilterCreationBlobResponse obtainFiltersPerIteration(Map<String, PlanCreatorServiceInfo> services,
-      Map<String, YamlFieldBlob> dependencies, Map<String, String> filters, SetupMetadata setupMetadata) {
+      FilterCreationBlobResponse.Builder responseBuilder, Map<String, String> filters, SetupMetadata setupMetadata) {
     CompletableFutures<FilterCreationResponseWrapper> completableFutures = new CompletableFutures<>(executor);
     for (Map.Entry<String, PlanCreatorServiceInfo> serviceEntry : services.entrySet()) {
-      if (!pmsSdkHelper.containsSupportedDependency(serviceEntry.getValue(), dependencies)) {
+      if (!pmsSdkHelper.containsSupportedDependencyByYamlPath(serviceEntry.getValue(), responseBuilder.getDeps())) {
         continue;
       }
 
@@ -143,7 +160,7 @@ public class FilterCreatorMergeService {
         try {
           FilterCreationResponse filterCreationResponse =
               serviceEntry.getValue().getPlanCreationClient().createFilter(FilterCreationBlobRequest.newBuilder()
-                                                                               .putAllDependencies(dependencies)
+                                                                               .setDeps(responseBuilder.getDeps())
                                                                                .setSetupMetadata(setupMetadata)
                                                                                .build());
           if (filterCreationResponse.getResponseCase() == FilterCreationResponse.ResponseCase.ERRORRESPONSE) {

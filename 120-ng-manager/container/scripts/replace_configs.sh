@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2022 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Shield 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
 
 CONFIG_FILE=/opt/harness/config.yml
 REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
@@ -9,6 +13,28 @@ replace_key_value () {
   if [[ "" != "$CONFIG_VALUE" ]]; then
     yq write -i $CONFIG_FILE $CONFIG_KEY $CONFIG_VALUE
   fi
+}
+
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 -s <<< "${HOST_AND_PORT[$INDEX]}")
+
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    if [[ "" != "$PORT" ]]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
+  done
+}
+
+write_mongo_params() {
+  IFS='&' read -ra PARAMS <<< "$2"
+  for PARAM_PAIR in "${PARAMS[@]}"; do
+    NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
+    VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
+    yq write -i $CONFIG_FILE $1.params.$NAME "$VALUE"
+  done
 }
 
 yq delete -i $CONFIG_FILE server.applicationConnectors[0]
@@ -51,6 +77,16 @@ if [[ "" != "$MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE mongo.uri "${MONGO_URI//\\&/&}"
 fi
 
+if [[ "" != "$MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE mongo.uri
+  yq write -i $CONFIG_FILE mongo.username "$MONGO_USERNAME"
+  yq write -i $CONFIG_FILE mongo.password "$MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE mongo.database "$MONGO_DATABASE"
+  yq write -i $CONFIG_FILE mongo.schema "$MONGO_SCHEMA"
+  write_mongo_hosts_and_ports mongo "$MONGO_HOSTS_AND_PORTS"
+  write_mongo_params mongo "$MONGO_PARAMS"
+fi
+
 if [[ "" != "$MONGO_TRACE_MODE" ]]; then
   yq write -i $CONFIG_FILE mongo.traceMode $MONGO_TRACE_MODE
 fi
@@ -81,6 +117,16 @@ fi
 
 if [[ "" != "$PMS_MONGO_URI" ]]; then
   yq write -i $CONFIG_FILE pmsMongo.uri "${PMS_MONGO_URI//\\&/&}"
+fi
+
+if [[ "" != "$PMS_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE pmsMongo.uri
+  yq write -i $CONFIG_FILE pmsMongo.username "$PMS_MONGO_USERNAME"
+  yq write -i $CONFIG_FILE pmsMongo.password "$PMS_MONGO_PASSWORD"
+  yq write -i $CONFIG_FILE pmsMongo.database "$PMS_MONGO_DATABASE"
+  yq write -i $CONFIG_FILE pmsMongo.schema "$PMS_MONGO_SCHEMA"
+  write_mongo_hosts_and_ports pmsMongo "$PMS_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params pmsMongo "$PMS_MONGO_PARAMS"
 fi
 
 if [[ "" != "$MANAGER_TARGET" ]]; then
@@ -133,6 +179,18 @@ fi
 
 if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$CENG_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.baseUrl "$CENG_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$CENG_CLIENT_READ_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.readTimeOutSeconds "$CENG_CLIENT_READ_TIMEOUT"
+fi
+
+if [[ "" != "$CENG_CLIENT_CONNECT_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.connectTimeOutSeconds "$CENG_CLIENT_CONNECT_TIMEOUT"
 fi
 
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then
@@ -347,7 +405,9 @@ replace_key_value signupNotificationConfiguration.projectId "$SIGNUP_NOTIFICATIO
 replace_key_value signupNotificationConfiguration.bucketName "$SIGNUP_NOTIFICATION_GCS_BUCKET_NAME"
 
 replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.url "$SEGMENT_URL"
 replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
+replace_key_value segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT"
 
 replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
 
@@ -371,5 +431,6 @@ replace_key_value ceAzureSetupConfig.azureAppClientId "$AZURE_APP_CLIENT_ID"
 replace_key_value ceAzureSetupConfig.azureAppClientSecret "$AZURE_APP_CLIENT_SECRET"
 replace_key_value pipelineServiceClientConfig.baseUrl "$PIPELINE_SERVICE_CLIENT_BASEURL"
 replace_key_value scopeAccessCheckEnabled "${SCOPE_ACCESS_CHECK:-true}"
-replace_key_value licenseConfig.deployVariant "$LICENSE_DEPLOY_VARIANT"
 replace_key_value ciManagerClientConfig.baseUrl "$CI_MANAGER_SERVICE_CLIENT_BASEURL"
+replace_key_value secretsConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
+replace_key_value secretsConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"

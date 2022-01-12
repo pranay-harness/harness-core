@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -226,7 +233,7 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
                                         .startTime(startTime)
                                         .endTime(endTime)
                                         .metricPath(getCompletePath(baseFolder, tier, metricPath))
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO = OnboardingRequestDTO.builder()
@@ -265,9 +272,39 @@ public class AppDynamicsServiceImpl implements AppDynamicsService {
   }
 
   @Override
+  public String getServiceInstanceMetricPath(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId) {
+    String[] metricPathFolders = metricPath.split("\\|");
+    StringBuilder metricPathSoFar = new StringBuilder(512);
+    int index = 0;
+
+    for (; index < metricPathFolders.length - 1; index++) {
+      if (containsIndividualNode(
+              projectParams, connectorIdentifier, appName, baseFolder, tier, metricPathSoFar.toString(), tracingId)) {
+        break;
+      }
+      metricPathSoFar.append('|').append(metricPathFolders[index]);
+    }
+    metricPathSoFar.append("|Individual Nodes|*");
+    for (; index < metricPathFolders.length; index++) {
+      { metricPathSoFar.append('|').append(metricPathFolders[index]); }
+    }
+    return metricPathSoFar.substring(1, metricPathSoFar.length());
+  }
+
+  @Override
   public void checkConnectivity(
       String accountId, String orgIdentifier, String projectIdentifier, String connectorIdentifier, String tracingId) {
     getApplications(accountId, connectorIdentifier, orgIdentifier, projectIdentifier, 0, 1, null);
+  }
+
+  private boolean containsIndividualNode(ProjectParams projectParams, String connectorIdentifier, String appName,
+      String baseFolder, String tier, String metricPath, String tracingId) {
+    List<AppDynamicsFileDefinition> appDynamicsFileDefinitions =
+        getMetricStructure(projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, tracingId);
+    return appDynamicsFileDefinitions.stream()
+        .map(AppDynamicsFileDefinition::getName)
+        .anyMatch(name -> name.equals("Individual Nodes"));
   }
 
   private List<AppDynamicsFileDefinition> getMetricStructure(

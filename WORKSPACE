@@ -10,7 +10,7 @@ http_archive(
     name = "com_github_bazelbuild_buildtools",
     sha256 = "932160d5694e688cb7a05ac38efba4b9a90470c75f39716d85fb1d2f95eec96d",
     strip_prefix = "buildtools-4.0.1",
-    url = "https://github.com/bazelbuild/buildtools/archive/refs/tags/4.0.1.zip",
+    url = "http://jfrogdev.dev.harness.io:80/artifactory/bazel-buildtools-github/archive/refs/tags/4.0.1.zip",
 )
 
 # Download the Go rules
@@ -18,8 +18,9 @@ http_archive(
     name = "io_bazel_rules_go",
     sha256 = "7904dbecbaffd068651916dce77ff3437679f9d20e1a7956bff43826e7645fcc",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
-        "https://github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
+        "http://jfrogdev.dev.harness.io:80/artifactory/rules-go-github/download/v0.25.1/rules_go-v0.25.1.tar.gz",
+        #"https://mirror.bazel.build/github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
+        #"https://github.com/bazelbuild/rules_go/releases/download/v0.25.1/rules_go-v0.25.1.tar.gz",
     ],
 )
 
@@ -27,14 +28,22 @@ http_archive(
     name = "bazel_gazelle",
     sha256 = "222e49f034ca7a1d1231422cdb67066b885819885c356673cb1f72f748a3c9d4",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
-        "https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        "http://jfrogdev.dev.harness.io:80/artifactory/bazel-gazelle-github/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        #"https://mirror.bazel.build/github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
+        #"https://github.com/bazelbuild/bazel-gazelle/releases/download/v0.22.3/bazel-gazelle-v0.22.3.tar.gz",
     ],
 )
 
 # Load and call the dependencies
 load("@io_bazel_rules_go//go:deps.bzl", "go_register_toolchains", "go_rules_dependencies")
 load("@bazel_gazelle//:deps.bzl", "gazelle_dependencies", "go_repository")
+
+go_repository(
+    name = "com_github_nbio_st",
+    importpath = "github.com/nbio/st",
+    sum = "h1:W6apQkHrMkS0Muv8G/TipAy/FJl/rCYT0+EuS8+Z0z4=",
+    version = "v0.0.0-20140626010706-e9e8d9816f32",
+)
 
 go_rules_dependencies()
 
@@ -46,7 +55,7 @@ http_archive(
     name = "rules_proto_grpc",
     sha256 = "5f0f2fc0199810c65a2de148a52ba0aff14d631d4e8202f41aff6a9d590a471b",
     strip_prefix = "rules_proto_grpc-1.0.2",
-    urls = ["https://github.com/rules-proto-grpc/rules_proto_grpc/archive/1.0.2.tar.gz"],
+    urls = ["http://jfrogdev.dev.harness.io:80/artifactory/rules-proto-grpc-github/archive/1.0.2.tar.gz"],
 )
 
 load("@rules_proto_grpc//:repositories.bzl", "rules_proto_grpc_repos", "rules_proto_grpc_toolchains")
@@ -452,8 +461,8 @@ go_repository(
 go_repository(
     name = "com_github_golang_protobuf",
     importpath = "github.com/golang/protobuf",
-    sum = "h1:JjCZWpVbqXDqFVmTfYWEVTMIYrL/NPdPSCHPJ0T/raM=",
-    version = "v1.4.3",
+    sum = "h1:ROPKBNFfQgOUMifHyP+KYbvpjbdoFNs+aK7DXlji0Tw=",
+    version = "v1.5.2",
 )
 
 go_repository(
@@ -466,8 +475,8 @@ go_repository(
 go_repository(
     name = "com_github_google_go_cmp",
     importpath = "github.com/google/go-cmp",
-    sum = "h1:X2ev0eStA3AbceY54o37/0PQ/UWqKEiiO2dKL5OPaFM=",
-    version = "v0.5.2",
+    sum = "h1:Khx7svrCpmxxtHBq5j2mp/xVjsi8hQMfNLvJFAlrGgU=",
+    version = "v0.5.5",
 )
 
 go_repository(
@@ -634,8 +643,8 @@ go_repository(
 go_repository(
     name = "org_golang_google_protobuf",
     importpath = "google.golang.org/protobuf",
-    sum = "h1:Ejskq+SyPohKW+1uil0JJMtmHCgJPJ/qWTxr8qp+R4c=",
-    version = "v1.25.0",
+    sum = "h1:SnqbnDw1V7RiZcXPx5MEeqPv2s79L9i7BJUlG/+RurQ=",
+    version = "v1.27.1",
 )
 
 go_repository(
@@ -851,8 +860,8 @@ go_repository(
 go_repository(
     name = "com_github_gofrs_uuid",
     importpath = "github.com/gofrs/uuid",
-    sum = "h1:y12jRkkFxsd7GpqdSZ+/KCs/fJbqpEXSGd4+jfEaewE=",
-    version = "v3.2.0+incompatible",
+    sum = "h1:yyYWMnhkhrKwwr8gAOcOCYxOOscHgDS9yZgBrnJfGa0=",
+    version = "v4.2.0+incompatible",
 )
 
 go_repository(
@@ -3371,8 +3380,8 @@ go_repository(
 go_repository(
     name = "cc_mvdan_sh_v3",
     importpath = "mvdan.cc/sh/v3",
-    sum = "h1:uQBpiGM+rEuHse3Q+W7ajuJUeOtFVJUN/6GeX4/dUWE=",
-    version = "v3.2.1",
+    sum = "h1:+fZaWcXWRjYAvqzEKoDhDM3DkxdDUykU2iw0VMKFe9s=",
+    version = "v3.2.4",
 )
 
 go_repository(
@@ -3535,7 +3544,7 @@ http_archive(
     strip_prefix = "rules_rust-f37b9d6a552e9412285e627f30cb124e709f4f7a",
     urls = [
         # Master branch as of 2021-01-27
-        "https://github.com/bazelbuild/rules_rust/archive/f37b9d6a552e9412285e627f30cb124e709f4f7a.tar.gz",
+        "http://jfrogdev.dev.harness.io:80/artifactory/rules-rust-github/archive/f37b9d6a552e9412285e627f30cb124e709f4f7a.tar.gz",
     ],
 )
 
@@ -4222,7 +4231,7 @@ http_archive(
     name = "rules_spring",
     sha256 = "9385652bb92d365675d1ca7c963672a8091dc5940a9e307104d3c92e7a789c8e",
     urls = [
-        "https://github.com/salesforce/rules_spring/releases/download/2.1.4/rules-spring-2.1.4.zip",
+        "http://jfrogdev.dev.harness.io:80/artifactory/rules-spring-github/download/2.1.4/rules-spring-2.1.4.zip",
     ],
 )
 
@@ -4232,7 +4241,7 @@ http_archive(
     name = "rules_jvm_external",
     sha256 = "f36441aa876c4f6427bfb2d1f2d723b48e9d930b62662bf723ddfb8fc80f0140",
     strip_prefix = "rules_jvm_external-%s" % RULES_JVM_EXTERNAL_TAG,
-    url = "https://github.com/bazelbuild/rules_jvm_external/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
+    url = "http://jfrogdev.dev.harness.io:80/artifactory/rules-jvm-external-github/archive/%s.zip" % RULES_JVM_EXTERNAL_TAG,
 )
 
 load("@rules_jvm_external//:defs.bzl", "maven_install")
@@ -4457,6 +4466,7 @@ plain_artifacts = [
     "com.squareup.wire:wire-runtime:2.2.0",
     "com.squareup.wire:wire-schema:3.2.2",
     "com.squareup.wire:wire-schema:3.2.2",
+    "com.stripe:stripe-java:20.92.0",
     "com.sumologic.api.client:sumo-java-client:2.5",
     "com.sun.istack:istack-commons-runtime:3.0.8",
     "com.sun.mail:javax.mail:1.5.6",
@@ -4563,13 +4573,13 @@ plain_artifacts = [
     "io.grpc:grpc-services:1.33.1",
     "io.grpc:grpc-stub:1.33.1",
     "io.gsonfire:gson-fire:1.8.3",
-    "io.harness.cv:data-collection-dsl:0.28-RELEASE",
-    "io.harness:ff-java-server-sdk:1.0.3",
+    "io.harness.cv:data-collection-dsl:0.31-RELEASE",
+    "io.harness:ff-java-server-sdk:1.0.5.1",
     "io.jsonwebtoken:jjwt:0.9.1",
-    "io.kubernetes:client-java-api:9.0.2",
-    "io.kubernetes:client-java-extended:9.0.2",
-    "io.kubernetes:client-java-proto:9.0.2",
-    "io.kubernetes:client-java:9.0.2",
+    "io.kubernetes:client-java-api:11.0.2",
+    "io.kubernetes:client-java-extended:11.0.2",
+    "io.kubernetes:client-java-proto:11.0.2",
+    "io.kubernetes:client-java:11.0.2",
     "io.leangen.graphql:spqr:0.11.2",
     "io.netty:netty-all:4.1.51.Final",
     "io.netty:netty-buffer:4.1.52.Final",
@@ -4695,8 +4705,8 @@ plain_artifacts = [
     "org.apache.kafka:connect-api:2.6.1",
     "org.apache.kafka:connect-runtime:2.6.1",
     "org.apache.kafka:kafka-clients:2.6.1",
-    "org.apache.logging.log4j:log4j-api:2.12.1",
-    "org.apache.logging.log4j:log4j-to-slf4j:2.12.1",
+    "org.apache.logging.log4j:log4j-api:2.16.0",
+    "org.apache.logging.log4j:log4j-to-slf4j:2.16.0",
     "org.apache.lucene:lucene-analyzers-common:8.5.1",
     "org.apache.lucene:lucene-backward-codecs:8.5.1",
     "org.apache.lucene:lucene-core:8.5.1",
@@ -5082,17 +5092,11 @@ maven_install(
         "org.mongodb:mongodb-driver": "@maven//:org_mongodb_mongo_java_driver",
     },
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://repo.spring.io/plugins-release",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/artifactory/harness-internal",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://jcenter.bintray.com",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://palantir.bintray.com/releases",
+        "https://s01.oss.sonatype.org/content/repositories/releases",
+        "https://s01.oss.sonatype.org/content/repositories/snapshots",
     ],
     version_conflict_policy = "pinned",
 )
@@ -5108,16 +5112,8 @@ maven_install(
         "org.antlr:antlr4-runtime:4.8",
     ],
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://repo.spring.io/plugins-release",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://jcenter.bintray.com",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://palantir.bintray.com/releases",
     ],
     version_conflict_policy = "pinned",
 )
@@ -5129,16 +5125,8 @@ maven_install(
         "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://repo.spring.io/plugins-release",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://jcenter.bintray.com",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://palantir.bintray.com/releases",
     ],
     version_conflict_policy = "pinned",
 )
@@ -5158,16 +5146,10 @@ maven_install(
         "com.github.sevntu-checkstyle:sevntu-checks:1.35.0",
     ],
     repositories = [
-        "https://repo1.maven.org/maven2",
-        "https://repo.spring.io/plugins-release",
-        "https://oss.sonatype.org/content/repositories/releases",
-        "https://jitpack.io",
-        "https://github.com/bkper/mvn-repo/raw/master/releases",
-        "http://packages.confluent.io/maven",
+        "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
         "https://harness.jfrog.io/harness/thirdparty-annonymous",
-        "https://jcenter.bintray.com",
-        "https://dl.bintray.com/michaelklishin/maven",
-        "https://palantir.bintray.com/releases",
+        "https://s01.oss.sonatype.org/content/repositories/releases",
+        "https://s01.oss.sonatype.org/content/repositories/snapshots",
     ],
 )
 
@@ -5183,7 +5165,7 @@ exports_files(["WORKSPACE"], visibility = ["//visibility:public"])
 """,
     sha256 = "f39b523c724d0e0047d238eb2bb17a9565a60574cf651206c867ee5fc000ab43",
     strip_prefix = "jdk8u242-b08",
-    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
+    urls = ["http://jfrogdev.dev.harness.io:80/artifactory/adoptjdk8u242-b08-github/download/jdk8u242-b08/OpenJDK8U-jdk_x64_linux_hotspot_8u242b08.tar.gz"],
 )
 
 http_archive(
@@ -5198,7 +5180,7 @@ java_runtime(
 """,
     sha256 = "06675b7d65bce0313ee1f2e888dd44267e8afeced75e0b39b5ad1f5fdff54e0b",
     strip_prefix = "jdk8u242-b08",
-    urls = ["https://github.com/AdoptOpenJDK/openjdk8-binaries/releases/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
+    urls = ["http://jfrogdev.dev.harness.io:80/artifactory/adoptjdk8u242-b08-github/download/jdk8u242-b08/OpenJDK8U-jdk_x64_mac_hotspot_8u242b08.tar.gz"],
 )
 
 load("//tools/bazel/pmd:toolchains.bzl", "rules_pmd_toolchains")
@@ -5236,7 +5218,7 @@ filegroup(
     ],
     sha256 = "991c3f8ac97992f3d308fefeb03a64db462574eadbff34ce8bc5bb583d9903ff",
     strip_prefix = "Python-3.9.1",
-    urls = ["https://www.python.org/ftp/python/3.9.1/Python-3.9.1.tar.xz"],
+    urls = ["http://jfrogdev.dev.harness.io:80/artifactory/python-remote/3.9.1/Python-3.9.1.tar.xz"],
 )
 
 register_toolchains("//:py_toolchain")
@@ -5247,7 +5229,7 @@ http_archive(
     name = "io_bazel_rules_docker",
     sha256 = "59d5b42ac315e7eadffa944e86e90c2990110a1c8075f1cd145f487e999d22b3",
     strip_prefix = "rules_docker-0.17.0",
-    urls = ["https://github.com/bazelbuild/rules_docker/releases/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
+    urls = ["http://jfrogdev.dev.harness.io:80/artifactory/rules-docker-github/download/v0.17.0/rules_docker-v0.17.0.tar.gz"],
 )
 
 load(
@@ -5306,8 +5288,9 @@ http_archive(
     name = "rules_pkg",
     sha256 = "038f1caa773a7e35b3663865ffb003169c6a71dc995e39bf4815792f385d837d",
     urls = [
-        "https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
-        "https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        "http://jfrogdev.dev.harness.io:80/artifactory/rules-pkg-github/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        #"https://mirror.bazel.build/github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
+        #"https://github.com/bazelbuild/rules_pkg/releases/download/0.4.0/rules_pkg-0.4.0.tar.gz",
     ],
 )
 

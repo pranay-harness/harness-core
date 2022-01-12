@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -37,6 +44,7 @@ public class YAMLFieldNameConstants {
   public final String OUTPUT_VARIABLES = "outputVariables";
   public final String HEADERS = "headers";
   public final String OUTPUT = "output";
+  public final String INPUT = "input";
   public final String ENVIRONMENT = "environment";
   public final String PROVISIONER = "provisioner";
   public final String CONNECTOR_REF = "connectorRef";

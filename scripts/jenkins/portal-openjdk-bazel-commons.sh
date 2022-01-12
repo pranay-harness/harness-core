@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 BAZEL_BIN="${HOME}/.bazel-dirs/bin"
 
 function prepare_to_copy_jars(){
@@ -140,7 +145,7 @@ function copy_ng_dashboard_jars(){
 	mkdir -p dist/ng-dashboard-service ;
 	cd dist/ng-dashboard-service
 
-	cp ${BAZEL_BIN}/290-dashboard-service/module_deploy.jar change-data-capture.jar
+	cp ${BAZEL_BIN}/290-dashboard-service/module_deploy.jar ng-dashboard-service.jar
 	cp ../../290-dashboard-service/config.yml .
 
 	if [ -e ../../dockerization/ng-dashboard-service/Dockerfile-ng-dashboard-k8-openjdk ]

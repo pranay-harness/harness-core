@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
@@ -34,7 +41,9 @@ import io.harness.ccm.budget.BudgetService;
 import io.harness.ccm.budget.BudgetServiceImpl;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
+import io.harness.ccm.commons.service.impl.EntityMetadataServiceImpl;
 import io.harness.ccm.commons.service.impl.InstanceDataServiceImpl;
+import io.harness.ccm.commons.service.intf.EntityMetadataService;
 import io.harness.ccm.commons.service.intf.InstanceDataService;
 import io.harness.ccm.communication.CECommunicationsService;
 import io.harness.ccm.communication.CECommunicationsServiceImpl;
@@ -80,12 +89,15 @@ import io.harness.datahandler.utils.AccountSummaryHelper;
 import io.harness.datahandler.utils.AccountSummaryHelperImpl;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.chartmuseum.NGChartMuseumService;
 import io.harness.delegate.chartmuseum.NGChartMuseumServiceImpl;
 import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
 import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.outbox.DelegateOutboxEventHandler;
+import io.harness.delegate.service.impl.DelegateUpgraderServiceImpl;
+import io.harness.delegate.service.intfc.DelegateUpgraderService;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
 import io.harness.encryptors.KmsEncryptor;
@@ -140,6 +152,9 @@ import io.harness.logstreaming.LogStreamingServiceClientFactory;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
+import io.harness.metrics.impl.DelegateTaskMetricsPublisher;
+import io.harness.metrics.modules.MetricsModule;
+import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.MongoConfig;
 import io.harness.ng.core.event.MessageListener;
 import io.harness.notifications.AlertNotificationRuleChecker;
@@ -159,6 +174,8 @@ import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.scim.service.ScimGroupService;
+import io.harness.scim.service.ScimUserService;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secretmanagers.SecretsManagerRBACService;
 import io.harness.secretmanagers.SecretsManagerRBACServiceImpl;
@@ -316,9 +333,7 @@ import software.wings.resources.graphql.GraphQLUtils;
 import software.wings.scheduler.BackgroundJobScheduler;
 import software.wings.scheduler.LdapSyncJobConfig;
 import software.wings.scheduler.ServiceJobScheduler;
-import software.wings.scim.ScimGroupService;
 import software.wings.scim.ScimGroupServiceImpl;
-import software.wings.scim.ScimUserService;
 import software.wings.scim.ScimUserServiceImpl;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountChecker;
 import software.wings.security.authentication.recaptcha.FailedLoginAttemptCountCheckerImpl;
@@ -446,6 +461,8 @@ import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureARMManagerImpl;
 import software.wings.service.impl.azure.manager.AzureAppServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerImpl;
+import software.wings.service.impl.azure.manager.resource.ACRResourceProvider;
+import software.wings.service.impl.azure.manager.resource.AzureK8sResourceProvider;
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
@@ -748,6 +765,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.Scopes;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -783,14 +801,17 @@ import org.jetbrains.annotations.NotNull;
 public class WingsModule extends AbstractModule implements ServersModule {
   private final String hashicorpvault = "hashicorpvault";
   private final MainConfiguration configuration;
+  private final StartupMode startupMode;
 
   /**
    * Creates a guice module for portal app.
    *
    * @param configuration Dropwizard configuration
+   * @param startupMode
    */
-  public WingsModule(MainConfiguration configuration) {
+  public WingsModule(MainConfiguration configuration, StartupMode startupMode) {
     this.configuration = configuration;
+    this.startupMode = startupMode;
   }
 
   @Provides
@@ -885,8 +906,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(PersistentLockModule.getInstance());
     install(AlertModule.getInstance());
 
-    install(new EventsFrameworkModule(
-        configuration.getEventsFrameworkConfiguration(), configuration.isEventsFrameworkAvailableInOnPrem()));
+    install(new EventsFrameworkModule(configuration.getEventsFrameworkConfiguration(),
+        configuration.isEventsFrameworkAvailableInOnPrem(), StartupMode.DELEGATE_SERVICE.equals(startupMode)));
     install(FeatureFlagModule.getInstance());
     install(AccessControlAdminClientModule.getInstance(
         AccessControlAdminClientConfiguration.builder()
@@ -977,6 +998,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
+    bind(DelegateUpgraderService.class).to(DelegateUpgraderServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
     bind(DelegateScopeService.class).to(DelegateScopeServiceImpl.class);
     bind(DelegateSelectionLogsService.class).to(DelegateSelectionLogsServiceImpl.class);
@@ -1088,6 +1110,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(DelegateTaskServiceClassic.class).to(DelegateTaskServiceClassicImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
+    bind(ACRResourceProvider.class);
+    bind(AzureK8sResourceProvider.class);
 
     bind(GraphQLRateLimiter.class);
     bind(GraphQLUtils.class);
@@ -1118,6 +1142,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(PreAggregateBillingService.class).to(PreAggregateBillingServiceImpl.class);
     bind(DelegateTokenService.class).to(DelegateTokenServiceImpl.class);
     bind(InstanceDataService.class).to(InstanceDataServiceImpl.class);
+    bind(EntityMetadataService.class).to(EntityMetadataServiceImpl.class);
 
     bind(WingsMongoExportImport.class);
 
@@ -1394,6 +1419,9 @@ public class WingsModule extends AbstractModule implements ServersModule {
     install(new CVCommonsServiceModule());
     bind(CDChangeSourceIntegrationService.class).to(CDChangeSourceIntegrationServiceImpl.class);
     bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
+
+    install(new MetricsModule());
+    bind(MetricsPublisher.class).to(DelegateTaskMetricsPublisher.class).in(Scopes.SINGLETON);
   }
 
   private void bindFeatures() {

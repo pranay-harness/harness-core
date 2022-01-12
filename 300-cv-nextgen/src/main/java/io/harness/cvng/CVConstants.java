@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -9,6 +16,7 @@ import java.time.Duration;
 public interface CVConstants {
   String SERVICE_BASE_URL = "/cv/api";
   Duration VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION = Duration.ofDays(30);
+  Duration MAX_DATA_RETENTION_DURATION = Duration.ofDays(180);
   /**
    * This should be set in findOption for the queries that are potentially working with large data.
    * This should be used for anything that is using
@@ -29,8 +37,10 @@ public interface CVConstants {
   int STATE_MACHINE_IGNORE_LIMIT = 100;
 
   int CREATE_TIME_MINUTES_FOR_DEMO_CVCONFIG = 120;
+  int DATA_COLLECTION_TIME_RANGE_FOR_SLI = 24 * 60;
   int STATE_MACHINE_IGNORE_MINUTES = 30;
   int STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO = CREATE_TIME_MINUTES_FOR_DEMO_CVCONFIG + 120;
+  int STATE_MACHINE_IGNORE_MINUTES_FOR_SLI = Integer.MAX_VALUE;
 
   String DATA_SOURCE_TYPE = "type";
   String SLO_TARGET_TYPE = "type";

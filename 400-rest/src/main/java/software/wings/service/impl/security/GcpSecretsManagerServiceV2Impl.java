@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
@@ -231,7 +238,7 @@ public class GcpSecretsManagerServiceV2Impl extends AbstractSecretServiceImpl im
       String encryptedDataId = String.copyValueOf(currentConfig.getCredentials());
       EncryptedData secretData = wingsPersistence.get(EncryptedData.class, encryptedDataId);
       Preconditions.checkNotNull(secretData, "encrypted secret key can't be null for " + gcpSecretsManagerConfig);
-      gcpSecretsManagerConfig.setCredentials(decryptUsingBaseAlgo(secretData));
+      gcpSecretsManagerConfig.setCredentials(decryptUsingAlgoOfSecret(secretData));
     }
   }
 

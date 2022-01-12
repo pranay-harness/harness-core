@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -139,12 +146,8 @@ public class YamlGitConfigServiceImplTest extends GitSyncTestBase {
   @Owner(developers = ABHINAV)
   @Category(UnitTests.class)
   public void testConnectorUpdate() {
-    GitSyncFolderConfigDTO rootFolder = GitSyncFolderConfigDTO.builder()
-                                            .isDefault(true)
-                                            .rootFolder(ROOT_FOLDER)
-                                            .identifier(ROOT_FOLDER_ID)
-                                            .enabled(true)
-                                            .build();
+    GitSyncFolderConfigDTO rootFolder =
+        GitSyncFolderConfigDTO.builder().isDefault(true).rootFolder(ROOT_FOLDER).build();
     GitSyncConfigDTO gitSyncConfigDTO =
         saveYamlGitConfig(Collections.singletonList(rootFolder), CONNECTOR_ID, REPO, BRANCH, IDENTIFIER);
     gitSyncConfigDTO.setGitConnectorRef(CONNECTOR_ID_1);

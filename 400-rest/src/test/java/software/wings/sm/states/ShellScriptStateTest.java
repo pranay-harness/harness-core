@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -285,7 +292,6 @@ public class ShellScriptStateTest extends WingsBaseTest {
     assertThat(shellScriptParameters.getScriptType()).isEqualTo(BASH);
     assertThat(shellScriptParameters.isExecuteOnDelegate()).isTrue();
     assertThat(delegateTask.getTags()).contains("T1", "T2");
-    assertThat(delegateTask.getMustExecuteOnDelegateId()).isNull();
 
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
@@ -341,7 +347,6 @@ public class ShellScriptStateTest extends WingsBaseTest {
     assertThat(shellScriptParameters.getScriptType()).isEqualTo(BASH);
     assertThat(shellScriptParameters.isExecuteOnDelegate()).isTrue();
     assertThat(delegateTask.getTags()).contains("T1", "T2");
-    assertThat(delegateTask.getMustExecuteOnDelegateId()).isEqualTo("delegateId");
 
     verify(activityHelperService).createAndSaveActivity(any(), any(), any(), any(), any());
     verify(stateExecutionService).appendDelegateTaskDetails(anyString(), any(DelegateTaskDetails.class));
@@ -353,7 +358,6 @@ public class ShellScriptStateTest extends WingsBaseTest {
     captor = ArgumentCaptor.forClass(DelegateTask.class);
     verify(delegateService, times(2)).queueTask(captor.capture());
     delegateTask = captor.getValue();
-    assertThat(delegateTask.getMustExecuteOnDelegateId()).isNull();
   }
 
   @Test

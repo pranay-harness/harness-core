@@ -1,11 +1,25 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.sdk;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
+import io.harness.annotations.dev.OwnedBy;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
 @Data
 @Builder
+@Schema(name = "EntityGitDetails", description = "This contains Validity Details of the Entity")
+@OwnedBy(PL)
 public class EntityValidityDetails {
-  private boolean valid;
-  private String invalidYaml;
+  @Schema(description = "Indicates if the Entity is valid") private boolean valid;
+  @Schema(description = "This has the Git File content if the entity is invalid") private String invalidYaml;
 }

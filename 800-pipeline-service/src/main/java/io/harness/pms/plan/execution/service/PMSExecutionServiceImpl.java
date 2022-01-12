@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -52,6 +59,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.PatternSyntaxException;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -130,14 +138,18 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
 
     Criteria searchCriteria = new Criteria();
     if (EmptyPredicate.isNotEmpty(searchTerm)) {
-      searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
-                                    .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(PlanExecutionSummaryKeys.name)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
-          where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
-              .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      try {
+        searchCriteria.orOperator(where(PlanExecutionSummaryKeys.pipelineIdentifier)
+                                      .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+            where(PlanExecutionSummaryKeys.name)
+                .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+            where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.key)
+                .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS),
+            where(PlanExecutionSummaryKeys.tags + "." + NGTagKeys.value)
+                .regex(searchTerm, NGResourceFilterConstants.CASE_INSENSITIVE_MONGO_OPTIONS));
+      } catch (PatternSyntaxException pex) {
+        throw new InvalidRequestException(pex.getMessage() + " Use \\\\ for special character", pex);
+      }
     }
 
     Criteria gitCriteria = new Criteria();
@@ -243,8 +255,25 @@ public class PMSExecutionServiceImpl implements PMSExecutionService {
   }
 
   @Override
+  public PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
+      String accountId, String orgId, String projectId, String planExecutionId) {
+    Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntityOptional =
+        pmsExecutionSummaryRespository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionId(
+            accountId, orgId, projectId, planExecutionId);
+    if (pipelineExecutionSummaryEntityOptional.isPresent()) {
+      return pipelineExecutionSummaryEntityOptional.get();
+    }
+    throw new InvalidRequestException(
+        "Plan Execution Summary does not exist or has been deleted for given planExecutionId");
+  }
+
+  @Override
   public Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable) {
     return pmsExecutionSummaryRespository.findAll(criteria, pageable);
+  }
+
+  public PipelineExecutionSummaryEntity findFirst(Criteria criteria) {
+    return pmsExecutionSummaryRespository.findFirst(criteria);
   }
 
   @Override

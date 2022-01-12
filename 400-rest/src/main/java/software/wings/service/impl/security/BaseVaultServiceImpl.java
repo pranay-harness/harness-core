@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.beans.EncryptedData.EncryptedDataKeys;
@@ -86,12 +93,12 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (encryptedToken != null) {
-        char[] decryptToken = decryptUsingBaseAlgo(encryptedToken);
+        char[] decryptToken = decryptUsingAlgoOfSecret(encryptedToken);
         baseVaultConfig.setAuthToken(String.valueOf(decryptToken));
       }
 
       if (encryptedSecretId != null) {
-        char[] decryptedSecretId = decryptUsingBaseAlgo(encryptedSecretId);
+        char[] decryptedSecretId = decryptUsingAlgoOfSecret(encryptedSecretId);
 
         baseVaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
@@ -316,11 +323,11 @@ public class BaseVaultServiceImpl extends AbstractSecretServiceImpl {
       }
 
       if (tokenData != null) {
-        char[] decryptedToken = decryptUsingBaseAlgo(tokenData);
+        char[] decryptedToken = decryptUsingAlgoOfSecret(tokenData);
         vaultConfig.setAuthToken(String.valueOf(decryptedToken));
       }
       if (secretIdData != null) {
-        char[] decryptedSecretId = decryptUsingBaseAlgo(secretIdData);
+        char[] decryptedSecretId = decryptUsingAlgoOfSecret(secretIdData);
         vaultConfig.setSecretId(String.valueOf(decryptedSecretId));
       }
     }

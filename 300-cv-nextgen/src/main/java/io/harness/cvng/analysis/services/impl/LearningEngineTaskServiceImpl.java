@@ -1,17 +1,27 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.CVConstants.SERVICE_BASE_URL;
 import static io.harness.cvng.analysis.CVAnalysisConstants.LEARNING_RESOURCE;
 import static io.harness.cvng.analysis.CVAnalysisConstants.MARK_FAILURE_PATH;
+import static io.harness.cvng.analysis.entities.LearningEngineTask.TaskPriority.P0;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
+import io.harness.cvng.analysis.beans.ExceptionInfo;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskKeys;
 import io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType;
 import io.harness.cvng.analysis.services.api.LearningEngineTaskService;
 import io.harness.cvng.core.entities.VerificationTask;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.metrics.CVNGMetricsUtils;
 import io.harness.cvng.metrics.beans.AccountMetricContext;
@@ -57,9 +67,8 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     Query<LearningEngineTask> learningEngineTaskQuery =
         hPersistence.createQuery(LearningEngineTask.class)
             .filter(LearningEngineTaskKeys.taskStatus, ExecutionStatus.QUEUED)
-            .order(Sort.ascending(LearningEngineTaskKeys.taskPriority));
-    // TODO: add ordering based on createdAt.
-
+            .order(
+                Sort.ascending(LearningEngineTaskKeys.taskPriority), Sort.ascending(LearningEngineTaskKeys.createdAt));
     if (isNotEmpty(taskType)) {
       learningEngineTaskQuery.field(LearningEngineTaskKeys.analysisType).in(taskType);
     }
@@ -83,6 +92,9 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
     learningEngineTask.setTaskStatus(ExecutionStatus.QUEUED);
     VerificationTask verificationTask = verificationTaskService.get(learningEngineTask.getVerificationTaskId());
     learningEngineTask.setAccountId(verificationTask.getAccountId());
+    if (verificationTask.getTaskInfo().getTaskType() == TaskType.DEPLOYMENT) {
+      learningEngineTask.setTaskPriority(P0.getValue());
+    }
     return hPersistence.save(learningEngineTask);
   }
 
@@ -171,11 +183,17 @@ public class LearningEngineTaskServiceImpl implements LearningEngineTaskService 
   }
 
   @Override
-  public void markFailure(String taskId) {
+  public void markFailure(String taskId, ExceptionInfo exceptionInfo) {
     Preconditions.checkNotNull(taskId, "taskId can not be null.");
     UpdateOperations<LearningEngineTask> updateOperations =
         hPersistence.createUpdateOperations(LearningEngineTask.class);
     updateOperations.set(LearningEngineTaskKeys.taskStatus, ExecutionStatus.FAILED);
+    if (isNotEmpty(exceptionInfo.getException())) {
+      updateOperations.set(LearningEngineTaskKeys.exception, exceptionInfo.getException());
+    }
+    if (isNotEmpty(exceptionInfo.getStackTrace())) {
+      updateOperations.set(LearningEngineTaskKeys.stackTrace, exceptionInfo.getStackTrace());
+    }
     hPersistence.update(hPersistence.createQuery(LearningEngineTask.class).filter(LearningEngineTaskKeys.uuid, taskId),
         updateOperations);
     incTaskStatusMetric(get(taskId).getAccountId(), ExecutionStatus.FAILED);

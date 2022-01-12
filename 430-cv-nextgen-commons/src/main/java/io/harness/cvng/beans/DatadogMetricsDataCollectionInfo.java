@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
 
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
@@ -30,8 +37,11 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
               return metricCollectionInfo.getQuery();
             })
             .collect(Collectors.toList());
+    List<String> metricIdentifiers =
+        metricDefinitions.stream().map(MetricCollectionInfo::getMetricIdentifier).collect(Collectors.toList());
     dslEnvVariables.put("queries", queries);
     dslEnvVariables.put("groupName", groupName);
+    dslEnvVariables.put("metricIdentifiers", metricIdentifiers);
     return dslEnvVariables;
   }
 
@@ -56,6 +66,7 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
     private String query;
     private String groupingQuery;
     private String metricName;
+    private String metricIdentifier;
     private String metric;
     private String serviceInstanceIdentifierTag;
   }

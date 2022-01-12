@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package git
 
 import (
@@ -73,6 +78,33 @@ func TestGetLatestCommitBitbucketCloud(t *testing.T) {
 		Slug: "tphoney/scm-test",
 		Type: &pb.GetLatestCommitRequest_Branch{
 			Branch: "main",
+		},
+		Provider: &pb.Provider{
+			Hook: &pb.Provider_BitbucketCloud{
+				BitbucketCloud: &pb.BitbucketCloudProvider{
+					Username:    "tphoney",
+					AppPassword: gitBitbucketCloudToken,
+				},
+			},
+			Debug: true,
+		},
+	}
+
+	log, _ := logs.GetObservedLogger(zap.InfoLevel)
+	got, err := GetLatestCommit(context.Background(), in, log.Sugar())
+
+	assert.Nil(t, err, "no errors")
+	assert.NotNil(t, got.Commit.Sha, "There is a commit id")
+}
+
+func TestGetLatestCommitBitbucketCloudBranchNameWithSlash(t *testing.T) {
+	if gitBitbucketCloudToken == "" {
+		t.Skip("Skipping, Acceptance test")
+	}
+	in := &pb.GetLatestCommitRequest{
+		Slug: "AutoUserOne/publicrepo",
+		Type: &pb.GetLatestCommitRequest_Branch{
+			Branch: "test/one",
 		},
 		Provider: &pb.Provider{
 			Hook: &pb.Provider_BitbucketCloud{

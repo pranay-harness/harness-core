@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 CONFIG_FILE=/opt/harness/ci-manager-config.yml
 REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
@@ -85,6 +89,42 @@ fi
 
 if [[ "" != "$S3_CACHE_IMAGE" ]]; then
   yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.cacheS3Config.image "$S3_CACHE_IMAGE"
+fi
+
+if [[ "" != "$VM_GIT_CLONE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.gitClone "$VM_GIT_CLONE_IMAGE"
+fi
+
+if [[ "" != "$VM_DOCKER_PUSH_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.buildAndPushDockerRegistry "$VM_DOCKER_PUSH_IMAGE"
+fi
+
+if [[ "" != "$VM_ECR_PUSH_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.buildAndPushECR "$VM_ECR_PUSH_IMAGE"
+fi
+
+if [[ "" != "$VM_GCR_PUSH_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.buildAndPushGCR "$VM_GCR_PUSH_IMAGE"
+fi
+
+if [[ "" != "$VM_GCS_UPLOAD_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.gcsUpload "$VM_GCS_UPLOAD_IMAGE"
+fi
+
+if [[ "" != "$VM_S3_UPLOAD_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.s3Upload "$VM_S3_UPLOAD_IMAGE"
+fi
+
+if [[ "" != "$VM_ARTIFACTORY_UPLOAD_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.artifactoryUpload "$VM_ARTIFACTORY_UPLOAD_IMAGE"
+fi
+
+if [[ "" != "$VM_GCS_CACHE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.cacheGCS "$VM_GCS_CACHE_IMAGE"
+fi
+
+if [[ "" != "$VM_S3_CACHE_IMAGE" ]]; then
+  yq write -i $CONFIG_FILE ciExecutionServiceConfig.stepConfig.vmImageConfig.cacheS3 "$VM_S3_CACHE_IMAGE"
 fi
 
 if [[ "" != "$DEFAULT_MEMORY_LIMIT" ]]; then

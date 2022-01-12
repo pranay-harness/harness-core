@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.api.impl;
 
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
@@ -5,7 +12,9 @@ import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.GROUP;
 import static io.harness.exception.WingsException.USER_SRE;
+import static io.harness.ng.core.user.UserMembershipUpdateSource.SYSTEM;
 import static io.harness.ng.core.utils.UserGroupMapper.toDTO;
 import static io.harness.ng.core.utils.UserGroupMapper.toEntity;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
@@ -15,6 +24,7 @@ import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_P
 import static java.lang.Boolean.FALSE;
 import static java.lang.Boolean.TRUE;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
@@ -23,10 +33,12 @@ import io.harness.accesscontrol.AccountIdentifier;
 import io.harness.accesscontrol.principals.PrincipalDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentFilterDTO;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentResponseDTO;
+import io.harness.accesscontrol.scopes.ScopeDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
 import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.eraro.ErrorCode;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
@@ -40,6 +52,7 @@ import io.harness.ng.core.entities.NotificationSettingConfig;
 import io.harness.ng.core.events.UserGroupCreateEvent;
 import io.harness.ng.core.events.UserGroupDeleteEvent;
 import io.harness.ng.core.events.UserGroupUpdateEvent;
+import io.harness.ng.core.invites.dto.RoleBinding;
 import io.harness.ng.core.user.entities.UserGroup;
 import io.harness.ng.core.user.entities.UserGroup.UserGroupKeys;
 import io.harness.ng.core.user.remote.dto.UserFilter;
@@ -64,6 +77,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -74,6 +88,7 @@ import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import net.jodah.failsafe.Failsafe;
 import net.jodah.failsafe.RetryPolicy;
+import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -131,6 +146,56 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
+  private void addUsersOfGroupToScope(UserGroupDTO userGroupDTO, ScopeDTO scope) {
+    if (isNotEmpty(userGroupDTO.getUsers())) {
+      for (String userId : userGroupDTO.getUsers()) {
+        ngUserService.addUserToScope(userId,
+            Scope.builder()
+                .accountIdentifier(scope.getAccountIdentifier())
+                .orgIdentifier(scope.getOrgIdentifier())
+                .projectIdentifier(scope.getProjectIdentifier())
+                .build(),
+            singletonList(RoleBinding.builder().build()), emptyList(), SYSTEM);
+      }
+    }
+  }
+
+  @Override
+  public boolean copy(String accountIdentifier, String userGroupIdentifier, List<ScopeDTO> scopePairs) {
+    Optional<UserGroup> userGroupOptional = get(accountIdentifier, null, null, userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      throw new InvalidRequestException("The user group doesnt exist at account level for copying");
+    }
+
+    UserGroupDTO userGroupDTO = toDTO(userGroupOptional.get());
+    for (ScopeDTO scope : scopePairs) {
+      if (StringUtils.isEmpty(scope.getAccountIdentifier()) || StringUtils.isEmpty(scope.getOrgIdentifier())) {
+        throw new InvalidRequestException("Invalid scope provided for copying user group " + userGroupIdentifier);
+      }
+      addUsersOfGroupToScope(userGroupDTO, scope);
+
+      log.info("Copying usergroup {} at scope {}", userGroupIdentifier, scope);
+      userGroupDTO.setOrgIdentifier(scope.getOrgIdentifier());
+      userGroupDTO.setProjectIdentifier(scope.getProjectIdentifier());
+      create(userGroupDTO);
+      log.info("Successfully copied usergroup {} at scope {}", userGroupIdentifier, scope);
+    }
+    return true;
+  }
+
+  @Override
+  public boolean isExternallyManaged(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOptional =
+        get(accountIdentifier, orgIdentifier, projectIdentifier, userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      throw new InvalidRequestException(String.format("Usergroup with Identifier: {} does not exist at Scope: {}/{}/{}",
+                                            userGroupIdentifier, accountIdentifier, orgIdentifier, projectIdentifier),
+          ErrorCode.USER_GROUP_ERROR, GROUP);
+    }
+    return userGroupOptional.get().isExternallyManaged();
+  }
+
   @Override
   public Optional<UserGroup> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
@@ -153,6 +218,11 @@ public class UserGroupServiceImpl implements UserGroupService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String searchTerm, Pageable pageable) {
     return userGroupRepository.findAll(
         createUserGroupFilterCriteria(accountIdentifier, orgIdentifier, projectIdentifier, searchTerm), pageable);
+  }
+
+  @Override
+  public List<UserGroup> list(Criteria criteria) {
+    return userGroupRepository.findAll(criteria);
   }
 
   @Override
@@ -186,6 +256,18 @@ public class UserGroupServiceImpl implements UserGroupService {
       userFilter.setIdentifiers(Sets.intersection(userFilter.getIdentifiers(), userGroupMemberIds));
     }
     return ngUserService.listUsers(scope, pageRequest, userFilter);
+  }
+
+  @Override
+  public List<UserMetadataDTO> getUsersInUserGroup(Scope scope, String userGroupIdentifier) {
+    Optional<UserGroup> userGroupOptional =
+        get(scope.getAccountIdentifier(), scope.getOrgIdentifier(), scope.getProjectIdentifier(), userGroupIdentifier);
+    if (!userGroupOptional.isPresent()) {
+      return new ArrayList<>();
+    }
+    Set<String> userGroupMemberIds = new HashSet<>(userGroupOptional.get().getUsers());
+
+    return ngUserService.getUserMetadata(new ArrayList<>(userGroupMemberIds));
   }
 
   @Override
@@ -513,6 +595,14 @@ public class UserGroupServiceImpl implements UserGroupService {
     Criteria criteria = new Criteria();
     criteria.and(UserGroupKeys.isSsoLinked).is(true);
     criteria.and(UserGroupKeys.linkedSsoId).is(ssoId);
+    return userGroupRepository.findAll(criteria);
+  }
+
+  @Override
+  public List<UserGroup> getExternallyManagedGroups(String accountIdentifier) {
+    Criteria criteria = new Criteria();
+    criteria.and(UserGroupKeys.accountIdentifier).is(accountIdentifier);
+    criteria.and(UserGroupKeys.externallyManaged).is(true);
     return userGroupRepository.findAll(criteria);
   }
 

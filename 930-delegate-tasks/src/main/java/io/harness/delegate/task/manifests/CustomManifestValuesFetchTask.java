@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.manifests;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -86,8 +93,9 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
 
     String defaultSourceWorkingDirectory = null;
     for (CustomManifestFetchConfig fetchFileConfig : orderedFetchConfig) {
+      String workingDirectory = null;
+      boolean shouldCleanUpWorkingDir = false;
       try {
-        String workingDirectory;
         CustomManifestSource customManifestSource = fetchFileConfig.getCustomManifestSource();
         String activityId = fetchParams.getActivityId();
         if (fetchFileConfig.isDefaultSource()) {
@@ -97,6 +105,7 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
           workingDirectory = defaultSourceWorkingDirectory;
           logCallback.saveExecutionLog("Reusing execution output from service manifest.");
         } else {
+          shouldCleanUpWorkingDir = true;
           workingDirectory = customManifestService.getWorkingDirectory();
         }
 
@@ -129,8 +138,14 @@ public class CustomManifestValuesFetchTask extends AbstractDelegateRunnableTask 
         return CustomManifestValuesFetchResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
             .build();
+      } finally {
+        if (shouldCleanUpWorkingDir) {
+          customManifestService.cleanup(workingDirectory);
+        }
       }
     }
+
+    customManifestService.cleanup(defaultSourceWorkingDirectory);
 
     return CustomManifestValuesFetchResponse.builder()
         .commandExecutionStatus(CommandExecutionStatus.SUCCESS)

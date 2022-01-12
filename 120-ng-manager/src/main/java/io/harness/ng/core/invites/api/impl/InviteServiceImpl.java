@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.invites.api.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -11,6 +18,7 @@ import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_EXPI
 import static io.harness.ng.core.invites.dto.InviteOperationResponse.INVITE_INVALID;
 import static io.harness.ng.core.invites.mapper.InviteMapper.toInviteList;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.sanitizeRoleBindings;
 import static io.harness.ng.core.user.UserMembershipUpdateSource.ACCEPTED_INVITE;
 
 import static java.lang.Boolean.FALSE;
@@ -111,8 +119,6 @@ public class InviteServiceImpl implements InviteService {
   private static final int INVITATION_VALIDITY_IN_DAYS = 30;
   private static final int LINK_VALIDITY_IN_DAYS = 7;
   private static final int DEFAULT_PAGE_SIZE = 1000;
-  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
-  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
   private static final String INVITE_URL =
       "/invite?accountId=%s&account=%s&company=%s&email=%s&inviteId=%s&generation=NG";
   private static final String NG_AUTH_UI_PATH_PREFIX = "auth/";
@@ -161,7 +167,7 @@ public class InviteServiceImpl implements InviteService {
   }
 
   @Override
-  public InviteOperationResponse create(Invite invite) {
+  public InviteOperationResponse create(Invite invite, boolean isScimInvite) {
     if (invite == null) {
       return FAIL;
     }
@@ -171,6 +177,14 @@ public class InviteServiceImpl implements InviteService {
     if (checkIfUserAlreadyAdded(invite)) {
       return InviteOperationResponse.USER_ALREADY_ADDED;
     }
+
+    //    if (!isInviteAcceptanceRequired) {
+    //      updateJWTTokenInInvite(invite);
+    //      // For SCIM user creation flow
+    //      createAndInviteNonPasswordUser(invite.getAccountIdentifier(), invite.getInviteToken(), invite.getEmail());
+    //      return InviteOperationResponse.ACCOUNT_INVITE_ACCEPTED;
+    //    }
+
     Optional<Invite> existingInviteOptional = getExistingInvite(invite);
     if (existingInviteOptional.isPresent()) {
       if (TRUE.equals(existingInviteOptional.get().getApproved())) {
@@ -180,7 +194,7 @@ public class InviteServiceImpl implements InviteService {
       return InviteOperationResponse.USER_ALREADY_INVITED;
     }
     try {
-      return wrapperForTransactions(this::newInvite, invite);
+      return wrapperForTransactions(this::newInvite, invite, isScimInvite);
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(getExceptionMessage(invite), USER_SRE, ex);
     }
@@ -193,7 +207,7 @@ public class InviteServiceImpl implements InviteService {
     List<Invite> invites = toInviteList(createInviteDTO, accountIdentifier, orgIdentifier, projectIdentifier);
     for (Invite invite : invites) {
       try {
-        InviteOperationResponse response = create(invite);
+        InviteOperationResponse response = create(invite, false);
         inviteOperationResponses.add(response);
       } catch (DuplicateFieldException ex) {
         log.error("error: ", ex);
@@ -204,12 +218,7 @@ public class InviteServiceImpl implements InviteService {
 
   private void preCreateInvite(Invite invite) {
     List<RoleBinding> roleBindings = invite.getRoleBindings();
-    roleBindings.forEach(roleBinding -> {
-      if (isBlank(roleBinding.getResourceGroupIdentifier())) {
-        roleBinding.setResourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER);
-        roleBinding.setResourceGroupName(DEFAULT_RESOURCE_GROUP_NAME);
-      }
-    });
+    sanitizeRoleBindings(roleBindings, invite.getOrgIdentifier(), invite.getProjectIdentifier());
   }
 
   private boolean checkIfUserAlreadyAdded(Invite invite) {
@@ -297,7 +306,7 @@ public class InviteServiceImpl implements InviteService {
       if (isPasswordRequired) {
         return getUserInfoSubmitUrl(baseUrl, resourceUrl, email, jwtToken, inviteAcceptResponse);
       } else {
-        createAndInviteNonPasswordUser(accountIdentifier, jwtToken, decodedEmail.trim());
+        createAndInviteNonPasswordUser(accountIdentifier, jwtToken, decodedEmail.trim(), false);
         return resourceUrl;
       }
     } else {
@@ -312,10 +321,11 @@ public class InviteServiceImpl implements InviteService {
     }
   }
 
-  private void createAndInviteNonPasswordUser(String accountIdentifier, String jwtToken, String email) {
+  private void createAndInviteNonPasswordUser(
+      String accountIdentifier, String jwtToken, String email, boolean isScimInvite) {
     UserInviteDTO userInviteDTO =
         UserInviteDTO.builder().accountId(accountIdentifier).email(email).name(email).token(jwtToken).build();
-    RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO));
+    RestClientUtils.getResponse(userClient.createUserAndCompleteNGInvite(userInviteDTO, isScimInvite));
   }
 
   private URI getUserInfoSubmitUrl(
@@ -389,6 +399,8 @@ public class InviteServiceImpl implements InviteService {
                                        .name(user.getName())
                                        .email(user.getEmail())
                                        .locked(user.isLocked())
+                                       .disabled(user.isDisabled())
+                                       .externallyManaged(user.isExternallyManaged())
                                        .build())
                             .orElse(null);
 
@@ -469,7 +481,7 @@ public class InviteServiceImpl implements InviteService {
         invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(), invite.getEmail());
   }
 
-  private InviteOperationResponse newInvite(Invite invite) {
+  private InviteOperationResponse newInvite(Invite invite, boolean isScimInvite) {
     Invite savedInvite = inviteRepository.save(invite);
     outboxService.save(new UserInviteCreateEvent(
         invite.getAccountIdentifier(), invite.getOrgIdentifier(), invite.getProjectIdentifier(), writeDTO(invite)));
@@ -481,11 +493,11 @@ public class InviteServiceImpl implements InviteService {
       log.error("Invite Email sending failed due to encoding exception. InviteId: " + savedInvite.getId(), e);
     }
     String accountId = invite.getAccountIdentifier();
-    boolean isAutoAcceptInviteEnabled =
-        RestClientUtils.getResponse(accountClient.checkAutoInviteAcceptanceEnabledForAccount(accountId));
-    if (isAutoAcceptInviteEnabled) {
-      String email = invite.getEmail().trim();
-      createAndInviteNonPasswordUser(accountId, invite.getInviteToken(), email);
+    String email = invite.getEmail().trim();
+    if (isScimInvite) {
+      createAndInviteNonPasswordUser(accountId, invite.getInviteToken(), email, true);
+    } else if (RestClientUtils.getResponse(accountClient.checkAutoInviteAcceptanceEnabledForAccount(accountId))) {
+      createAndInviteNonPasswordUser(accountId, invite.getInviteToken(), email, false);
     }
     return InviteOperationResponse.USER_INVITED_SUCCESSFULLY;
   }
@@ -644,6 +656,8 @@ public class InviteServiceImpl implements InviteService {
                 .name(user.getName())
                 .uuid(user.getUuid())
                 .locked(user.isLocked())
+                .disabled(user.isDisabled())
+                .externallyManaged(user.isExternallyManaged())
                 .build()));
     for (String email : userEmails) {
       userMetadataMap.computeIfAbsent(email, email1 -> UserMetadataDTO.builder().email(email1).build());

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.filter.resource;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -42,7 +49,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
-import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/filters")
 @Path("/filters")
@@ -82,7 +88,7 @@ public class FilterResource {
             responseCode = "default", description = "Returns Filter having filterIdentifier as specified in request")
       })
   public ResponseDTO<FilterDTO>
-  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+  get(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
@@ -148,7 +154,7 @@ public class FilterResource {
   update(@RequestBody(required = true,
              description = "This is the updated Filter. This should have all the fields not just the updated ones")
          @NotNull @Valid FilterDTO filterDTO,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotEmpty @QueryParam(
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(filterService.update(accountIdentifier, filterDTO));
   }
@@ -164,7 +170,7 @@ public class FilterResource {
       })
   public ResponseDTO<Boolean>
   delete(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
-             NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+             NGCommonEntityConstants.ACCOUNT_KEY) @NotNull String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,

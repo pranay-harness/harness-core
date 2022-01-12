@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.pipeline.resources;
 
 import static io.harness.rule.OwnerRule.SAHIL;
@@ -41,7 +48,7 @@ public class CDNGPipelineConfigurationResourceTest extends CategoryTest {
         cdngPipelineConfigurationResource.getExecutionStrategyList().getData();
 
     assertThat(executionStrategyResponse).isNotNull();
-    assertThat(executionStrategyResponse.keySet().size()).isEqualTo(1);
+    assertThat(executionStrategyResponse.keySet().size()).isEqualTo(2);
     assertThat(executionStrategyResponse.get(ServiceDefinitionType.KUBERNETES))
         .isEqualTo(Lists.newArrayList(ExecutionStrategyType.ROLLING, ExecutionStrategyType.BLUE_GREEN,
             ExecutionStrategyType.CANARY, ExecutionStrategyType.DEFAULT));
@@ -70,6 +77,6 @@ public class CDNGPipelineConfigurationResourceTest extends CategoryTest {
         cdngPipelineConfigurationResource.getServiceDefinitionTypes().getData();
 
     assertThat(serviceDefinitionTypes).isNotNull();
-    assertThat(serviceDefinitionTypes.size()).isEqualTo(1);
+    assertThat(serviceDefinitionTypes.size()).isEqualTo(2);
   }
 }

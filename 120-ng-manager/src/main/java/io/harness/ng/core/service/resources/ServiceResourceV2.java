@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.service.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -40,6 +47,7 @@ import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
 import io.harness.ng.core.service.mappers.ServiceFilterHelper;
+import io.harness.ng.core.service.services.ServiceEntityManagementService;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.pms.rbac.NGResourceType;
 import io.harness.rbac.CDNGRbacUtility;
@@ -117,6 +125,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
 public class ServiceResourceV2 {
   private final ServiceEntityService serviceEntityService;
   private final AccessControlClient accessControlClient;
+  private final ServiceEntityManagementService serviceEntityManagementService;
 
   public static final String SERVICE_PARAM_MESSAGE = "Service Identifier for the entity";
 
@@ -220,8 +229,8 @@ public class ServiceResourceV2 {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier) {
-    return ResponseDTO.newResponse(serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier,
-        serviceIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
+    return ResponseDTO.newResponse(serviceEntityManagementService.deleteService(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, ifMatch));
   }
 
   @PUT

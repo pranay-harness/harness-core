@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.service.impl;
 
 import static io.harness.ccm.commons.entities.k8s.K8sWorkload.encodeDotsInKey;
@@ -84,12 +91,14 @@ public class WorkloadRepositoryImpl implements WorkloadRepository {
   }
 
   @Override
-  public List<K8sWorkload> getWorkload(String accountId, String clusterId, Set<String> workloadName) {
+  public List<K8sWorkload> getWorkload(String accountId, String clusterId, String namespace, Set<String> workloadName) {
     return hPersistence.createQuery(K8sWorkload.class)
         .filter(K8sWorkloadKeys.accountId, accountId)
         .filter(K8sWorkloadKeys.clusterId, clusterId)
+        .filter(K8sWorkloadKeys.namespace, namespace)
         .field(K8sWorkloadKeys.name)
         .in(workloadName)
+        .order(Sort.descending(K8sWorkloadKeys.lastUpdatedAt))
         .asList();
   }
 

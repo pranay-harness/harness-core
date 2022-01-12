@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ff;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -30,6 +37,7 @@ import io.harness.security.JWTTokenServiceUtils;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.util.ArrayList;
@@ -48,7 +56,7 @@ import org.jetbrains.annotations.NotNull;
 public class CfMigrationService {
   @Inject @Named("cfMigrationAPI") private CFApi cfAdminApi;
   @Inject private CfMigrationConfig cfMigrationConfig;
-  @Inject private CfClient cfClient;
+  @Inject private Provider<CfClient> cfClient;
   @Inject private PersistentLocker persistentLocker;
   @Inject private FeatureFlagConfig featureFlagConfig;
 
@@ -61,7 +69,7 @@ public class CfMigrationService {
         accountId = FeatureFlagConstants.STATIC_ACCOUNT_ID;
       }
       Target target = Target.builder().identifier(accountId).name(accountId).build();
-      boolean cfFeatureValue = cfClient.boolVariation(featureName.name(), target, false);
+      boolean cfFeatureValue = cfClient.get().boolVariation(featureName.name(), target, false);
       if (cfFeatureValue != featureValue) {
         log.error("CF MISMATCH WITH HARNESS FF -> FEATURE [{}], HARNESS FF [{}], CF [{}], target [{}]",
             featureName.name(), featureValue, cfFeatureValue, target.getIdentifier());

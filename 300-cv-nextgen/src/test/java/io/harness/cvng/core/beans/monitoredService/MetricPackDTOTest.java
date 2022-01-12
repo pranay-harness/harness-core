@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.beans.monitoredService;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -10,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.MetricPack;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rule.Owner;
 
@@ -33,7 +41,7 @@ public class MetricPackDTOTest extends CvNextGenTestBase {
     orgIdentifier = "org";
     projectIdentifier = "project";
     accountId = generateUuid();
-    metricPackDTO = metricPackDTO.builder().identifier(CVMonitoringCategory.ERRORS).build();
+    metricPackDTO = MetricPackDTO.builder().identifier(CVNextGenConstants.ERRORS_PACK_IDENTIFIER).build();
     metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
   }
 
@@ -58,7 +66,7 @@ public class MetricPackDTOTest extends CvNextGenTestBase {
   public void testToMetricPackDTO() {
     MetricPack metricPack = createMetricPack();
     MetricPackDTO metricPackDTO = MetricPackDTO.toMetricPackDTO(metricPack);
-    assertThat(metricPackDTO.getIdentifier()).isEqualTo(metricPack.getCategory());
+    assertThat(metricPackDTO.getIdentifier()).isEqualTo(metricPack.getIdentifier());
   }
 
   private MetricPack createMetricPack() {

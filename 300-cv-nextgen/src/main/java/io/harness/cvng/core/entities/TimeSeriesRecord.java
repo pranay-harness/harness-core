@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.entities;
 
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
+import io.harness.cvng.CVConstants;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
@@ -54,10 +62,10 @@ public final class TimeSeriesRecord
 
   @Id private String uuid;
   @FdIndex private String accountId;
-  @FdIndex private String cvConfigId;
   @FdIndex private String verificationTaskId;
   @FdIndex private String host;
   @FdIndex private String metricName;
+  @FdIndex private String metricIdentifier;
   private double riskScore;
   private Instant bucketStartTime;
   private TimeSeriesMetricType metricType;
@@ -69,7 +77,7 @@ public final class TimeSeriesRecord
   @SchemaIgnore
   @Default
   @FdTtlIndex
-  private Date validUntil = Date.from(OffsetDateTime.now().plusDays(180).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(CVConstants.MAX_DATA_RETENTION_DURATION).toInstant());
 
   @Override
   public int compareTo(@NotNull TimeSeriesRecord o) {

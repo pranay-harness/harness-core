@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.yaml;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
@@ -5,13 +12,17 @@ import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
 import io.harness.EntityType;
 import io.harness.ModuleType;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureFlag;
 import io.harness.cdng.creator.plan.stage.DeploymentStageConfig;
 import io.harness.encryption.Scope;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.remote.client.RestClientUtils;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
@@ -20,6 +31,8 @@ import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -31,7 +44,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -48,19 +63,49 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
 
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
+  private final AccountClient accountClient;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
-
+  private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   @Inject
   public CdYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
-      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes) {
+      @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, AccountClient accountClient) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
+    this.accountClient = accountClient;
   }
 
   @Override
-  public PartialSchemaDTO getDeploymentStageYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+  public PartialSchemaDTO getMergedDeploymentStageYamlSchema(String accountIdentifier, String projectIdentifier,
+      String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
+    return getDeploymentStageYamlSchemaUtil(
+        accountIdentifier, projectIdentifier, orgIdentifier, scope, stepSchemaWithDetails);
+  }
+
+  @Override
+  public List<YamlSchemaWithDetails> getDeploymentStageYamlSchemaWithDetails(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
+    return yamlSchemaProvider.getCrossFunctionalStepsSchemaDetails(projectIdentifier, orgIdentifier, scope,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), ModuleType.CD);
+  }
+
+  @Override
+  public JsonNode getIndividualYamlSchema(EntityType entityType, String orgId, String projectId, Scope scope) {
+    return yamlSchemaProvider.getYamlSchema(entityType, orgId, projectId, scope);
+  }
+
+  @Override
+  public List<PartialSchemaDTO> getDeploymentStageYamlSchema(
+      String accountIdentifier, String projectIdentifier, String orgIdentifier, Scope scope) {
+    return Collections.singletonList(
+        getDeploymentStageYamlSchemaUtil(accountIdentifier, projectIdentifier, orgIdentifier, scope, null));
+  }
+
+  public PartialSchemaDTO getDeploymentStageYamlSchemaUtil(String accountIdentifier, String projectIdentifier,
+      String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> stepSchemaWithDetails) {
     JsonNode deploymentStageSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.DEPLOYMENT_STAGE, orgIdentifier, projectIdentifier, scope);
 
@@ -71,7 +116,8 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     JsonNode deploymentStepDefinitions = deploymentStepsSchema.get(DEFINITIONS_NODE);
 
     JsonNodeUtils.merge(definitions, deploymentStepDefinitions);
-
+    yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
+        YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
     JsonNode jsonNode = definitions.get(ParallelStepElementConfig.class.getSimpleName());
     if (jsonNode.isObject()) {
       flattenParallelStepElementConfig((ObjectNode) jsonNode);
@@ -83,6 +129,22 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     }
 
     yamlSchemaGenerator.modifyRefsNamespace(deploymentStageSchema, CD_NAMESPACE);
+
+    Set<String> enabledFeatureFlags =
+        RestClientUtils.getResponse(accountClient.listAllFeatureFlagsForAccount(accountIdentifier))
+            .stream()
+            .filter(FeatureFlag::isEnabled)
+            .map(FeatureFlag::getName)
+            .collect(Collectors.toSet());
+
+    // Should be after this modifyRefsNamespace call.
+    YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        CD_NAMESPACE);
+    if (stepSchemaWithDetails != null) {
+      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
+          deploymentStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags);
+    }
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, definitions);
 
@@ -115,7 +177,6 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
     String fieldName = YamlSchemaUtils.getJsonTypeInfo(typedField).property();
     Set<Class<?>> cachedSubtypes = yamlSchemaSubtypes.get(typedField.getType());
     Set<SubtypeClassMap> mapOfSubtypes = YamlSchemaUtils.toSetOfSubtypeClassMap(cachedSubtypes);
-
     return ImmutableSet.of(
         FieldEnumData.builder()
             .fieldName(fieldName)

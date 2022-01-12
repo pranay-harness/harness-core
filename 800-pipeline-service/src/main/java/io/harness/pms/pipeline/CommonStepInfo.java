@@ -1,12 +1,22 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
+import io.harness.steps.FolderPathConstants;
+import io.harness.steps.StepCategoryConstants;
 import io.harness.steps.StepSpecTypeConstants;
 
 import com.google.inject.Inject;
@@ -40,9 +50,9 @@ public class CommonStepInfo {
           .setName("Harness Approval")
           .setType("HarnessApproval")
           .setStepMetaData(StepMetaData.newBuilder()
-                               .addCategory("Provisioner")
-                               .addCategory("Approval")
-                               .addFolderPaths("Approval")
+                               .addCategory(StepCategoryConstants.PROVISIONER)
+                               .addCategory(StepCategoryConstants.APPROVAL)
+                               .addFolderPaths(FolderPathConstants.APPROVAL)
                                .build())
           .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_HARNESS_UI.name())
           .build();
@@ -51,9 +61,9 @@ public class CommonStepInfo {
           .setName("Jira Approval")
           .setType("JiraApproval")
           .setStepMetaData(StepMetaData.newBuilder()
-                               .addCategory("Provisioner")
-                               .addCategory("Approval")
-                               .addFolderPaths("Approval")
+                               .addCategory(StepCategoryConstants.PROVISIONER)
+                               .addCategory(StepCategoryConstants.APPROVAL)
+                               .addFolderPaths(FolderPathConstants.APPROVAL)
                                .build())
           .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
 
@@ -63,18 +73,34 @@ public class CommonStepInfo {
           .setName("Jira Create")
           .setType(StepSpecTypeConstants.JIRA_CREATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
+
           .build();
   StepInfo jiraUpdateStepInfo =
       StepInfo.newBuilder()
           .setName("Jira Update")
           .setType(StepSpecTypeConstants.JIRA_UPDATE)
           .setStepMetaData(StepMetaData.newBuilder().addCategory("Jira").addFolderPaths("Jira").build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_JIRA.name())
+
           .build();
   StepInfo barrierStepInfo =
       StepInfo.newBuilder()
           .setName("Barrier")
           .setType("Barrier")
           .setStepMetaData(StepMetaData.newBuilder().addFolderPaths("FlowControl/Barrier").build())
+          .build();
+  StepInfo serviceNowApprovalStepInfo =
+      StepInfo.newBuilder()
+          .setName("ServiceNow Approval")
+          .setType(StepSpecTypeConstants.SERVICENOW_APPROVAL)
+          .setStepMetaData(StepMetaData.newBuilder()
+                               .addCategory(StepCategoryConstants.PROVISIONER)
+                               .addCategory(StepCategoryConstants.APPROVAL)
+                               .addFolderPaths(FolderPathConstants.APPROVAL)
+                               .build())
+          .setFeatureRestrictionName(FeatureRestrictionName.INTEGRATED_APPROVALS_WITH_SERVICE_NOW.name())
+          .setFeatureFlag(FeatureName.SERVICENOW_NG_INTEGRATION.name())
           .build();
 
   public List<StepInfo> getCommonSteps(String category) {
@@ -86,6 +112,7 @@ public class CommonStepInfo {
     stepInfos.add(jiraCreateStepInfo);
     stepInfos.add(jiraUpdateStepInfo);
     stepInfos.add(barrierStepInfo);
+    stepInfos.add(serviceNowApprovalStepInfo);
     return stepInfos;
   }
 }

@@ -1,0 +1,19 @@
+{
+  "accountId": "$accountId",
+  "timestamp": "$timestamp",
+  "verificationTaskId": "$verificationTaskId",
+  "host": "some-host",
+  "metricValues": [
+    {
+      "metricName":"Stall Count",
+      "metricIdentifier": "stall_count",
+      "timeSeriesValues":[
+        {
+          "groupName":"Page Not Found",
+          "value": -1,
+          "percent":0
+        }
+      ]
+    }
+  ]
+}

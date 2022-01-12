@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -50,10 +57,13 @@ import io.harness.exception.WingsException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.model.HelmVersion;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord;
 import io.harness.perpetualtask.internal.PerpetualTaskRecord.PerpetualTaskRecordKeys;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.api.DeploymentType;
 import software.wings.beans.Application;
@@ -153,12 +163,15 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   @Inject private ApplicationManifestUtils applicationManifestUtils;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private FeatureFlagService featureFlagService;
-  @Inject @Getter private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<ApplicationManifestServiceObserver> subject = new Subject<>();
   @Inject private HelmChartService helmChartService;
   @Inject private SettingsService settingsService;
   @Inject private HelmHelper helmHelper;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
   @Inject private TriggerService triggerService; // do not remove, needed for pruning logic.
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   private static long MAX_MANIFEST_FILES_PER_APPLICATION_MANIFEST = 50L;
 
@@ -511,7 +524,11 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   void createPerpetualTask(@NotNull ApplicationManifest applicationManifest) {
     try {
+      // Both subject and remote Observer are needed since in few places DMS might not be present
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onSaved, applicationManifest);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ApplicationManifestServiceObserver.class, "onSaved", ApplicationManifest.class),
+          ApplicationManifestServiceImpl.class, applicationManifest);
     } catch (Exception e) {
       log.error(
           "Encountered exception while informing the observers of Application Manifest on save for app manifest: {}",
@@ -522,6 +539,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void resetPerpetualTask(@NotNull ApplicationManifest applicationManifest) {
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onUpdated, applicationManifest);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ApplicationManifestServiceObserver.class, "onUpdated", ApplicationManifest.class),
+          ApplicationManifestServiceImpl.class, applicationManifest);
     } catch (Exception e) {
       log.error(
           "Encountered exception while informing the observers of Application Manifest on resetfor app manifest: {}",
@@ -532,6 +552,9 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
   void deletePerpetualTask(@NotNull ApplicationManifest applicationManifest) {
     try {
       subject.fireInform(ApplicationManifestServiceObxxxxxxxx:onDeleted, applicationManifest);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ApplicationManifestServiceObserver.class, "onDeleted", ApplicationManifest.class),
+          ApplicationManifestServiceImpl.class, applicationManifest);
     } catch (Exception e) {
       log.error(
           "Encountered exception while informing the observers of Application Manifest on delete for app manifest: {}",
@@ -575,8 +598,8 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
         }
       }
     } else {
-      if (Boolean.TRUE.equals(oldPollForChanges)) {
-        helmChartService.deleteByAppManifest(oldAppManifest.getAppId(), oldAppManifest.getUuid());
+      // default behavior for null is now changed to true
+      if (Boolean.TRUE.equals(oldPollForChanges) && Boolean.FALSE.equals(curPollForChanges)) {
         deletePerpetualTask(oldAppManifest);
       }
     }
@@ -647,7 +670,16 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
     if (service != null && Boolean.TRUE.equals(service.getArtifactFromManifest())
         && applicationManifest.getStoreType() == HelmChartRepo) {
-      applicationManifest.setPollForChanges(true);
+      // By default enable collection should be true and needs to be set by BE till UI starts sending default value as
+      // true
+      if (isCreate && !Boolean.FALSE.equals(applicationManifest.getEnableCollection())) {
+        applicationManifest.setEnableCollection(true);
+      }
+      applicationManifest.setPollForChanges(
+          applicationManifest.getEnableCollection() == null || applicationManifest.getEnableCollection());
+    } else if (Boolean.TRUE.equals(applicationManifest.getPollForChanges())) {
+      throw new InvalidRequestException(
+          "Collection can be enabled only for helm chart from helm repo manifest type", USER);
     }
 
     if (isCreate && exists(applicationManifest)) {
@@ -1486,11 +1518,12 @@ public class ApplicationManifestServiceImpl implements ApplicationManifestServic
 
   @Override
   public boolean deletePerpetualTaskByAppManifest(String accountId, String appManifestId) {
+    log.info("Deleting perpetual task associated with app manifest " + appManifestId);
     Query<PerpetualTaskRecord> query =
         wingsPersistence.createQuery(PerpetualTaskRecord.class)
             .field(PerpetualTaskRecordKeys.accountId)
             .equal(accountId)
-            .field(PerpetualTaskRecordKeys.clientContext + "." + ManifestCollectionPTaskClientParamsKeys.appManifestId)
+            .field(PerpetualTaskRecordKeys.client_params + "." + ManifestCollectionPTaskClientParamsKeys.appManifestId)
             .equal(appManifestId);
     return wingsPersistence.delete(query);
   }

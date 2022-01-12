@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -34,10 +41,13 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.logstreaming.LogStreamingServiceConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
+import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.scheduler.SchedulerConfig;
+import io.harness.secret.ConfigSecret;
 import io.harness.secret.SecretsConfiguration;
 import io.harness.stream.AtmosphereBroadcaster;
+import io.harness.swagger.SwaggerBundleConfigurationFactory;
 import io.harness.telemetry.segment.SegmentConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 import io.harness.timescaledb.TimeScaleDBConfig;
@@ -80,13 +90,17 @@ import io.dropwizard.server.DefaultServerFactory;
 import io.dropwizard.server.ServerFactory;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import javax.ws.rs.Path;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Used to load all the application configuration.
@@ -104,15 +118,16 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
           .build();
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-  @JsonProperty("mongo") private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
+  @JsonProperty("mongo") @ConfigSecret private MongoConfig mongoConnectionFactory = MongoConfig.builder().build();
   @JsonProperty("distributedLockImplementation") private DistributedLockImplementation distributedLockImplementation;
-  @JsonProperty("events-mongo") private MongoConfig eventsMongo = MongoConfig.builder().uri("").build();
+  @JsonProperty("events-mongo") @ConfigSecret private MongoConfig eventsMongo = MongoConfig.builder().uri("").build();
   @JsonProperty("elasticsearch")
   private ElasticsearchConfig elasticsearchConfig = ElasticsearchConfig.builder().build();
   @JsonProperty(value = "searchEnabled") private boolean isSearchEnabled;
   @JsonProperty(value = "graphQLEnabled") private boolean isGraphQLEnabled;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
-  @JsonProperty private PortalConfig portal = new PortalConfig();
+  @JsonProperty @ConfigSecret private PortalConfig portal = new PortalConfig();
+  @JsonProperty("disableResourceValidation") private boolean disableResourceValidation;
   @JsonProperty(defaultValue = "true") private boolean enableIterators = true;
   @JsonProperty(defaultValue = "true") private boolean enableAuth = true;
   @JsonProperty(defaultValue = "50") private int jenkinsBuildQuerySize = 50;
@@ -128,7 +143,7 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("exportAccountDataBatchSize") private int exportAccountDataBatchSize;
   @JsonProperty("supportEmail") private String supportEmail;
   @JsonProperty("envPath") private String envPath;
-  @JsonProperty("smtp") private SmtpConfig smtpConfig;
+  @JsonProperty("smtp") @ConfigSecret private SmtpConfig smtpConfig;
   @JsonProperty("globalWhitelistConfig") private GlobalWhitelistConfig globalWhitelistConfig;
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty(defaultValue = "SAAS") private DeployVariant deployVariant = DeployVariant.SAAS;
@@ -147,14 +162,16 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("fileStorageMode") private DataStorageMode fileStorageMode;
   @JsonProperty("clusterName") private String clusterName;
   @JsonProperty("deploymentClusterName") private String deploymentClusterName;
-  @JsonProperty("ceSetUpConfig") private CESetUpConfig ceSetUpConfig;
-  @JsonProperty("marketoConfig") private MarketoConfig marketoConfig;
-  @JsonProperty("segmentConfig") private SegmentConfig segmentConfig;
-  @JsonProperty("segmentConfiguration") private SegmentConfiguration segmentConfiguration;
-  @JsonProperty("salesforceConfig") private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
-  @JsonProperty("datadogConfig") private DatadogConfig datadogConfig;
-  @JsonProperty("redisLockConfig") private RedisConfig redisLockConfig;
-  @JsonProperty("redisAtmosphereConfig") private RedisConfig redisAtmosphereConfig;
+  @JsonProperty("ceSetUpConfig") @ConfigSecret private CESetUpConfig ceSetUpConfig;
+  @JsonProperty("marketoConfig") @ConfigSecret private MarketoConfig marketoConfig;
+  @JsonProperty("segmentConfig") @ConfigSecret private SegmentConfig segmentConfig;
+  @JsonProperty("segmentConfiguration") @ConfigSecret private SegmentConfiguration segmentConfiguration;
+  @JsonProperty("salesforceConfig")
+  @ConfigSecret
+  private SalesforceConfig salesforceConfig = SalesforceConfig.builder().build();
+  @JsonProperty("datadogConfig") @ConfigSecret private DatadogConfig datadogConfig;
+  @JsonProperty("redisLockConfig") @ConfigSecret private RedisConfig redisLockConfig;
+  @JsonProperty("redisAtmosphereConfig") @ConfigSecret private RedisConfig redisAtmosphereConfig;
   @JsonProperty("defaultSalesContacts") private DefaultSalesContacts defaultSalesContacts;
   @JsonProperty("githubConfig") private GithubConfig githubConfig;
   @JsonProperty("linkedinConfig") private LinkedinConfig linkedinConfig;
@@ -162,10 +179,10 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("azureConfig") private AzureConfig azureConfig;
   @JsonProperty("bitbucketConfig") private BitbucketConfig bitbucketConfig;
   @JsonProperty("gitlabConfig") private GitlabConfig gitlabConfig;
-  @JsonProperty("mktPlaceConfig") private MarketPlaceConfig marketPlaceConfig;
+  @JsonProperty("mktPlaceConfig") @ConfigSecret private MarketPlaceConfig marketPlaceConfig;
   @JsonProperty("sampleTargetEnv") private String sampleTargetEnv;
   @JsonProperty("sampleTargetStatusHost") private String sampleTargetStatusHost;
-  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("timescaledb") @ConfigSecret private TimeScaleDBConfig timeScaleDBConfig;
   @JsonProperty("cacheConfig") private CacheConfig cacheConfig;
   @JsonProperty("ngAuthUIEnabled") private boolean ngAuthUIEnabled;
   @JsonProperty("gcpMarketplaceConfig") private GcpMarketplaceConfig gcpMarketplaceConfig;
@@ -181,25 +198,28 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
   @JsonProperty("currentJre") private String currentJre;
   @JsonProperty("migrateToJre") private String migrateToJre;
   @JsonProperty("jreConfigs") private Map<String, JreConfig> jreConfigs;
-  @JsonProperty("cdnConfig") private CdnConfig cdnConfig;
+  @JsonProperty("cdnConfig") @ConfigSecret private CdnConfig cdnConfig;
   @JsonProperty("commandLibraryServiceConfig")
+  @ConfigSecret
   private CommandLibraryServiceConfig commandLibraryServiceConfig = CommandLibraryServiceConfig.builder().build();
-  @JsonProperty(value = "bugsnagApiKey") private String bugsnagApiKey;
+  @JsonProperty(value = "bugsnagApiKey") @ConfigSecret private String bugsnagApiKey;
   @JsonProperty("atmosphereBroadcaster") private AtmosphereBroadcaster atmosphereBroadcaster;
   @JsonProperty(value = "jobsFrequencyConfig") private JobsFrequencyConfig jobsFrequencyConfig;
   @JsonProperty("ngManagerServiceHttpClientConfig") private ServiceHttpClientConfig ngManagerServiceHttpClientConfig;
   @JsonProperty("mockServerConfig") private MockServerConfig mockServerConfig;
   @JsonProperty("numberOfRemindersBeforeAccountDeletion") private int numberOfRemindersBeforeAccountDeletion;
   @JsonProperty("delegateGrpcServicePort") private Integer delegateGrpcServicePort;
-  @JsonProperty("logStreamingServiceConfig") private LogStreamingServiceConfig logStreamingServiceConfig;
-  @JsonProperty("accessControlClient") private AccessControlClientConfiguration accessControlClientConfiguration;
-  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
-  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
-  @JsonProperty("cfMigrationConfig") private CfMigrationConfig cfMigrationConfig;
+  @JsonProperty("logStreamingServiceConfig") @ConfigSecret private LogStreamingServiceConfig logStreamingServiceConfig;
+  @JsonProperty("accessControlClient")
+  @ConfigSecret
+  private AccessControlClientConfiguration accessControlClientConfiguration;
+  @JsonProperty("eventsFramework") @ConfigSecret private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("cfClientConfig") @ConfigSecret private CfClientConfig cfClientConfig;
+  @JsonProperty("cfMigrationConfig") @ConfigSecret private CfMigrationConfig cfMigrationConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
   @JsonProperty("auditClientConfig") private ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") private boolean enableAudit;
-  @JsonProperty("dmsSecret") private String dmsSecret;
+  @JsonProperty("dmsSecret") @ConfigSecret private String dmsSecret;
   @JsonProperty(value = "disableDelegateMgmtInManager", defaultValue = "false")
   private boolean disableDelegateMgmtInManager;
   @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
@@ -244,12 +264,24 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
    * @return the swagger bundle configuration
    */
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
+    Collection<Class<?>> resourceClasses = getResourceClasses();
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration(resourceClasses);
     defaultSwaggerBundleConfiguration.setResourcePackage(
         "software.wings.resources,software.wings.utils,io.harness.cvng.core.resources,io.harness.delegate.resources");
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost("{{host}}");
     return Optional.ofNullable(swaggerBundleConfiguration).orElse(defaultSwaggerBundleConfiguration);
+  }
+
+  public static Collection<Class<?>> getResourceClasses() {
+    return HarnessReflections.get()
+        .getTypesAnnotatedWith(Path.class)
+        .stream()
+        .filter(klazz
+            -> StringUtils.startsWithAny(klazz.getPackage().getName(), "software.wings.resources",
+                "software.wings.utils", "io.harness.cvng.core.resources", "io.harness.delegate.resources"))
+        .collect(Collectors.toList());
   }
 
   /**
@@ -304,5 +336,10 @@ public class MainConfiguration extends Configuration implements AssetsBundleConf
      * @return the resource path to uri mappings
      */
     @JsonIgnore public abstract Map<String, String> getResourcePathToUriMappings();
+  }
+
+  @JsonIgnore
+  public boolean useCdnForDelegateStorage() {
+    return !DeployMode.isOnPrem(getDeployMode().name());
   }
 }

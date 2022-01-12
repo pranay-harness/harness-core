@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package client
 
 import (
@@ -14,7 +19,7 @@ import (
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
-	"github.com/wings-software/portal/product/ci/ti-service/logger"
+	logger "github.com/wings-software/portal/commons/go/lib/logs"
 	"github.com/wings-software/portal/product/ci/ti-service/types"
 	"go.uber.org/zap"
 )
@@ -22,9 +27,10 @@ import (
 var _ Client = (*HTTPClient)(nil)
 
 const (
-	dbEndpoint   = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s"
-	testEndpoint = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
-	cgEndpoint   = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s&timeMs=%d"
+	dbEndpoint    = "/reports/write?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&report=%s&repo=%s&sha=%s&commitLink=%s"
+	testEndpoint  = "/tests/select?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s"
+	cgEndpoint    = "/tests/uploadcg?accountId=%s&orgId=%s&projectId=%s&pipelineId=%s&buildId=%s&stageId=%s&stepId=%s&repo=%s&sha=%s&source=%s&target=%s&timeMs=%d"
+	agentEndpoint = "/agents/link?language=%s&os=%s&arch=%s&framework=%s"
 )
 
 // defaultClient is the default http.Client.
@@ -68,11 +74,19 @@ type HTTPClient struct {
 }
 
 // Write writes test results to the TI server
-func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, stage, step, report, repo, sha string, tests []*types.TestCase) error {
-	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report, repo, sha)
+func (c *HTTPClient) Write(ctx context.Context, org, project, pipeline, build, stage, step, report, repo, sha, commitLink string, tests []*types.TestCase) error {
+	path := fmt.Sprintf(dbEndpoint, c.AccountID, org, project, pipeline, build, stage, step, report, repo, sha, commitLink)
 	ctx = context.WithValue(ctx, "reqId", sha)
 	_, err := c.do(ctx, c.Endpoint+path, "POST", &tests, nil)
 	return err
+}
+
+func (c *HTTPClient) DownloadLink(ctx context.Context, language, os, arch, framework string) ([]types.DownloadLink, error) {
+	path := fmt.Sprintf(agentEndpoint, language, os, arch, framework)
+	var resp []types.DownloadLink
+	ctx = context.WithValue(ctx, "reqId", "")
+	_, err := c.do(ctx, c.Endpoint+path, "GET", nil, &resp)
+	return resp, err
 }
 
 // SelectTests returns a list of tests which should be run intelligently

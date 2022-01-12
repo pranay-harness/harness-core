@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.k8s;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
@@ -133,7 +140,7 @@ public class K8sDelete extends AbstractK8sState {
               .resources(context.renderExpression(this.resources))
               .deleteNamespacesForRelease(deleteNamespacesForRelease)
               .timeoutIntervalInMin(10)
-              .useLatestKustomizeVersion(
+              .useVarSupportForKustomize(
                   featureFlagService.isEnabled(FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
               .useNewKubectlVersion(featureFlagService.isEnabled(NEW_KUBECTL_VERSION, infraMapping.getAccountId()))
               .build();
@@ -210,7 +217,7 @@ public class K8sDelete extends AbstractK8sState {
                             .k8sDelegateManifestConfig(
                                 createDelegateManifestConfig(context, appManifestMap.get(K8sValuesLocation.Service)))
                             .valuesYamlList(fetchRenderedValuesFiles(appManifestMap, context))
-                            .useLatestKustomizeVersion(featureFlagService.isEnabled(
+                            .useVarSupportForKustomize(featureFlagService.isEnabled(
                                 FeatureName.VARIABLE_SUPPORT_FOR_KUSTOMIZE, context.getAccountId()))
                             .build();
     return queueK8sDelegateTask(context, k8sTaskParameters, appManifestMap);

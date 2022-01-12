@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -13,25 +20,21 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 import io.harness.filter.dto.FilterPropertiesDTO;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
-import io.harness.gitsync.sdk.EntityGitDetailsMapper;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.pms.annotations.PipelineServiceAuth;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.gitsync.PmsGitSyncBranchContextGuard;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetYamlWithTemplateDTO;
-import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineResourceConstants;
 import io.harness.pms.pipeline.mappers.ExecutionGraphMapper;
 import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
-import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionFilterPropertiesDTO;
@@ -52,7 +55,6 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
-import java.util.Optional;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
@@ -86,7 +88,7 @@ import org.springframework.data.mongodb.core.query.Criteria;
           @ApiResponse(code = 403, response = TemplateInputsErrorResponseDTO.class,
               message = "TemplateRefs Resolved failed in pipeline yaml.")
     })
-@Tag(name = "executionDetails", description = "This contains APIs related to pipeline executions")
+@Tag(name = "Execution Details", description = "This contains APIs for fetching Pipeline Execution details.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {
@@ -102,11 +104,9 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @PipelineServiceAuth
 @Slf4j
 public class ExecutionDetailsResource {
-  @Inject private final PMSPipelineService pmsPipelineService;
   @Inject private final PMSExecutionService pmsExecutionService;
   @Inject private final AccessControlClient accessControlClient;
   @Inject private final PmsGitSyncHelper pmsGitSyncHelper;
-  @Inject private final PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
 
   @POST
   @Path("/summary")
@@ -161,7 +161,7 @@ public class ExecutionDetailsResource {
     Page<PipelineExecutionSummaryDTO> planExecutionSummaryDTOS =
         pmsExecutionService.getPipelineExecutionSummaryEntity(criteria, pageRequest)
             .map(e
-                -> pipelineExecutionSummaryDtoMapper.toDto(e,
+                -> PipelineExecutionSummaryDtoMapper.toDto(e,
                     e.getEntityGitDetails() != null
                         ? e.getEntityGitDetails()
                         : pmsGitSyncHelper.getEntityGitDetailsFromBytes(e.getGitSyncBranchContext())));
@@ -193,23 +193,12 @@ public class ExecutionDetailsResource {
     PipelineExecutionSummaryEntity executionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
 
-    Optional<PipelineEntity> optionalPipelineEntity;
+    EntityGitDetails entityGitDetails;
     if (executionSummaryEntity.getEntityGitDetails() == null) {
-      try (PmsGitSyncBranchContextGuard ignore = pmsGitSyncHelper.createGitSyncBranchContextGuardFromBytes(
-               executionSummaryEntity.getGitSyncBranchContext(), false)) {
-        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
-            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
-      }
+      entityGitDetails =
+          pmsGitSyncHelper.getEntityGitDetailsFromBytes(executionSummaryEntity.getGitSyncBranchContext());
     } else {
-      try (PmsGitSyncBranchContextGuard ignore = new PmsGitSyncBranchContextGuard(
-               executionSummaryEntity.getEntityGitDetails().toGitSyncBranchContext(), false)) {
-        optionalPipelineEntity = pmsPipelineService.getWithoutIsDeleted(
-            accountId, orgId, projectId, executionSummaryEntity.getPipelineIdentifier());
-      }
-    }
-    if (!optionalPipelineEntity.isPresent()) {
-      throw new InvalidRequestException(
-          "Pipeline with identifier " + executionSummaryEntity.getPipelineIdentifier() + " not found");
+      entityGitDetails = executionSummaryEntity.getEntityGitDetails();
     }
 
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgId, projectId),
@@ -217,8 +206,7 @@ public class ExecutionDetailsResource {
 
     PipelineExecutionDetailDTO pipelineExecutionDetailDTO =
         PipelineExecutionDetailDTO.builder()
-            .pipelineExecutionSummary(pipelineExecutionSummaryDtoMapper.toDto(
-                executionSummaryEntity, EntityGitDetailsMapper.mapEntityGitDetails(optionalPipelineEntity.get())))
+            .pipelineExecutionSummary(PipelineExecutionSummaryDtoMapper.toDto(executionSummaryEntity, entityGitDetails))
             .executionGraph(ExecutionGraphMapper.toExecutionGraph(
                 pmsExecutionService.getOrchestrationGraph(stageNodeId, planExecutionId)))
             .build();

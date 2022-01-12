@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.migrations;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -46,6 +53,8 @@ import io.harness.migrations.all.AddHarnessOwnedToResourceConstraint;
 import io.harness.migrations.all.AddInfraMappingNameToInstanceData;
 import io.harness.migrations.all.AddIsDefaultFlagToUserGroup;
 import io.harness.migrations.all.AddOrchestrationToWorkflows;
+import io.harness.migrations.all.AddRingDetailsToDelegateRing;
+import io.harness.migrations.all.AddRingsToAccountMigration;
 import io.harness.migrations.all.AddStateMachineToWorkflowExecutions;
 import io.harness.migrations.all.AddValidUntilToSecretUsageLogs;
 import io.harness.migrations.all.AddValidUntilToWorkflowExecution;
@@ -60,6 +69,7 @@ import io.harness.migrations.all.CleanupSyncStatusForDeletedEntities;
 import io.harness.migrations.all.ConvertHttpHeadersStringTypeToList;
 import io.harness.migrations.all.CreateNgPrimaryProfileForExistingAccounts;
 import io.harness.migrations.all.CreatePrimiryProfileForAllAccounts;
+import io.harness.migrations.all.DefaultDelegateNgTokenMigration;
 import io.harness.migrations.all.DefaultExperienceMigration;
 import io.harness.migrations.all.DelegateGroupIdentifierMigration;
 import io.harness.migrations.all.DelegateNgDetailsToDelegateGroupMigration;
@@ -67,6 +77,7 @@ import io.harness.migrations.all.DelegateProfileIdentifierMigration;
 import io.harness.migrations.all.DelegateTokenMigration;
 import io.harness.migrations.all.DelegatesWithoutGroupMigration;
 import io.harness.migrations.all.DelegatesWithoutProfileMigration;
+import io.harness.migrations.all.DeleteDelegateAlertsExceptDelegateDown;
 import io.harness.migrations.all.DeleteInvalidArtifactStreams;
 import io.harness.migrations.all.DeleteInvalidServiceGuardConfigs;
 import io.harness.migrations.all.DeleteOrphanNotificationGroups;
@@ -100,6 +111,7 @@ import io.harness.migrations.all.MigratePipelineStagesToUseDisableAssertion;
 import io.harness.migrations.all.MigrateServiceNowCriteriaInPipelines;
 import io.harness.migrations.all.MigrateServiceNowCriteriaInWorkflows;
 import io.harness.migrations.all.MigrateTimeSeriesRawDataToGoogle;
+import io.harness.migrations.all.MigrationSMCredentialsFromLocalToGlobalKMS;
 import io.harness.migrations.all.MoveDelegateNameToDelegateSelectorsMigration;
 import io.harness.migrations.all.NoOpMigration;
 import io.harness.migrations.all.RemoveDeletedAppIdsFromUserGroups;
@@ -124,6 +136,7 @@ import io.harness.migrations.all.UpdateWorkflowExecutionDuration;
 import io.harness.migrations.all.WFEAddDeploymentMetaData;
 import io.harness.migrations.all.WorkflowExecutionAddCDPageCandidateMigration;
 import io.harness.migrations.apppermission.ManageApplicationTemplatePermissionMigration;
+import io.harness.migrations.apppermission.NullAppFilterPermissionMigration;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
@@ -346,6 +359,12 @@ public class MigrationBackgroundList {
         .add(Pair.of(204, DeleteOrphanPerpetualTaskMigration.class))
         .add(Pair.of(205, ManageApplicationTemplatePermissionMigration.class))
         .add(Pair.of(206, CDPaidLicenseToNGMigration.class))
+        .add(Pair.of(207, DeleteDelegateAlertsExceptDelegateDown.class))
+        .add(Pair.of(208, MigrationSMCredentialsFromLocalToGlobalKMS.class))
+        .add(Pair.of(209, NullAppFilterPermissionMigration.class))
+        .add(Pair.of(210, DefaultDelegateNgTokenMigration.class))
+        .add(Pair.of(211, AddRingsToAccountMigration.class))
+        .add(Pair.of(212, AddRingDetailsToDelegateRing.class))
         .build();
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -22,6 +29,7 @@ import io.harness.connector.services.ConnectorService;
 import io.harness.connector.services.NGVaultService;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
+import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -44,6 +52,7 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
   private SecretManagerConnectorServiceImpl secretManagerConnectorService;
   private ConnectorRepository connectorRepository;
   private NGVaultService ngVaultService;
+  private EnforcementClientService enforcementClientService;
 
   @Before
   public void setup() {
@@ -51,8 +60,9 @@ public class SecretManagerConnectorServiceImplTest extends CategoryTest {
     defaultConnectorService = mock(ConnectorService.class);
     connectorRepository = mock(ConnectorRepository.class);
     ngVaultService = mock(NGVaultService.class);
-    secretManagerConnectorService =
-        new SecretManagerConnectorServiceImpl(defaultConnectorService, connectorRepository, ngVaultService);
+    enforcementClientService = mock(EnforcementClientService.class);
+    secretManagerConnectorService = new SecretManagerConnectorServiceImpl(
+        defaultConnectorService, connectorRepository, ngVaultService, enforcementClientService);
   }
 
   private InvalidRequestException getInvalidRequestException() {

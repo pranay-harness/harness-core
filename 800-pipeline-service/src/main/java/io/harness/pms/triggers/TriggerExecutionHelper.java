@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.triggers;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
@@ -46,6 +53,7 @@ import io.harness.pms.merger.helpers.InputSetMergeHelper;
 import io.harness.pms.ngpipeline.inputset.helpers.InputSetSanitizer;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.pipeline.service.PMSYamlSchemaService;
 import io.harness.pms.plan.execution.ExecutionHelper;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
@@ -74,6 +82,7 @@ public class TriggerExecutionHelper {
   private final PMSExecutionService pmsExecutionService;
   private final PMSYamlSchemaService pmsYamlSchemaService;
   private final ExecutionHelper executionHelper;
+  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public PlanExecution resolveRuntimeInputAndSubmitExecutionReques(
       TriggerDetails triggerDetails, TriggerPayload triggerPayload) {
@@ -99,14 +108,14 @@ public class TriggerExecutionHelper {
     return createPlanExecution(triggerDetails, triggerPayload, payload, executionTagForGitEvent, triggerInfo);
   }
 
+  // Todo: Check if we can merge some logic with ExecutionHelper
   private PlanExecution createPlanExecution(TriggerDetails triggerDetails, TriggerPayload triggerPayload,
       String payload, String executionTagForGitEvent, ExecutionTriggerInfo triggerInfo) {
     try {
       NGTriggerEntity ngTriggerEntity = triggerDetails.getNgTriggerEntity();
       String targetIdentifier = ngTriggerEntity.getTargetIdentifier();
-      Optional<PipelineEntity> pipelineEntityToExecute =
-          pmsPipelineService.incrementRunSequence(ngTriggerEntity.getAccountId(), ngTriggerEntity.getOrgIdentifier(),
-              ngTriggerEntity.getProjectIdentifier(), targetIdentifier, false);
+      Optional<PipelineEntity> pipelineEntityToExecute = pmsPipelineService.get(ngTriggerEntity.getAccountId(),
+          ngTriggerEntity.getOrgIdentifier(), ngTriggerEntity.getProjectIdentifier(), targetIdentifier, false);
 
       if (!pipelineEntityToExecute.isPresent()) {
         throw new TriggerException("Unable to continue trigger execution. Pipeline with identifier: "
@@ -115,6 +124,7 @@ public class TriggerExecutionHelper {
                 + ", For Trigger: " + ngTriggerEntity.getIdentifier() + " does not exists. ",
             USER);
       }
+      PipelineEntity pipelineEntity = pipelineEntityToExecute.get();
 
       String runtimeInputYaml = triggerDetails.getNgTriggerConfigV2().getInputYaml();
 
@@ -123,17 +133,17 @@ public class TriggerExecutionHelper {
           ExecutionMetadata.newBuilder()
               .setExecutionUuid(executionId)
               .setTriggerInfo(triggerInfo)
-              .setRunSequence(pipelineEntityToExecute.get().getRunSequence())
-              .setPipelineIdentifier(pipelineEntityToExecute.get().getIdentifier());
+              .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity))
+              .setPipelineIdentifier(pipelineEntity.getIdentifier());
 
       PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
           PlanExecutionMetadata.builder().planExecutionId(executionId).triggerJsonPayload(payload);
 
       String pipelineYaml;
       if (isBlank(runtimeInputYaml)) {
-        pipelineYaml = pipelineEntityToExecute.get().getYaml();
+        pipelineYaml = pipelineEntity.getYaml();
       } else {
-        String pipelineYamlBeforeMerge = pipelineEntityToExecute.get().getYaml();
+        String pipelineYamlBeforeMerge = pipelineEntity.getYaml();
         String sanitizedRuntimeInputYaml =
             InputSetSanitizer.sanitizeRuntimeInput(pipelineYamlBeforeMerge, runtimeInputYaml);
         if (isBlank(sanitizedRuntimeInputYaml)) {
@@ -144,9 +154,20 @@ public class TriggerExecutionHelper {
               InputSetMergeHelper.mergeInputSetIntoPipeline(pipelineYamlBeforeMerge, sanitizedRuntimeInputYaml, true);
         }
       }
+      if (pipelineEntity.getTemplateReference() != null && pipelineEntity.getTemplateReference()) {
+        pipelineYaml =
+            pipelineTemplateHelper
+                .resolveTemplateRefsInPipeline(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+                    pipelineEntity.getProjectIdentifier(), pipelineYaml, true)
+                .getMergedPipelineYaml();
+      }
+      String expandedJson = pmsPipelineService.fetchExpandedPipelineJSONFromYaml(pipelineEntity.getAccountId(),
+          pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineYaml);
+
       planExecutionMetadataBuilder.yaml(pipelineYaml);
       planExecutionMetadataBuilder.processedYaml(YamlUtils.injectUuid(pipelineYaml));
       planExecutionMetadataBuilder.triggerPayload(triggerPayload);
+      planExecutionMetadataBuilder.expandedPipelineJson(expandedJson);
 
       // Set Principle user as pipeline service.
       SecurityContextBuilder.setContext(new ServicePrincipal(PIPELINE_SERVICE.getServiceId()));

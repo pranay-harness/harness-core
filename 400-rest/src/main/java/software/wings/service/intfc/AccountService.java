@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessModule._945_ACCOUNT_MGMT;
@@ -6,6 +13,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.account.ProvisionStep;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.authenticationservice.beans.AuthenticationInfo;
 import io.harness.beans.FeatureFlag;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -238,4 +246,6 @@ public interface AccountService {
   boolean isAutoInviteAcceptanceEnabled(String accountId);
 
   Void setDefaultExperience(String accountId, DefaultExperience defaultExperience);
+
+  AuthenticationInfo getAuthenticationInfo(String accountId);
 }

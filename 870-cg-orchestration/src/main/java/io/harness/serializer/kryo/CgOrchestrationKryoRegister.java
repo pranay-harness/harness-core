@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -12,10 +19,8 @@ import io.harness.beans.WorkflowType;
 import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.ecs.EcsBGSetupData;
-import software.wings.beans.SettingAttribute;
 import software.wings.beans.command.CommandType;
 import software.wings.beans.command.TailFilePatternEntry;
-import software.wings.settings.validation.ConnectivityValidationAttributes;
 import software.wings.sm.BarrierStatusData;
 import software.wings.utils.FileType;
 
@@ -25,14 +30,11 @@ import com.esotericsoftware.kryo.Kryo;
 public class CgOrchestrationKryoRegister implements KryoRegistrar {
   @Override
   public void register(Kryo kryo) {
-    kryo.register(SettingAttribute.class, 5008);
-    kryo.register(SettingAttribute.SettingCategory.class, 5069);
     kryo.register(OrchestrationWorkflowType.class, 5148);
     kryo.register(WorkflowType.class, 5025);
     kryo.register(DelegateTask.Status.class, 5004);
     kryo.register(DelegateTask.class, 5003);
     kryo.register(FileType.class, 5119);
-    kryo.register(ConnectivityValidationAttributes.class, 5567);
 
     kryo.register(ExecutionStatusResponseData.class, 3102);
     kryo.register(RepairActionCode.class, 2528);

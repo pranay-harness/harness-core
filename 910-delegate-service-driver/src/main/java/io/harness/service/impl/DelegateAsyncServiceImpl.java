@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -19,6 +26,7 @@ import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.WaitNotifyEngine;
 
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -27,6 +35,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.query.Query;
@@ -54,8 +63,11 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
     if (enablePrimaryCheck && queueController != null) {
       consumeResponse = queueController.isPrimary();
     }
+    final Stopwatch globalStopwatch = Stopwatch.createStarted();
+    long loopStartTime = 0;
     while (consumeResponse) {
       try {
+        final Stopwatch stopwatch = Stopwatch.createStarted();
         Query<DelegateAsyncTaskResponse> taskResponseQuery =
             persistence.createQuery(DelegateAsyncTaskResponse.class, excludeAuthority)
                 .field(DelegateAsyncTaskResponseKeys.processAfter)
@@ -65,18 +77,35 @@ public class DelegateAsyncServiceImpl implements DelegateAsyncService {
             persistence.createUpdateOperations(DelegateAsyncTaskResponse.class)
                 .set(DelegateAsyncTaskResponseKeys.processAfter, currentTimeMillis());
 
+        long queryStartTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         DelegateAsyncTaskResponse lockedAsyncTaskResponse =
             persistence.findAndModify(taskResponseQuery, updateOperations, HPersistence.returnNewOptions);
+        long queryEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
 
         if (lockedAsyncTaskResponse == null) {
           break;
         }
 
-        log.info("Process won the async task response {}.", lockedAsyncTaskResponse.getUuid());
+        long queryTime = queryEndTime - queryStartTime;
+        long loopProcessingTime =
+            Math.max((globalStopwatch.elapsed(TimeUnit.MILLISECONDS) - loopStartTime) - queryTime, 0l);
+
+        log.info("Process won the async task response {}, mongo queryTime {}, loop processing time {} .",
+            lockedAsyncTaskResponse.getUuid(), queryTime, loopProcessingTime);
+
+        loopStartTime = globalStopwatch.elapsed(TimeUnit.MILLISECONDS);
         ResponseData responseData = disableDeserialization
             ? BinaryResponseData.builder().data(lockedAsyncTaskResponse.getResponseData()).build()
             : (DelegateResponseData) kryoSerializer.asInflatedObject(lockedAsyncTaskResponse.getResponseData());
+        long doneWithStartTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
         waitNotifyEngine.doneWith(lockedAsyncTaskResponse.getUuid(), responseData);
+        long doneWithEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+        if (log.isDebugEnabled()) {
+          log.debug("DB update processing time {} for doneWith operation, loop processing time {} ",
+              doneWithEndTime - doneWithStartTime,
+              Math.max(loopProcessingTime - (doneWithEndTime - doneWithStartTime), 0l));
+        }
 
         if (lockedAsyncTaskResponse.getHoldUntil() == null
             || lockedAsyncTaskResponse.getHoldUntil() < currentTimeMillis()) {

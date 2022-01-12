@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.remote.resources;
 
 import static io.harness.ccm.commons.utils.BigQueryHelper.UNIFIED_TABLE;
@@ -12,6 +19,7 @@ import io.harness.CategoryTest;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.commons.utils.BigQueryHelper;
+import io.harness.ccm.graphql.core.budget.BudgetCostService;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewState;
 import io.harness.ccm.views.entities.ViewType;
@@ -32,6 +40,7 @@ public class PerspectiveResourceTest extends CategoryTest {
   private CEReportScheduleService ceReportScheduleService = mock(CEReportScheduleService.class);
   private BigQueryService bigQueryService = mock(BigQueryService.class);
   private BigQueryHelper bigQueryHelper = mock(BigQueryHelper.class);
+  private BudgetCostService budgetCostService = mock(BudgetCostService.class);
   private PerspectiveResource perspectiveResource;
 
   private final String ACCOUNT_ID = "ACCOUNT_ID";
@@ -60,8 +69,8 @@ public class PerspectiveResourceTest extends CategoryTest {
     when(ceViewService.update(perspective)).thenReturn(perspective);
     when(bigQueryHelper.getCloudProviderTableName(ACCOUNT_ID, UNIFIED_TABLE)).thenReturn(UNIFIED_TABLE_NAME);
 
-    perspectiveResource = new PerspectiveResource(
-        ceViewService, ceReportScheduleService, viewCustomFieldService, bigQueryService, bigQueryHelper);
+    perspectiveResource = new PerspectiveResource(ceViewService, ceReportScheduleService, viewCustomFieldService,
+        bigQueryService, bigQueryHelper, budgetCostService);
   }
 
   @Test

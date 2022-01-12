@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.merger.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.VED;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -138,12 +146,21 @@ public class InputSetYamlHelperTest extends CategoryTest {
   }
 
   @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testPipelineIdentifierAbsentFromInputSet() {
+    String yaml1 = getInputSetYamlWithoutPipelineIdentifier(true);
+    assertThatThrownBy(() -> InputSetYamlHelper.confirmPipelineIdentifierInInputSet(yaml1, "n2"))
+        .hasMessage("Pipeline identifier is missing in the YAML. Please give a valid Pipeline identifier");
+  }
+
+  @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testConfirmPipelineIdentifierInOverlayInputSet() {
     String yaml1 = getOverlayInputSetYaml(false, true);
     assertThatThrownBy(() -> InputSetYamlHelper.confirmPipelineIdentifierInOverlayInputSet(yaml1, "n2"))
-        .hasMessage("Pipeline identifier in input set does not match");
+        .hasMessage("Pipeline identifier is missing in the YAML. Please give a valid Pipeline identifier");
 
     String yaml2 = addPipelineIdentifier(yaml1);
     assertThatThrownBy(() -> InputSetYamlHelper.confirmPipelineIdentifierInOverlayInputSet(yaml2, "n1"))
@@ -157,15 +174,16 @@ public class InputSetYamlHelperTest extends CategoryTest {
   public void testConfirmOrgAndProjectIdentifier() {
     String yaml1 = getInputSetYaml(true);
     assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml1, "inputSet", "o1", "p1"))
-        .hasMessage("Org identifier in input set does not match");
+        .hasMessage("Organization identifier is missing in the YAML. Please give a valid Organization identifier");
 
     String yaml2 = addOrgIdentifier(yaml1);
-    assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml2, "inputSet", "o2", "p1"))
-        .hasMessage("Org identifier in input set does not match");
     assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml2, "inputSet", "o1", "p1"))
-        .hasMessage("Project identifier in input set does not match");
+        .hasMessage("Project identifier is missing in the YAML. Please give a valid Project identifier");
 
     String yaml3 = addProjectIdentifier(yaml2);
+    assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "inputSet", "o2", "p1"))
+        .hasMessage("Org identifier in input set does not match");
+
     assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "inputSet", "o1", "p2"))
         .hasMessage("Project identifier in input set does not match");
     InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "inputSet", "o1", "p1");
@@ -177,18 +195,28 @@ public class InputSetYamlHelperTest extends CategoryTest {
   public void testConfirmOrgAndProjectIdentifierForOverlay() {
     String yaml1 = getOverlayInputSetYaml(true, true);
     assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml1, "overlayInputSet", "o1", "p1"))
-        .hasMessage("Org identifier in input set does not match");
+        .hasMessage("Organization identifier is missing in the YAML. Please give a valid Organization identifier");
 
     String yaml2 = addOrgIdentifier(yaml1);
-    assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml2, "overlayInputSet", "o2", "p1"))
-        .hasMessage("Org identifier in input set does not match");
     assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml2, "overlayInputSet", "o1", "p1"))
-        .hasMessage("Project identifier in input set does not match");
+        .hasMessage("Project identifier is missing in the YAML. Please give a valid Project identifier");
 
     String yaml3 = addProjectIdentifier(yaml2);
+    assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "overlayInputSet", "o2", "p1"))
+        .hasMessage("Org identifier in input set does not match");
+
     assertThatThrownBy(() -> InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "overlayInputSet", "o1", "p2"))
         .hasMessage("Project identifier in input set does not match");
     InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml3, "overlayInputSet", "o1", "p1");
+  }
+
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testOverlayInputSetWithEmptyReferences() {
+    String yaml1 = getOverlayInputSetYamlWithNullReferences(false);
+    assertThatThrownBy(() -> InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml1))
+        .hasMessage("Input Set References cannot be empty. Please give valid Input Set References.");
   }
 
   private String getInputSetYaml(boolean hasPipelineComponent) {
@@ -227,6 +255,16 @@ public class InputSetYamlHelperTest extends CategoryTest {
     return base + (hasTags ? tags : "") + (hasReferences ? references : noReferences);
   }
 
+  private String getOverlayInputSetYamlWithNullReferences(boolean hasTags) {
+    String base = "overlayInputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: n1\n";
+    String tags = "  tags:\n"
+        + "    a : b\n";
+
+    return base + (hasTags ? tags : "");
+  }
+
   private String addOrgIdentifier(String yaml) {
     String orgId = "  orgIdentifier: o1\n";
     return yaml + orgId;
@@ -240,5 +278,20 @@ public class InputSetYamlHelperTest extends CategoryTest {
   private String addPipelineIdentifier(String yaml) {
     String pipelineId = "  pipelineIdentifier: n2\n";
     return yaml + pipelineId;
+  }
+
+  private String getInputSetYamlWithoutPipelineIdentifier(boolean hasPipelineComponent) {
+    return getInputSetYamlWithoutIdentifier(hasPipelineComponent, false);
+  }
+
+  private String getInputSetYamlWithoutIdentifier(boolean hasPipelineComponent, boolean hasTags) {
+    String base = "inputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: n1\n";
+    String tags = "  tags:\n"
+        + "    a : b\n";
+    String pipelineComponent = "  pipeline:\n"
+        + "    name: n2\n";
+    return base + (hasTags ? tags : "") + (hasPipelineComponent ? pipelineComponent : "");
   }
 }

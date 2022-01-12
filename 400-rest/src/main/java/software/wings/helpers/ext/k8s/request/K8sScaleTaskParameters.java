@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -31,10 +38,10 @@ public class K8sScaleTaskParameters extends K8sTaskParameters {
       K8sTaskType k8sTaskType, K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName,
       Integer timeoutIntervalInMin, String workload, Integer instances, InstanceUnitType instanceUnitType,
       Integer maxInstances, boolean skipSteadyStateCheck, HelmVersion helmVersion, Set<String> delegateSelectors,
-      boolean useLatestChartMuseumVersion, boolean useLatestKustomizeVersion, boolean useNewKubectlVersion) {
+      boolean useLatestChartMuseumVersion, boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, k8sTaskType, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-        useLatestKustomizeVersion, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
     this.workload = workload;
     this.instances = instances;
     this.instanceUnitType = instanceUnitType;

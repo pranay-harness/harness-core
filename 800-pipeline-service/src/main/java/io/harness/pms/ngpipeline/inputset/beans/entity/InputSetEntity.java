@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.ngpipeline.inputset.beans.entity;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -11,6 +18,7 @@ import io.harness.gitsync.persistance.GitSyncableEntity;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.ng.core.common.beans.NGTag;
 import io.harness.persistence.AccountAccess;
@@ -25,7 +33,9 @@ import com.google.common.collect.ImmutableList;
 import com.sun.istack.internal.NotNull;
 import java.util.List;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 import lombok.Singular;
@@ -67,6 +77,16 @@ public class InputSetEntity
                  .field(InputSetEntityKeys.yamlGitConfigRef)
                  .field(InputSetEntityKeys.branch)
                  .build())
+        // for full sync
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_organizationId_projectId_repo_branch")
+                 .field(InputSetEntityKeys.accountId)
+                 .field(InputSetEntityKeys.orgIdentifier)
+                 .field(InputSetEntityKeys.projectIdentifier)
+                 .field(InputSetEntityKeys.yamlGitConfigRef)
+                 .field(InputSetEntityKeys.branch)
+                 .descRangeField(InputSetEntityKeys.lastUpdatedAt)
+                 .build())
         .build();
   }
   @Setter @NonFinal @Id @org.mongodb.morphia.annotations.Id String uuid;
@@ -91,13 +111,13 @@ public class InputSetEntity
   @Wither @Builder.Default Boolean deleted = Boolean.FALSE;
   @Wither @Version Long version;
 
-  @Setter @NonFinal String objectIdOfYaml;
+  @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @NonFinal Boolean isEntityInvalid;
+  @Getter(AccessLevel.NONE) @Wither @NonFinal Boolean isEntityInvalid;
 
   @Wither @Builder.Default Boolean isInvalid = Boolean.FALSE;
 

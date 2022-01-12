@@ -1,9 +1,15 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Shield 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+
 input AwsCloudProviderInput {
   name: String!
 
   credentialsType: AwsCredentialsType
   ec2IamCredentials: Ec2IamCredentials
   manualCredentials: AwsManualCredentials
+  irsaCredentials: IrsaCredentials
 
   crossAccountAttributes: AwsCrossAccountAttributes
   defaultRegion: String
@@ -12,6 +18,7 @@ input AwsCloudProviderInput {
 enum AwsCredentialsType {
   EC2_IAM
   MANUAL
+  IRSA
 }
 
 input Ec2IamCredentials {
@@ -23,6 +30,11 @@ input AwsManualCredentials {
   accessKey: String
   accessKeySecretId: String
   secretKeySecretId: String!
+}
+
+input IrsaCredentials {
+  delegateSelector: String!
+  usageScope: UsageScopeInput
 }
 
 input AwsCrossAccountAttributes {
@@ -37,6 +49,7 @@ input UpdateAwsCloudProviderInput {
   credentialsType: AwsCredentialsType
   ec2IamCredentials: UpdateEc2IamCredentials
   manualCredentials: UpdateAwsManualCredentials
+  irsaCredentials: UpdateIrsaCredentials
 
   crossAccountAttributes: UpdateAwsCrossAccountAttributes
   defaultRegion: String
@@ -51,6 +64,11 @@ input UpdateAwsManualCredentials {
   accessKey: String
   accessKeySecretId: String
   secretKeySecretId: String
+}
+
+input UpdateIrsaCredentials {
+  delegateSelector: String
+  usageScope: UsageScopeInput
 }
 
 input UpdateAwsCrossAccountAttributes {

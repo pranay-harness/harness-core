@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -5,6 +12,8 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SortOrder;
+import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 
@@ -115,5 +124,17 @@ public class PageUtils {
         .pageItemCount(returnList.size())
         .content(returnList)
         .build();
+  }
+
+  public Pageable getPageRequest(int page, int size, List<String> sort, Sort sortBy) {
+    try {
+      if (EmptyPredicate.isEmpty(sort)) {
+        return org.springframework.data.domain.PageRequest.of(page, size, sortBy);
+      } else {
+        return PageUtils.getPageRequest(page, size, sort);
+      }
+    } catch (Exception e) {
+      throw new InvalidRequestException(e.getMessage(), e);
+    }
   }
 }

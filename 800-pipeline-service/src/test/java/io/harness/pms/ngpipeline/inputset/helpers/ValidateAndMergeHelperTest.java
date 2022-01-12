@@ -1,9 +1,18 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.ngpipeline.inputset.beans.entity.InputSetEntityType.INPUT_SET;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.VED;
 
+import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
@@ -75,14 +84,14 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateInputSet(
                                accountId, orgId, projectId, pipelineId, inputSetYamlWithNoProjOrOrg, branch, repoId))
-        .hasMessage("Org identifier in input set does not match");
+        .hasMessage("Organization identifier is missing in the YAML. Please give a valid Organization identifier");
 
     String inputSetFileWithNoProj = "inputset1-with-org-id.yaml";
     String inputSetYamlWithNoProj = readFile(inputSetFileWithNoProj);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateInputSet(
                                accountId, orgId, projectId, pipelineId, inputSetYamlWithNoProj, branch, repoId))
-        .hasMessage("Project identifier in input set does not match");
+        .hasMessage("Project identifier is missing in the YAML. Please give a valid Project identifier");
 
     String inputSetFile = "inputset1-with-org-proj-id.yaml";
     String inputSetYaml = readFile(inputSetFile);
@@ -118,19 +127,19 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutOrgId))
-        .hasMessage("Org identifier in input set does not match");
+        .hasMessage("Organization identifier is missing in the YAML. Please give a valid Organization identifier");
 
     String overlayInputSetYamlWithoutProjectId = getOverlayInputSetYaml(true, true, false, true, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutProjectId))
-        .hasMessage("Project identifier in input set does not match");
+        .hasMessage("Project identifier is missing in the YAML. Please give a valid Project identifier");
 
     String overlayInputSetYamlWithoutPipelineId = getOverlayInputSetYaml(true, true, true, false, false);
     assertThatThrownBy(()
                            -> validateAndMergeHelper.validateOverlayInputSet(
                                accountId, orgId, projectId, pipelineId, overlayInputSetYamlWithoutPipelineId))
-        .hasMessage("Pipeline identifier in input set does not match");
+        .hasMessage("Pipeline identifier is missing in the YAML. Please give a valid Pipeline identifier");
 
     String inputSetFile1 = "inputset1-with-org-proj-id.yaml";
     String inputSetYaml1 = readFile(inputSetFile1);
@@ -181,6 +190,26 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     assertThat(nonExistentReferenceMap).hasSize(1);
     assertThat(nonExistentReferenceMap.get(nonExistentReference)).isEqualTo("Reference does not exist");
     verify(pmsInputSetService, times(1)).get(accountId, orgId, projectId, pipelineId, nonExistentReference, false);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testValidateEmptyReferencesInOverlayInputSet() {
+    String emptyReferencesOverlay = "overlayInputSet:\n"
+        + "  identifier: a\n"
+        + "  orgIdentifier: orgId\n"
+        + "  projectIdentifier: projectId\n"
+        + "  pipelineIdentifier: Test_Pipline11\n"
+        + "  inputSetReferences:\n"
+        + "    - \"\"\n"
+        + "    - \"\"";
+
+    assertThatThrownBy(()
+                           -> validateAndMergeHelper.validateOverlayInputSet(
+                               accountId, orgId, projectId, pipelineId, emptyReferencesOverlay))
+        .isInstanceOf(InvalidRequestException.class)
+        .hasMessage("Empty Input Set Identifier not allowed in Input Set References");
   }
 
   private String getOverlayInputSetWithNonExistentReference() {
@@ -235,7 +264,8 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
     doReturn(Optional.empty()).when(pmsPipelineService).get(accountId, orgId, projectId, pipelineId, false);
     assertThatThrownBy(() -> validateAndMergeHelper.getPipelineTemplate(accountId, orgId, projectId, pipelineId, null))
         .isInstanceOf(InvalidRequestException.class)
-        .hasMessage("Could not find pipeline");
+        .hasMessage(format("Pipeline [%s] under Project[%s], Organization [%s] doesn't exist or has been deleted.",
+            pipelineId, projectId, orgId));
   }
 
   @Test
@@ -270,5 +300,66 @@ public class ValidateAndMergeHelperTest extends PipelineServiceTestBase {
                                pipelineId, Arrays.asList(invalidIdentifier, validIdentifier), branch, repoId, null))
         .isInstanceOf(InvalidRequestException.class)
         .hasMessage("invalidIdentifier is invalid. Pipeline update has made this input set outdated");
+  }
+
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testForLengthCheckOnInputSetIdentifiers() {
+    String yaml1 = getInputSetYamlWithLongIdentifier();
+    String yaml2 = addOrgIdentifier(yaml1);
+    String yaml3 = addProjectIdentifier(yaml2);
+    String yaml4 = addPipelineIdentifier(yaml3);
+    assertThatThrownBy(
+        () -> validateAndMergeHelper.validateInputSet(accountId, orgId, projectId, pipelineId, yaml4, branch, repoId))
+        .hasMessage("Input Set identifier length cannot be more that 63 characters.");
+  }
+
+  @Test
+  @Owner(developers = VED)
+  @Category(UnitTests.class)
+  public void testForLengthCheckOnOverlayInputSetIdentifiers() {
+    String yaml1 = getOverlayInputSetYamlWithLongIdentifier();
+    String yaml2 = addOrgIdentifier(yaml1);
+    String yaml3 = addProjectIdentifier(yaml2);
+    String yaml4 = addPipelineIdentifier(yaml3);
+    assertThatThrownBy(
+        () -> validateAndMergeHelper.validateOverlayInputSet(accountId, orgId, projectId, pipelineId, yaml4))
+        .hasMessage("Overlay Input Set identifier length cannot be more that 63 characters.");
+  }
+
+  private String getInputSetYamlWithLongIdentifier() {
+    String base = "inputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n";
+    String pipelineComponent = "  pipeline:\n"
+        + "    name: n2\n"
+        + "    identifier: n2\n";
+    return base + pipelineComponent;
+  }
+
+  private String getOverlayInputSetYamlWithLongIdentifier() {
+    String base = "overlayInputSet:\n"
+        + "  name: n1\n"
+        + "  identifier: abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghij\n";
+    String references = "  inputSetReferences:\n"
+        + "    - s1\n"
+        + "    - s2\n";
+    return base + references;
+  }
+
+  private String addOrgIdentifier(String yaml) {
+    String orgId = "  orgIdentifier: o1\n";
+    return yaml + orgId;
+  }
+
+  private String addProjectIdentifier(String yaml) {
+    String projectId = "  projectIdentifier: p1\n";
+    return yaml + projectId;
+  }
+
+  private String addPipelineIdentifier(String yaml) {
+    String pipelineId = "  pipelineIdentifier: n2\n";
+    return yaml + pipelineId;
   }
 }

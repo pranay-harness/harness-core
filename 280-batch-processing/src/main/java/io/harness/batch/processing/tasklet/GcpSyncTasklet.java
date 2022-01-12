@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.tasklet;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,7 +20,6 @@ import io.harness.batch.processing.dao.intfc.BatchJobScheduledDataDao;
 import io.harness.ccm.commons.entities.batch.BatchJobScheduledData;
 import io.harness.ccm.config.GcpBillingAccount;
 import io.harness.ccm.config.GcpServiceAccount;
-import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorFilterPropertiesDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResourceClient;
@@ -29,7 +35,10 @@ import io.harness.utils.RestCallToNGManagerClientUtils;
 import software.wings.service.intfc.instance.CloudToHarnessMappingService;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.api.core.ApiFuture;
+import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.api.gax.paging.Page;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.ImpersonatedCredentials;
@@ -53,8 +62,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobParameters;
 import org.springframework.batch.core.StepContribution;
@@ -79,7 +88,16 @@ public class GcpSyncTasklet implements Tasklet {
   @Autowired protected CloudToHarnessMappingService cloudToHarnessMappingService;
   @Autowired private BatchJobScheduledDataDao batchJobScheduledDataDao;
   private JobParameters parameters;
-  private static final String GOOGLE_CREDENTIALS_PATH = "GOOGLE_CREDENTIALS_PATH";
+  private static final String GOOGLE_CREDENTIALS_PATH = "CE_GCP_CREDENTIALS_PATH";
+
+  private Cache<CacheKey, Boolean> gcpSyncInfo = Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES).build();
+
+  @Value
+  private static class CacheKey {
+    private String accountId;
+    private String projectId;
+    private String datasetId;
+  }
 
   @Override
   public RepeatStatus execute(StepContribution stepContribution, ChunkContext chunkContext) throws Exception {
@@ -99,10 +117,17 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorInfoDTO connectorInfo = connector.getConnector();
         GcpCloudCostConnectorDTO gcpCloudCostConnectorDTO =
             (GcpCloudCostConnectorDTO) connectorInfo.getConnectorConfig();
+        log.info("ServiceAccountEmail: {}, DatasetId: {}, "
+                + "ProjectId: {}, TableId: {}"
+                + "ConnectorIdentifier: {}",
+            gcpCloudCostConnectorDTO.getServiceAccountEmail(),
+            gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
+            gcpCloudCostConnectorDTO.getBillingExportSpec().getTableId(), connectorInfo.getIdentifier());
         try {
           processGCPConnector(billingDataPipelineConfig, gcpCloudCostConnectorDTO.getServiceAccountEmail(),
               gcpCloudCostConnectorDTO.getBillingExportSpec().getDatasetId(), gcpCloudCostConnectorDTO.getProjectId(),
-              accountId, connectorInfo.getIdentifier(), endTime);
+              gcpCloudCostConnectorDTO.getBillingExportSpec().getTableId(), accountId, connectorInfo.getIdentifier(),
+              endTime);
         } catch (Exception e) {
           log.error("Exception processing NG GCP Connector: {}", connectorInfo.getIdentifier(), e);
         }
@@ -113,14 +138,14 @@ public class GcpSyncTasklet implements Tasklet {
       log.info("Processing batch size of {} in GCP Sync Job for CG Connectors", gcpBillingAccounts.size());
       for (GcpBillingAccount gcpBillingAccount : gcpBillingAccounts) {
         GcpServiceAccount gcpServiceAccount = cloudToHarnessMappingService.getGcpServiceAccount(accountId);
-        log.info("gcpServiceAccount.getEmail(): {}, gcpBillingAccount.getBqDatasetId(): {}, "
-                + "gcpBillingAccount.getBqProjectId(): {}, "
-                + "gcpBillingAccount.getUuid(): {}",
+        log.info("ServiceAccountEmail: {}, DatasetId: {}, "
+                + "ProjectId: {},"
+                + "ConnectorIdentifier: {}",
             gcpServiceAccount.getEmail(), gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(),
             gcpBillingAccount.getUuid());
         try {
           processGCPConnector(billingDataPipelineConfig, gcpServiceAccount.getEmail(),
-              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), accountId,
+              gcpBillingAccount.getBqDatasetId(), gcpBillingAccount.getBqProjectId(), "", accountId,
               gcpBillingAccount.getUuid(), endTime);
         } catch (Exception e) {
           log.error("Exception processing CG GCP Connector: {}", gcpBillingAccount.getUuid(), e);
@@ -131,32 +156,49 @@ public class GcpSyncTasklet implements Tasklet {
   }
 
   private void processGCPConnector(BillingDataPipelineConfig billingDataPipelineConfig, String serviceAccountEmail,
-      String datasetId, String projectId, String accountId, String connectorId, Long endTime) {
+      String datasetId, String projectId, String tableName, String accountId, String connectorId, Long endTime) {
     ServiceAccountCredentials sourceCredentials = getCredentials(GOOGLE_CREDENTIALS_PATH);
     Credentials credentials = getImpersonatedCredentials(sourceCredentials, serviceAccountEmail);
     BigQuery bigQuery = BigQueryOptions.newBuilder().setCredentials(credentials).build().getService();
     DatasetId datasetIdFullyQualified = DatasetId.of(projectId, datasetId);
     Dataset dataset = bigQuery.getDataset(datasetIdFullyQualified);
-    Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
-    tableList.getValues().forEach(table -> {
-      if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
-        TableId tableId = TableId.of(projectId, datasetId, table.getTableId().getTable());
-        Table tableGranularData = bigQuery.getTable(tableId);
-
-        Long lastModifiedTime = tableGranularData.getLastModifiedTime();
-        lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
-        log.info("Sync condition {} {}", lastModifiedTime, endTime);
-        if (lastModifiedTime > endTime) {
-          try {
-            publishMessage(billingDataPipelineConfig.getGcpProjectId(),
-                billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
-                datasetId, projectId, accountId, connectorId, table.getTableId().getTable());
-          } catch (IOException | ExecutionException | InterruptedException e) {
-            log.error("Exception publishing Pub Sub Message: {}", e);
+    if (isEmpty(tableName)) {
+      // Older way to get the tableName
+      Page<Table> tableList = dataset.list(BigQuery.TableListOption.pageSize(1000));
+      tableList.getValues().forEach(table -> {
+        if (table.getTableId().getTable().contains(GCP_BILLING_EXPORT_V_1)) {
+          TableId tableId1 = TableId.of(projectId, datasetId, table.getTableId().getTable());
+          Table tableGranularData = bigQuery.getTable(tableId1);
+          Long lastModifiedTime = tableGranularData.getLastModifiedTime();
+          lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : table.getCreationTime();
+          log.info("Sync condition {} {}", lastModifiedTime, endTime);
+          if (lastModifiedTime > endTime) {
+            CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
+            gcpSyncInfo.get(cacheKey,
+                key
+                -> publishMessage(sourceCredentials, billingDataPipelineConfig.getGcpProjectId(),
+                    billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
+                    datasetId, projectId, accountId, connectorId, table.getTableId().getTable()));
+            return;
           }
         }
+      });
+    } else {
+      log.info("tableName exists in config");
+      TableId tableId = TableId.of(projectId, datasetId, tableName);
+      Table tableGranularData = bigQuery.getTable(tableId);
+      Long lastModifiedTime = tableGranularData.getLastModifiedTime();
+      lastModifiedTime = lastModifiedTime != null ? lastModifiedTime : tableGranularData.getCreationTime();
+      log.info("Sync condition {} {}", lastModifiedTime, endTime);
+      if (lastModifiedTime > endTime) {
+        CacheKey cacheKey = new CacheKey(accountId, projectId, datasetId);
+        gcpSyncInfo.get(cacheKey,
+            key
+            -> publishMessage(sourceCredentials, billingDataPipelineConfig.getGcpProjectId(),
+                billingDataPipelineConfig.getGcpSyncPubSubTopic(), dataset.getLocation(), serviceAccountEmail,
+                datasetId, projectId, accountId, connectorId, tableGranularData.getTableId().getTable()));
       }
-    });
+    }
   }
 
   public List<ConnectorResponseDTO> getNextGenGCPConnectorResponses(String accountId) {
@@ -166,7 +208,6 @@ public class GcpSyncTasklet implements Tasklet {
         ConnectorFilterPropertiesDTO.builder()
             .types(Arrays.asList(ConnectorType.GCP_CLOUD_COST))
             .ccmConnectorFilter(CcmConnectorFilter.builder().featuresEnabled(Arrays.asList(CEFeatures.BILLING)).build())
-            .connectivityStatuses(Arrays.asList(ConnectivityStatus.SUCCESS))
             .build();
     connectorFilterPropertiesDTO.setFilterType(FilterType.CONNECTOR);
     int page = 0;
@@ -214,16 +255,17 @@ public class GcpSyncTasklet implements Tasklet {
     }
   }
 
-  public static void publishMessage(String harnessProjectId, String topicId, String location,
-      String serviceAccountEmail, String datasetId, String projectId, String accountId, String connectorId,
-      String tableName) throws IOException, ExecutionException, InterruptedException {
+  public static boolean publishMessage(ServiceAccountCredentials sourceCredentials, String harnessProjectId,
+      String topicId, String location, String serviceAccountEmail, String datasetId, String projectId, String accountId,
+      String connectorId, String tableName) {
     TopicName topicName = TopicName.of(harnessProjectId, topicId);
     Publisher publisher = null;
 
     try {
       // Create a publisher instance with default settings bound to the topic
-      publisher = Publisher.newBuilder(topicName).build();
-
+      publisher = Publisher.newBuilder(topicName)
+                      .setCredentialsProvider(FixedCredentialsProvider.create(sourceCredentials))
+                      .build();
       ImmutableMap<String, String> customAttributes = ImmutableMap.<String, String>builder()
                                                           .put(SERVICE_ACCOUNT, serviceAccountEmail)
                                                           .put(SOURCE_DATA_SET_ID, datasetId)
@@ -235,21 +277,26 @@ public class GcpSyncTasklet implements Tasklet {
                                                           .build();
       ObjectMapper objectMapper = new ObjectMapper();
       String message = objectMapper.writeValueAsString(customAttributes);
-      log.info("GCP Sync Pub Sub Event json: {}", message);
       log.info("Sending GCP Sync Pub Sub Event with data: {}", message);
       ByteString data = ByteString.copyFromUtf8(message);
       PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
-
       // Once published, returns a server-assigned message id (unique within the topic)
       ApiFuture<String> messageIdFuture = publisher.publish(pubsubMessage);
       String messageId = messageIdFuture.get();
       log.info("Published a message with custom attributes: " + messageId);
+    } catch (Exception ex) {
+      log.error("Exception while publishing", ex);
     } finally {
       if (publisher != null) {
         // When finished with the publisher, shutdown to free up resources.
         publisher.shutdown();
-        publisher.awaitTermination(1, TimeUnit.MINUTES);
+        try {
+          publisher.awaitTermination(1, TimeUnit.MINUTES);
+        } catch (InterruptedException e) {
+          log.error("InterruptedException ", e);
+        }
       }
     }
+    return true;
   }
 }

@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.core.plan.creation.creators;
+
+import static io.harness.pms.sdk.PmsSdkModuleUtils.PLAN_CREATOR_SERVICE_EXECUTOR;
 
 import static java.lang.String.format;
 
@@ -6,11 +15,12 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.ExceptionManager;
-import io.harness.manage.ManagedExecutorService;
 import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.contracts.plan.ErrorResponse;
 import io.harness.pms.contracts.plan.FilterCreationBlobRequest;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
@@ -34,6 +44,7 @@ import io.harness.pms.yaml.YamlUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import io.grpc.stub.StreamObserver;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,7 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +60,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class PlanCreatorService extends PlanCreationServiceImplBase {
-  private final Executor executor = new ManagedExecutorService(Executors.newFixedThreadPool(2));
+  @Inject @Named(PLAN_CREATOR_SERVICE_EXECUTOR) private Executor executor;
   @Inject ExceptionManager exceptionManager;
 
   private final FilterCreatorService filterCreatorService;
@@ -128,10 +138,23 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
     List<Map.Entry<String, String>> dependenciesList = new ArrayList<>(dependencies.getDependenciesMap().entrySet());
     String currentYaml = dependencies.getYaml();
 
-    dependenciesList.stream()
-        .map(Map.Entry::getValue)
-        .forEach(yamlPath
-            -> completableFutures.supplyAsync(() -> createPlanForDependencyInternal(currentYaml, yamlPath, ctx)));
+    YamlField fullField;
+    try {
+      fullField = YamlUtils.readTree(currentYaml);
+    } catch (IOException ex) {
+      String message = "Invalid yaml during plan creation";
+      log.error(message, ex);
+      throw new InvalidRequestException(message);
+    }
+
+    dependenciesList.forEach(key -> completableFutures.supplyAsync(() -> {
+      try {
+        return createPlanForDependencyInternal(currentYaml, fullField.fromYamlPath(key.getValue()), ctx,
+            dependencies.getDependencyMetadataMap().get(key.getKey()));
+      } catch (IOException e) {
+        throw new InvalidRequestException("Unable to parse the field in the path:" + key.getValue());
+      }
+    }));
 
     try {
       List<PlanCreationResponse> planCreationResponses = completableFutures.allOf().get(2, TimeUnit.MINUTES);
@@ -195,10 +218,8 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
   }
 
   private PlanCreationResponse createPlanForDependencyInternal(
-      String currentYaml, String fieldYamlPath, PlanCreationContext ctx) {
+      String currentYaml, YamlField field, PlanCreationContext ctx, Dependency dependency) {
     try {
-      YamlField field = YamlField.fromYamlPath(currentYaml, fieldYamlPath);
-
       Optional<PartialPlanCreator<?>> planCreatorOptional =
           PlanCreatorServiceHelper.findPlanCreator(planCreators, field);
       if (!planCreatorOptional.isPresent()) {
@@ -210,8 +231,8 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
       Object obj = YamlField.class.isAssignableFrom(cls) ? field : YamlUtils.read(field.getNode().toString(), cls);
 
       try {
-        PlanCreationResponse planForField =
-            planCreator.createPlanForField(PlanCreationContext.cloneWithCurrentField(ctx, field, currentYaml), obj);
+        PlanCreationResponse planForField = planCreator.createPlanForField(
+            PlanCreationContext.cloneWithCurrentField(ctx, field, currentYaml, dependency), obj);
         PlanCreatorServiceHelper.decorateNodesWithStageFqn(field, planForField);
         return planForField;
       } catch (Exception ex) {
@@ -222,7 +243,7 @@ public class PlanCreatorService extends PlanCreationServiceImplBase {
             .build();
       }
     } catch (IOException ex) {
-      String message = format("Invalid yaml path [%s] during execution plan creation", fieldYamlPath);
+      String message = format("Invalid yaml path [%s] during execution plan creation", field.getYamlPath());
       log.error(message, ex);
       return PlanCreationResponse.builder().errorMessage(message).build();
     }

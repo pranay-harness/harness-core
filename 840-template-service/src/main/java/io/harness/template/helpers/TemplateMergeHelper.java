@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -5,16 +12,20 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.pms.merger.helpers.MergeHelper.mergeInputSetFormatYamlToOriginYaml;
 import static io.harness.pms.yaml.validation.RuntimeInputValuesValidator.validateStaticValues;
+import static io.harness.template.beans.NGTemplateConstants.DUMMY_NODE;
+import static io.harness.template.beans.NGTemplateConstants.SPEC;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE_INPUTS;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE_REF;
+import static io.harness.template.beans.NGTemplateConstants.TEMPLATE_VERSION_LABEL;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.common.NGExpressionUtils;
-import io.harness.eraro.ErrorCode;
 import io.harness.exception.ngexception.NGTemplateException;
-import io.harness.ng.core.Status;
-import io.harness.ng.core.template.TemplateInputsErrorDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorDTO;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorMetadataDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.TemplateReferenceSummary;
 import io.harness.ng.core.template.exception.NGTemplateResolveException;
@@ -55,19 +66,12 @@ import lombok.extern.slf4j.Slf4j;
 @AllArgsConstructor(onConstructor = @__({ @Inject }))
 @Slf4j
 public class TemplateMergeHelper {
-  private static final String TEMPLATE = "template";
-  private static final String TEMPLATE_REF = "templateRef";
-  private static final String TEMPLATE_VERSION_LABEL = "versionLabel";
-  private static final String TEMPLATE_INPUTS = "templateInputs";
-  private static final String DUMMY_NODE = "dummy";
-  private static final String SPEC = "spec";
-
   private NGTemplateService templateService;
 
   public String getTemplateInputs(String accountId, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel) {
-    Optional<TemplateEntity> optionalTemplateEntity =
-        templateService.get(accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
+    Optional<TemplateEntity> optionalTemplateEntity = templateService.getOrThrowExceptionIfInvalid(
+        accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, false);
     if (!optionalTemplateEntity.isPresent()) {
       throw new NGTemplateException("Template to fetch template inputs does not exist.");
     }
@@ -155,7 +159,7 @@ public class TemplateMergeHelper {
       throw new NGTemplateException("Could not convert yaml to JsonNode: " + e.getMessage());
     }
 
-    TemplateInputsErrorResponseDTO errorResponse =
+    TemplateInputsErrorMetadataDTO errorResponse =
         validateLinkedTemplateInputsInYaml(accountId, orgId, projectId, pipelineYamlNode);
     if (errorResponse != null) {
       throw new NGTemplateResolveException("Exception in resolving template refs in given yaml.", USER, errorResponse);
@@ -191,9 +195,10 @@ public class TemplateMergeHelper {
           JsonNode versionLabelNode = (JsonNode) fqnToValueMap.get(FQN.builder().fqnList(fqnList).build());
           String versionLabel = "";
           if (versionLabelNode == null) {
-            Optional<TemplateEntity> templateEntity = templateService.get(templateIdentifierRef.getAccountIdentifier(),
-                templateIdentifierRef.getOrgIdentifier(), templateIdentifierRef.getProjectIdentifier(),
-                templateIdentifierRef.getIdentifier(), versionLabel, false);
+            Optional<TemplateEntity> templateEntity =
+                templateService.getOrThrowExceptionIfInvalid(templateIdentifierRef.getAccountIdentifier(),
+                    templateIdentifierRef.getOrgIdentifier(), templateIdentifierRef.getProjectIdentifier(),
+                    templateIdentifierRef.getIdentifier(), versionLabel, false);
             if (templateEntity.isPresent()) {
               versionLabel = templateEntity.get().getVersionLabel();
             }
@@ -228,7 +233,8 @@ public class TemplateMergeHelper {
     for (YamlField childYamlField : yamlNode.fields()) {
       String fieldName = childYamlField.getName();
       JsonNode value = childYamlField.getNode().getCurrJsonNode();
-      if (TEMPLATE.equals(fieldName)) {
+      boolean isTemplatePresent = isTemplatePresent(fieldName, value);
+      if (isTemplatePresent) {
         value = replaceTemplateOccurrenceWithTemplateSpecYaml(accountId, orgId, projectId, value);
       }
       if (value.isValueNode() || YamlUtils.checkIfNodeIsArrayWithPrimitiveTypes(value)) {
@@ -238,7 +244,7 @@ public class TemplateMergeHelper {
       } else {
         // If it was template key in yaml, we have replace it with the fields in template.spec in template yaml.
         // Hence, we directly put all the keys returned in map, after iterating over them.
-        if (TEMPLATE.equals(fieldName)) {
+        if (isTemplatePresent) {
           Map<String, Object> temp = mergeTemplateInputsInObject(
               accountId, orgId, projectId, new YamlNode(fieldName, value, childYamlField.getNode().getParentNode()));
           resMap.putAll(temp);
@@ -348,7 +354,7 @@ public class TemplateMergeHelper {
    * @param yaml - Yaml on which we need to validate template inputs in linked template.
    * @return
    */
-  public TemplateInputsErrorResponseDTO validateLinkedTemplateInputsInYaml(
+  public TemplateInputsErrorMetadataDTO validateLinkedTemplateInputsInYaml(
       String accountId, String orgId, String projectId, YamlNode yamlNode) {
     Map<String, TemplateInputsErrorDTO> templateInputsErrorMap = new LinkedHashMap<>();
     Map<String, Object> errorYamlMap =
@@ -358,8 +364,7 @@ public class TemplateMergeHelper {
     }
     String errorYaml = convertToYaml(errorYamlMap);
     String errorTemplateYaml = convertUuidErrorMapToFqnErrorMap(errorYaml, templateInputsErrorMap);
-    return new TemplateInputsErrorResponseDTO(Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION,
-        "Template resolve failed in given yaml.", null, errorTemplateYaml, templateInputsErrorMap);
+    return new TemplateInputsErrorMetadataDTO(errorTemplateYaml, templateInputsErrorMap);
   }
 
   private Map<String, Object> validateTemplateInputsInObject(String accountId, String orgId, String projectId,
@@ -368,7 +373,7 @@ public class TemplateMergeHelper {
     for (YamlField childYamlField : yamlNode.fields()) {
       String fieldName = childYamlField.getName();
       JsonNode value = childYamlField.getNode().getCurrJsonNode();
-      if (TEMPLATE.equals(fieldName)) {
+      if (isTemplatePresent(fieldName, value)) {
         resMap.put(fieldName, validateTemplateInputs(accountId, orgId, projectId, value, templateInputsErrorMap));
         continue;
       }
@@ -548,14 +553,18 @@ public class TemplateMergeHelper {
     }
 
     IdentifierRef templateIdentifierRef = IdentifierRefHelper.getIdentifierRef(identifier, accountId, orgId, projectId);
-    Optional<TemplateEntity> templateEntity =
-        templateService.get(templateIdentifierRef.getAccountIdentifier(), templateIdentifierRef.getOrgIdentifier(),
-            templateIdentifierRef.getProjectIdentifier(), templateIdentifierRef.getIdentifier(), versionLabel, false);
+    Optional<TemplateEntity> templateEntity = templateService.getOrThrowExceptionIfInvalid(
+        templateIdentifierRef.getAccountIdentifier(), templateIdentifierRef.getOrgIdentifier(),
+        templateIdentifierRef.getProjectIdentifier(), templateIdentifierRef.getIdentifier(), versionLabel, false);
     if (!templateEntity.isPresent()) {
       throw new NGTemplateException(String.format(
           "The template identifier %s and version label %s does not exist. Could not replace this template",
           templateIdentifierRef.getIdentifier(), versionLabel));
     }
     return templateEntity.get();
+  }
+
+  private boolean isTemplatePresent(String fieldName, JsonNode templateValue) {
+    return TEMPLATE.equals(fieldName) && templateValue.isObject() && templateValue.get(TEMPLATE_REF) != null;
   }
 }

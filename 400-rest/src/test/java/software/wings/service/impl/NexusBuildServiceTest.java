@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
@@ -24,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyInt;
+import static org.mockito.Matchers.anySet;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -297,7 +305,8 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                                               .artifactStreamType(ArtifactStreamType.NEXUS.name())
                                               .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
-    verify(nexusService).getVersions(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackageName"));
+    verify(nexusService)
+        .getVersions(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackageName"), anySet());
 
     attributes = ArtifactStreamAttributes.builder()
                      .jobName("someJobName")
@@ -306,7 +315,8 @@ public class NexusBuildServiceTest extends WingsBaseTest {
                      .artifactStreamType(ArtifactStreamType.NEXUS.name())
                      .build();
     nexusBuildService.getBuilds(APP_ID, attributes, nexusConfig, Collections.emptyList());
-    verify(nexusService).getVersions(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackageName"));
+    verify(nexusService)
+        .getVersions(eq(npm.name()), eq(nexusRequest), eq("someJobName"), eq("someNexusPackageName"), anySet());
   }
 
   @Test

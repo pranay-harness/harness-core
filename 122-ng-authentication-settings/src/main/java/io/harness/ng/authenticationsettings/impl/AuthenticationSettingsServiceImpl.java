@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.authenticationsettings.impl;
 
 import static io.harness.remote.client.RestClientUtils.getResponse;
@@ -143,6 +150,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
                        .origin(samlSettings.getOrigin())
                        .displayName(samlSettings.getDisplayName())
                        .authorizationEnabled(samlSettings.isAuthorizationEnabled())
+                       .entityIdentifier(samlSettings.getEntityIdentifier())
                        .build());
 
       } else if (ssoSetting.getType().equals(SSOType.OAUTH)) {
@@ -180,7 +188,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
-    RequestBody entityIdentifierPart = createPartFromString(logoutUrl);
+    RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
     return getResponse(managerClient.uploadSAMLMetadata(accountId, inputStream, displayNamePart,
         groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
@@ -188,14 +196,15 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @Override
   @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
   public SSOConfig updateSAMLMetadata(@NotNull @AccountIdentifier String accountId, MultipartBody.Part inputStream,
-      String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl) {
+      String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl,
+      String entityIdentifier) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
-
-    return getResponse(managerClient.updateSAMLMetadata(
-        accountId, inputStream, displayNamePart, groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart));
+    RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
+    return getResponse(managerClient.updateSAMLMetadata(accountId, inputStream, displayNamePart,
+        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
 
   @Override

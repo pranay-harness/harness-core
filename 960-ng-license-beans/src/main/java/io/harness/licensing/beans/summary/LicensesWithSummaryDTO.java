@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.licensing.beans.summary;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
@@ -36,7 +43,8 @@ import lombok.experimental.SuperBuilder;
           @JsonSubTypes.Type(value = CVLicenseSummaryDTO.class, name = "CV"),
           @JsonSubTypes.Type(value = CFLicenseSummaryDTO.class, name = "CF"),
     })
-@Schema(name = "LicensesWithSummary", description = "This is the view of a License With Summary defined in Harness")
+@Schema(
+    name = "LicensesWithSummary", description = "This contains details of the License With Summary defined in Harness")
 public abstract class LicensesWithSummaryDTO {
   Edition edition;
   LicenseType licenseType;

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -28,8 +35,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.Size;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Builder.Default;
+import lombok.Getter;
 import lombok.Setter;
 import lombok.Singular;
 import lombok.Value;
@@ -101,21 +110,22 @@ public class PipelineEntity
   @Wither @Version Long version;
 
   @Default Map<String, org.bson.Document> filters = new HashMap<>();
+  // Todo: Move this to pipelineMetadata
   ExecutionSummaryInfo executionSummaryInfo;
   int runSequence;
 
   @Wither int stageCount;
   @Wither @Singular List<String> stageNames;
 
-  @Wither @Setter @NonFinal Boolean templateReference;
+  @Wither @Setter @NonFinal @Default Boolean templateReference = false;
 
-  @Setter @NonFinal String objectIdOfYaml;
+  @Wither @Setter @NonFinal String objectIdOfYaml;
   @Setter @NonFinal Boolean isFromDefaultBranch;
   @Setter @NonFinal String branch;
   @Setter @NonFinal String yamlGitConfigRef;
   @Setter @NonFinal String filePath;
   @Setter @NonFinal String rootFolder;
-  @NonFinal Boolean isEntityInvalid;
+  @Getter(AccessLevel.NONE) @Wither @NonFinal Boolean isEntityInvalid;
 
   @Override
   public String getAccountIdentifier() {

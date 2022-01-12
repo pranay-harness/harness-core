@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -6,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityName;
 import io.harness.encryption.Scope;
 import io.harness.gitsync.sdk.EntityGitDetails;
+import io.harness.gitsync.sdk.EntityValidityDetails;
 import io.harness.ng.core.template.TemplateEntityType;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -47,5 +55,6 @@ public class TemplateResponseDTO {
   Scope templateScope;
   Long version;
   EntityGitDetails gitDetails;
+  EntityValidityDetails entityValidityDetails;
   long lastUpdatedAt;
 }

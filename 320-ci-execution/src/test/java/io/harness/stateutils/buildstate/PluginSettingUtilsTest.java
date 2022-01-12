@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.stateutils.buildstate;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
@@ -17,6 +24,7 @@ import io.harness.beans.steps.stepinfo.SaveCacheS3StepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.category.element.UnitTests;
 import io.harness.executionplan.CIExecutionTestBase;
@@ -47,7 +55,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
 
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToArtifactoryStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -79,7 +87,8 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
     expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier", 100);
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(gcrStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -111,7 +120,8 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
     expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier", 100);
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(ecrStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
   @Test
@@ -139,7 +149,8 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_CUSTOM_LABELS", "label=label1");
     expected.put("PLUGIN_SNAPSHOT_MODE", "redo");
     expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
-    Map<String, String> actual = PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier", 100);
+    Map<String, String> actual =
+        PluginSettingUtils.getPluginCompatibleEnvVariables(dockerStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -166,7 +177,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_PATH_STYLE", "false");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -196,7 +207,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_PATH_STYLE", "false");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -224,9 +235,9 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_PATH_STYLE", "false");
     expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
-    expected.put("PLUGIN_OVERRIDE", "true");
+    expected.put("PLUGIN_OVERRIDE", "false");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -242,7 +253,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
             .sourcePaths(ParameterField.createValueField(asList("path1", "path2")))
             .endpoint(ParameterField.createValueField("endpoint"))
             .archiveFormat(ParameterField.createValueField(ArchiveFormat.GZIP))
-            .override(ParameterField.createValueField(false))
+            .override(ParameterField.createValueField(true))
             .build();
     Map<String, String> expected = new HashMap<>();
     expected.put("PLUGIN_BACKEND", "s3");
@@ -256,9 +267,9 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_PATH_STYLE", "false");
     expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
-    expected.put("PLUGIN_OVERRIDE", "false");
+    expected.put("PLUGIN_OVERRIDE", "true");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -280,7 +291,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -305,7 +316,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_ARCHIVE_FORMAT", "gzip");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(restoreCacheGCSStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -327,10 +338,10 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_REBUILD", "true");
     expected.put("PLUGIN_EXIT_CODE", "true");
     expected.put("PLUGIN_ARCHIVE_FORMAT", "tar");
-    expected.put("PLUGIN_OVERRIDE", "true");
+    expected.put("PLUGIN_OVERRIDE", "false");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -357,7 +368,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_OVERRIDE", "false");
     expected.put("PLUGIN_BACKEND_OPERATION_TIMEOUT", "100s");
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(saveCacheGCSStepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -381,7 +392,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
 
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 
@@ -400,7 +411,7 @@ public class PluginSettingUtilsTest extends CIExecutionTestBase {
     expected.put("PLUGIN_ARTIFACT_FILE", "/addon/tmp/.plugin/artifact");
 
     Map<String, String> actual =
-        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100);
+        PluginSettingUtils.getPluginCompatibleEnvVariables(uploadToS3StepInfo, "identifier", 100, Type.K8);
     assertThat(actual).isEqualTo(expected);
   }
 }

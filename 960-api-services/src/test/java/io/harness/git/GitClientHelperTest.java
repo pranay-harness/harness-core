@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.git;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
@@ -15,6 +22,7 @@ import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.DEEPAK;
 import static io.harness.rule.OwnerRule.HARSH;
 import static io.harness.rule.OwnerRule.JAMIE;
+import static io.harness.rule.OwnerRule.JELENA;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +59,7 @@ import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.TransportException;
 import org.eclipse.jgit.lib.ObjectId;
@@ -73,6 +82,13 @@ public class GitClientHelperTest extends CategoryTest {
   public void test_checkIfGitConnectivityIssueInCaseOfTransportException() {
     gitClientHelper.checkIfGitConnectivityIssue(
         new GitAPIException("Git Exception", new TransportException("Transport Exception")) {});
+  }
+
+  @Test(expected = GitConnectionDelegateException.class)
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void test_checkIfGitConnectivityIssueInCaseOfRefNotFoundException() {
+    gitClientHelper.checkIfGitConnectivityIssue(new RefNotFoundException("Invalid commit Id"));
   }
 
   @Test

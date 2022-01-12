@@ -1,10 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.entities;
 
 import io.harness.cvng.servicelevelobjective.beans.SLIMetricType;
-import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorSpec;
-import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdSLIMetricSpec;
+import io.harness.cvng.servicelevelobjective.beans.slimetricspec.ThresholdType;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.google.common.base.Preconditions;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,6 +29,8 @@ import org.mongodb.morphia.query.UpdateOperations;
 @EqualsAndHashCode(callSuper = true)
 public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
   String metric1;
+  Double thresholdValue;
+  ThresholdType thresholdType;
 
   @Override
   public SLIMetricType getSLIMetricType() {
@@ -27,11 +38,10 @@ public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
   }
 
   @Override
-  public ServiceLevelIndicatorSpec getServiceLevelIndicatorSpec() {
-    return ServiceLevelIndicatorSpec.builder()
-        .type(SLIMetricType.THRESHOLD)
-        .spec(ThresholdSLIMetricSpec.builder().metric1(metric1).build())
-        .build();
+  public List<String> getMetricNames() {
+    List<String> metricForRatioSLI = new ArrayList<>();
+    metricForRatioSLI.add(metric1);
+    return metricForRatioSLI;
   }
 
   public static class ThresholdServiceLevelIndicatorUpdatableEntity
@@ -41,6 +51,35 @@ public class ThresholdServiceLevelIndicator extends ServiceLevelIndicator {
         ThresholdServiceLevelIndicator thresholdServiceLevelIndicator) {
       setCommonOperations(updateOperations, thresholdServiceLevelIndicator);
       updateOperations.set(ThresholdServiceLevelIndicatorKeys.metric1, thresholdServiceLevelIndicator.getMetric1());
+      updateOperations.set(
+          ThresholdServiceLevelIndicatorKeys.thresholdValue, thresholdServiceLevelIndicator.getThresholdValue());
+      updateOperations.set(
+          ThresholdServiceLevelIndicatorKeys.thresholdType, thresholdServiceLevelIndicator.getThresholdType());
+    }
+  }
+
+  public boolean isUpdatable(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      Preconditions.checkArgument(isCoreUpdatable(serviceLevelIndicator));
+      ThresholdServiceLevelIndicator thresholdServiceLevelIndicator =
+          (ThresholdServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getMetric1().equalsIgnoreCase(thresholdServiceLevelIndicator.getMetric1()));
+      return true;
+    } catch (IllegalArgumentException ex) {
+      return false;
+    }
+  }
+
+  @Override
+  public boolean shouldReAnalysis(ServiceLevelIndicator serviceLevelIndicator) {
+    try {
+      ThresholdServiceLevelIndicator thresholdServiceLevelIndicator =
+          (ThresholdServiceLevelIndicator) serviceLevelIndicator;
+      Preconditions.checkArgument(this.getThresholdValue().equals(thresholdServiceLevelIndicator.getThresholdValue()));
+      Preconditions.checkArgument(this.getThresholdType().equals(thresholdServiceLevelIndicator.getThresholdType()));
+      return false;
+    } catch (IllegalArgumentException ex) {
+      return true;
     }
   }
 }

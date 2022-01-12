@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.applicationmanifest;
 
 import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonicalForm;
+import static io.harness.rule.OwnerRule.HINGER;
 import static io.harness.rule.OwnerRule.PRABU;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -44,6 +52,7 @@ import software.wings.beans.settings.helm.HttpHelmRepoConfig;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.FeatureFlagService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.applicationmanifest.HelmChartService;
@@ -62,6 +71,7 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
   private static final String ENCRYPT = "ENCRYPT";
 
   @Inject @InjectMocks private ManifestCollectionUtils manifestCollectionUtils;
+  @Mock private FeatureFlagService featureFlagService;
   @Mock private ApplicationManifestService applicationManifestService;
   @Mock private HelmChartService helmChartService;
   @Mock private SecretManager secretManager;
@@ -101,7 +111,7 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
     assertThat(helmChartConfigParams.getChartName()).isEqualTo(CHART_NAME);
     assertThat(helmChartConfigParams.getEncryptedDataDetails().get(0).getFieldName()).isEqualTo(ENCRYPT);
     assertThat(helmChartConfigParams.getHelmVersion()).isEqualTo(HelmVersion.V3);
-    assertThat(helmChartConfigParams.getRepoName()).isEqualTo(convertBase64UuidToCanonicalForm(SETTING_ID));
+    assertThat(helmChartConfigParams.getRepoName()).isEqualTo(convertBase64UuidToCanonicalForm(MANIFEST_ID));
     assertThat(helmChartConfigParams.getHelmRepoConfig()).isInstanceOf(HttpHelmRepoConfig.class);
   }
 
@@ -159,6 +169,39 @@ public class ManifestCollectionUtilsTest extends WingsBaseTest {
     assertThat(taskParams.getEncryptedDataDetails().get(0).getFieldName()).isEqualTo(ENCRYPT);
     assertThat(taskParams.getRepoDisplayName()).isEqualTo(SETTING_NAME);
     assertThat(taskParams.getHelmRepoConfig()).isInstanceOf(HttpHelmRepoConfig.class);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void shouldNotUseRepoFlagsForHelmV2() {
+    ApplicationManifest applicationManifest = generateApplicationManifest();
+    // service with helm v2
+    Service service = Service.builder().uuid(SERVICE_ID).helmVersion(HelmVersion.V2).build();
+    List<HelmChart> publishedCharts =
+        Arrays.asList(generateHelmChartWithVersion("1"), generateHelmChartWithVersion("2"));
+
+    doReturn(true).when(featureFlagService).isFeatureFlagEnabled(any(), any());
+
+    doReturn(applicationManifest).when(applicationManifestService).getById(APP_ID, MANIFEST_ID);
+    doReturn(service).when(serviceResourceService).get(APP_ID, SERVICE_ID);
+    doReturn(publishedCharts).when(helmChartService).listHelmChartsForAppManifest(ACCOUNT_ID, MANIFEST_ID);
+    doReturn(aSettingAttribute().withUuid(SETTING_ID).withValue(HttpHelmRepoConfig.builder().build()).build())
+        .when(settingsService)
+        .get(any());
+    doReturn(Arrays.asList(EncryptedDataDetail.builder().fieldName(ENCRYPT).build()))
+        .when(secretManager)
+        .getEncryptionDetails(any(EncryptableSetting.class), anyString(), anyString());
+
+    ManifestCollectionParams collectionParams = manifestCollectionUtils.prepareCollectTaskParamsWithChartVersion(
+        MANIFEST_ID, APP_ID, HelmChartCollectionParams.HelmChartCollectionType.SPECIFIC_VERSION, "1");
+    HelmChartCollectionParams helmChartCollectionParams = (HelmChartCollectionParams) collectionParams;
+    assertThat(helmChartCollectionParams.getHelmChartConfigParams()).isNotNull();
+    assertThat(helmChartCollectionParams.isUseRepoFlags()).isFalse();
+
+    HelmChartConfigParams helmChartConfigParams = helmChartCollectionParams.getHelmChartConfigParams();
+    assertThat(helmChartConfigParams.getHelmVersion()).isEqualTo(HelmVersion.V2);
+    assertThat(helmChartConfigParams.getChartVersion()).isEqualTo("1");
   }
 
   private ApplicationManifest generateApplicationManifest() {

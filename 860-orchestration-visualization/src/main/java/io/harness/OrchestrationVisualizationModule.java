@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
@@ -5,12 +12,12 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.eventsframework.EventsFrameworkConstants.ORCHESTRATION_LOG;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.events.PmsRedissonClientFactory;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
-import io.harness.eventsframework.impl.redis.RedisUtils;
 import io.harness.graph.stepDetail.PmsGraphStepDetailsServiceImpl;
 import io.harness.graph.stepDetail.service.PmsGraphStepDetailsService;
 import io.harness.redis.RedisConfig;
@@ -62,7 +69,7 @@ public class OrchestrationVisualizationModule extends AbstractModule {
           .toInstance(
               NoOpConsumer.of(EventsFrameworkConstants.DUMMY_TOPIC_NAME, EventsFrameworkConstants.DUMMY_GROUP_NAME));
     } else {
-      RedissonClient redissonClient = RedisUtils.getClient(redisConfig);
+      RedissonClient redissonClient = PmsRedissonClientFactory.getRedisClient(redisConfig);
       bind(Consumer.class)
           .annotatedWith(Names.named(ORCHESTRATION_LOG))
           .toInstance(RedisConsumer.of(ORCHESTRATION_LOG, PIPELINE_SERVICE.getServiceId(), redissonClient,

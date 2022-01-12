@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.connector.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
@@ -9,7 +16,6 @@ import static io.harness.encryption.Scope.ACCOUNT;
 import static io.harness.encryption.Scope.ORG;
 import static io.harness.encryption.Scope.PROJECT;
 import static io.harness.filter.FilterType.CONNECTOR;
-import static io.harness.springdata.SpringDataMongoUtils.populateAllFilter;
 import static io.harness.springdata.SpringDataMongoUtils.populateInFilter;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
@@ -283,7 +289,7 @@ public class ConnectorFilterServiceImpl implements ConnectorFilterService {
     populateAzureFilters(criteria, ccmConnectorFilter);
     populateGcpFilters(criteria, ccmConnectorFilter);
     populateK8sFilters(criteria, ccmConnectorFilter);
-    populateAllFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
+    populateInFilter(criteria, CEAzureConfigKeys.featuresEnabled, ccmConnectorFilter.getFeaturesEnabled());
   }
 
   private void populateAwsFilters(Criteria criteria, CcmConnectorFilter ccmConnectorFilter) {

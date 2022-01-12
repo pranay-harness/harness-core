@@ -1,14 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.activity.services.api;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.PageRequest;
-import io.harness.cvng.activity.beans.ActivityDashboardDTO;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
@@ -29,9 +31,6 @@ import io.harness.ng.beans.PageResponse;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nullable;
-import javax.validation.constraints.NotNull;
-import lombok.NonNull;
 
 @OwnedBy(HarnessTeam.CV)
 public interface ActivityService {
@@ -43,22 +42,11 @@ public interface ActivityService {
 
   void updateActivityStatus(Activity activity);
 
-  List<DeploymentActivityVerificationResultDTO> getRecentDeploymentActivityVerifications(
-      String accountId, String orgIdentifier, String projectIdentifier);
-
-  DeploymentActivityResultDTO getDeploymentActivityVerificationsByTag(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String deploymentTag);
-  DeploymentActivityPopoverResultDTO getDeploymentActivityVerificationsPopoverSummary(
-      String accountId, String orgIdentifier, String projectIdentifier, String serviceIdentifier, String deploymentTag);
   Activity getActivityFromDTO(ActivityDTO activityDTO);
 
   String getDeploymentTagFromActivity(String accountId, String verificationJobInstanceId);
 
   String createActivity(Activity activity);
-
-  List<ActivityDashboardDTO> listActivitiesInTimeRange(@NotNull @NonNull ProjectParams projectParams,
-      @Nullable String serviceIdentifier, @Nullable String environmentIdentifier, @NotNull Instant startTime,
-      @NotNull Instant endTime);
 
   List<ActivityVerificationResultDTO> getRecentActivityVerificationResults(
       String accountId, String orgIdentifier, String projectIdentifier, int size);
@@ -98,6 +86,4 @@ public interface ActivityService {
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);
 
   String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
-
-  io.harness.beans.PageResponse<Activity> getPaginated(PageRequest pageRequest);
 }

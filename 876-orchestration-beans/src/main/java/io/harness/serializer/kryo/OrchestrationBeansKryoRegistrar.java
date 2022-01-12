@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -9,7 +16,14 @@ import io.harness.execution.NodeExecution;
 import io.harness.interrupts.Interrupt;
 import io.harness.interrupts.Interrupt.State;
 import io.harness.interrupts.InterruptEffect;
+import io.harness.pms.contracts.plan.ConsumerConfig;
+import io.harness.pms.contracts.plan.SdkModuleInfo;
+import io.harness.pms.contracts.steps.SdkStep;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
+import io.harness.pms.sdk.PmsSdkInstance;
+import io.harness.pms.serializer.kryo.serializers.ConsumerConfigKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.SdkModuleInfoKryoSerializer;
+import io.harness.pms.serializer.kryo.serializers.SdkStepKryoSerializer;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.timeout.trackers.active.ActiveTimeoutParameters;
 
@@ -40,5 +54,9 @@ public class OrchestrationBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(StepDetailInstance.class, 87603);
 
     kryo.register(PmsStepParameters.class, 88405);
+    kryo.register(PmsSdkInstance.class, 88408);
+    kryo.register(ConsumerConfig.class, ConsumerConfigKryoSerializer.getInstance(), 2627);
+    kryo.register(SdkModuleInfo.class, SdkModuleInfoKryoSerializer.getInstance(), 2628);
+    kryo.register(SdkStep.class, SdkStepKryoSerializer.getInstance(), 2629);
   }
 }

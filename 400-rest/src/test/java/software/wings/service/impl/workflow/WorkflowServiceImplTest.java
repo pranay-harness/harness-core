@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -183,8 +190,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.field(any())).thenReturn(fieldEnd);
-    when(fieldEnd.contains(any())).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -226,11 +232,10 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(emptyQuery.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(emptyQuery);
-    when(query.field(WorkflowExecutionKeys.serviceIds)).thenReturn(fieldEnd);
-    when(fieldEnd.contains(any())).thenReturn(emptyQuery);
-    when(emptyQuery.order(any(Sort.class))).thenReturn(emptyQuery);
-    when(emptyQuery.get()).thenReturn(null);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
+    when(query.order(any(Sort.class))).thenReturn(query);
+    when(query.get()).thenReturn(null);
     WorkflowServiceImpl workflowServiceImpl = (WorkflowServiceImpl) workflowService;
     LastDeployedArtifactInformation artifactInformation = workflowServiceImpl.fetchLastDeployedArtifact(
         workflow, asList(ARTIFACT_STREAM_ID, ARTIFACT_STREAM_ID_ARTIFACTORY), SERVICE_ID);
@@ -407,8 +412,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.field(any())).thenReturn(fieldEnd);
-    when(fieldEnd.contains(any())).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -462,6 +466,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).pollForChanges(true).build();
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(SERVICE_NAME).artifactFromManifest(true).build());
 
     DeploymentMetadata deploymentMetadata =
         workflowService.fetchDeploymentMetadata(APP_ID, workflow, Collections.EMPTY_MAP, Collections.EMPTY_LIST,
@@ -523,6 +530,9 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     ApplicationManifest applicationManifest =
         ApplicationManifest.builder().storeType(StoreType.HelmChartRepo).pollForChanges(true).build();
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
+
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(SERVICE_NAME).artifactFromManifest(true).build());
 
     DeploymentMetadata deploymentMetadata =
         workflowService.fetchDeploymentMetadata(APP_ID, workflow, Collections.EMPTY_MAP, Collections.EMPTY_LIST,
@@ -604,7 +614,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
     when(applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
         .thenReturn(Collections.singletonList(applicationManifest));
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(SERVICE_NAME).artifactFromManifest(true).build());
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
         .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").version("1").displayName("chart-1").build());
 
@@ -641,7 +652,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
     when(applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
         .thenReturn(Collections.singletonList(applicationManifest));
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(SERVICE_NAME).artifactFromManifest(true).build());
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
         .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").version("1").displayName("chart-1").build());
 
@@ -712,8 +724,7 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(query.filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.appId, workflow.getAppId())).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())).thenReturn(query);
-    when(query.field(WorkflowExecutionKeys.serviceIds)).thenReturn(fieldEnd);
-    when(fieldEnd.contains(SERVICE_ID)).thenReturn(query);
+    when(query.filter(WorkflowExecutionKeys.serviceIds, SERVICE_ID)).thenReturn(query);
     when(query.filter(WorkflowExecutionKeys.status, SUCCESS)).thenReturn(query);
     when(query.order(any(Sort.class))).thenReturn(query);
     when(query.get()).thenReturn(workflowExecution);
@@ -1006,7 +1017,8 @@ public class WorkflowServiceImplTest extends WingsBaseTest {
     when(applicationManifestService.getManifestByServiceId(APP_ID, SERVICE_ID)).thenReturn(applicationManifest);
     when(applicationManifestService.getManifestsByServiceId(APP_ID, SERVICE_ID, AppManifestKind.K8S_MANIFEST))
         .thenReturn(asList(applicationManifest, applicationManifest2));
-    when(serviceResourceService.get(APP_ID, SERVICE_ID)).thenReturn(Service.builder().name(SERVICE_NAME).build());
+    when(serviceResourceService.get(APP_ID, SERVICE_ID))
+        .thenReturn(Service.builder().name(SERVICE_NAME).artifactFromManifest(true).build());
     when(helmChartService.getLastCollectedManifest(ACCOUNT_ID, MANIFEST_ID))
         .thenReturn(HelmChart.builder().uuid(HELM_CHART_ID).name("chart").version("1").displayName("chart-1").build());
 

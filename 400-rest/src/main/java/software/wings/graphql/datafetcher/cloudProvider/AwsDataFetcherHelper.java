@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.cloudProvider;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -18,8 +25,10 @@ import software.wings.graphql.datafetcher.secrets.UsageScopeController;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLAwsManualCredentials;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLEc2IamCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLIrsaCredentials;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateAwsCloudProviderInput;
 import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateEc2IamCredentials;
+import software.wings.graphql.schema.mutation.cloudProvider.aws.QLUpdateIrsaCredentials;
 import software.wings.graphql.schema.type.secrets.QLUsageScope;
 
 import com.google.inject.Inject;
@@ -33,7 +42,7 @@ public class AwsDataFetcherHelper {
   @Inject private UsageScopeController usageScopeController;
 
   public SettingAttribute toSettingAttribute(QLAwsCloudProviderInput input, String accountId) {
-    AwsConfigBuilder configBuilder = AwsConfig.builder().accountId(accountId);
+    final AwsConfigBuilder configBuilder = AwsConfig.builder().accountId(accountId);
 
     SettingAttribute.Builder settingAttributeBuilder =
         SettingAttribute.Builder.aSettingAttribute().withAccountId(accountId).withCategory(
@@ -73,6 +82,21 @@ public class AwsDataFetcherHelper {
             });
             configBuilder.encryptedSecretKey(credentials.getSecretKeySecretId().getValue().orElseThrow(
                 () -> new InvalidRequestException("No secretKeySecretId provided with the request.")));
+          } break;
+          case IRSA: {
+            QLIrsaCredentials credentials = input.getIrsaCredentials().getValue().orElseThrow(
+                () -> new InvalidRequestException("No IRSA Credentials provided with the request."));
+
+            configBuilder.useEc2IamCredentials(false);
+            configBuilder.useEncryptedAccessKey(false);
+            configBuilder.useIRSA(true);
+            configBuilder.tag(credentials.getDelegateSelector().getValue().orElseThrow(
+                () -> new InvalidRequestException("No delegateSelector provided with the request.")));
+            RequestField<QLUsageScope> usageRestrictions = credentials.getUsageScope();
+            if (usageRestrictions != null && usageRestrictions.isPresent()) {
+              settingAttributeBuilder.withUsageRestrictions(
+                  usageScopeController.populateUsageRestrictions(usageRestrictions.getValue().orElse(null), accountId));
+            }
           } break;
           default:
             throw new InvalidRequestException("Invalid credentials type");
@@ -156,6 +180,25 @@ public class AwsDataFetcherHelper {
               });
               credentials.getSecretKeySecretId().getValue().ifPresent(config::setEncryptedSecretKey);
             });
+          } break;
+          case IRSA: {
+            config.setUseEc2IamCredentials(false);
+            config.setUseIRSA(true);
+            config.setAccessKey(null);
+            config.setEncryptedSecretKey(null);
+            input.getIrsaCredentials()
+                .getValue()
+                .flatMap(credentials -> credentials.getDelegateSelector().getValue())
+                .ifPresent(config::setTag);
+            QLUpdateIrsaCredentials irsaCredentials = input.getIrsaCredentials().getValue().orElseThrow(
+                () -> new InvalidRequestException("No IRSA Credentials provided"));
+            if (irsaCredentials != null) {
+              RequestField<QLUsageScope> usageRestrictions = irsaCredentials.getUsageScope();
+              if (usageRestrictions != null && usageRestrictions.isPresent()) {
+                settingAttribute.setUsageRestrictions(usageScopeController.populateUsageRestrictions(
+                    usageRestrictions.getValue().orElse(null), accountId));
+              }
+            }
           } break;
           default:
             throw new InvalidRequestException("Invalid credentials type");

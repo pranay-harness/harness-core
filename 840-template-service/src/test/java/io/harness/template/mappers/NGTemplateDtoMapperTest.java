@@ -1,9 +1,18 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ARCHIT;
+import static io.harness.rule.OwnerRule.INDER;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -17,6 +26,7 @@ import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 
 import com.google.common.io.Resources;
+import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -165,5 +175,28 @@ public class NGTemplateDtoMapperTest extends CategoryTest {
     assertThat(ngTemplateConfig).isNotNull();
     assertThat(ngTemplateConfig.getTemplateInfoConfig().getIdentifier()).isEqualTo(entity.getIdentifier());
     assertThat(ngTemplateConfig.getTemplateInfoConfig().getVersionLabel()).isEqualTo(entity.getVersionLabel());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testVersionLabelValidations() {
+    String yaml = "template:\n"
+        + "  identifier: template1\n"
+        + "  versionLabel: Version 1\n"
+        + "  name: template1\n"
+        + "  type: Step";
+
+    assertThatThrownBy(() -> NGTemplateDtoMapper.toTemplateEntity(ACCOUNT_ID, yaml))
+        .isInstanceOf(JerseyViolationException.class);
+
+    String yaml2 = "template:\n"
+        + "  identifier: template1\n"
+        + "  versionLabel: _Version1\n"
+        + "  name: template1\n"
+        + "  type: Step";
+
+    assertThatThrownBy(() -> NGTemplateDtoMapper.toTemplateEntity(ACCOUNT_ID, yaml2))
+        .isInstanceOf(JerseyViolationException.class);
   }
 }

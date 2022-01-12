@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.common.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -23,6 +30,7 @@ import io.harness.gitsync.common.dtos.SaasGitDTO;
 import io.harness.gitsync.common.impl.GitUtils;
 import io.harness.gitsync.common.service.ScmFacilitatorService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.core.OrgIdentifier;
 import io.harness.ng.core.ProjectIdentifier;
@@ -111,13 +119,14 @@ public class ScmFacilitatorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL,
+      @Parameter(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.REPO_URL) String repoURL,
       @Parameter(description = PAGE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PAGE) @DefaultValue(
           "0") int pageNum,
       @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue(
           "50") int pageSize,
-      @Parameter(description = "Search Term") @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue(
-          "") String searchTerm) {
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
     return ResponseDTO.newResponse(scmFacilitatorService.listBranchesUsingConnector(accountIdentifier, orgIdentifier,
         projectIdentifier, connectorIdentifierRef, URLDecoderUtility.getDecodedString(repoURL),
         PageRequest.builder().pageIndex(pageNum).pageSize(pageSize).build(), searchTerm));
@@ -125,16 +134,16 @@ public class ScmFacilitatorResource {
 
   @GET
   @Path("listBranchesByGitConfig")
-  @ApiOperation(value = "Gets list of branches by Git Config Identifier", nickname = "getListOfBranchesByGitConfig")
-  @Operation(operationId = "getListOfBranchesByGitConfig",
-      summary = "Lists Branches by given Git Sync Config Identifier",
+  @ApiOperation(value = "Retrieves a list of Git Branches corresponding to a Git Sync Config Id",
+      nickname = "getListOfBranchesByGitConfig")
+  @Operation(operationId = "getListOfBranchesByGitConfig", summary = "Lists Branches by given Git Sync Config Id",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(description = "This contains a list of Branches specific to Git Sync Config Id")
       })
   public ResponseDTO<List<String>>
-  listBranchesForRepo(@Parameter(description = "Git Sync Config Id") @QueryParam(
+  listBranchesForRepo(@Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @QueryParam(
                           YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
@@ -146,8 +155,8 @@ public class ScmFacilitatorResource {
           "0") int pageNum,
       @Parameter(description = SIZE_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.SIZE) @DefaultValue(
           "50") int pageSize,
-      @Parameter(description = "Search Term") @QueryParam(NGCommonEntityConstants.SEARCH_TERM) @DefaultValue(
-          "") String searchTerm) {
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.SEARCH_TERM) @DefaultValue("") String searchTerm) {
     return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
         -> scmClientFacilitatorService.listBranchesForRepoByGitSyncConfig(accountIdentifier, orgIdentifier,
             projectIdentifier, yamlGitConfigIdentifier,
@@ -165,8 +174,8 @@ public class ScmFacilitatorResource {
         ApiResponse(description = "Git File Content including: object Id and content")
       })
   public ResponseDTO<GitFileContent>
-  getFileContent(@Parameter(description = "Git Sync Config Id", required = true) @NotBlank @NotNull @QueryParam(
-                     YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
+  getFileContent(@Parameter(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE, required = true) @NotBlank @NotNull
+                 @QueryParam(YamlConstants.YAML_GIT_CONFIG) String yamlGitConfigIdentifier,
       @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
@@ -174,8 +183,8 @@ public class ScmFacilitatorResource {
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(description = "File Path") @QueryParam(YamlConstants.FILE_PATH) @NotBlank @NotNull String filePath,
-      @Parameter(description = "Branch Name") @QueryParam(YamlConstants.BRANCH) String branch,
-      @Parameter(description = "Commit Id") @QueryParam(YamlConstants.COMMIT_ID) String commitId) {
+      @Parameter(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) @QueryParam(YamlConstants.BRANCH)
+      String branch, @Parameter(description = "Commit Id") @QueryParam(YamlConstants.COMMIT_ID) String commitId) {
     return ResponseDTO.newResponse(scmOrchestratorService.processScmRequest(scmClientFacilitatorService
         -> scmClientFacilitatorService.getFileContent(
             yamlGitConfigIdentifier, accountIdentifier, orgIdentifier, projectIdentifier, filePath, branch, commitId),
@@ -192,7 +201,8 @@ public class ScmFacilitatorResource {
         ApiResponse(description = "True if Saas is possible for given Repo Url")
       })
   public ResponseDTO<SaasGitDTO>
-  isSaasGit(@Parameter(description = "Repo Url") @QueryParam(NGCommonEntityConstants.REPO_URL) String repoURL) {
+  isSaasGit(@Parameter(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) @QueryParam(
+      NGCommonEntityConstants.REPO_URL) String repoURL) {
     return ResponseDTO.newResponse(GitUtils.isSaasGit(URLDecoderUtility.getDecodedString(repoURL)));
   }
 

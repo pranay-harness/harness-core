@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk;
 
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_TOPIC;
@@ -34,6 +41,7 @@ import io.harness.pms.sdk.core.registries.StepRegistry;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.redis.RedisConfig;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.ServiceManager;
 import com.google.inject.Injector;
 import com.google.inject.Key;
@@ -134,6 +142,7 @@ public class PmsSdkInitHelper {
         .setFacilitatorEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.FACILITATOR_EVENT))
         .putAllStaticAliases(CollectionUtils.emptyIfNull(sdkConfiguration.getStaticAliases()))
         .addAllSdkFunctors(PmsSdkInitHelper.getSupportedSdkFunctorsList(sdkConfiguration))
+        .addAllExpandableFields(getExpandableFields(sdkConfiguration))
         .setNodeStartEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_START))
         .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
         .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
@@ -142,12 +151,22 @@ public class PmsSdkInitHelper {
         .build();
   }
 
-  private static List<String> getSupportedSdkFunctorsList(PmsSdkConfiguration sdkConfiguration) {
+  @VisibleForTesting
+  static List<String> getSupportedSdkFunctorsList(PmsSdkConfiguration sdkConfiguration) {
     if (sdkConfiguration.getSdkFunctors() == null) {
       return new ArrayList<>();
     }
     return new ArrayList<>(sdkConfiguration.getSdkFunctors().keySet());
   }
+
+  @VisibleForTesting
+  static List<String> getExpandableFields(PmsSdkConfiguration sdkConfiguration) {
+    if (EmptyPredicate.isEmpty(sdkConfiguration.getJsonExpansionHandlers())) {
+      return new ArrayList<>();
+    }
+    return new ArrayList<>(sdkConfiguration.getJsonExpansionHandlers().keySet());
+  }
+
   private static List<SdkStep> mapToSdkStep(List<StepType> stepTypeList, List<StepInfo> stepInfos) {
     Map<String, StepType> stepTypeStringToStepType =
         stepTypeList.stream().collect(Collectors.toMap(StepType::getType, stepType -> stepType));

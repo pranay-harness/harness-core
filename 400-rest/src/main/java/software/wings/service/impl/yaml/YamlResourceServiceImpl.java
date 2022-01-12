@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -18,6 +25,8 @@ import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_CONN_STRIN
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_CONN_STRINGS_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE;
+import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE;
 import static software.wings.beans.yaml.YamlType.APPLICATION_MANIFEST_PCF_ENV_SERVICE_OVERRIDE;
@@ -808,6 +817,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         return APPLICATION_MANIFEST_HELM_ENV_SERVICE_OVERRIDE;
       case OC_PARAMS:
         return APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE;
+      case KUSTOMIZE_PATCHES:
+        return APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE;
       case AZURE_APP_SETTINGS_OVERRIDE:
         return APPLICATION_MANIFEST_APP_SETTINGS_ENV_SERVICE_OVERRIDE;
       case AZURE_CONN_STRINGS_OVERRIDE:
@@ -830,6 +841,8 @@ public class YamlResourceServiceImpl implements YamlResourceService {
         return APPLICATION_MANIFEST_HELM_OVERRIDES_ALL_SERVICE;
       case OC_PARAMS:
         return APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE;
+      case KUSTOMIZE_PATCHES:
+        return APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE;
       case AZURE_APP_SETTINGS_OVERRIDE:
         return APPLICATION_MANIFEST_APP_SETTINGS_ENV_OVERRIDE;
       case AZURE_CONN_STRINGS_OVERRIDE:

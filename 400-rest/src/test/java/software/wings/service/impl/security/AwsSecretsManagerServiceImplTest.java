@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -186,11 +193,11 @@ public class AwsSecretsManagerServiceImplTest extends WingsBaseTest {
     String savedConfigId =
         awsSecretsManagerService.saveAwsSecretsManagerConfig(accountId, kryoSerializer.clone(awsSecretManagerConfig));
 
-    assertNotNull(secretManager.getSecretManager(accountId, savedConfigId));
+    assertNotNull(awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId));
 
     awsSecretsManagerService.deleteAwsSecretsManagerConfig(accountId, savedConfigId);
 
-    assertNull(secretManager.getSecretManager(accountId, savedConfigId));
+    assertNull(awsSecretsManagerService.getAwsSecretsManagerConfig(accountId, savedConfigId));
   }
 
   @Test

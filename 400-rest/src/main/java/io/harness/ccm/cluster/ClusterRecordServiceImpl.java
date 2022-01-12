@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.cluster;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -18,7 +25,9 @@ import io.harness.ccm.cluster.entities.ClusterRecord;
 import io.harness.ccm.cluster.entities.DirectKubernetesCluster;
 import io.harness.ccm.cluster.entities.EcsCluster;
 import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
+import io.harness.reflection.ReflectionUtils;
 
 import software.wings.beans.Application;
 import software.wings.beans.AzureKubernetesInfrastructureMapping;
@@ -53,6 +62,7 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
   @Inject private AppService appService;
   @Inject private SettingsService settingsService;
   @Inject @Getter private Subject<ClusterRecordObserver> subject = new Subject<>();
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public ClusterRecord upsert(ClusterRecord clusterRecord) {
@@ -68,6 +78,9 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     }
     try {
       subject.fireInform(ClusterRecordObxxxxxxxx:onUpserted, upsertedClusterRecord);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(ClusterRecordObserver.class, "onUpserted", ClusterRecord.class),
+          ClusterRecordServiceImpl.class, upsertedClusterRecord);
     } catch (Exception e) {
       log.error("Failed to inform the observers for the Cluster with id={}", upsertedClusterRecord.getUuid(), e);
     }
@@ -114,7 +127,11 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     } else {
       for (ClusterRecord clusterRecord : clusterRecords) {
         try {
+          // Both subject and remote Observer are needed since in few places DMS might not be present
           subject.fireInform(ClusterRecordObxxxxxxxx:onDeactivating, clusterRecord);
+          remoteObserverInformer.sendEvent(
+              ReflectionUtils.getMethod(ClusterRecordObserver.class, "onDeactivating", ClusterRecord.class),
+              ClusterRecordServiceImpl.class, clusterRecord);
         } catch (Exception e) {
           log.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
         }
@@ -132,7 +149,11 @@ public class ClusterRecordServiceImpl implements ClusterRecordService {
     } else {
       for (ClusterRecord clusterRecord : clusterRecords) {
         try {
+          // Both subject and remote Observer are needed since in few places DMS might not be present
           subject.fireInform(ClusterRecordObxxxxxxxx:onDeleting, clusterRecord);
+          remoteObserverInformer.sendEvent(
+              ReflectionUtils.getMethod(ClusterRecordObserver.class, "onDeleting", ClusterRecord.class),
+              ClusterRecordServiceImpl.class, clusterRecord);
         } catch (Exception e) {
           log.error("Failed to inform the Observers for ClusterRecord with id={}", clusterRecord.getCluster(), e);
         }

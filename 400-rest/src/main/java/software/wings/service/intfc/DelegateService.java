@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -40,7 +47,7 @@ import javax.ws.rs.core.MediaType;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
-@TargetModule(HarnessModule._870_CG_ORCHESTRATION)
+@TargetModule(HarnessModule._420_DELEGATE_SERVICE)
 @OwnedBy(DEL)
 @BreakDependencyOn("software.wings.service.intfc.ownership.OwnedByAccount")
 public interface DelegateService extends OwnedByAccount {
@@ -78,8 +85,8 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost)
-      throws IOException;
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
+      String delegateType) throws IOException;
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
       String delegateName) throws IOException;
@@ -136,8 +143,6 @@ public interface DelegateService extends OwnedByAccount {
 
   List<String> obtainDelegateIdsUsingName(String accountId, String delegateName);
 
-  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
-
   boolean filter(String accountId, String delegateId);
 
   Delegate updateHeartbeatForDelegateWithPollingEnabled(Delegate delegate);
@@ -179,12 +184,19 @@ public interface DelegateService extends OwnedByAccount {
 
   String expireTask(String accountId, String delegateTaskId);
 
-  DelegateSizeDetails fetchDefaultDelegateSize();
+  DelegateSizeDetails fetchDefaultDockerDelegateSize();
 
-  void validateDockerSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
+  void validateDelegateSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
 
   File downloadNgDocker(String managerHost, String verificationServiceUrl, String accountId,
       DelegateSetupDetails delegateSetupDetails) throws IOException;
 
   String createDelegateGroup(String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  void validateDockerSetupDetailsNg(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
+
+  File generateKubernetesYamlNg(String accountId, DelegateSetupDetails delegateSetupDetails, String managerHost,
+      String verificationServiceUrl, MediaType fileFormat) throws IOException;
+
+  DelegateSetupDetails validateKubernetesYamlNg(String accountId, DelegateSetupDetails delegateSetupDetails);
 }

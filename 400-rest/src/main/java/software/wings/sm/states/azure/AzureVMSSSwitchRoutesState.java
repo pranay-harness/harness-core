@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.azure;
 
 import static io.harness.azure.model.AzureConstants.AZURE_VMSS_SWAP_BACKEND_POOL;
@@ -61,7 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Slf4j
 public class AzureVMSSSwitchRoutesState extends State {
-  @Getter @Setter private boolean downsizeOldVMSSS;
+  @Getter @Setter private boolean downsizeOldVMSS;
 
   public static final String AZURE_VMSS_SWAP_ROUTE = AzureConstants.AZURE_VMSS_SWAP_BACKEND_POOL;
   @Inject protected transient DelegateService delegateService;
@@ -159,7 +166,7 @@ public class AzureVMSSSwitchRoutesState extends State {
         .resourceGroupName(azureVMSSInfrastructureMapping.getResourceGroupName())
         .oldVMSSName(azureVMSSSetupContextElement.getOldVirtualMachineScaleSetName())
         .newVMSSName(azureVMSSSetupContextElement.getNewVirtualMachineScaleSetName())
-        .downscaleOldVMSS(downsizeOldVMSSS)
+        .downscaleOldVMSS(downsizeOldVMSS)
         .rollback(isRollback())
         .preDeploymentData(azureVMSSSetupContextElement.getPreDeploymentData())
         .azureLoadBalancerDetail(azureVMSSSetupContextElement.getAzureLoadBalancerDetail())

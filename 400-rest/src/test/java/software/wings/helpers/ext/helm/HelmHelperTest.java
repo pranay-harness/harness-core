@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -8,9 +15,6 @@ import static io.harness.rule.OwnerRule.IVAN;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 
-import static software.wings.utils.HelmTestConstants.INVALID_VALUES_YAML;
-import static software.wings.utils.HelmTestConstants.VALID_VALUES_YAML;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.Mockito.mock;
@@ -19,6 +23,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
+import io.harness.delegate.task.helm.HelmTestConstants;
 import io.harness.exception.WingsException;
 import io.harness.helm.HelmConstants;
 import io.harness.k8s.manifest.ManifestHelper;
@@ -221,9 +226,9 @@ public class HelmHelperTest extends WingsBaseTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void testValidateHelmValueYamlFile() {
-    helmHelper.validateHelmValueYamlFile(VALID_VALUES_YAML);
+    helmHelper.validateHelmValueYamlFile(HelmTestConstants.VALID_VALUES_YAML);
     assertThatExceptionOfType(WingsException.class)
-        .isThrownBy(() -> helmHelper.validateHelmValueYamlFile(INVALID_VALUES_YAML));
+        .isThrownBy(() -> helmHelper.validateHelmValueYamlFile(HelmTestConstants.INVALID_VALUES_YAML));
   }
 
   @Test

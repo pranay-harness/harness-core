@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.registrars;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -8,7 +15,9 @@ import io.harness.pms.sdk.core.steps.Step;
 import io.harness.steps.approval.stage.ApprovalStageStep;
 import io.harness.steps.approval.step.harness.HarnessApprovalStep;
 import io.harness.steps.approval.step.jira.JiraApprovalStep;
+import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStep;
 import io.harness.steps.barriers.BarrierStep;
+import io.harness.steps.cf.FeatureFlagStageStep;
 import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.common.pipeline.PipelineSetupStep;
 import io.harness.steps.http.HttpStep;
@@ -39,9 +48,12 @@ public class OrchestrationStepsModuleStepRegistrar {
 
     engineSteps.put(HttpStep.STEP_TYPE, HttpStep.class);
     engineSteps.put(ShellScriptStep.STEP_TYPE, ShellScriptStep.class);
+    engineSteps.put(ServiceNowApprovalStep.STEP_TYPE, ServiceNowApprovalStep.class);
 
     // Feature Flag
     engineSteps.put(FlagConfigurationStep.STEP_TYPE, FlagConfigurationStep.class);
+    engineSteps.put(FeatureFlagStageStep.STEP_TYPE, FeatureFlagStageStep.class);
+    engineSteps.put(ServiceNowApprovalStep.STEP_TYPE, ServiceNowApprovalStep.class);
 
     engineSteps.putAll(OrchestrationStepsModuleSdkStepRegistrar.getEngineSteps());
 

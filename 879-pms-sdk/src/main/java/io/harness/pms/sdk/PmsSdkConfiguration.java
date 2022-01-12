@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk;
 
 import io.harness.ModuleType;
@@ -10,18 +17,21 @@ import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.sdk.core.PipelineSdkRedisEventsConfig;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.ExecutionSummaryModuleInfoProvider;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
 import io.harness.pms.sdk.core.pipeline.filters.FilterCreationResponseMerger;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.steps.Step;
 import io.harness.redis.RedisConfig;
 import io.harness.threading.ThreadPoolConfig;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import lombok.Builder;
@@ -48,12 +58,16 @@ public class PmsSdkConfiguration {
   Class<? extends ExecutionSummaryModuleInfoProvider> executionSummaryModuleInfoProviderClass;
   @Builder.Default ThreadPoolConfig executionPoolConfig = ThreadPoolConfig.builder().build();
   @Builder.Default ThreadPoolConfig orchestrationEventPoolConfig = ThreadPoolConfig.builder().build();
+  @Builder.Default ThreadPoolConfig planCreatorServiceInternalConfig = ThreadPoolConfig.builder().build();
+  @Default Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
 
   @Default
   EventsFrameworkConfiguration eventsFrameworkConfiguration =
       EventsFrameworkConfiguration.builder()
           .redisConfig(RedisConfig.builder().redisUrl("dummyRedisUrl").build())
           .build();
+
+  @Default PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig = PipelineSdkRedisEventsConfig.builder().build();
 
   public String getServiceName() {
     return moduleType.name().toLowerCase();

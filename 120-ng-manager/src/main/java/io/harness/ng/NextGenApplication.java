@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng;
 
 import static io.harness.AuthorizationServiceHeader.BEARER;
@@ -9,8 +16,9 @@ import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassInt
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPaths;
 import static io.harness.accesscontrol.filter.NGScopeAccessCheckFilter.bypassPublicApi;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.ng.NextGenConfiguration.getResourceClasses;
+import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -33,9 +41,11 @@ import io.harness.cdng.creator.filters.CDNGFilterCreationResponseMerger;
 import io.harness.cdng.licenserestriction.ServiceRestrictionsUsageImpl;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.cdng.pipeline.executions.CdngOrchestrationExecutionEventHandlerRegistrar;
+import io.harness.cdng.visitor.YamlTypes;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
+import io.harness.configuration.DeployVariant;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.entities.Connector;
 import io.harness.connector.gitsync.ConnectorGitSyncHelper;
@@ -67,6 +77,7 @@ import io.harness.gitsync.migration.GitSyncMigrationProvider;
 import io.harness.gitsync.server.GitSyncGrpcModule;
 import io.harness.gitsync.server.GitSyncServiceConfiguration;
 import io.harness.govern.ProviderModule;
+import io.harness.governance.DefaultConnectorRefExpansionHandler;
 import io.harness.health.HealthService;
 import io.harness.licensing.migrations.LicenseManagerMigrationProvider;
 import io.harness.logstreaming.LogStreamingModule;
@@ -95,17 +106,24 @@ import io.harness.ng.core.remote.licenserestriction.CloudCostK8sConnectorRestric
 import io.harness.ng.core.remote.licenserestriction.OrgRestrictionsUsageImpl;
 import io.harness.ng.core.remote.licenserestriction.ProjectRestrictionsUsageImpl;
 import io.harness.ng.core.user.exception.mapper.InvalidUserRemoveRequestExceptionMapper;
+import io.harness.ng.migration.DelegateMigrationProvider;
 import io.harness.ng.migration.NGCoreMigrationProvider;
 import io.harness.ng.migration.SourceCodeManagerMigrationProvider;
 import io.harness.ng.migration.UserMembershipMigrationProvider;
 import io.harness.ng.migration.UserMetadataMigrationProvider;
 import io.harness.ng.overview.eventGenerator.DeploymentEventGenerator;
 import io.harness.ng.webhook.services.api.WebhookEventProcessingService;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
+import io.harness.pms.governance.EnvironmentRefExpansionHandler;
+import io.harness.pms.governance.ServiceRefExpansionHandler;
 import io.harness.pms.listener.NgOrchestrationNotifyEventListener;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkInitHelper;
@@ -113,6 +131,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -122,6 +141,7 @@ import io.harness.pms.sdk.execution.events.orchestrationevent.OrchestrationEvent
 import io.harness.pms.sdk.execution.events.plan.CreatePartialPlanRedisConsumer;
 import io.harness.pms.sdk.execution.events.progress.ProgressEventRedisConsumer;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
+import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.polling.service.impl.PollingPerpetualTaskManager;
 import io.harness.polling.service.impl.PollingServiceImpl;
 import io.harness.polling.service.intfc.PollingService;
@@ -132,6 +152,7 @@ import io.harness.registrars.CDServiceAdviserRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
 import io.harness.runnable.InstanceAccountInfoRunnable;
+import io.harness.secret.ConfigSecretUtils;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -142,6 +163,7 @@ import io.harness.service.impl.DelegateProgressServiceImpl;
 import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.stats.statscollector.InstanceStatsIteratorHandler;
 import io.harness.springdata.HMongoTemplate;
+import io.harness.telemetry.NGTelemetryRecordsJob;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.remote.TokenClient;
@@ -216,6 +238,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
+import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.server.model.Resource;
 import org.springframework.data.mongodb.core.MongoTemplate;
 
@@ -266,6 +289,9 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   @Override
   public void run(NextGenConfiguration appConfig, Environment environment) {
     log.info("Starting Next Gen Application ...");
+
+    ConfigSecretUtils.resolveSecrets(appConfig.getSecretsConfiguration(), appConfig);
+
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
         appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
         appConfig.getCommonPoolConfig().getTimeUnit(),
@@ -323,21 +349,34 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     } else {
       modules.add(new SCMGrpcClientModule(appConfig.getGitSdkConfiguration().getScmConnectionConfig()));
     }
+    modules.add(new AbstractRemoteObserverModule() {
+      @Override
+      public boolean noOpProducer() {
+        return true;
+      }
 
+      @Override
+      public Set<RemoteObserver> observers() {
+        return Collections.emptySet();
+      }
+
+      @Override
+      public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+        return NoOpRemoteObserverInformerImpl.class;
+      }
+    });
     // Pipeline Service Modules
     PmsSdkConfiguration pmsSdkConfiguration = getPmsSdkConfiguration(appConfig);
     modules.add(PmsSdkModule.getInstance(pmsSdkConfiguration));
     modules.add(PipelineServiceUtilityModule.getInstance());
-
     CacheModule cacheModule = new CacheModule(appConfig.getCacheConfig());
     modules.add(cacheModule);
-
     Injector injector = Guice.createInjector(modules);
 
     // Will create collections and Indexes
     injector.getInstance(HPersistence.class);
     registerCorsFilter(appConfig, environment);
-    registerResources(environment, injector);
+    registerResources(appConfig, environment, injector);
     registerJerseyProviders(environment, injector);
     registerJerseyFeatures(environment);
     registerCharsetResponseFilter(environment, injector);
@@ -361,13 +400,25 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     registerManagedBeans(environment, injector);
     initializeEnforcementService(injector, appConfig);
     initializeEnforcementSdk(injector);
-
     if (appConfig.getShouldDeployWithGitSync()) {
       intializeGitSync(injector);
       GitSyncSdkInitHelper.initGitSyncSdk(injector, environment, getGitSyncConfiguration(appConfig));
     }
     registerMigrations(injector);
+
+    log.info("NextGenApplication DEPLOY_VERSION = " + System.getenv().get(DEPLOY_VERSION));
+    if (DeployVariant.isCommunity(System.getenv().get(DEPLOY_VERSION))) {
+      initializeNGMonitoring(appConfig, injector);
+    } else {
+      log.info("NextGenApplication DEPLOY_VERSION is not COMMUNITY");
+    }
+
     MaintenanceController.forceMaintenance(false);
+  }
+
+  private void initializeNGMonitoring(NextGenConfiguration appConfig, Injector injector) {
+    log.info("Initializing NGMonitoring");
+    injector.getInstance(NGTelemetryRecordsJob.class).scheduleTasks();
   }
 
   private void registerOasResource(NextGenConfiguration appConfig, Environment environment, Injector injector) {
@@ -409,6 +460,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
           { add(LicenseManagerMigrationProvider.class); }
           { add(SourceCodeManagerMigrationProvider.class); }
           { add(GitSyncMigrationProvider.class); }
+          { add(DelegateMigrationProvider.class); }
         })
         .build();
   }
@@ -536,6 +588,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .pipelineServiceInfoProviderClass(CDNGPlanCreatorProvider.class)
         .staticAliases(getStaticAliases())
         .sdkFunctors(getSdkFunctors())
+        .jsonExpansionHandlers(getJsonExpansionHandlers())
         .filterCreationResponseMerger(new CDNGFilterCreationResponseMerger())
         .engineSteps(NgStepRegistrar.getEngineSteps())
         .engineAdvisers(CDServiceAdviserRegistrar.getEngineAdvisers())
@@ -544,6 +597,7 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
         .engineEventHandlersMap(getOrchestrationEventHandlers())
         .executionPoolConfig(appConfig.getPmsSdkExecutionPoolConfig())
         .orchestrationEventPoolConfig(appConfig.getPmsSdkOrchestrationEventPoolConfig())
+        .planCreatorServiceInternalConfig(appConfig.getPmsPlanCreatorServicePoolConfig())
         .build();
   }
 
@@ -561,6 +615,14 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     Map<String, Class<? extends SdkFunctor>> sdkFunctorMap = new HashMap<>();
     sdkFunctorMap.put(ImagePullSecretFunctor.IMAGE_PULL_SECRET, ImagePullSecretFunctor.class);
     return sdkFunctorMap;
+  }
+
+  private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
+    Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
+    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
+    jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, ServiceRefExpansionHandler.class);
+    jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, EnvironmentRefExpansionHandler.class);
+    return jsonExpansionHandlers;
   }
 
   private Map<OrchestrationEventType, Set<Class<? extends OrchestrationEventHandler>>> getOrchestrationEventHandlers() {
@@ -607,13 +669,15 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     cors.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
   }
 
-  private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceClasses()) {
+  private void registerResources(NextGenConfiguration appConfig, Environment environment, Injector injector) {
+    for (Class<?> resource : HARNESS_RESOURCE_CLASSES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }
     }
     environment.jersey().register(injector.getInstance(VersionInfoResource.class));
+    environment.jersey().property(
+        ServerProperties.RESOURCE_VALIDATION_DISABLE, appConfig.isDisableResourceValidation());
   }
 
   private OpenAPIConfiguration getOasConfig(NextGenConfiguration appConfig) {
@@ -772,6 +836,8 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
                 ImmutableMap.<FeatureRestrictionName, Class<? extends RestrictionUsageInterface>>builder()
                     .put(FeatureRestrictionName.TEST2, ExampleStaticLimitUsageImpl.class)
                     .put(FeatureRestrictionName.TEST3, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST6, ExampleRateLimitUsageImpl.class)
+                    .put(FeatureRestrictionName.TEST7, ExampleStaticLimitUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_PROJECTS, ProjectRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.MULTIPLE_ORGANIZATIONS, OrgRestrictionsUsageImpl.class)
                     .put(FeatureRestrictionName.SERVICES, ServiceRestrictionsUsageImpl.class)
@@ -794,6 +860,6 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
   }
 
   public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
-    return getResourceClasses().stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
+    return HARNESS_RESOURCE_CLASSES.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 }

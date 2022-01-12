@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.k8s.watch;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -67,7 +74,7 @@ public class CrdWorkloadFetcher {
     ApiextensionsV1Api apiextensionsV1Api = new ApiextensionsV1Api(apiClient);
     try {
       V1CustomResourceDefinitionList v1CustomResourceDefinitionList =
-          apiextensionsV1Api.listCustomResourceDefinition(null, null, null, null, null, null, null, null, null);
+          apiextensionsV1Api.listCustomResourceDefinition(null, null, null, null, null, null, null, null, null, null);
       for (V1CustomResourceDefinition crd : v1CustomResourceDefinitionList.getItems()) {
         V1CustomResourceDefinitionNames names = crd.getSpec().getNames();
         plurals.put(names.getKind(), names.getPlural());

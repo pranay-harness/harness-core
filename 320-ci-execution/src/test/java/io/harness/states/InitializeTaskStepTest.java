@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.states;
 
 import static io.harness.rule.OwnerRule.ALEKSANDAR;
@@ -14,11 +21,11 @@ import io.harness.beans.environment.pod.container.ContainerDefinitionInfo;
 import io.harness.beans.environment.pod.container.ContainerImageDetails;
 import io.harness.beans.steps.stepinfo.InitializeStepInfo;
 import io.harness.category.element.UnitTests;
-import io.harness.delegate.beans.ci.awsvm.AwsVmTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.CIContainerStatus;
 import io.harness.delegate.beans.ci.k8s.CiK8sTaskResponse;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
 import io.harness.delegate.beans.ci.k8s.PodStatus;
+import io.harness.delegate.beans.ci.vm.VmTaskExecutionResponse;
 import io.harness.executionplan.CIExecutionTestBase;
 import io.harness.k8s.model.ImageDetails;
 import io.harness.logging.CommandExecutionStatus;
@@ -186,9 +193,9 @@ public class InitializeTaskStepTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void handleAwsVmTaskSuccessWithSecurityContext() {
-    AwsVmTaskExecutionResponse executionResponse =
-        AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
+  public void handleVmTaskSuccessWithSecurityContext() {
+    VmTaskExecutionResponse executionResponse =
+        VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
     StepResponse stepResponse = initializeTaskStep.handleTaskResultWithSecurityContext(
         ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.SUCCEEDED);
@@ -198,9 +205,9 @@ public class InitializeTaskStepTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
-  public void handleAwsVmTaskFailureWithSecurityContext() {
-    AwsVmTaskExecutionResponse executionResponse =
-        AwsVmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
+  public void handleVmTaskFailureWithSecurityContext() {
+    VmTaskExecutionResponse executionResponse =
+        VmTaskExecutionResponse.builder().commandExecutionStatus(CommandExecutionStatus.FAILURE).build();
     StepResponse stepResponse = initializeTaskStep.handleTaskResultWithSecurityContext(
         ambiance, stepElementParameters, () -> executionResponse);
     assertThat(stepResponse.getStatus()).isEqualTo(Status.FAILED);

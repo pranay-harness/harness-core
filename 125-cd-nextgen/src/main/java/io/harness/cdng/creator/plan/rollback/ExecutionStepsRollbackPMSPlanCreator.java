@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.creator.plan.rollback;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -10,8 +17,10 @@ import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
+import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -25,6 +34,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * This class is used to create rollback plan for steps inside rollback section of execution.
@@ -34,8 +44,26 @@ import java.util.Optional;
  *    rollbackSteps: // This section
  */
 @OwnedBy(HarnessTeam.CDC)
-public class ExecutionStepsRollbackPMSPlanCreator {
-  public static PlanCreationResponse createExecutionStepsRollbackPlanNode(YamlField rollbackStepsField) {
+public class ExecutionStepsRollbackPMSPlanCreator implements PartialPlanCreator<YamlField> {
+  private static List<YamlField> getStepYamlFields(YamlField rollbackStepsNode) {
+    List<YamlNode> yamlNodes =
+        Optional.of(Preconditions.checkNotNull(rollbackStepsNode).getNode().asArray()).orElse(Collections.emptyList());
+    return PlanCreatorUtils.getStepYamlFields(yamlNodes);
+  }
+
+  @Override
+  public Class<YamlField> getFieldClass() {
+    return YamlField.class;
+  }
+
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap(
+        YAMLFieldNameConstants.ROLLBACK_STEPS, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+  }
+
+  @Override
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, YamlField rollbackStepsField) {
     if (rollbackStepsField == null || rollbackStepsField.getNode().asArray().size() == 0) {
       return PlanCreationResponse.builder().build();
     }
@@ -68,12 +96,6 @@ public class ExecutionStepsRollbackPMSPlanCreator {
                     .build())
             .skipGraphType(SkipType.SKIP_NODE)
             .build();
-    return planCreationResponseBuilder.node(executionRollbackNode.getUuid(), executionRollbackNode).build();
-  }
-
-  private static List<YamlField> getStepYamlFields(YamlField rollbackStepsNode) {
-    List<YamlNode> yamlNodes =
-        Optional.of(Preconditions.checkNotNull(rollbackStepsNode).getNode().asArray()).orElse(Collections.emptyList());
-    return PlanCreatorUtils.getStepYamlFields(yamlNodes);
+    return planCreationResponseBuilder.planNode(executionRollbackNode).build();
   }
 }

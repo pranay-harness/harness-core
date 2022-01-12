@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.statemachine.services.impl;
 
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES;
 import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES_FOR_DEMO;
+import static io.harness.cvng.CVConstants.STATE_MACHINE_IGNORE_MINUTES_FOR_SLI;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -16,6 +24,8 @@ import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.statemachine.beans.AnalysisInput;
 import io.harness.cvng.statemachine.beans.AnalysisState;
 import io.harness.cvng.statemachine.beans.AnalysisStatus;
@@ -25,6 +35,7 @@ import io.harness.cvng.statemachine.entities.AnalysisStateMachine.AnalysisStateM
 import io.harness.cvng.statemachine.entities.CanaryTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.DeploymentLogClusterState;
 import io.harness.cvng.statemachine.entities.PreDeploymentLogClusterState;
+import io.harness.cvng.statemachine.entities.SLIMetricAnalysisState;
 import io.harness.cvng.statemachine.entities.ServiceGuardLogClusterState;
 import io.harness.cvng.statemachine.entities.ServiceGuardTimeSeriesAnalysisState;
 import io.harness.cvng.statemachine.entities.TestTimeSeriesAnalysisState;
@@ -56,6 +67,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
   @Inject private VerificationJobInstanceService verificationJobInstanceService;
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private Clock clock;
+  @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
 
   @Override
   public void initiateStateMachine(String verificationTaskId, AnalysisStateMachine stateMachine) {
@@ -254,7 +266,9 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
                                             .status(AnalysisStatus.CREATED)
                                             .build();
 
-    if (verificationTaskService.isServiceGuardId(inputForAnalysis.getVerificationTaskId())) {
+    VerificationTask verificationTask = verificationTaskService.get(inputForAnalysis.getVerificationTaskId());
+    VerificationTask.TaskType verificationTaskType = verificationTask.getTaskInfo().getTaskType();
+    if (TaskType.LIVE_MONITORING.equals(verificationTaskType)) {
       String cvConfigId = verificationTaskService.getCVConfigId(inputForAnalysis.getVerificationTaskId());
       CVConfig cvConfig = cvConfigService.get(cvConfigId);
       VerificationType verificationType = cvConfig.getVerificationType();
@@ -277,10 +291,7 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       firstState.setInputs(inputForAnalysis);
       stateMachine.setAccountId(cvConfig.getAccountId());
       stateMachine.setCurrentState(firstState);
-    } else {
-      VerificationTask verificationTask = verificationTaskService.get(inputForAnalysis.getVerificationTaskId());
-      Preconditions.checkNotNull(verificationTask.getTaskInfo().getTaskType().equals(TaskType.DEPLOYMENT),
-          "VerificationTask should be of Deployment type");
+    } else if (TaskType.DEPLOYMENT.equals(verificationTaskType)) {
       VerificationJobInstance verificationJobInstance = verificationJobInstanceService.getVerificationJobInstance(
           ((DeploymentInfo) verificationTask.getTaskInfo()).getVerificationJobInstanceId());
       CVConfig cvConfigForDeployment =
@@ -293,6 +304,18 @@ public class AnalysisStateMachineServiceImpl implements AnalysisStateMachineServ
       } else {
         createDeploymentAnalysisState(stateMachine, inputForAnalysis, verificationJobInstance, cvConfigForDeployment);
       }
+    } else if (TaskType.SLI.equals(verificationTaskType)) {
+      String sliId = verificationTaskService.getSliId(inputForAnalysis.getVerificationTaskId());
+      ServiceLevelIndicator serviceLevelIndicator = serviceLevelIndicatorService.get(sliId);
+      Preconditions.checkNotNull(serviceLevelIndicator, "Service Level Indicator can't be null");
+      AnalysisState firstState = SLIMetricAnalysisState.builder().build();
+      firstState.setStatus(AnalysisStatus.CREATED);
+      firstState.setInputs(inputForAnalysis);
+      stateMachine.setAccountId(serviceLevelIndicator.getAccountId());
+      stateMachine.setStateMachineIgnoreMinutes(STATE_MACHINE_IGNORE_MINUTES_FOR_SLI);
+      stateMachine.setCurrentState(firstState);
+    } else {
+      throw new IllegalStateException("Invalid verificationType");
     }
     return stateMachine;
   }

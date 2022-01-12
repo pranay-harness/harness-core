@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -95,6 +102,7 @@ public enum TaskType {
   AZURE_VMSS_COMMAND_TASK(TaskGroup.AZURE_VMSS),
   AZURE_APP_SERVICE_TASK(TaskGroup.AZURE_APP_SERVICE),
   AZURE_ARM_TASK(TaskGroup.AZURE_ARM),
+  AZURE_RESOURCE_TASK(TaskGroup.AZURE_RESOURCE),
   LDAP_TEST_CONN_SETTINGS(TaskGroup.LDAP),
   LDAP_TEST_USER_SETTINGS(TaskGroup.LDAP),
   LDAP_TEST_GROUP_SETTINGS(TaskGroup.LDAP),
@@ -222,6 +230,7 @@ public enum TaskType {
   DYNA_TRACE_GET_SERVICES(TaskGroup.DYNA_TRACE),
   DYNATRACE_COLLECT_24_7_METRIC_DATA(TaskGroup.GUARD_24x7),
   HELM_COMMAND_TASK(TaskGroup.HELM),
+  HELM_COMMAND_TASK_NG(TaskGroup.HELM, "Helm Command Task"),
   KUBERNETES_STEADY_STATE_CHECK_TASK(TaskGroup.CONTAINER),
   PCF_COMMAND_TASK(TaskGroup.PCF),
   SPOTINST_COMMAND_TASK(TaskGroup.SPOTINST),
@@ -281,6 +290,7 @@ public enum TaskType {
   HELM_REPO_CONFIG_VALIDATION(TaskGroup.HELM_REPO_CONFIG_VALIDATION),
   HELM_VALUES_FETCH(TaskGroup.HELM_VALUES_FETCH_TASK),
   HELM_VALUES_FETCH_NG(TaskGroup.HELM_VALUES_FETCH_TASK, "Helm Values Fetch Task"),
+  HELM_COLLECT_CHART(TaskGroup.HELM),
   SLACK(TaskGroup.SLACK),
   INITIALIZATION_PHASE(TaskGroup.CI),
   CI_LE_STATUS(TaskGroup.CI),
@@ -325,7 +335,9 @@ public enum TaskType {
   SCM_GIT_REF_TASK(TaskGroup.GIT, "SCM Git Ref Task"),
   SCM_GIT_FILE_TASK(TaskGroup.GIT, "SCM Git File Task"),
   SCM_PULL_REQUEST_TASK(TaskGroup.GIT, "SCM Git PR Task"),
-  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task");
+  SCM_GIT_WEBHOOK_TASK(TaskGroup.GIT, "SCM Git Webhook Task"),
+  SERVICENOW_CONNECTIVITY_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow connectivity test Task"),
+  SERVICENOW_TASK_NG(TaskGroup.SERVICENOW_NG, "ServiceNow Task");
 
   private final TaskGroup taskGroup;
   private final String displayName;

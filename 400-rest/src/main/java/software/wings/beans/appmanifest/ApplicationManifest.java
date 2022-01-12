@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.appmanifest;
 
 import static io.harness.annotations.dev.HarnessModule._957_CG_BEANS;
@@ -70,12 +77,14 @@ public class ApplicationManifest extends Base implements AccountAccess {
 
   private Boolean pollForChanges;
   @Transient private String serviceName;
-  private enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
+
+  public enum ManifestCollectionStatus { UNSTABLE, COLLECTING, STABLE }
   private ManifestCollectionStatus collectionStatus;
   private String perpetualTaskId;
   private int failedAttempts;
   private Boolean skipVersioningForAllK8sObjects;
   private String validationMessage;
+  private Boolean enableCollection;
 
   public ApplicationManifest cloneInternal() {
     ApplicationManifest manifest = ApplicationManifest.builder()
@@ -92,6 +101,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
                                        .skipVersioningForAllK8sObjects(this.skipVersioningForAllK8sObjects)
                                        .helmCommandFlag(HelmCommandFlagConfig.cloneFrom(this.helmCommandFlag))
                                        .helmValuesYamlFilePaths(this.helmValuesYamlFilePaths)
+                                       .enableCollection(enableCollection)
                                        .name(this.name)
                                        .build();
     manifest.setAppId(this.appId);
@@ -112,11 +122,13 @@ public class ApplicationManifest extends Base implements AccountAccess {
     private Boolean skipVersioningForAllK8sObjects;
     private HelmCommandFlagConfig helmCommandFlag;
     private String helmValuesYamlFilePaths;
+    private Boolean enableCollection;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String storeType, GitFileConfig gitFileConfig,
         HelmChartConfig helmChartConfig, KustomizeConfig kustomizeConfig, CustomSourceConfig customSourceConfig,
-        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects, String helmValuesYamlFilePaths) {
+        HelmCommandFlagConfig helmCommandFlag, Boolean skipVersioningForAllK8sObjects, String helmValuesYamlFilePaths,
+        Boolean enableCollection) {
       super(type, harnessApiVersion);
       this.storeType = storeType;
       this.gitFileConfig = gitFileConfig;
@@ -126,6 +138,7 @@ public class ApplicationManifest extends Base implements AccountAccess {
       this.skipVersioningForAllK8sObjects = skipVersioningForAllK8sObjects;
       this.helmCommandFlag = helmCommandFlag;
       this.helmValuesYamlFilePaths = helmValuesYamlFilePaths;
+      this.enableCollection = enableCollection;
     }
   }
 }

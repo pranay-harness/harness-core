@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.yaml.schema.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -15,6 +22,8 @@ public class YamlSchemaRootClass {
   EntityType entityType;
 
   Class<?> clazz;
+
+  YamlSchemaMetadata yamlSchemaMetadata;
 
   /**
    * If an entity is available at org level, a schema is prepared by removing <b>projectIdentifier</b> from schema.

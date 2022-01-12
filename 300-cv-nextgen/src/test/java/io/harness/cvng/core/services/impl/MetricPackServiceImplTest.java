@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.ERRORS_PACK_IDENTIFIER;
@@ -26,6 +33,7 @@ import io.harness.cvng.beans.TimeSeriesThresholdType;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.MetricPack.MetricDefinition;
 import io.harness.cvng.core.entities.TimeSeriesThreshold;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -108,6 +116,11 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
         assertThat(metricDefinition.getPath()).isNotEmpty();
       });
     });
+    // Validate APPD Custom metric pack is hidden
+    assertThat(metricPacks.stream()
+                   .filter(metricPack -> metricPack.getIdentifier().equals(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER))
+                   .filter(metricPack -> metricPack.getDataSourceType().equals(DataSourceType.APP_DYNAMICS)))
+        .hasSize(0);
   }
 
   @Test
@@ -115,7 +128,7 @@ public class MetricPackServiceImplTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void testGetMetricPack_withExistingCategory() {
     MetricPack metricPack = metricPackService.getMetricPack(
-        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, CVMonitoringCategory.ERRORS);
+        accountId, orgIdentifier, projectIdentifier, DataSourceType.APP_DYNAMICS, ERRORS_PACK_IDENTIFIER);
     assertThat(metricPack.getAccountId()).isEqualTo(accountId);
     assertThat(metricPack.getOrgIdentifier()).isEqualTo(orgIdentifier);
     assertThat(metricPack.getProjectIdentifier()).isEqualTo(projectIdentifier);

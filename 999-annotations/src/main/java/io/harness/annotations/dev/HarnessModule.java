@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.annotations.dev;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -46,6 +53,7 @@ public enum HarnessModule {
   _882_PMS_SDK_CORE,
   _884_PMS_COMMONS,
   _888_PMS_CLIENT,
+  _889_YAML_COMMONS,
   _890_ORCHESTRATION_PERSISTENCE,
   _890_PMS_CONTRACTS,
   _890_SM_CORE,
@@ -94,5 +102,5 @@ public enum HarnessModule {
   _970_NG_COMMONS,
   _970_RBAC_CORE,
   _980_COMMONS,
-  _990_COMMONS_TEST
+  _990_COMMONS_TEST;
 }

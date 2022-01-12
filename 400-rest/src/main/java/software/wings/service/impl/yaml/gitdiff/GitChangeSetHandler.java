@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml.gitdiff;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -23,7 +30,7 @@ import static org.apache.commons.collections4.MapUtils.emptyIfNull;
 import io.harness.exception.UnexpectedException;
 
 import software.wings.beans.Application;
-import software.wings.beans.Base;
+import software.wings.beans.CGConstants;
 import software.wings.beans.GitCommit;
 import software.wings.beans.yaml.ChangeContext;
 import software.wings.beans.yaml.GitDiffResult;
@@ -247,14 +254,14 @@ public class GitChangeSetHandler {
   public List<String> obtainYamlGitConfigIds(
       String accountId, String branchName, String repositoryName, String gitConnectorId) {
     return wingsPersistence.createQuery(YamlGitConfig.class)
-        .filter(YamlGitConfig.ACCOUNT_ID_KEY2, accountId)
+        .filter(CGConstants.ACCOUNT_ID_KEY, accountId)
         .filter(GIT_CONNECTOR_ID_KEY, gitConnectorId)
         .filter(REPOSITORY_NAME_KEY, repositoryName)
         .filter(BRANCH_NAME_KEY, branchName)
-        .project(YamlGitConfig.ID_KEY2, true)
+        .project(CGConstants.ID_KEY, true)
         .asList()
         .stream()
-        .map(Base::getUuid)
+        .map(YamlGitConfig::getUuid)
         .collect(toList());
   }
 

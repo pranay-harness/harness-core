@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.ldap;
 
 import java.util.ArrayList;
@@ -101,6 +108,7 @@ public class LdapSearch implements LdapValidator {
         return search.execute(request).getResult();
       }
     } else {
+      log.info("Using ldap paginated query with searchfilter {} and baseDN {}", searchFilter, baseDN);
       Hashtable<String, Object> env = new Hashtable<>();
 
       env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
@@ -154,10 +162,19 @@ public class LdapSearch implements LdapValidator {
         ctx.close();
         return new SearchResult(entries);
       } catch (Exception e) {
-        log.info("Error querying to ldap server", e);
+        log.error("Error querying to ldap server with pagination", e);
       }
-      return null;
+      try (Connection connection = connectionFactory.getConnection()) {
+        log.info("Trying to query second time to LDAP server with old logic with searchfilter {} and baseDN {}",
+            searchFilter, baseDN);
+        connection.open();
+        SearchOperation search = new SearchOperation(connection);
+        return search.execute(request).getResult();
+      } catch (Exception e) {
+        log.error("Error querying second time to LDAP server with old logic ", e);
+      }
     }
+    return null;
   }
 
   public SearchDnResolver getSearchDnResolver(String userFilter) {

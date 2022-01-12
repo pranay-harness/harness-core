@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.connector;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -15,10 +22,12 @@ import io.harness.connector.heartbeat.DockerConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpKmsConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.GcpValidationParamsProvider;
 import io.harness.connector.heartbeat.HttpHelmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.JiraValidationParamsProvider;
 import io.harness.connector.heartbeat.K8sConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.NexusValidationParamsProvider;
 import io.harness.connector.heartbeat.NoOpConnectorValidationParamsProvider;
 import io.harness.connector.heartbeat.ScmConnectorValidationParamsProvider;
+import io.harness.connector.heartbeat.ServiceNowValidationParamsProvider;
 import io.harness.connector.heartbeat.VaultConnectorValidationParamsProvider;
 import io.harness.connector.mappers.ConnectorDTOToEntityMapper;
 import io.harness.connector.mappers.ConnectorEntityToDTOMapper;
@@ -38,6 +47,8 @@ import io.harness.connector.mappers.ceazure.CEAzureDTOToEntity;
 import io.harness.connector.mappers.ceazure.CEAzureEntityToDTO;
 import io.harness.connector.mappers.cek8s.CEKubernetesDTOToEntity;
 import io.harness.connector.mappers.cek8s.CEKubernetesEntityToDTO;
+import io.harness.connector.mappers.customhealthconnectormapper.CustomHealthDTOToEntity;
+import io.harness.connector.mappers.customhealthconnectormapper.CustomHealthEntityToDTO;
 import io.harness.connector.mappers.datadogmapper.DatadogDTOToEntity;
 import io.harness.connector.mappers.datadogmapper.DatadogEntityToDTO;
 import io.harness.connector.mappers.docker.DockerDTOToEntity;
@@ -80,12 +91,15 @@ import io.harness.connector.mappers.secretmanagermapper.LocalDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.LocalEntityToDTO;
 import io.harness.connector.mappers.secretmanagermapper.VaultDTOToEntity;
 import io.harness.connector.mappers.secretmanagermapper.VaultEntityToDTO;
+import io.harness.connector.mappers.servicenow.ServiceNowDTOtoEntity;
+import io.harness.connector.mappers.servicenow.ServiceNowEntityToDTO;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkDTOToEntity;
 import io.harness.connector.mappers.splunkconnectormapper.SplunkEntityToDTO;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicDTOToEntity;
 import io.harness.connector.mappers.sumologicmapper.SumoLogicEntityToDTO;
 import io.harness.connector.task.ConnectorValidationHandler;
 import io.harness.connector.task.NotSupportedValidationHandler;
+import io.harness.connector.task.git.GitValidationHandler;
 import io.harness.connector.validator.ArtifactoryConnectionValidator;
 import io.harness.connector.validator.AwsConnectorValidator;
 import io.harness.connector.validator.CEAwsConnectorValidator;
@@ -101,6 +115,7 @@ import io.harness.connector.validator.JiraConnectorValidator;
 import io.harness.connector.validator.KubernetesConnectionValidator;
 import io.harness.connector.validator.NexusConnectorValidator;
 import io.harness.connector.validator.SecretManagerConnectorValidator;
+import io.harness.connector.validator.ServiceNowConnectorValidator;
 import io.harness.connector.validator.scmValidators.AwsCodeCommitValidator;
 import io.harness.connector.validator.scmValidators.BitbucketConnectorValidator;
 import io.harness.connector.validator.scmValidators.GitConnectorValidator;
@@ -202,7 +217,7 @@ public class ConnectorRegistryFactory {
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.JIRA,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, JiraConnectorValidator.class,
-            NoOpConnectorValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
+            JiraValidationParamsProvider.class, JiraDTOToEntity.class, JiraEntityToDTO.class,
             NotSupportedValidationHandler.class));
     registrar.put(ConnectorType.NEXUS,
         new ConnectorRegistrar(ConnectorCategory.ARTIFACTORY, NexusConnectorValidator.class,
@@ -211,7 +226,7 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.GITHUB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GithubConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, GithubDTOToEntity.class, GithubEntityToDTO.class,
-            NotSupportedValidationHandler.class));
+            GitValidationHandler.class));
     registrar.put(ConnectorType.GITLAB,
         new ConnectorRegistrar(ConnectorCategory.CODE_REPO, GitlabConnectorValidator.class,
             ScmConnectorValidationParamsProvider.class, GitlabDTOToEntity.class, GitlabEntityToDTO.class,
@@ -239,6 +254,14 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.PAGER_DUTY,
         new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
             CVConnectorParamsProvider.class, PagerDutyDTOToEntity.class, PagerDutyEntityToDTO.class,
+            NotSupportedValidationHandler.class));
+    registrar.put(ConnectorType.CUSTOM_HEALTH,
+        new ConnectorRegistrar(ConnectorCategory.MONITORING, CVConnectorValidator.class,
+            CVConnectorParamsProvider.class, CustomHealthDTOToEntity.class, CustomHealthEntityToDTO.class,
+            NotSupportedValidationHandler.class));
+    registrar.put(ConnectorType.SERVICENOW,
+        new ConnectorRegistrar(ConnectorCategory.TICKETING, ServiceNowConnectorValidator.class,
+            ServiceNowValidationParamsProvider.class, ServiceNowDTOtoEntity.class, ServiceNowEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

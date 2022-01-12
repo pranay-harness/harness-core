@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.approval.resources;
 
 import io.harness.NGCommonEntityConstants;
@@ -22,7 +29,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
@@ -47,7 +53,6 @@ import org.hibernate.validator.constraints.NotEmpty;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@Tag(name = "Approvals", description = "This contains a list of APIs specific to the Approval steps")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = NGCommonEntityConstants.BAD_REQUEST_CODE,
     description = NGCommonEntityConstants.BAD_REQUEST_PARAM_MESSAGE,
     content =
@@ -89,6 +94,7 @@ public class ApprovalResource {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns the saved Approval Instance")
       })
+  @Hidden
   public ResponseDTO<ApprovalInstanceResponseDTO>
   getApprovalInstance(@Parameter(description = APPROVAL_PARAM_MESSAGE) @NotEmpty @PathParam(
       "approvalInstanceId") String approvalInstanceId) {
@@ -104,6 +110,7 @@ public class ApprovalResource {
         @io.swagger.v3.oas.annotations.responses.
         ApiResponse(responseCode = "default", description = "Returns a newly added Harness Approval activity")
       })
+  @Hidden
   public ResponseDTO<ApprovalInstanceResponseDTO>
   addHarnessApprovalActivity(@Parameter(description = APPROVAL_PARAM_MESSAGE) @NotEmpty @PathParam(
                                  "approvalInstanceId") String approvalInstanceId,

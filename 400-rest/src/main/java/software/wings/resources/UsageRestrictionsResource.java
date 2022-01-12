@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.resources;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
@@ -11,12 +18,14 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.Scope;
 import software.wings.service.intfc.UsageRestrictionsService;
 import software.wings.settings.UsageRestrictionsReferenceSummary;
+import software.wings.utils.AccountPermissionUtils;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -37,6 +46,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Scope(ResourceType.USER)
 public class UsageRestrictionsResource {
   private UsageRestrictionsService usageRestrictionsService;
+  private AccountPermissionUtils accountPermissionUtils;
 
   /**
    * Instantiates a new Usage restrictions resource.
@@ -44,8 +54,10 @@ public class UsageRestrictionsResource {
    * @param usageRestrictionsService    the usageRestrictionsService
    */
   @Inject
-  public UsageRestrictionsResource(UsageRestrictionsService usageRestrictionsService) {
+  public UsageRestrictionsResource(
+      UsageRestrictionsService usageRestrictionsService, AccountPermissionUtils accountPermissionUtils) {
     this.usageRestrictionsService = usageRestrictionsService;
+    this.accountPermissionUtils = accountPermissionUtils;
   }
 
   /**
@@ -98,6 +110,20 @@ public class UsageRestrictionsResource {
       @PathParam("entityId") @NotEmpty String entityId, @QueryParam("entityType") @NotEmpty String entityType) {
     boolean isEditable = usageRestrictionsService.isEditable(accountId, entityId, entityType);
     return new RestResponse<>(isEditable);
+  }
+
+  @DELETE
+  @Path("references")
+  @Timed
+  @ExceptionMetered
+  public RestResponse<Boolean> purgeDanglingReferences(@QueryParam("accountId") @NotEmpty String accountId) {
+    RestResponse<Boolean> response =
+        accountPermissionUtils.checkIfHarnessUser("User not allowed to purge dangling references");
+    if (response == null) {
+      int count = usageRestrictionsService.purgeDanglingAppEnvReferences(accountId);
+      return new RestResponse<>(count > 0);
+    }
+    return response;
   }
 
   @GET

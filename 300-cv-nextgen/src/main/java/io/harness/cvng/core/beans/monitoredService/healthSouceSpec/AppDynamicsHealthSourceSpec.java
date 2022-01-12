@@ -1,12 +1,22 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.beans.monitoredService.healthSouceSpec;
 
+import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
 import io.harness.cvng.core.beans.monitoredService.MetricPackDTO;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.MetricPackService;
+import io.harness.cvng.core.validators.UniqueIdentifierCheck;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.Sets;
@@ -25,6 +35,7 @@ import lombok.NoArgsConstructor;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Data
@@ -32,11 +43,12 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
+public class AppDynamicsHealthSourceSpec extends MetricHealthSourceSpec {
   @NotNull String feature;
   @NotEmpty String applicationName;
   @NotEmpty String tierName;
-  @NotNull @NotEmpty @Valid Set<MetricPackDTO> metricPacks;
+  @Valid Set<MetricPackDTO> metricPacks;
+  @UniqueIdentifierCheck List<AppDMetricDefinitions> metricDefinitions;
 
   @Override
   public HealthSource.CVConfigUpdateResult getCVConfigUpdateResult(String accountId, String orgIdentifier,
@@ -78,7 +90,9 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
   private List<AppDynamicsCVConfig> toCVConfigs(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentRef, String serviceRef, String identifier, String name, MetricPackService metricPackService) {
     List<AppDynamicsCVConfig> cvConfigs = new ArrayList<>();
-    metricPacks.forEach(metricPack -> {
+    CollectionUtils.emptyIfNull(metricPacks).forEach(metricPack -> {
+      MetricPack metricPackFromDb =
+          metricPack.toMetricPack(accountId, orgIdentifier, projectIdentifier, getType(), metricPackService);
       AppDynamicsCVConfig appDynamicsCVConfig = AppDynamicsCVConfig.builder()
                                                     .accountId(accountId)
                                                     .orgIdentifier(orgIdentifier)
@@ -91,12 +105,38 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
                                                     .tierName(tierName)
                                                     .envIdentifier(environmentRef)
                                                     .serviceIdentifier(serviceRef)
-                                                    .metricPack(metricPack.toMetricPack(accountId, orgIdentifier,
-                                                        projectIdentifier, getType(), metricPackService))
-                                                    .category(metricPack.getIdentifier())
+                                                    .metricPack(metricPackFromDb)
+                                                    .category(metricPackFromDb.getCategory())
                                                     .build();
       cvConfigs.add(appDynamicsCVConfig);
     });
+    cvConfigs.addAll(CollectionUtils.emptyIfNull(metricDefinitions)
+                         .stream()
+                         .collect(Collectors.groupingBy(md -> MetricDefinitionKey.fromMetricDefinition(md)))
+                         .values()
+                         .stream()
+                         .map(mdList -> {
+                           AppDynamicsCVConfig appDynamicsCVConfig =
+                               AppDynamicsCVConfig.builder()
+                                   .accountId(accountId)
+                                   .orgIdentifier(orgIdentifier)
+                                   .projectIdentifier(projectIdentifier)
+                                   .identifier(identifier)
+                                   .connectorIdentifier(getConnectorRef())
+                                   .monitoringSourceName(name)
+                                   .productName(feature)
+                                   .applicationName(applicationName)
+                                   .tierName(tierName)
+                                   .envIdentifier(environmentRef)
+                                   .serviceIdentifier(serviceRef)
+                                   .groupName(mdList.get(0).getGroupName())
+                                   .category(mdList.get(0).getRiskProfile().getCategory())
+                                   .build();
+                           appDynamicsCVConfig.populateFromMetricDefinitions(
+                               metricDefinitions, metricDefinitions.get(0).getRiskProfile().getCategory());
+                           return appDynamicsCVConfig;
+                         })
+                         .collect(Collectors.toList()));
     return cvConfigs;
   }
 
@@ -106,7 +146,19 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
         .metricPack(appDynamicsCVConfig.getMetricPack())
         .serviceIdentifier(appDynamicsCVConfig.getServiceIdentifier())
         .tierName(appDynamicsCVConfig.getTierName())
+        .groupName(appDynamicsCVConfig.getGroupName())
         .build();
+  }
+
+  @Data
+  @SuperBuilder
+  @NoArgsConstructor
+  @FieldDefaults(level = AccessLevel.PRIVATE)
+  public static class AppDMetricDefinitions extends HealthSourceMetricDefinition {
+    String groupName;
+
+    String baseFolder;
+    String metricPath;
   }
 
   @Value
@@ -116,5 +168,20 @@ public class AppDynamicsHealthSourceSpec extends HealthSourceSpec {
     String tierName;
     String serviceIdentifier;
     MetricPack metricPack;
+    String groupName;
+  }
+
+  @Value
+  @Builder
+  private static class MetricDefinitionKey {
+    String groupName;
+    CVMonitoringCategory category;
+
+    public static MetricDefinitionKey fromMetricDefinition(AppDMetricDefinitions appDMetricDefinitions) {
+      return MetricDefinitionKey.builder()
+          .category(appDMetricDefinitions.getRiskProfile().getCategory())
+          .groupName(appDMetricDefinitions.getGroupName())
+          .build();
+    }
   }
 }

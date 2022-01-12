@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.gitsync;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -19,6 +26,7 @@ import io.harness.beans.NGTemplateReference;
 import io.harness.category.element.UnitTests;
 import io.harness.encryption.Scope;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateEntityType;
 import io.harness.rule.Owner;
@@ -99,8 +107,8 @@ public class TemplateEntityGitSyncHandlerTest extends CategoryTest {
         .when(templateService)
         .get(ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, TEMPLATE_IDENTIFIER, TEMPLATE_VERSION_LABEL, false);
 
-    String lastObjectIdIfExists = templateEntityGitSyncHandler.getLastObjectIdIfExists(ACCOUNT_ID, yaml);
-    assertThat(lastObjectIdIfExists).isEqualTo(objectId);
+    EntityGitDetails lastEntityDetails = templateEntityGitSyncHandler.getEntityDetailsIfExists(ACCOUNT_ID, yaml).get();
+    assertThat(lastEntityDetails.getObjectId()).isEqualTo(objectId);
   }
 
   @Test

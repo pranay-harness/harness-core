@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -16,6 +23,7 @@ public enum DataCollectionRequestType {
   APPDYNAMICS_FETCH_APPS,
   APPDYNAMICS_FETCH_TIERS,
   APPDYNAMICS_GET_METRIC_DATA,
+  APPDYNAMICS_GET_SINGLE_METRIC_DATA,
   APPDYNAMICS_FETCH_METRIC_STRUCTURE,
   NEWRELIC_APPS_REQUEST,
   NEWRELIC_VALIDATION_REQUEST,
@@ -32,5 +40,8 @@ public enum DataCollectionRequestType {
   DATADOG_ACTIVE_METRICS,
   DATADOG_TIME_SERIES_POINTS,
   DATADOG_LOG_SAMPLE_DATA,
-  DATADOG_LOG_INDEXES
+  DATADOG_LOG_INDEXES,
+  NEWRELIC_SAMPLE_FETCH_REQUEST,
+  SYNC_DATA_COLLECTION,
+  CUSTOM_HEALTH_SAMPLE_DATA
 }

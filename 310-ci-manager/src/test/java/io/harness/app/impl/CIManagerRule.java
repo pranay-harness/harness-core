@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.app.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CI;
@@ -45,6 +52,7 @@ import io.harness.testlib.module.MongoRuleMixin;
 import io.harness.testlib.module.TestMongoModule;
 import io.harness.threading.CurrentThreadExecutor;
 import io.harness.threading.ExecutorModule;
+import io.harness.threading.ThreadPoolConfig;
 import io.harness.yaml.YamlSdkModule;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
@@ -153,6 +161,7 @@ public class CIManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
                                           .liteEngineImageTag("v1.4-alpha")
                                           .pvcDefaultStorageSize(25600)
                                           .build())
+            .asyncDelegateResponseConsumption(ThreadPoolConfig.builder().corePoolSize(1).build())
             .logServiceConfig(
                 LogServiceConfig.builder().baseUrl("http://localhost-inc:8079").globalToken("global-token").build())
             .opaServerConfig(OpaServiceConfiguration.builder().baseUrl("http://localhost:3000").build())

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.commons.entities.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -6,6 +13,7 @@ import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -65,6 +73,14 @@ public final class K8sWorkload implements PersistentEntity, UuidAware, CreatedAt
                  .field(K8sWorkloadKeys.clusterId)
                  .field(K8sWorkloadKeys.namespace)
                  .field(K8sWorkloadKeys.name)
+                 .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("accountId_clusterId_namespace_name_lastUpdatedAt")
+                 .field(K8sWorkloadKeys.accountId)
+                 .field(K8sWorkloadKeys.clusterId)
+                 .field(K8sWorkloadKeys.namespace)
+                 .field(K8sWorkloadKeys.name)
+                 .descSortField(K8sWorkloadKeys.lastUpdatedAt)
                  .build())
         .add(CompoundMongoIndex.builder()
                  .name("accountId_name_labels")

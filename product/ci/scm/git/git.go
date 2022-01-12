@@ -1,7 +1,13 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package git
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/drone/go-scm/scm"
@@ -198,6 +204,17 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 	if err != nil {
 		log.Errorw("GetLatestCommit failure, bad ref/branch", "provider", gitclient.GetProvider(*request.GetProvider()), "slug", request.GetSlug(), "ref", ref, "elapsed_time_ms", utils.TimeSince(start), zap.Error(err))
 		return nil, err
+	}
+	if request.GetBranch() != "" && strings.Contains(ref, "/") {
+		switch client.Driver {
+			case scm.DriverBitbucket,
+				scm.DriverStash:
+				ref = scm.TrimRef(ref)
+				branch, _, err := client.Git.FindBranch(ctx, request.GetSlug(), ref)
+				if err == nil {
+					ref = branch.Sha
+				}
+		}
 	}
 
 	refResponse, response, err := client.Git.FindCommit(ctx, request.GetSlug(), ref)

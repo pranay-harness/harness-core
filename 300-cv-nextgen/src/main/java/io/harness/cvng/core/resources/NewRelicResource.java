@@ -1,9 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.resources;
 
 import io.harness.annotations.ExposeInternalException;
 import io.harness.cvng.beans.MetricPackDTO;
 import io.harness.cvng.beans.newrelic.NewRelicApplication;
 import io.harness.cvng.core.beans.MetricPackValidationResponse;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.NewRelicService;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -17,6 +25,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import java.util.LinkedHashMap;
 import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -79,5 +88,24 @@ public class NewRelicResource {
       @QueryParam("requestGuid") @NotNull String requestGuid, @NotNull @Valid @Body List<MetricPackDTO> metricPacks) {
     return ResponseDTO.newResponse(newRelicService.validateData(
         accountId, connectorIdentifier, orgIdentifier, projectIdentifier, appName, appId, metricPacks, requestGuid));
+  }
+
+  @GET
+  @Path("/fetch-sample-data")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get sample data for given nrql", nickname = "getSampleDataForNRQL")
+  public ResponseDTO<LinkedHashMap> getSampleDataForNRQL(@QueryParam("accountId") @NotNull String accountId,
+      @QueryParam("orgIdentifier") @NotNull String orgIdentifier,
+      @QueryParam("projectIdentifier") @NotNull String projectIdentifier,
+      @QueryParam("connectorIdentifier") @NotNull String connectorIdentifier,
+      @QueryParam("requestGuid") @NotNull String requestGuid, @QueryParam("nrql") @NotNull String nrql) {
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .accountIdentifier(accountId)
+                                      .orgIdentifier(orgIdentifier)
+                                      .projectIdentifier(projectIdentifier)
+                                      .build();
+    return ResponseDTO.newResponse(
+        newRelicService.fetchSampleData(projectParams, connectorIdentifier, nrql, requestGuid));
   }
 }

@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.event;
 
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.getDefaultResourceGroupIdentifier;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -91,6 +99,9 @@ public class NGAccountSetupService {
 
     Organization defaultOrg = createDefaultOrg(accountIdentifier);
     setupRBAC(defaultOrg.getAccountIdentifier(), defaultOrg.getIdentifier());
+    log.info("[NGAccountSetupService]: Creating global SM for account{}", accountIdentifier);
+    harnessSMManager.createGlobalSecretManager();
+    log.info("[NGAccountSetupService]: Global SM Created Successfully for account{}", accountIdentifier);
     harnessSMManager.createHarnessSecretManager(accountIdentifier, null, null);
     ciDefaultEntityManager.createCIDefaultEntities(accountIdentifier, null, null);
   }
@@ -103,7 +114,7 @@ public class NGAccountSetupService {
     }
     OrganizationDTO createOrganizationDTO = OrganizationDTO.builder().build();
     createOrganizationDTO.setIdentifier(DEFAULT_ORG_IDENTIFIER);
-    createOrganizationDTO.setName("Default");
+    createOrganizationDTO.setName("default");
     createOrganizationDTO.setTags(emptyMap());
     createOrganizationDTO.setDescription("Default Organization");
     createOrganizationDTO.setHarnessManaged(true);
@@ -152,17 +163,18 @@ public class NGAccountSetupService {
   }
 
   private void assignAdminRoleToUsers(Scope scope, Collection<String> users, String roleIdentifier) {
-    createRoleAssignments(scope, buildRoleAssignments(users, roleIdentifier));
+    createRoleAssignments(scope, buildRoleAssignments(users, roleIdentifier, getDefaultResourceGroupIdentifier(scope)));
   }
 
-  private List<RoleAssignmentDTO> buildRoleAssignments(Collection<String> userIds, String roleIdentifier) {
+  private List<RoleAssignmentDTO> buildRoleAssignments(
+      Collection<String> userIds, String roleIdentifier, String resourceGroupIdentifier) {
     return userIds.stream()
         .map(userId
             -> RoleAssignmentDTO.builder()
                    .disabled(false)
                    .identifier("role_assignment_".concat(CryptoUtils.secureRandAlphaNumString(20)))
                    .roleIdentifier(roleIdentifier)
-                   .resourceGroupIdentifier("_all_resources")
+                   .resourceGroupIdentifier(resourceGroupIdentifier)
                    .principal(PrincipalDTO.builder().identifier(userId).type(PrincipalType.USER).build())
                    .build())
         .collect(Collectors.toList());

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.schedule;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -145,13 +152,21 @@ public class BatchJobRunner {
   private void logJobErrors(
       String accountId, BatchJobType batchJobType, BatchStatus status, Instant startInstant, Instant endInstant) {
     CacheKey cacheKey = new CacheKey(accountId, batchJobType, startInstant);
-    if (logErrorCache.getIfPresent(cacheKey) == null) {
-      log.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
-          batchJobType, status, startInstant, endInstant);
-      logErrorCache.put(cacheKey, Boolean.TRUE);
+    if (ImmutableSet
+            .of(BatchJobType.SYNC_BILLING_REPORT_S3, BatchJobType.SYNC_BILLING_REPORT_AZURE,
+                BatchJobType.SYNC_BILLING_REPORT_GCP)
+            .contains(batchJobType)) {
+      log.error("Exception running job for account {} type {} status {} time range {} - {}", accountId, batchJobType,
+          status, startInstant, endInstant);
     } else {
-      log.error("Error in running batch job retry for account {} type {} status {} time range {} - {}", accountId,
-          batchJobType, status, startInstant, endInstant);
+      if (logErrorCache.getIfPresent(cacheKey) == null) {
+        log.error("Error while running batch job for account {} type {} status {} time range {} - {}", accountId,
+            batchJobType, status, startInstant, endInstant);
+        logErrorCache.put(cacheKey, Boolean.TRUE);
+      } else {
+        log.error("Error in running batch job retry for account {} type {} status {} time range {} - {}", accountId,
+            batchJobType, status, startInstant, endInstant);
+      }
     }
   }
 

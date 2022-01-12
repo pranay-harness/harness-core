@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.webhook.services.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -24,10 +31,12 @@ import io.harness.product.ci.scm.proto.ParseWebhookResponse;
 import io.harness.repositories.ng.webhook.spring.WebhookEventRepository;
 import io.harness.service.WebhookParserSCMService;
 
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -89,7 +98,11 @@ public class WebhookEventProcessingServiceImpl
 
   public ParseWebhookResponse invokeScmService(WebhookEvent event) {
     try {
-      return webhookParserSCMService.parseWebhookUsingSCMAPI(event.getHeaders(), event.getPayload());
+      Stopwatch stopwatch = Stopwatch.createStarted();
+      ParseWebhookResponse parseWebhookResponse =
+          webhookParserSCMService.parseWebhookUsingSCMAPI(event.getHeaders(), event.getPayload());
+      log.info("Finished parsing webhook payload in {} ", stopwatch.elapsed(TimeUnit.SECONDS));
+      return parseWebhookResponse;
     } catch (Exception exception) {
       logIfScmUnavailableException(event, exception);
     }

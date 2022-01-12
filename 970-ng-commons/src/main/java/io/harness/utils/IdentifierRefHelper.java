@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.utils;
+
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -44,7 +53,7 @@ public class IdentifierRefHelper {
       identifierRefBuilder.metadata(metadata);
     }
 
-    if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
+    if (isEmpty(scopedIdentifierConfig)) {
       throw new InvalidRequestException("Empty identifier ref cannot be given");
     }
     String[] identifierConfigStringSplit = scopedIdentifierConfig.split(IDENTIFIER_REF_DELIMITER);
@@ -52,6 +61,7 @@ public class IdentifierRefHelper {
     if (identifierConfigStringSplit.length == 1) {
       identifier = identifierConfigStringSplit[0];
       scope = Scope.PROJECT;
+      verifyFieldExistence(scope, accountId, orgIdentifier, projectIdentifier);
       return identifierRefBuilder.orgIdentifier(orgIdentifier)
           .projectIdentifier(projectIdentifier)
           .identifier(identifier)
@@ -64,8 +74,10 @@ public class IdentifierRefHelper {
       if (scope == Scope.PROJECT || scope == null) {
         throw new InvalidRequestException("Invalid Identifier Reference, Scope.PROJECT invalid.");
       } else if (scope == Scope.ORG) {
+        verifyFieldExistence(scope, accountId, orgIdentifier);
         return identifierRefBuilder.orgIdentifier(orgIdentifier).build();
       }
+      verifyFieldExistence(scope, accountId);
       return identifierRefBuilder.build();
     } else {
       throw new InvalidRequestException("Invalid Identifier Reference.");
@@ -81,12 +93,15 @@ public class IdentifierRefHelper {
       identifierRefBuilder.metadata(metadata);
     }
     if (scope == Scope.ACCOUNT) {
+      verifyFieldExistence(scope, accountId);
       return identifierRefBuilder.build();
     }
     if (scope == Scope.ORG) {
+      verifyFieldExistence(scope, accountId, orgIdentifier);
       return identifierRefBuilder.orgIdentifier(orgIdentifier).build();
     }
     if (scope == Scope.PROJECT) {
+      verifyFieldExistence(scope, accountId, orgIdentifier, projectIdentifier);
       return identifierRefBuilder.orgIdentifier(orgIdentifier).projectIdentifier(projectIdentifier).build();
     } else {
       throw new InvalidRequestException("Invalid Identifier Reference.");
@@ -105,7 +120,7 @@ public class IdentifierRefHelper {
   }
 
   public Scope getScope(String identifierScopeString) {
-    if (EmptyPredicate.isEmpty(identifierScopeString)) {
+    if (isEmpty(identifierScopeString)) {
       return null;
     }
     return Scope.fromString(identifierScopeString);
@@ -121,7 +136,7 @@ public class IdentifierRefHelper {
   }
 
   public String getIdentifier(String scopedIdentifierConfig) {
-    if (EmptyPredicate.isEmpty(scopedIdentifierConfig)) {
+    if (isEmpty(scopedIdentifierConfig)) {
       throw new InvalidRequestException("scopedIdentifierConfig is null");
     }
     String identifier;
@@ -138,5 +153,28 @@ public class IdentifierRefHelper {
       throw new InvalidRequestException("Invalid Identifier Reference.");
     }
     return identifier;
+  }
+
+  // provide fields in order of accountId, orgId and projectId
+  private void verifyFieldExistence(Scope scope, String... fields) {
+    for (int fieldNum = 0; fieldNum < fields.length; fieldNum++) {
+      if (isEmpty(fields[fieldNum])) {
+        throw new InvalidRequestException(
+            String.format("%s cannot be empty for %s scope", getEmptyFieldName(fieldNum), scope));
+      }
+    }
+  }
+
+  private String getEmptyFieldName(int fieldNum) {
+    switch (fieldNum) {
+      case 0:
+        return "AccountIdentifier";
+      case 1:
+        return "OrgIdentifier";
+      case 2:
+        return "ProjectIdentifier";
+      default:
+        return "unknown";
+    }
   }
 }

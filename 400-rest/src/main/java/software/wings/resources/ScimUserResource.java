@@ -1,10 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.resources;
 
-import software.wings.beans.scim.ScimUser;
-import software.wings.scim.PatchRequest;
-import software.wings.scim.ScimListResponse;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimResource;
+import io.harness.scim.ScimUser;
+import io.harness.security.annotations.ScimAPI;
+
 import software.wings.scim.ScimUserServiceImpl;
-import software.wings.security.annotations.ScimAPI;
 
 import com.google.inject.Inject;
 import io.dropwizard.jersey.PATCH;

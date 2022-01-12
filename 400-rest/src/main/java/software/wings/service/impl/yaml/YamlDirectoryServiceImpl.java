@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessModule._951_CG_GIT_SYNC;
@@ -20,6 +27,7 @@ import static software.wings.beans.Service.GLOBAL_SERVICE_NAME_FOR_YAML;
 import static software.wings.beans.appmanifest.AppManifestKind.AZURE_APP_SERVICE_MANIFEST;
 import static software.wings.beans.appmanifest.AppManifestKind.HELM_CHART_OVERRIDE;
 import static software.wings.beans.appmanifest.AppManifestKind.K8S_MANIFEST;
+import static software.wings.beans.appmanifest.AppManifestKind.KUSTOMIZE_PATCHES;
 import static software.wings.beans.appmanifest.AppManifestKind.OC_PARAMS;
 import static software.wings.beans.appmanifest.AppManifestKind.VALUES;
 import static software.wings.beans.yaml.YamlConstants.APPLICATIONS_FOLDER;
@@ -44,6 +52,7 @@ import static software.wings.beans.yaml.YamlConstants.HELM_CHART_OVERRIDE_FOLDER
 import static software.wings.beans.yaml.YamlConstants.INDEX_YAML;
 import static software.wings.beans.yaml.YamlConstants.INFRA_DEFINITION_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.INFRA_MAPPING_FOLDER;
+import static software.wings.beans.yaml.YamlConstants.KUSTOMIZE_PATCHES_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.LOAD_BALANCERS_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FILE_FOLDER;
 import static software.wings.beans.yaml.YamlConstants.MANIFEST_FOLDER;
@@ -123,6 +132,7 @@ import software.wings.beans.container.PcfServiceSpecification;
 import software.wings.beans.container.UserDataSpecification;
 import software.wings.beans.defaults.Defaults;
 import software.wings.beans.governance.GovernanceConfig;
+import software.wings.beans.security.UserGroup;
 import software.wings.beans.template.Template;
 import software.wings.beans.template.Template.TemplateKeys;
 import software.wings.beans.template.TemplateFolder;
@@ -1204,6 +1214,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
         // ------------------- END VALUES YAML OVERRIDE SECTION -----------------------
 
+        // ------------------- KUSTOMIZE PATCHES OVERRIDE SECTION -----------------------
+
+        FolderNode kustomizePatchesFolder = generateKustomizePatchesFolder(accountId, service, servicePath);
+        if (kustomizePatchesFolder != null) {
+          serviceFolder.addChild(kustomizePatchesFolder);
+        }
+        // ------------------- END KUSTOMIZE PATCHES OVERRIDE SECTION -----------------------
+
         // ------------------- OC PARAMS OVERRIDE SECTION -----------------------
 
         FolderNode ocParamsFolder = generateOcParamsFolder(accountId, service, servicePath);
@@ -1219,6 +1237,18 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
 
   private FolderNode generateValuesFolder(String accountId, Service service, DirectoryPath servicePath) {
     return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.VALUES);
+  }
+
+  private FolderNode generateKustomizePatchesFolder(String accountId, Service service, DirectoryPath servicePath) {
+    ApplicationManifest appManifest =
+        applicationManifestService.getAppManifest(service.getAppId(), null, service.getUuid(), K8S_MANIFEST);
+    if (appManifest == null) {
+      return null;
+    }
+    if (appManifest.getStoreType() != StoreType.KustomizeSourceRepo) {
+      return null;
+    }
+    return generateKindBasedFolder(accountId, service, servicePath, AppManifestKind.KUSTOMIZE_PATCHES);
   }
 
   private FolderNode generateOcParamsFolder(String accountId, Service service, DirectoryPath servicePath) {
@@ -1625,6 +1655,14 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         }
         // ------------------- END HELM OVERRIDE SECTION -----------------------
 
+        // ------------------- KUSTOMIZE PATCHES FILES SECTION -----------------------
+        FolderNode kustomizePatchesFolder =
+            generateEnvValuesFolder(accountId, environment, envPath, AppManifestKind.KUSTOMIZE_PATCHES);
+        if (kustomizePatchesFolder != null) {
+          envFolder.addChild(kustomizePatchesFolder);
+        }
+        // ------------------- END KUSTOMIZE PATCHES FILES SECTION -----------------------
+
         // ------------------- OC PARAMS FILES SECTION -----------------------
         FolderNode ocParamsFolder = generateEnvValuesFolder(accountId, environment, envPath, AppManifestKind.OC_PARAMS);
         if (ocParamsFolder != null) {
@@ -1998,11 +2036,13 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return workflowsFolder;
     }
 
-    PageRequest<Workflow> pageRequest = aPageRequest()
-                                            .addFilter("appId", Operator.EQ, app.getAppId())
-                                            .addOrder(Workflow.NAME_KEY, SortOrder.OrderType.ASC)
-                                            .build();
-    List<Workflow> workflows = workflowService.listWorkflows(pageRequest).getResponse();
+    PageRequest<Workflow> pageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, app.getAppId())
+            .addOrder(Workflow.NAME_KEY, SortOrder.OrderType.ASC)
+            .addFieldsIncluded(Pipeline.UUID_KEY, Pipeline.NAME_KEY, Pipeline.APP_ID_KEY2)
+            .build();
+    List<Workflow> workflows = workflowService.listWorkflowsWithoutOrchestration(pageRequest).getResponse();
 
     if (workflows != null) {
       // iterate over workflows
@@ -2031,10 +2071,12 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return pipelinesFolder;
     }
 
-    PageRequest<Pipeline> pageRequest = aPageRequest()
-                                            .addFilter("appId", Operator.EQ, app.getAppId())
-                                            .addOrder(Pipeline.NAME_KEY, SortOrder.OrderType.ASC)
-                                            .build();
+    PageRequest<Pipeline> pageRequest =
+        aPageRequest()
+            .addFilter("appId", Operator.EQ, app.getAppId())
+            .addOrder(Pipeline.NAME_KEY, SortOrder.OrderType.ASC)
+            .addFieldsIncluded(Pipeline.UUID_KEY, Pipeline.NAME_KEY, Pipeline.APP_ID_KEY2)
+            .build();
     List<Pipeline> pipelines = pipelineService.listPipelines(pageRequest).getResponse();
 
     if (pipelines != null) {
@@ -2553,13 +2595,15 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
   }
 
   private boolean shouldGoInsideManifestFiles(boolean fromManifestFile, AppManifestKind kind) {
-    return fromManifestFile && (kind != VALUES && kind != OC_PARAMS);
+    return fromManifestFile && (kind != VALUES && kind != OC_PARAMS && kind != KUSTOMIZE_PATCHES);
   }
 
   private String getServiceFolderForManifest(AppManifestKind kind) {
     switch (kind) {
       case VALUES:
         return VALUES_FOLDER;
+      case KUSTOMIZE_PATCHES:
+        return KUSTOMIZE_PATCHES_FOLDER;
       case OC_PARAMS:
         return OC_PARAMS_FOLDER;
       case AZURE_APP_SERVICE_MANIFEST:
@@ -2581,6 +2625,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
         break;
       case OC_PARAMS:
         folderName = OC_PARAMS_FOLDER;
+        break;
+      case KUSTOMIZE_PATCHES:
+        folderName = KUSTOMIZE_PATCHES_FOLDER;
         break;
       case AZURE_APP_SETTINGS_OVERRIDE:
         folderName = AZURE_APP_SETTINGS_OVERRIDES_FOLDER;
@@ -2931,8 +2978,9 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       return getRootPathForGovernanceConfig();
     } else if (entity instanceof CgEventConfig) {
       return getRootPathByEventConfig((CgEventConfig) entity);
+    } else if (entity instanceof UserGroup) {
+      return SETUP_FOLDER;
     }
-
     throw new InvalidRequestException(
         "Unhandled case while obtaining yaml entity root path for entity type " + entity.getClass().getSimpleName());
   }

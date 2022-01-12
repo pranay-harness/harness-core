@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -219,7 +226,7 @@ public class CyberArkServiceImpl extends AbstractSecretServiceImpl implements Cy
       if (maskSecret) {
         cyberArkConfig.maskSecrets();
       } else {
-        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingBaseAlgo(encryptedClientCert)));
+        cyberArkConfig.setClientCertificate(String.valueOf(decryptUsingAlgoOfSecret(encryptedClientCert)));
       }
     }
   }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE_NEW;
@@ -139,6 +146,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
+                                                          .metricIdentifier("metricIdentifier-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
         for (int k = 0; k < numOfTxnx; k++) {
@@ -201,6 +209,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
+                                                          .metricIdentifier("metricIdentifier-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
         for (int k = 0; k < numOfTxnx; k++) {
@@ -256,6 +265,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       for (int j = 0; j < numOfMetrics; j++) {
         TimeSeriesDataRecordMetricValue metricValue = TimeSeriesDataRecordMetricValue.builder()
                                                           .metricName("metric-" + j)
+                                                          .metricIdentifier("metricIdentifier-" + j)
                                                           .timeSeriesValues(new HashSet<>())
                                                           .build();
         for (int k = 0; k < numOfTxnx; k++) {
@@ -270,7 +280,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
     List<TimeSeriesRecord> timeSeriesRecords = hPersistence.createQuery(TimeSeriesRecord.class, excludeAuthority)
                                                    .order(Sort.ascending(TimeSeriesRecordKeys.metricName))
                                                    .asList();
-    Set<String> nullableFields = Sets.newHashSet(TimeSeriesRecordKeys.cvConfigId);
+    Set<String> nullableFields = Sets.newHashSet();
     timeSeriesRecords.forEach(timeSeriesRecord -> {
       List<Field> fields = ReflectionUtils.getAllDeclaredAndInheritedFields(TimeSeriesRecord.class);
       fields.stream().filter(field -> !nullableFields.contains(field.getName())).forEach(field -> {
@@ -416,6 +426,7 @@ public class TimeSeriesRecordServiceImplTest extends CvNextGenTestBase {
       assertThat(timeSeriesRecord.getAccountId()).isEqualTo(accountId);
       assertThat(timeSeriesRecord.getBucketStartTime().toEpochMilli()).isEqualTo(0);
       assertThat(timeSeriesRecord.getMetricName()).isEqualTo("metric-" + i);
+      assertThat(timeSeriesRecord.getMetricIdentifier()).isEqualTo("metricIdentifier-" + i);
       assertThat(timeSeriesRecord.getTimeSeriesGroupValues().size()).isEqualTo(numOfTxnx * numOfMins);
       ArrayList<TimeSeriesRecord.TimeSeriesGroupValue> timeSeriesGroupValues =
           Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues());

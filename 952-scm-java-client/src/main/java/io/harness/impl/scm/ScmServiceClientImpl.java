@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.impl.scm;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -473,7 +480,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
   }
 
   @Override
-  public void createNewBranch(
+  public CreateBranchResponse createNewBranch(
       ScmConnector scmConnector, String branch, String baseBranchName, SCMGrpc.SCMBlockingStub scmBlockingStub) {
     String slug = scmGitProviderHelper.getSlug(scmConnector);
     Provider gitProvider = scmGitProviderMapper.mapToSCMGitProvider(scmConnector);
@@ -492,6 +499,7 @@ public class ScmServiceClientImpl implements ScmServiceClient {
         throw new ExplanationException(String.format("Failed to create branch %s", branch), e);
       }
     }
+    return createBranchResponse;
   }
 
   @Override

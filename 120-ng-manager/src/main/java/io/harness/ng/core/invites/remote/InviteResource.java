@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.invites.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -7,6 +14,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_USER_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.USER;
 import static io.harness.ng.core.invites.mapper.InviteMapper.writeDTO;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.validateRoleBindings;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.stripToNull;
@@ -48,6 +56,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -152,7 +161,7 @@ public class InviteResource {
       })
   @NGAccessControlCheck(resourceType = USER, permission = VIEW_USER_PERMISSION)
   public ResponseDTO<PageResponse<InviteDTO>>
-  getInvites(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam(
+  getInvites(@Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
                  "accountIdentifier") @NotNull @AccountIdentifier String accountIdentifier,
       @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectIdentifier")
@@ -173,8 +182,7 @@ public class InviteResource {
                             .is(Boolean.FALSE)
                             .and(InviteKeys.deleted)
                             .is(Boolean.FALSE);
-    PageResponse<InviteDTO> invites =
-        inviteService.getInvites(criteria, pageRequest).map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO);
+    PageResponse<InviteDTO> invites = inviteService.getInvites(criteria, pageRequest).map(InviteMapper::writeDTO);
     return ResponseDTO.newResponse(invites);
   }
 
@@ -204,7 +212,9 @@ public class InviteResource {
 
   @POST
   @ApiOperation(value = "Add a new invite for the specified project/organization", nickname = "sendInvite")
-  @Operation(operationId = "sendInvite", summary = "Send a user Invite to either Project or Organization",
+  @Operation(operationId = "sendInvite",
+      summary =
+          "Send a user Invite to either Project or Organization (Deprecated). Please use the /user/users API to invite users",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.
@@ -220,12 +230,14 @@ public class InviteResource {
           description = "Details of the Invite to create") @NotNull @Valid CreateInviteDTO createInviteDTO) {
     projectIdentifier = stripToNull(projectIdentifier);
     orgIdentifier = stripToNull(orgIdentifier);
+    validateRoleBindings(createInviteDTO.getRoleBindings(), orgIdentifier, projectIdentifier);
     List<InviteOperationResponse> inviteOperationResponses =
         inviteService.createInvitations(accountIdentifier, orgIdentifier, projectIdentifier, createInviteDTO);
     return ResponseDTO.newResponse(inviteOperationResponses);
   }
 
   @GET
+  @Hidden
   @Path("accept")
   @ApiOperation(value = "Verify user invite", nickname = "verifyInvite", hidden = true)
   public ResponseDTO<InviteAcceptResponse> accept(@QueryParam("token") @NotNull String jwtToken) {
@@ -233,6 +245,7 @@ public class InviteResource {
   }
 
   @GET
+  @Hidden
   @Path("verify")
   @ApiOperation(
       value = "Verify user invite with the new NG Auth UI flow", nickname = "verifyInviteViaNGAuthUi", hidden = true)
@@ -251,6 +264,7 @@ public class InviteResource {
   }
 
   @GET
+  @Hidden
   @Path("complete")
   @ApiOperation(value = "Complete user invite", nickname = "completeInvite", hidden = true)
   @Operation(operationId = "completeInvite", summary = "Complete the User Invite",
@@ -260,7 +274,7 @@ public class InviteResource {
         ApiResponse(responseCode = "default", description = "Returns the boolean status")
       })
   public ResponseDTO<Boolean>
-  completeInvite(@Parameter(description = "JWT Tokenn") @QueryParam("token") String token) {
+  completeInvite(@Parameter(description = "JWT Token") @QueryParam("token") String token) {
     Optional<Invite> inviteOpt = inviteService.getInviteFromToken(token, false);
     return ResponseDTO.newResponse(inviteService.completeInvite(inviteOpt));
   }
@@ -277,12 +291,13 @@ public class InviteResource {
   public ResponseDTO<Optional<InviteDTO>>
   updateInvite(@Parameter(description = "Invite id") @PathParam("inviteId") @NotNull String inviteId,
       @RequestBody(required = true, description = "Details of the Updated Invite") @NotNull @Valid InviteDTO inviteDTO,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountIdentifier") String accountIdentifier) {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE, required = true) @QueryParam(
+          "accountIdentifier") String accountIdentifier) {
     NGAccess ngAccess = BaseNGAccess.builder().accountIdentifier(accountIdentifier).build();
     Invite invite = InviteMapper.toInvite(inviteDTO, ngAccess);
     invite.setId(inviteId);
     Optional<Invite> inviteOptional = inviteService.updateInvite(invite);
-    return ResponseDTO.newResponse(inviteOptional.map(io.harness.ng.core.invites.mapper.InviteMapper::writeDTO));
+    return ResponseDTO.newResponse(inviteOptional.map(InviteMapper::writeDTO));
   }
 
   @DELETE

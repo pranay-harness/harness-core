@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.mongo;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -8,6 +15,7 @@ import static lombok.AccessLevel.NONE;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.mongo.tracing.TraceMode;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -25,6 +33,7 @@ import lombok.Builder.Default;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
+import lombok.experimental.FieldDefaults;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.client.utils.URIBuilder;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -38,6 +47,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @Builder(toBuilder = true)
 @ToString(onlyExplicitlyIncluded = true)
 @OwnedBy(HarnessTeam.PL)
+@FieldDefaults(makeFinal = false)
 public class MongoConfig {
   public static final String DOT_REPLACEMENT = "__dot__";
   public static final String DEFAULT_URI = "mongodb://localhost:27017/wings";
@@ -64,11 +74,11 @@ public class MongoConfig {
   }
 
   @JsonProperty(defaultValue = DEFAULT_URI) @Default @NotEmpty private String uri = DEFAULT_URI;
-
+  @JsonProperty @Getter(NONE) private String schema;
   @JsonProperty @Getter(NONE) private List<HostAndPort> hosts;
   @JsonProperty @Getter(NONE) private String database;
-  @JsonProperty @Getter(NONE) private String username;
-  @JsonProperty @Getter(NONE) private String password;
+  @JsonProperty @Getter(NONE) @ConfigSecret private String username;
+  @JsonProperty @Getter(NONE) @ConfigSecret private String password;
   @JsonProperty @Getter(NONE) private Map<String, String> params;
 
   @ToString.Include @Getter(NONE) private ReadPref readPref;
@@ -117,7 +127,7 @@ public class MongoConfig {
     }
 
     final URIBuilder uriBuilder =
-        new URIBuilder().setScheme(MONGODB_SCHEMA).setHost(hosts()).setPath(forceSlashAfterHostWhenThereAreParams());
+        new URIBuilder().setScheme(schema()).setHost(hosts()).setPath(forceSlashAfterHostWhenThereAreParams());
 
     if (StringUtils.isNotBlank(username) && StringUtils.isNotBlank(password)) {
       uriBuilder.setUserInfo(username, password);
@@ -130,6 +140,14 @@ public class MongoConfig {
     }
 
     return uriBuilder.toString();
+  }
+
+  private String schema() {
+    if (StringUtils.isNotBlank(schema)) {
+      return schema;
+    } else {
+      return MONGODB_SCHEMA;
+    }
   }
 
   private String hosts() {

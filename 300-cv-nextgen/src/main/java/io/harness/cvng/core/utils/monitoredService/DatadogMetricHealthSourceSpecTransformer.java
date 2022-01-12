@@ -1,8 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.utils.monitoredService;
 
 import io.harness.cvng.core.beans.DatadogMetricHealthDefinition;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition;
 import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.DatadogMetricHealthSourceSpec;
+import io.harness.cvng.core.entities.AnalysisInfo;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 
 import com.google.common.base.Preconditions;
@@ -19,23 +28,33 @@ public class DatadogMetricHealthSourceSpecTransformer
         "ConnectorRef should be same for all the configs in the list.");
     List<DatadogMetricHealthDefinition> metricDefinitions = new ArrayList<>();
     cvConfigs.forEach(cvConfig -> cvConfig.getMetricInfoList().forEach(metricInfo -> {
+      RiskProfile riskProfile = RiskProfile.builder()
+                                    .category(cvConfig.getMetricPack().getCategory())
+                                    .metricType(metricInfo.getMetricType())
+                                    .thresholdTypes(cvConfig.getThresholdTypeOfMetric(metricInfo.getMetric(), cvConfig))
+                                    .build();
       DatadogMetricHealthDefinition metricDefinition =
           DatadogMetricHealthDefinition.builder()
               .dashboardId(cvConfig.getDashboardId())
               .dashboardName(cvConfig.getDashboardName())
               .metricName(metricInfo.getMetricName())
+              .identifier(metricInfo.getIdentifier())
               .metric(metricInfo.getMetric())
+              .metricPath(metricInfo.getMetricPath())
               .serviceInstanceIdentifierTag(metricInfo.getServiceInstanceIdentifierTag())
               .query(metricInfo.getQuery())
               .groupingQuery(metricInfo.getGroupingQuery())
               .aggregation(metricInfo.getAggregation())
               .metricTags(metricInfo.getMetricTags())
               .isManualQuery(metricInfo.isManualQuery())
-              .riskProfile(RiskProfile.builder()
-                               .category(cvConfig.getMetricPack().getCategory())
-                               .metricType(metricInfo.getMetricType())
-                               .thresholdTypes(cvConfig.getThresholdTypeOfMetric(metricInfo.getMetric(), cvConfig))
-                               .build())
+              .riskProfile(riskProfile)
+              .sli(transformSLIEntityToDTO(metricInfo.getSli()))
+              .analysis(HealthSourceMetricDefinition.AnalysisDTO.builder()
+                            .liveMonitoring(transformLiveMonitoringEntityToDTO(metricInfo.getLiveMonitoring()))
+                            .deploymentVerification(transformDevelopmentVerificationEntityToDTO(
+                                metricInfo.getDeploymentVerification(), metricInfo.getServiceInstanceIdentifierTag()))
+                            .riskProfile(riskProfile)
+                            .build())
               .build();
 
       metricDefinitions.add(metricDefinition);
@@ -45,5 +64,24 @@ public class DatadogMetricHealthSourceSpecTransformer
         .metricDefinitions(metricDefinitions)
         .connectorRef(cvConfigs.get(0).getConnectorIdentifier())
         .build();
+  }
+
+  public HealthSourceMetricDefinition.AnalysisDTO.DeploymentVerificationDTO transformDevelopmentVerificationEntityToDTO(
+      AnalysisInfo.DeploymentVerification deploymentVerification, String serviceInstanceFieldName) {
+    return HealthSourceMetricDefinition.AnalysisDTO.DeploymentVerificationDTO.builder()
+        .serviceInstanceFieldName(serviceInstanceFieldName)
+        .enabled(deploymentVerification.isEnabled())
+        .build();
+  }
+
+  private HealthSourceMetricDefinition.AnalysisDTO.LiveMonitoringDTO transformLiveMonitoringEntityToDTO(
+      AnalysisInfo.LiveMonitoring liveMonitoring) {
+    return HealthSourceMetricDefinition.AnalysisDTO.LiveMonitoringDTO.builder()
+        .enabled(liveMonitoring.isEnabled())
+        .build();
+  }
+
+  public HealthSourceMetricDefinition.SLIDTO transformSLIEntityToDTO(AnalysisInfo.SLI sli) {
+    return HealthSourceMetricDefinition.SLIDTO.builder().enabled(sli.isEnabled()).build();
   }
 }

@@ -1,8 +1,12 @@
 #!/bin/bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 set +e
 
-PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIE|PL|SEC|SWAT|GTM|FFM|ONP|LWG|ART"
+PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIE|PL|SEC|SWAT|GTM|FFM|OPA|ONP|LWG|ART"
 
 # Check commit message if there's a single commit
 if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then
@@ -31,27 +35,28 @@ else
 fi
 
 echo "issueType is ${issuetype}"
+echo "INFO: Checking JIRA STATUS OF issueType ${issuetype}"
 
 if [[ "${issuetype}" = "Bug" && ( "${bug_resolution}" = "" || "${jira_resolved_as}" = "null" || "${phase_injected}" = "null" || "${what_changed}" = "null" ) ]]
 then
       if [[ -z ${bug_resolution} ]]
       then
-        echo "bug resolution is empty"
+        echo "ERROR: JIRA FIELD: bug resolution is empty"
       fi
 
       if [[ "${jira_resolved_as}" = "null" ]]
       then
-        echo "jira_resolved_as is not selected"
+        echo "ERROR: JIRA FIELD: jira_resolved_as is not selected"
       fi
 
       if [[ "${phase_injected}" = "null" ]]
       then
-        echo "phase_injected is not selected"
+        echo "ERROR: JIRA FIELD: phase_injected is not selected"
       fi
 
       if [[ "${what_changed}" = "null" ]]
       then
-        echo "what_changed is not updated"
+        echo "ERROR: JIRA FIELD: what_changed is not updated"
       fi
       exit 1
 fi
@@ -60,11 +65,11 @@ if [[ "${issuetype}" = "Story" && ( "${ff_added}" = "null" || "${what_changed}" 
 then
       if [[ "${ff_added}" = "null" ]]
       then
-        echo "FF added is not updated, Please update FF added to proceed"
+        echo "ERROR: JIRA FIELD: FF added is not updated, Please update FF added to proceed"
       fi
       if [[ "${what_changed}" = "null" ]]
       then
-        echo "what_changed is not updated"
+        echo "ERROR: JIRA FIELD: what_changed is not updated"
       fi
       exit 1
 fi

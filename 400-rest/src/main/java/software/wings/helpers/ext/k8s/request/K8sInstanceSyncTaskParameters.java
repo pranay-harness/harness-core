@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.k8s.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -23,10 +30,10 @@ public class K8sInstanceSyncTaskParameters extends K8sTaskParameters {
   public K8sInstanceSyncTaskParameters(String accountId, String appId, String commandName, String activityId,
       K8sClusterConfig k8sClusterConfig, String workflowExecutionId, String releaseName, Integer timeoutIntervalInMin,
       String namespace, HelmVersion helmVersion, Set<String> delegateSelectors, boolean useLatestChartMuseumVersion,
-      boolean useLatestKustomizeVersion, boolean useNewKubectlVersion) {
+      boolean useVarSupportForKustomize, boolean useNewKubectlVersion) {
     super(accountId, appId, commandName, activityId, k8sClusterConfig, workflowExecutionId, releaseName,
         timeoutIntervalInMin, K8sTaskType.INSTANCE_SYNC, helmVersion, delegateSelectors, useLatestChartMuseumVersion,
-        useLatestKustomizeVersion, useNewKubectlVersion);
+        useVarSupportForKustomize, useNewKubectlVersion);
     this.namespace = namespace;
   }
 }

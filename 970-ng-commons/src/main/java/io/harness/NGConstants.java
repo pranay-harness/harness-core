@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -15,7 +22,9 @@ public class NGConstants {
   public static final String HARNESS_SECRET_MANAGER_IDENTIFIER = "harnessSecretManager";
   public static final String DEFAULT_ORG_IDENTIFIER = "default";
   public static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  public static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
+  public static final String DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER = "_all_account_level_resources";
+  public static final String DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER = "_all_organization_level_resources";
+  public static final String DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER = "_all_project_level_resources";
   public static final String ENTITY_REFERENCE_LOG_PREFIX = "ENTITY_REFERENCE :";
   public static final String HARNESS_BLUE = "#0063F7";
   public static final String STRING_CONNECTOR = ":";

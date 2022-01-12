@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.k8s.model;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -143,7 +150,7 @@ public class KubernetesResource {
 
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
@@ -176,7 +183,7 @@ public class KubernetesResource {
 
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
@@ -256,7 +263,7 @@ public class KubernetesResource {
 
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
@@ -272,7 +279,7 @@ public class KubernetesResource {
     updateName(k8sResource, transformer);
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
@@ -369,7 +376,7 @@ public class KubernetesResource {
 
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
@@ -388,7 +395,7 @@ public class KubernetesResource {
 
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       this.spec = yaml.dump(k8sResource);
       this.value = readYaml(this.spec).get(0);
     } catch (IOException e) {
@@ -417,7 +424,7 @@ public class KubernetesResource {
         }
       }
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       result = yaml.dump(v1Secret);
     } catch (Exception e) {
       // do nothing
@@ -775,7 +782,7 @@ public class KubernetesResource {
 
     try {
       org.yaml.snakeyaml.Yaml yaml =
-          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+          new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
       return ResourceUtils.removeEmptyOrNullFields(yaml.dump(Yaml.loadAs(this.spec, V1StatefulSet.class)));
     } catch (IOException e) {
       // Return original spec

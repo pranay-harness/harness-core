@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -9,6 +16,7 @@ import io.harness.steps.approval.step.harness.HarnessApprovalOutcome;
 import io.harness.steps.approval.step.harness.HarnessApprovalResponseData;
 import io.harness.steps.approval.step.jira.JiraApprovalOutcome;
 import io.harness.steps.approval.step.jira.beans.JiraApprovalResponseData;
+import io.harness.steps.approval.step.servicenow.beans.ServiceNowApprovalResponseData;
 import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -58,6 +66,7 @@ public class OrchestrationStepsKryoRegistrar implements KryoRegistrar {
     kryo.register(JiraIssueOutcome.class, 3225);
     kryo.register(FlagConfigurationStepParameters.class, 3226);
     kryo.register(BarrierError.class, 3227);
+    kryo.register(ServiceNowApprovalResponseData.class, 3228);
 
     // made it same as which was in CD
     kryo.register(HttpStepInfo.class, 8048);

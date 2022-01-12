@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.iterator;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -23,7 +30,7 @@ public interface PersistentCronIterable extends PersistentIrregularIterable {
   CronParser parser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(CronType.QUARTZ));
 
   default boolean expandNextIterations(boolean skipMissing, long throttled, String cronExpression, List<Long> times) {
-    final ZonedDateTime now = ZonedDateTime.now();
+    final ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);
 
     // Take this item here, before we cleanup the list and potentially make it empty. We would like to align the items
     // based on the last previous one, instead of now, if they depend on each other.
@@ -40,10 +47,6 @@ public interface PersistentCronIterable extends PersistentIrregularIterable {
 
     final Cron cron = parser.parse(cronExpression);
     ExecutionTime executionTime = ExecutionTime.forCron(cron);
-
-    if (times.isEmpty()) {
-      times.add(ZonedDateTime.now().toInstant().toEpochMilli());
-    }
 
     while (times.size() < 10) {
       final Optional<ZonedDateTime> nextTime = executionTime.nextExecution(time);

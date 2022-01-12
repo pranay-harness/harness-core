@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.event.handlers;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -21,7 +28,7 @@ public class AddExecutableResponseRequestProcessor implements SdkResponseProcess
   @Override
   public void handleEvent(SdkResponseEventProto event) {
     AddExecutableResponseRequest request = event.getAddExecutableResponseRequest();
-    nodeExecutionService.update(SdkResponseEventUtils.getNodeExecutionId(event),
+    nodeExecutionService.updateV2(SdkResponseEventUtils.getNodeExecutionId(event),
         ops -> ops.addToSet(NodeExecutionKeys.executableResponses, request.getExecutableResponse()));
   }
 }

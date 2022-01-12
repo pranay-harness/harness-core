@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks;
 
 /**
@@ -25,7 +32,7 @@ import org.apache.commons.lang3.NotImplementedException;
 
 @Slf4j
 public class CIInitializeTask extends AbstractDelegateRunnableTask {
-  @Inject @Named(CITaskConstants.INIT_AWS_VM) private CIInitializeTaskHandler ciAwsVmInitializeTaskHandler;
+  @Inject @Named(CITaskConstants.INIT_VM) private CIInitializeTaskHandler ciVmInitializeTaskHandler;
   @Inject @Named(CITaskConstants.INIT_K8) private CIInitializeTaskHandler ciK8InitializeTaskHandler;
 
   public CIInitializeTask(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
@@ -42,9 +49,11 @@ public class CIInitializeTask extends AbstractDelegateRunnableTask {
   public DelegateResponseData run(TaskParameters parameters) {
     CIInitializeTaskParams ciInitializeTaskParams = (CIInitializeTaskParams) parameters;
     if (ciInitializeTaskParams.getType() == CIInitializeTaskParams.Type.GCP_K8) {
-      return ciK8InitializeTaskHandler.executeTaskInternal(ciInitializeTaskParams, getLogStreamingTaskClient());
-    } else if (ciInitializeTaskParams.getType() == CIInitializeTaskParams.Type.AWS_VM) {
-      return ciAwsVmInitializeTaskHandler.executeTaskInternal(ciInitializeTaskParams, getLogStreamingTaskClient());
+      return ciK8InitializeTaskHandler.executeTaskInternal(
+          ciInitializeTaskParams, getLogStreamingTaskClient(), getTaskId());
+    } else if (ciInitializeTaskParams.getType() == CIInitializeTaskParams.Type.VM) {
+      return ciVmInitializeTaskHandler.executeTaskInternal(
+          ciInitializeTaskParams, getLogStreamingTaskClient(), getTaskId());
     } else {
       throw new CIStageExecutionException(
           format("Invalid infra type for initializing stage", ciInitializeTaskParams.getType()));

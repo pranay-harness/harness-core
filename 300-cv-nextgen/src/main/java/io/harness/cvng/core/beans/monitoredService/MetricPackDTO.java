@@ -1,6 +1,12 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.beans.monitoredService;
 
-import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -16,7 +22,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MetricPackDTO {
-  @NotNull private CVMonitoringCategory identifier;
+  @NotNull private String identifier;
 
   public MetricPack toMetricPack(String accountId, String orgId, String projectId, DataSourceType dataSourceType,
       MetricPackService metricPackService) {
@@ -24,6 +30,6 @@ public class MetricPackDTO {
   }
 
   public static MetricPackDTO toMetricPackDTO(MetricPack metricPack) {
-    return MetricPackDTO.builder().identifier(metricPack.getCategory()).build();
+    return MetricPackDTO.builder().identifier(metricPack.getIdentifier()).build();
   }
 }

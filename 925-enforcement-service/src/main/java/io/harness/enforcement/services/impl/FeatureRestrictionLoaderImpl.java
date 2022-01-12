@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.services.impl;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
@@ -9,6 +16,8 @@ import io.harness.enforcement.bases.AvailabilityRestriction;
 import io.harness.enforcement.bases.CustomRestriction;
 import io.harness.enforcement.bases.DurationRestriction;
 import io.harness.enforcement.bases.FeatureRestriction;
+import io.harness.enforcement.bases.LicenseRateLimitRestriction;
+import io.harness.enforcement.bases.LicenseStaticLimitRestriction;
 import io.harness.enforcement.bases.RateLimitRestriction;
 import io.harness.enforcement.bases.Restriction;
 import io.harness.enforcement.bases.StaticLimitRestriction;
@@ -130,7 +139,7 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
 
     featureRestriction.getRestrictions().values().forEach(v -> {
       try {
-        validRestriction(v);
+        validRestriction(v, moduleType);
         loadUsageClientToLimitRestriction(v);
       } catch (Exception e) {
         throw new InvalidArgumentsException(
@@ -166,7 +175,7 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
     }
   }
 
-  void validRestriction(Restriction restriction) {
+  void validRestriction(Restriction restriction, ModuleType moduleType) {
     if (restriction.getRestrictionType() == null) {
       throw new InvalidArgumentsException("Restriction type is missing");
     }
@@ -204,6 +213,27 @@ public class FeatureRestrictionLoaderImpl implements FeatureRestrictionLoader {
         DurationRestriction durationRestriction = (DurationRestriction) restriction;
         if (durationRestriction.getTimeUnit() == null || durationRestriction.getTimeUnit().getUnit() == null) {
           throw new InvalidArgumentsException("DurationRestriction is missing necessary config");
+        }
+        break;
+      case LICENSE_RATE_LIMIT:
+        LicenseRateLimitRestriction licenseRateLimitRestriction = (LicenseRateLimitRestriction) restriction;
+        if (ModuleType.CORE.equals(moduleType)) {
+          throw new InvalidArgumentsException("CORE feature can't have LicenseRateLimitRestriction");
+        }
+        if (licenseRateLimitRestriction.getClientName() == null || licenseRateLimitRestriction.getFieldName() == null
+            || licenseRateLimitRestriction.getTimeUnit() == null
+            || licenseRateLimitRestriction.getTimeUnit().getUnit() == null) {
+          throw new InvalidArgumentsException("LicenseRateLimitRestriction is missing necessary config");
+        }
+        break;
+      case LICENSE_STATIC_LIMIT:
+        LicenseStaticLimitRestriction licenseStaticLimitRestriction = (LicenseStaticLimitRestriction) restriction;
+        if (ModuleType.CORE.equals(moduleType)) {
+          throw new InvalidArgumentsException("CORE feature can't have LicenseRateLimitRestriction");
+        }
+        if (licenseStaticLimitRestriction.getClientName() == null
+            || licenseStaticLimitRestriction.getFieldName() == null) {
+          throw new InvalidArgumentsException("LicenseRateLimitRestriction is missing necessary config");
         }
         break;
       default:

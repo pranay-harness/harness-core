@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -123,6 +130,7 @@ public class DatadogServiceImpl implements DatadogService {
                                                                .from(now.minus(Duration.ofMinutes(1000)).toEpochMilli())
                                                                .to(now.toEpochMilli())
                                                                .limit(DatadogLogDataCollectionInfo.LOG_MAX_LIMIT)
+                                                               .query(query)
                                                                .build();
 
       Type type = new TypeToken<List<LinkedHashMap>>() {}.getType();

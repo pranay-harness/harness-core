@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.telemetry;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -20,9 +27,10 @@ public interface TelemetryReporter {
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
    * @param category the flow category, used to clarify what the work flow is, e.g. during SINGUP. Default is GLOBAL.
+   * @param telemetryOption The optional field for telemetry options. Only allow the first argument
    */
-  void sendTrackEvent(
-      String eventName, HashMap<String, Object> properties, Map<Destination, Boolean> destinations, String category);
+  void sendTrackEvent(String eventName, HashMap<String, Object> properties, Map<Destination, Boolean> destinations,
+      String category, TelemetryOption... telemetryOption);
 
   /**
    * Sending track message
@@ -36,17 +44,20 @@ public interface TelemetryReporter {
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
    * @param category the flow category, used to clarify what the work flow is, e.g. during SINGUP. Default is GLOBAL.
+   * @param telemetryOption The optional field for telemetry options. Only allow the first argument
    */
   void sendTrackEvent(String eventName, String identity, String accountId, HashMap<String, Object> properties,
-      Map<Destination, Boolean> destinations, String category);
+      Map<Destination, Boolean> destinations, String category, TelemetryOption... telemetryOption);
 
   /**
    * Sending identify message
    * @param identity event user id, use email as userid
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
+   * @param telemetryOption The optional field for telemetry options. Only allow the first argument
    */
-  void sendIdentifyEvent(String identity, HashMap<String, Object> properties, Map<Destination, Boolean> destinations);
+  void sendIdentifyEvent(String identity, HashMap<String, Object> properties, Map<Destination, Boolean> destinations,
+      TelemetryOption... telemetryOption);
 
   /**
    * Sending group message
@@ -57,8 +68,10 @@ public interface TelemetryReporter {
    * @param accountId account id
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
+   * @param telemetryOption The optional field for telemetry options. Only allow the first argument
    */
-  void sendGroupEvent(String accountId, HashMap<String, Object> properties, Map<Destination, Boolean> destinations);
+  void sendGroupEvent(String accountId, HashMap<String, Object> properties, Map<Destination, Boolean> destinations,
+      TelemetryOption... telemetryOption);
 
   /**
    * Sending group message to Segment
@@ -66,22 +79,25 @@ public interface TelemetryReporter {
    * @param identity identity message irrespective what the caller user id is
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
+   * @param telemetryOption The optional field for telemetry options. Only allow the first argument
    */
-  void sendGroupEvent(
-      String accountId, String identity, HashMap<String, Object> properties, Map<Destination, Boolean> destinations);
+  void sendGroupEvent(String accountId, String identity, HashMap<String, Object> properties,
+      Map<Destination, Boolean> destinations, TelemetryOption... telemetryOption);
 
   /**
    * Sending group message to Segment
-   * for passing historical date only, otherwise use {@link #sendGroupEvent(String,String,HashMap,Map)} method
+   * for passing historical date only, otherwise use {@link
+   * #sendGroupEvent(String,String,HashMap,Map,TelemetryOption...)} method
    *
    * @param accountId account id
    * @param identity identity message irrespective what the caller user id is
    * @param properties event properties
    * @param destinations event destinations, null if sending to all destinations
    * @param timestamp historical date
+   * @param telemetryOption The optional field for telemetry options. Only allow the first argument
    */
   void sendGroupEvent(String accountId, String identity, HashMap<String, Object> properties,
-      Map<Destination, Boolean> destinations, Date timestamp);
+      Map<Destination, Boolean> destinations, Date timestamp, TelemetryOption... telemetryOption);
 
   void flush();
 }

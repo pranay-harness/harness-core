@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.entities.changeSource;
 
 import io.harness.annotation.HarnessEntity;
@@ -56,6 +63,16 @@ public abstract class ChangeSource
                  .field(ChangeSourceKeys.identifier)
                  .unique(true)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("demo_generation_index")
+                 .field(ChangeSourceKeys.isConfiguredForDemo)
+                 .field(ChangeSourceKeys.demoDataGenerationIteration)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("data_collection_iteration")
+                 .field(ChangeSourceKeys.type)
+                 .field(ChangeSourceKeys.dataCollectionTaskIteration)
+                 .build())
         .build();
   }
 
@@ -75,9 +92,11 @@ public abstract class ChangeSource
   @NotNull ChangeSourceType type;
 
   boolean enabled;
+  boolean isConfiguredForDemo;
 
   @FdIndex String dataCollectionTaskId;
-  @FdIndex Long dataCollectionTaskIteration;
+  Long demoDataGenerationIteration;
+  Long dataCollectionTaskIteration;
 
   @Getter(AccessLevel.NONE) boolean dataCollectionRequired;
 
@@ -105,15 +124,25 @@ public abstract class ChangeSource
     if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       this.dataCollectionTaskIteration = nextIteration;
       return;
+    } else if (ChangeSourceKeys.demoDataGenerationIteration.equals(fieldName)) {
+      this.demoDataGenerationIteration = nextIteration;
+      return;
+    } else {
+      throw new IllegalArgumentException("Invalid fieldName " + fieldName);
     }
-    throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
   @Override
   public Long obtainNextIteration(String fieldName) {
     if (ChangeSourceKeys.dataCollectionTaskIteration.equals(fieldName)) {
       return this.dataCollectionTaskIteration;
+    } else if (ChangeSourceKeys.demoDataGenerationIteration.equals(fieldName)) {
+      return this.demoDataGenerationIteration;
     }
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
+  }
+
+  public boolean isEligibleForDemo() {
+    return this.identifier.endsWith("_dev");
   }
 }

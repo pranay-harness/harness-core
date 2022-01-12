@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.instrumentaion;
 
 import static io.harness.rule.OwnerRule.BRIJESH;
@@ -11,33 +18,42 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.dto.FailureInfoDTO;
+import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.eraro.ResponseMessage;
 import io.harness.exception.FailureType;
+import io.harness.execution.NodeExecution;
+import io.harness.ng.core.dto.AccountDTO;
 import io.harness.notification.PipelineEventType;
 import io.harness.notification.bean.NotificationRules;
 import io.harness.notification.bean.PipelineEvent;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.plan.ExecutionTriggerInfo;
+import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.plan.TriggerType;
 import io.harness.pms.contracts.plan.TriggeredBy;
 import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.notification.NotificationInstrumentationHelper;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.GraphLayoutNodeDTO;
 import io.harness.pms.plan.execution.service.PMSExecutionService;
+import io.harness.pms.sdk.SdkStepHelper;
 import io.harness.rule.Owner;
 import io.harness.telemetry.TelemetryReporter;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.junit.Before;
@@ -53,6 +69,9 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
   @Mock TelemetryReporter telemetryReporter;
   @Mock PMSExecutionService pmsExecutionService;
   @Mock NotificationInstrumentationHelper notificationInstrumentationHelper;
+  @Mock NodeExecutionService nodeExecutionService;
+  @Mock SdkStepHelper sdkStepHelper;
+  @Mock AccountService accountService;
   @InjectMocks InstrumentationPipelineEndEventHandler instrumentationPipelineEndEventHandler;
   @Before
   public void setUp() {
@@ -100,6 +119,18 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
                 Collections.singletonList(PipelineEvent.builder().type(PipelineEventType.PIPELINE_END).build()))
             .build());
     Set<String> notificationMethods = Collections.singleton("slack");
+    List<NodeExecution> nodeExecutionList = Arrays.asList(
+        NodeExecution.builder()
+            .node(PlanNodeProto.newBuilder()
+                      .setStepType(StepType.newBuilder().setStepCategory(StepCategory.STEP).setType("Http").build())
+                      .build())
+            .build());
+    doReturn(nodeExecutionList).when(nodeExecutionService).fetchNodeExecutions(any());
+    doReturn(new HashSet() {
+      { add("Http"); }
+    })
+        .when(sdkStepHelper)
+        .getAllStepVisibleInUI();
     doReturn(pipelineExecutionSummaryEntity)
         .when(pmsExecutionService)
         .getPipelineExecutionSummaryEntity("accountId", "orgId", "projectId", "planExecutionId", false);
@@ -109,12 +140,16 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
     doReturn(notificationMethods)
         .when(notificationInstrumentationHelper)
         .getNotificationMethodTypes(notificationRulesList);
+
+    AccountDTO accountDTO = AccountDTO.builder().name("TestAccountName").build();
+    doReturn(accountDTO).when(accountService).getAccount(any());
+
     instrumentationPipelineEndEventHandler.onEnd(ambiance);
 
     ArgumentCaptor<HashMap> argumentCaptor = ArgumentCaptor.forClass(HashMap.class);
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(PipelineInstrumentationConstants.PIPELINE_EXECUTION), eq("admin@harness.io"),
-            eq("accountId"), argumentCaptor.capture(), any(), any());
+            eq("accountId"), argumentCaptor.capture(), any(), any(), any());
     HashMap<String, Object> propertiesMap = argumentCaptor.getValue();
     EnumSet<io.harness.pms.contracts.execution.failure.FailureType> returnedFailureTypes =
         (EnumSet<io.harness.pms.contracts.execution.failure.FailureType>) propertiesMap.get(
@@ -126,15 +161,19 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.LEVEL), StepCategory.PIPELINE);
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.STATUS), ExecutionStatus.FAILED);
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.EXECUTION_TIME), 1L);
+    assertEquals(((HashSet<String>) propertiesMap.get(PipelineInstrumentationConstants.STEP_TYPES)).size(), 1);
+    assertTrue(((HashSet<String>) propertiesMap.get(PipelineInstrumentationConstants.STEP_TYPES)).contains("Http"));
+    assertEquals(propertiesMap.get(PipelineInstrumentationConstants.ACCOUNT_NAME), "TestAccountName");
     assertEquals(returnedNotificationMethods, notificationMethods);
     assertTrue(returnedFailureTypes.contains(FailureType.AUTHENTICATION));
     assertEquals(returnedErrorMessages.get(0), "message");
 
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(PipelineInstrumentationConstants.PIPELINE_NOTIFICATION), eq("admin@harness.io"),
-            eq("accountId"), argumentCaptor.capture(), any(), any());
+            eq("accountId"), argumentCaptor.capture(), any(), any(), any());
     propertiesMap = argumentCaptor.getValue();
     Set<String> eventTypes = (Set<String>) propertiesMap.get(PipelineInstrumentationConstants.EVENT_TYPES);
+    assertEquals(propertiesMap.get(PipelineInstrumentationConstants.ACCOUNT_NAME), "TestAccountName");
 
     assertEquals(eventTypes.size(), 1);
     assertTrue(eventTypes.contains(PipelineEventType.PIPELINE_END));

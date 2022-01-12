@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 /**
  *
  */
@@ -16,7 +23,6 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.EmbeddedUser;
 import io.harness.data.structure.CollectionUtils;
 import io.harness.data.validator.EntityName;
-import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.persistence.AccountAccess;
@@ -81,6 +87,11 @@ public class Pipeline
                  .field(PipelineKeys.accountId)
                  .ascSortField(PipelineKeys.name)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("appId_name")
+                 .field(PipelineKeys.appId)
+                 .ascSortField(PipelineKeys.name)
+                 .build())
         .build();
   }
 
@@ -108,7 +119,7 @@ public class Pipeline
   private transient List<String> infraMappingIds = new ArrayList<>();
   private transient List<String> infraDefinitionIds = new ArrayList<>();
   @SchemaIgnore private Set<String> keywords;
-  @FdIndex private String accountId;
+  private String accountId;
   private boolean sample;
   private transient List<HarnessTagLink> tagLinks;
 

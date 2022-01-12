@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.infra;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -12,11 +19,11 @@ import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.FeatureName;
 import io.harness.environment.SystemEnvironment;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccessTokenBean;
 
+import software.wings.app.MainConfiguration;
 import software.wings.utils.CdnStorageUrlGenerator;
 import software.wings.utils.GcsUtils;
 
@@ -58,6 +65,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
   @Inject private SystemEnvironment sysenv;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private CdnStorageUrlGenerator cdnStorageUrlGenerator;
+  @Inject private MainConfiguration mainConfiguration;
 
   private final Map<String, String> serviceAccountCache = new HashMap<>();
 
@@ -103,8 +111,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       return LOCAL_DELEGATE;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
-        && !ON_PREM_ENV_STRING.equals(envString)) {
+    if (mainConfiguration.useCdnForDelegateStorage() && !ON_PREM_ENV_STRING.equals(envString)) {
       return cdnStorageUrlGenerator.getDelegateJarUrl(version);
     } else {
       String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);
@@ -131,8 +138,7 @@ public class InfraDownloadServiceImpl implements InfraDownloadService {
       return LOCAL_WATCHER;
     }
 
-    if (featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, accountId)
-        && !ON_PREM_ENV_STRING.equals(envString)) {
+    if (mainConfiguration.useCdnForDelegateStorage() && !ON_PREM_ENV_STRING.equals(envString)) {
       return cdnStorageUrlGenerator.getWatcherJarUrl(version);
     } else {
       String serviceAccountJson = getServiceAccountJson(DOWNLOAD_SERVICE_ACCOUNT_ENV_VAR);

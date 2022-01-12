@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.gitsyncerror.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -25,6 +32,7 @@ import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
 import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
+import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.OrgIdentifier;
@@ -108,10 +116,11 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
-      @Parameter(description = "This is the count of errors to be displayed in the summary") @QueryParam(
+      @Parameter(description = "Number of errors that will be displayed in the summary") @QueryParam(
           "numberOfErrorsInSummary") @DefaultValue("5") @Max(5) Integer numberOfErrorsInSummary) {
     if (isEmpty(pageRequest.getSortOrders())) {
       SortOrder order =
@@ -143,7 +152,7 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @Parameter(description = "Commit Id", required = true) @PathParam("commitId") String commitId) {
     if (isEmpty(pageRequest.getSortOrders())) {
@@ -175,8 +184,9 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo,
       @Parameter(
           description =
@@ -193,8 +203,8 @@ public class GitSyncErrorResource {
           gitSyncErrorService.listAllGitToHarnessErrors(pageRequest, accountIdentifier, orgIdentifier,
               projectIdentifier, searchTerm, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch()));
     } else {
-      return ResponseDTO.newResponse(gitSyncErrorService.listConnectivityErrors(accountIdentifier, orgIdentifier,
-          projectIdentifier, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch(), pageRequest));
+      return ResponseDTO.newResponse(gitSyncErrorService.listConnectivityErrors(
+          accountIdentifier, orgIdentifier, projectIdentifier, gitEntityBasicInfo.getYamlGitConfigId(), pageRequest));
     }
   }
 
@@ -216,8 +226,9 @@ public class GitSyncErrorResource {
           NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @io.harness.accesscontrol.OrgIdentifier String orgIdentifier,
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
       harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier,
-      @Parameter(description = "Search Term") @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
-      @RequestBody(description = "Details to find Git Entity including: Git Config Id and Branch name")
+      @Parameter(description = GitSyncApiConstants.SEARCH_TERM_PARAM_MESSAGE) @QueryParam(
+          NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm,
+      @RequestBody(description = "Details to find Git Entity including: Git Sync Config Id and Branch Name")
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     return ResponseDTO.newResponse(gitSyncErrorService.getErrorCount(accountIdentifier, orgIdentifier,
         projectIdentifier, searchTerm, gitEntityBasicInfo.getYamlGitConfigId(), gitEntityBasicInfo.getBranch()));

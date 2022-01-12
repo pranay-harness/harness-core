@@ -1,7 +1,15 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.activityhistory;
 
 import static io.harness.EntityType.CONNECTORS;
 import static io.harness.EntityType.PIPELINES;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.common.EntityReference;
 import io.harness.ng.core.EntityDetail;
@@ -18,7 +26,14 @@ public class ActivityHistoryTestHelper {
   public static NGActivityDTO createActivityHistoryDTO(String accountIdentifier, String orgIdentifier,
       String projectIdentifier, String identifier, NGActivityStatus status, long activityTime,
       NGActivityType activityType) {
-    String identifier1 = "identifier1";
+    String identifier1;
+    if (isNotEmpty(projectIdentifier)) {
+      identifier1 = "identifier1";
+    } else if (isNotEmpty(orgIdentifier)) {
+      identifier1 = "org.identifier1";
+    } else {
+      identifier1 = "account.identifier";
+    }
     EntityReference referredEntityRef =
         IdentifierRefHelper.getIdentifierRef(identifier, accountIdentifier, orgIdentifier, projectIdentifier);
     EntityReference referredByEntityRef =

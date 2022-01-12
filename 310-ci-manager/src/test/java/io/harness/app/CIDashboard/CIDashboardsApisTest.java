@@ -1,10 +1,20 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.app.CIDashboard;
 
 import static io.harness.rule.OwnerRule.JAMIE;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.app.beans.entities.BuildActiveInfo;
@@ -32,6 +42,10 @@ import io.harness.pms.execution.ExecutionStatus;
 import io.harness.rule.Owner;
 import io.harness.timescaledb.TimeScaleDBService;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.Before;
@@ -41,6 +55,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.stubbing.Answer;
 
 public class CIDashboardsApisTest extends CategoryTest {
   @Mock TimeScaleDBService timeScaleDBService;
@@ -554,5 +569,40 @@ public class CIDashboardsApisTest extends CategoryTest {
                                     .activeCommitters(activeCommitters)
                                     .build();
     assertThat(usageResult).isEqualTo(ciOverviewDashboardServiceImpl.getCIUsageResult(accountId, timestamp));
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetActiveCommitters() throws SQLException {
+    ResultSet resultSet = mock(ResultSet.class);
+    Connection connection = mock(Connection.class);
+    PreparedStatement statement = mock(PreparedStatement.class);
+    when(statement.executeQuery()).thenReturn(resultSet);
+    when(connection.prepareStatement(any())).thenReturn(statement);
+    when(timeScaleDBService.getDBConnection()).thenReturn(connection);
+    final int[] count = {0};
+    when(resultSet.next()).then((Answer<Boolean>) invocation -> {
+      if (count[0] <= 1) {
+        count[0]++;
+        return true;
+      }
+      return false;
+    });
+    when(resultSet.getString("moduleinfo_author_id")).then((Answer<String>) invocation -> "authoerId" + count[0]);
+    when(resultSet.getString("projectidentifier")).then((Answer<String>) invocation -> "projectId" + count[0]);
+    when(resultSet.getString("orgidentifier")).then((Answer<String>) invocation -> "orgId" + count[0]);
+
+    List<ReferenceDTO> usageReferences = new ArrayList<>();
+    ReferenceDTO reference1 =
+        ReferenceDTO.builder().identifier("authoerId1").projectIdentifier("projectId1").orgIdentifier("orgId1").build();
+    usageReferences.add(reference1);
+    ReferenceDTO reference2 =
+        ReferenceDTO.builder().identifier("authoerId2").projectIdentifier("projectId2").orgIdentifier("orgId2").build();
+    usageReferences.add(reference2);
+
+    UsageDataDTO usage =
+        UsageDataDTO.builder().count(2).displayName("Last 30 Days").references(usageReferences).build();
+    assertThat(usage).isEqualTo(ciOverviewDashboardServiceImpl.getActiveCommitter("accountId", 0L));
   }
 }

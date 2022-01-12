@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl.monitoredService;
+
+import static io.harness.cvng.core.utils.FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO;
 
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionType;
@@ -15,6 +24,8 @@ import io.harness.cvng.core.entities.changeSource.ChangeSource.ChangeSourceKeys;
 import io.harness.cvng.core.entities.changeSource.HarnessCDCurrentGenChangeSource;
 import io.harness.cvng.core.entities.changeSource.KubernetesChangeSource;
 import io.harness.cvng.core.services.api.ChangeEventService;
+import io.harness.cvng.core.services.api.FeatureFlagService;
+import io.harness.cvng.core.services.api.demo.ChangeSourceDemoDataGenerator;
 import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.impl.ChangeSourceUpdateHandler;
 import io.harness.cvng.core.transformer.changeSource.ChangeSourceEntityAndDTOTransformer;
@@ -24,6 +35,7 @@ import io.harness.persistence.HPersistence;
 import com.google.inject.Inject;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +57,8 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Inject private Map<ChangeSourceType, ChangeSourceUpdateHandler> changeSourceUpdateHandlerMap;
   @Inject private Map<ChangeSourceType, ChangeSource.UpdatableChangeSourceEntity> changeSourceUpdatableMap;
   @Inject private VerificationManagerService verificationManagerService;
+  @Inject private FeatureFlagService featureFlagService;
+  @Inject private Map<ChangeSourceType, ChangeSourceDemoDataGenerator> changeSourceTypeToDemoDataGeneratorMap;
 
   @Override
   public void create(
@@ -54,10 +68,22 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     List<ChangeSource> changeSources = changeSourceDTOs.stream()
                                            .map(dto -> changeSourceTransformer.getEntity(environmentParams, dto))
                                            .collect(Collectors.toList());
+    create(changeSources);
+  }
+  private void create(List<ChangeSource> changeSources) {
+    changeSources.forEach(changeSource -> setConfigForDemoIfApplicable(changeSource));
+
     hPersistence.save(changeSources);
     changeSources.stream()
         .filter(changeSource -> changeSourceUpdateHandlerMap.containsKey(changeSource.getType()))
         .forEach(changeSource -> changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource));
+  }
+
+  private void setConfigForDemoIfApplicable(ChangeSource changeSource) {
+    if (changeSource.isEligibleForDemo()
+        && featureFlagService.isFeatureFlagEnabled(changeSource.getAccountId(), CVNG_MONITORED_SERVICE_DEMO)) {
+      changeSource.setConfiguredForDemo(true);
+    }
   }
 
   @Override
@@ -66,7 +92,7 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     if (CollectionUtils.isEmpty(identifiers)) {
       return Collections.emptySet();
     }
-    return mongoQuery(environmentParams)
+    return createQuery(environmentParams)
         .field(ChangeSourceKeys.identifier)
         .in(identifiers)
         .asList()
@@ -76,8 +102,13 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   }
 
   @Override
+  public ChangeSource get(ServiceEnvironmentParams serviceEnvironmentParams, String identifier) {
+    return createQuery(serviceEnvironmentParams).filter(ChangeSourceKeys.identifier, identifier).get();
+  }
+
+  @Override
   public Set<ChangeSourceDTO> getByType(ServiceEnvironmentParams environmentParams, ChangeSourceType changeSourceType) {
-    return mongoQuery(environmentParams)
+    return createQuery(environmentParams)
         .filter(ChangeSourceKeys.type, changeSourceType)
         .asList()
         .stream()
@@ -88,7 +119,7 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   @Override
   public void delete(@NonNull ServiceEnvironmentParams environmentParams, @NonNull List<String> identifiers) {
     List<ChangeSource> changeSources =
-        mongoQuery(environmentParams).field(ChangeSourceKeys.identifier).in(identifiers).asList();
+        createQuery(environmentParams).field(ChangeSourceKeys.identifier).in(identifiers).asList();
     changeSources.forEach(changeSource -> {
       hPersistence.delete(changeSource);
       if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
@@ -107,11 +138,11 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
             .collect(Collectors.toMap(cs -> cs.getIdentifier(), Function.identity()));
 
     Map<String, ChangeSource> existingChangeSourceMap =
-        mongoQuery(environmentParams)
+        createQuery(environmentParams)
             .asList()
             .stream()
             .collect(Collectors.toMap(sc -> sc.getIdentifier(), Function.identity()));
-
+    List<ChangeSource> changeSourcesToCreate = new ArrayList<>();
     newChangeSourceMap.forEach((identifier, changeSource) -> {
       if (replaceable(identifier, newChangeSourceMap, existingChangeSourceMap)) {
         ChangeSource existingChangeSource = existingChangeSourceMap.remove(identifier);
@@ -120,13 +151,10 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
           changeSourceUpdateHandlerMap.get(changeSource.getType()).handleUpdate(existingChangeSource, changeSource);
         }
       } else {
-        hPersistence.save(changeSource);
-        if (changeSourceUpdateHandlerMap.containsKey(changeSource.getType())) {
-          changeSourceUpdateHandlerMap.get(changeSource.getType()).handleCreate(changeSource);
-        }
+        changeSourcesToCreate.add(changeSource);
       }
     });
-
+    create(changeSourcesToCreate);
     existingChangeSourceMap.keySet().forEach(identifier -> {
       ChangeSource changeSource = existingChangeSourceMap.get(identifier);
       hPersistence.delete(changeSource);
@@ -198,7 +226,7 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
     }
   }
 
-  private Query<ChangeSource> mongoQuery(ServiceEnvironmentParams environmentParams) {
+  private Query<ChangeSource> createQuery(ServiceEnvironmentParams environmentParams) {
     return hPersistence.createQuery(ChangeSource.class)
         .filter(ChangeSourceKeys.accountId, environmentParams.getAccountIdentifier())
         .filter(ChangeSourceKeys.orgIdentifier, environmentParams.getOrgIdentifier())
@@ -225,31 +253,6 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
   }
 
   @Override
-  public void deleteByProjectIdentifier(
-      Class<ChangeSource> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
-    hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, accountId)
-        .filter(ChangeSourceKeys.orgIdentifier, orgIdentifier)
-        .filter(ChangeSourceKeys.projectIdentifier, projectIdentifier)
-        .forEach(hPersistence::delete);
-  }
-
-  @Override
-  public void deleteByOrgIdentifier(Class<ChangeSource> clazz, String accountId, String orgIdentifier) {
-    hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, accountId)
-        .filter(ChangeSourceKeys.orgIdentifier, orgIdentifier)
-        .forEach(hPersistence::delete);
-  }
-
-  @Override
-  public void deleteByAccountIdentifier(Class<ChangeSource> clazz, String accountId) {
-    hPersistence.createQuery(ChangeSource.class)
-        .filter(ChangeSourceKeys.accountId, accountId)
-        .forEach(hPersistence::delete);
-  }
-
-  @Override
   public void handleCurrentGenEvents(HarnessCDCurrentGenChangeSource changeSource) {
     List<HarnessCDCurrentGenEventMetadata> events = verificationManagerService.getCurrentGenEvents(
         changeSource.getAccountId(), changeSource.getHarnessApplicationId(), changeSource.getHarnessEnvironmentId(),
@@ -268,5 +271,12 @@ public class ChangeSourceServiceImpl implements ChangeSourceService {
                                           .build();
       changeEventService.register(changeEventDTO);
     });
+  }
+  @Override
+  public void generateDemoData(ChangeSource entity) {
+    if (changeSourceTypeToDemoDataGeneratorMap.containsKey(entity.getType())) {
+      List<ChangeEventDTO> changeEvents = changeSourceTypeToDemoDataGeneratorMap.get(entity.getType()).generate(entity);
+      changeEvents.forEach(changeEvent -> changeEventService.register(changeEvent));
+    }
   }
 }

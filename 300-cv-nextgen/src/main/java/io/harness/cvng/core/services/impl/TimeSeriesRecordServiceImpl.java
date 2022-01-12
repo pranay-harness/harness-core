@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.analysis.CVAnalysisConstants.TIMESERIES_SERVICE_GUARD_WINDOW_SIZE_NEW;
@@ -53,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -62,6 +70,7 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.UpdateOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.UpdateOperations;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 
@@ -100,17 +109,22 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
       if (timeSeriesRecord.getHost() != null) {
         query = query.filter(TimeSeriesRecordKeys.host, timeSeriesRecord.getHost());
       }
-      hPersistence.getDatastore(TimeSeriesRecord.class)
-          .update(query,
-              hPersistence.createUpdateOperations(TimeSeriesRecord.class)
-                  .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
-                  .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
-                  .setOnInsert(TimeSeriesRecordKeys.metricType, metricType)
-                  .setOnInsert(TimeSeriesRecordKeys.validUntil, TimeSeriesRecord.builder().build().getValidUntil())
-                  .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
-                  .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
-                      Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues())),
-              options);
+
+      UpdateOperations<TimeSeriesRecord> updateOperations =
+          hPersistence.createUpdateOperations(TimeSeriesRecord.class)
+              .setOnInsert(TimeSeriesRecordKeys.uuid, generateUuid())
+              .setOnInsert(TimeSeriesRecordKeys.createdAt, Instant.now().toEpochMilli())
+              .setOnInsert(TimeSeriesRecordKeys.validUntil, TimeSeriesRecord.builder().build().getValidUntil())
+              .set(TimeSeriesRecordKeys.accountId, timeSeriesRecord.getAccountId())
+              .addToSet(TimeSeriesRecordKeys.timeSeriesGroupValues,
+                  Lists.newArrayList(timeSeriesRecord.getTimeSeriesGroupValues()));
+      if (Objects.nonNull(metricType)) {
+        updateOperations.setOnInsert(TimeSeriesRecordKeys.metricType, metricType);
+      }
+      if (Objects.nonNull(timeSeriesRecord.getMetricIdentifier())) {
+        updateOperations.set(TimeSeriesRecordKeys.metricIdentifier, timeSeriesRecord.getMetricIdentifier());
+      }
+      hPersistence.getDatastore(TimeSeriesRecord.class).update(query, updateOperations, options);
     });
 
     saveHosts(dataRecords);
@@ -169,6 +183,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
           - Math.floorMod(dataRecord.getTimeStamp(), TimeUnit.MINUTES.toMillis(CV_ANALYSIS_WINDOW_MINUTES));
       dataRecord.getMetricValues().forEach(timeSeriesDataRecordMetricValue -> {
         String metricName = timeSeriesDataRecordMetricValue.getMetricName();
+        String metricIdentifier = timeSeriesDataRecordMetricValue.getMetricIdentifier();
         TimeSeriesRecordBucketKey timeSeriesRecordBucketKey = TimeSeriesRecordBucketKey.builder()
                                                                   .host(dataRecord.getHost())
                                                                   .metricName(metricName)
@@ -183,6 +198,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                   .accountId(dataRecord.getAccountId())
                   .bucketStartTime(Instant.ofEpochMilli(bucketBoundary))
                   .metricName(metricName)
+                  .metricIdentifier(metricIdentifier)
                   .build());
         }
 
@@ -455,6 +471,7 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
                   .groupName(record.getGroupName())
                   .host(timeSeriesRecord.getHost())
                   .metricName(timeSeriesRecord.getMetricName())
+                  .metricIdentifier(timeSeriesRecord.getMetricIdentifier())
                   .epochMinute(TimeUnit.MILLISECONDS.toMinutes(record.getTimeStamp().toEpochMilli()))
                   .verificationTaskId(timeSeriesRecord.getVerificationTaskId())
                   .metricValue(record.getMetricValue())
@@ -541,11 +558,11 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
 
   @Override
   public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      Instant startTime, Instant endTime) throws IOException {
+      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException {
     Instant time = startTime;
-    CVConfig cvConfig = cvConfigService.get(verificationTaskId);
-    String demoTemplatePath = getDemoTemplate(cvConfig);
-    Map<String, ArrayList<Long>> metricToRiskScore = getDemoRiskScoreForAllTheMetrics(cvConfig);
+
+    String demoTemplatePath = getDemoTemplate(demoTemplateIdentifier);
+    Map<String, ArrayList<Long>> metricToRiskScore = getDemoRiskScoreForAllTheMetrics(demoTemplateIdentifier);
     // todo: check the metrics have the same size
     int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
     List<TimeSeriesDataCollectionRecord> timeSeriesDataCollectionRecords = new ArrayList<>();
@@ -579,18 +596,16 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
     save(timeSeriesDataCollectionRecords);
   }
 
-  private String getDemoTemplate(CVConfig cvConfig) throws IOException {
-    String path =
-        "/io/harness/cvng/analysis/liveMonitoring/timeSeries/$provider/$category/$provider_time_series_live_monitoring_demo_default_template.json";
-    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
-    path = path.replace("$category", cvConfig.getCategory().getDisplayName().toLowerCase());
+  private String getDemoTemplate(String templateIdentifier) throws IOException {
+    log.info("Template identifier: {}", templateIdentifier);
+    String path = "/io/harness/cvng/analysis/liveMonitoring/timeSeries/$template/time_series_metrics_def.json";
+    path = path.replace("$template", templateIdentifier);
     return Resources.toString(this.getClass().getResource(path), Charsets.UTF_8);
   }
 
-  public Map<String, ArrayList<Long>> getDemoRiskScoreForAllTheMetrics(CVConfig cvConfig) throws IOException {
+  public Map<String, ArrayList<Long>> getDemoRiskScoreForAllTheMetrics(String templateIdentifier) throws IOException {
     Map<String, ArrayList<Long>> metricToRiskScore = new HashMap<>();
-    String folder = "io.harness.cvng.analysis.liveMonitoring.timeSeries." + cvConfig.getType().getDemoTemplatePrefix()
-        + "." + cvConfig.getCategory().getDisplayName().toLowerCase() + ".riskScore";
+    String folder = "io.harness.cvng.analysis.liveMonitoring.timeSeries." + templateIdentifier + ".riskScore";
     Reflections reflections = new Reflections(folder, new ResourcesScanner());
     Set<String> riskFileNames = reflections.getResources(Pattern.compile(".*\\.json"));
     for (String file : riskFileNames) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.user.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -15,6 +22,9 @@ import io.harness.ng.core.user.UserMembershipUpdateSource;
 import io.harness.ng.core.user.entities.UserMembership;
 import io.harness.ng.core.user.remote.dto.UserFilter;
 import io.harness.ng.core.user.remote.dto.UserMetadataDTO;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
 import io.harness.user.remote.UserFilterNG;
 
 import java.util.List;
@@ -41,6 +51,9 @@ public interface NgUserService {
   Page<UserInfo> listCurrentGenUsers(String accountIdentifier, String searchString, Pageable page);
 
   List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter);
+
+  ScimListResponse<ScimUser> searchScimUsersByEmailQuery(
+      String accountId, String searchQuery, Integer count, Integer startIndex);
 
   List<UserMetadataDTO> listUsersHavingRole(Scope scope, String roleIdentifier);
 
@@ -74,7 +87,17 @@ public interface NgUserService {
   boolean removeUserFromScope(
       String userId, Scope scope, UserMembershipUpdateSource source, NGRemoveUserFilter removeUserFilter);
 
+  boolean removeUserWithCriteria(String userId, UserMembershipUpdateSource source, Criteria criteria);
+
   boolean isUserPasswordSet(String accountIdentifier, String email);
 
   List<String> listUserAccountIds(String userId);
+
+  boolean removeUser(String userId, String accountId);
+
+  ScimUser updateScimUser(String accountId, String userId, PatchRequest patchRequest);
+
+  boolean updateScimUser(String accountId, String userId, ScimUser scimUser);
+
+  boolean updateUserDisabled(String accountId, String userId, boolean disabled);
 }

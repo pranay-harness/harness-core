@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.artifacts.docker.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -366,7 +373,14 @@ public class DockerRegistryServiceImpl implements DockerRegistryService {
               registryRestClient.getApiVersionEndingWithForwardSlash(BEARER + dockerRegistryToken.getToken()).execute();
         }
       }
-      return isSuccessful(response);
+      boolean isSuccess = isSuccessful(response);
+      if (!isSuccess && response.code() == 404) {
+        throw NestedExceptionUtils.hintWithExplanationException(
+            "Check with you registry provider for a Docker v2 compliant URL",
+            "Provided Docker Registry URL is incorrect",
+            new InvalidArtifactServerException("Invalid Docker Registry URL", USER));
+      }
+      return isSuccess;
     } catch (IOException ioException) {
       Exception exception = new Exception(ioException);
       throw NestedExceptionUtils.hintWithExplanationException("Invalid Credentials",

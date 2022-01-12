@@ -1,9 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.gitsyncerror.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.gitsync.gitsyncerror.beans.GitSyncErrorType;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorAggregateByCommitDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorCountDTO;
 import io.harness.gitsync.gitsyncerror.dtos.GitSyncErrorDTO;
@@ -26,25 +32,27 @@ public interface GitSyncErrorService {
   PageResponse<GitSyncErrorDTO> listGitToHarnessErrorsForCommit(PageRequest pageRequest, String commitId,
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoId, String branch);
 
-  GitSyncErrorDTO save(GitSyncErrorDTO gitSyncErrorDTO);
+  Optional<GitSyncErrorDTO> save(GitSyncErrorDTO gitSyncErrorDTO);
 
   List<GitSyncErrorDTO> saveAll(List<GitSyncErrorDTO> gitSyncErrorDTOList);
 
-  void markOverriddenErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths);
+  void overrideGitToHarnessErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths);
 
-  void markResolvedErrors(String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId);
+  void resolveGitToHarnessErrors(
+      String accountId, String repoUrl, String branchName, Set<String> filePaths, String commitId);
 
   Optional<GitSyncErrorDTO> getGitToHarnessError(
       String accountId, String commitId, String repoUrl, String branchName, String filePath);
 
   boolean deleteGitSyncErrors(List<String> errorIds, String accountId);
 
-  void recordConnectivityError(String accountIdentifier, String orgIdentifier, String projectIdentifier,
-      GitSyncErrorType gitSyncErrorType, String repoUrl, String branch, String errorMessage);
+  void recordConnectivityError(String accountIdentifier, String repoUrl, String errorMessage);
 
   PageResponse<GitSyncErrorDTO> listConnectivityErrors(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String repoIdentifier, String branch, PageRequest pageRequest);
+      String projectIdentifier, String repoIdentifier, PageRequest pageRequest);
 
   GitSyncErrorCountDTO getErrorCount(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String searchTerm, String repoId, String branch);
+
+  void resolveConnectivityErrors(String accountIdentifier, String repoUrl);
 }

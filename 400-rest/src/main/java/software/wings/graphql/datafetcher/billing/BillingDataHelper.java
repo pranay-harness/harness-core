@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -66,6 +73,14 @@ public class BillingDataHelper {
   private static final int UNALLOCATED_COST_BASELINE = 5;
 
   protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet) throws SQLException {
+    return roundingDoubleFieldValue(field, resultSet, false);
+  }
+
+  protected double roundingDoubleFieldValue(BillingDataMetaDataFields field, ResultSet resultSet, boolean skipRoundOff)
+      throws SQLException {
+    if (skipRoundOff) {
+      return resultSet.getDouble(field.getFieldName());
+    }
     return Math.round(resultSet.getDouble(field.getFieldName()) * 100D) / 100D;
   }
 

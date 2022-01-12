@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.delegation;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -25,6 +32,7 @@ import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.api.terraform.TfVarGitSource;
+import software.wings.beans.AwsConfig;
 import software.wings.beans.GitConfig;
 import software.wings.beans.NameValuePair;
 import software.wings.delegatetasks.delegatecapability.CapabilityHelper;
@@ -79,6 +87,7 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private final String delegateTag;
 
   private final boolean saveTerraformJson;
+  private final boolean useOptimizedTfPlanJson;
   private final SecretManagerConfig secretManagerConfig;
   private final EncryptedRecordData encryptedTfPlan;
   private final String planName;
@@ -93,6 +102,11 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
   private boolean skipRefreshBeforeApplyingPlan;
   private boolean isGitHostConnectivityCheck;
   private final boolean useTfConfigInspectLatestVersion;
+  private final AwsConfig awsConfig;
+  private final String awsConfigId;
+  private final String awsRoleArn;
+  private final String awsRegion;
+  private List<EncryptedDataDetail> awsConfigEncryptionDetails;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
@@ -125,6 +139,10 @@ public class TerraformProvisionParameters implements TaskParameters, ActivityAcc
     if (secretManagerConfig != null) {
       capabilities.addAll(
           EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilityForSecretManager(secretManagerConfig, null));
+    }
+    if (awsConfig != null) {
+      capabilities.addAll(
+          CapabilityHelper.generateDelegateCapabilities(awsConfig, awsConfigEncryptionDetails, maskingEvaluator));
     }
     return capabilities;
   }

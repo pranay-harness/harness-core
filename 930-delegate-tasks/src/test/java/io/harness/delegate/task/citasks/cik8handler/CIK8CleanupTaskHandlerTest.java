@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.citasks.cik8handler;
 
 import static io.harness.rule.OwnerRule.SHUBHAM;
@@ -80,7 +87,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
 
     when(cik8JavaClientHandler.deletePodWithRetries(any(), any(), any())).thenThrow(new ApiException());
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -96,7 +103,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.TRUE);
     when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 
@@ -113,7 +120,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.TRUE);
     when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.TRUE);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.SUCCESS, response.getCommandExecutionStatus());
   }
 
@@ -130,7 +137,7 @@ public class CIK8CleanupTaskHandlerTest extends CategoryTest {
     when(cik8JavaClientHandler.deleteService(any(), any(), any())).thenReturn(Boolean.FALSE);
     when(cik8JavaClientHandler.deleteSecret(any(), any(), any())).thenReturn(Boolean.FALSE);
 
-    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams);
+    K8sTaskExecutionResponse response = cik8DeleteSetupTaskHandler.executeTaskInternal(taskParams, "");
     assertEquals(CommandExecutionStatus.FAILURE, response.getCommandExecutionStatus());
   }
 

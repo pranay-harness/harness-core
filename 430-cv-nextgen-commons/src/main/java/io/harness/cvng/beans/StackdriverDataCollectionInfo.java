@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
 
 import static io.harness.cvng.utils.StackdriverUtils.Scope.METRIC_SCOPE;
@@ -26,6 +33,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     Map<String, Object> dslEnvVariables = StackdriverUtils.getCommonEnvVariables(connectorConfigDTO, METRIC_SCOPE);
     List<String> crossSeriesReducerList = new ArrayList<>();
     List<String> perSeriesAlignerList = new ArrayList<>();
+    List<String> metricIdentifiers = new ArrayList<>();
     List<String> filterList = new ArrayList<>();
     List<List<String>> groupByFieldsList = new ArrayList<>();
     Map<String, List<String>> groupByResponseList = new HashMap<>();
@@ -37,6 +45,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
         serviceInstanceResponseFields.put(metricDefinition.getMetricName(),
             metricDefinition.getServiceInstanceField().replace("\"", "").replace("label", "labels"));
       }
+      metricIdentifiers.add(metricDefinition.getMetricIdentifier());
       crossSeriesReducerList.add(
           checkForNullAndReturnValue(metricDefinition.getAggregation().getCrossSeriesReducer(), ""));
       perSeriesAlignerList.add(checkForNullAndReturnValue(metricDefinition.getAggregation().getPerSeriesAligner(), ""));
@@ -60,6 +69,7 @@ public class StackdriverDataCollectionInfo extends TimeSeriesDataCollectionInfo<
     dslEnvVariables.put("perSeriesAlignerList", perSeriesAlignerList);
     dslEnvVariables.put("groupByFieldsList", groupByFieldsList);
     dslEnvVariables.put("groupByResponseList", groupByResponseList);
+    dslEnvVariables.put("metricIdentifiers", metricIdentifiers);
     dslEnvVariables.put("filterList", filterList);
 
     if (this.isCollectHostData()) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -12,7 +19,8 @@ public enum MonitoredServiceDataSourceType {
   @JsonProperty("Prometheus") PROMETHEUS,
   @JsonProperty("Splunk") SPLUNK,
   @JsonProperty("DatadogMetrics") DATADOG_METRICS,
-  @JsonProperty("DatadogLog") DATADOG_LOG;
+  @JsonProperty("DatadogLog") DATADOG_LOG,
+  @JsonProperty("CustomHealth") CUSTOM_HEALTH;
 
   public static Map<DataSourceType, MonitoredServiceDataSourceType> dataSourceTypeMonitoredServiceDataSourceTypeMap =
       new HashMap<DataSourceType, MonitoredServiceDataSourceType>() {
@@ -25,6 +33,7 @@ public enum MonitoredServiceDataSourceType {
           put(DataSourceType.SPLUNK, SPLUNK);
           put(DataSourceType.DATADOG_METRICS, DATADOG_METRICS);
           put(DataSourceType.DATADOG_LOG, DATADOG_LOG);
+          put(DataSourceType.CUSTOM_HEALTH, CUSTOM_HEALTH);
         }
       };
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.dtos;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -8,7 +15,9 @@ import io.harness.entities.InstanceType;
 import io.harness.ng.core.environment.beans.EnvironmentType;
 
 import lombok.Builder;
+import lombok.Setter;
 import lombok.Value;
+import lombok.experimental.NonFinal;
 
 @OwnedBy(HarnessTeam.DX)
 @Value
@@ -30,7 +39,7 @@ public class InstanceDTO {
   ArtifactDetails primaryArtifact;
   String lastDeployedById;
   String lastDeployedByName;
-  long lastDeployedAt;
+  @NonFinal @Setter long lastDeployedAt;
   String lastPipelineExecutionId;
   String lastPipelineExecutionName;
   InstanceInfoDTO instanceInfoDTO;

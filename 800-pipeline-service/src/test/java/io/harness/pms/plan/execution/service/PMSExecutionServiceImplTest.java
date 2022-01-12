@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.MLUKIC;
 import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -234,5 +242,21 @@ public class PMSExecutionServiceImplTest extends PipelineServiceTestBase {
         .hasMessage(
             String.format("Executions for Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.",
                 PIPELINE_IDENTIFIER, PROJ_IDENTIFIER, ORG_IDENTIFIER));
+  }
+
+  @Test
+  @Owner(developers = MLUKIC)
+  @Category(UnitTests.class)
+  public void testGetPipelineExecutionSummary() {
+    doReturn(Optional.of(executionSummaryEntity))
+        .when(pmsExecutionSummaryRepository)
+        .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionId(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID);
+
+    PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
+        pmsExecutionService.getPipelineExecutionSummaryEntity(
+            ACCOUNT_ID, ORG_IDENTIFIER, PROJ_IDENTIFIER, PLAN_EXECUTION_ID);
+
+    assertThat(pipelineExecutionSummaryEntity).isEqualTo(executionSummaryEntity);
   }
 }

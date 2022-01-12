@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.views.graphql;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
+import static io.harness.ccm.views.graphql.QLCEViewTimeGroupType.DAY;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_KEY_UN_NESTED;
 import static io.harness.ccm.views.graphql.ViewsMetaDataFields.LABEL_VALUE_UN_NESTED;
@@ -15,7 +23,6 @@ import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_LIMIT
 import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_REQUEST;
 import static io.harness.ccm.views.utils.ClusterTableKeys.EFFECTIVE_MEMORY_UTILIZATION_VALUE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_APPLICATION;
-import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_CLOUD_PROVIDER;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_LAUNCH_TYPE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_SERVICE;
 import static io.harness.ccm.views.utils.ClusterTableKeys.GROUP_BY_ECS_TASK;
@@ -104,7 +111,7 @@ public class ViewsQueryBuilder {
   private static final ImmutableSet<String> clusterFilterImmutableSet =
       ImmutableSet.of("product", "region", "PROVIDERS");
   private static final ImmutableList<String> applicationGroupBys =
-      ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT, GROUP_BY_CLOUD_PROVIDER);
+      ImmutableList.of(GROUP_BY_APPLICATION, GROUP_BY_SERVICE, GROUP_BY_ENVIRONMENT);
   private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING = "PROVIDERS";
   private static final String CLOUD_PROVIDERS_CUSTOM_GROUPING_QUERY =
       "CASE WHEN cloudProvider = 'CLUSTER' THEN 'CLUSTER' ELSE 'CLOUD' END";
@@ -112,6 +119,13 @@ public class ViewsQueryBuilder {
   public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
       List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
       List<QLCEViewSortCriteria> sortCriteriaList, String cloudProviderTableName) {
+    return getQuery(
+        rules, filters, timeFilters, groupByList, aggregations, sortCriteriaList, cloudProviderTableName, 0);
+  }
+
+  public SelectQuery getQuery(List<ViewRule> rules, List<QLCEViewFilter> filters, List<QLCEViewTimeFilter> timeFilters,
+      List<QLCEViewGroupBy> groupByList, List<QLCEViewAggregation> aggregations,
+      List<QLCEViewSortCriteria> sortCriteriaList, String cloudProviderTableName, int timeOffsetInDays) {
     SelectQuery selectQuery = new SelectQuery();
     selectQuery.addCustomFromTable(cloudProviderTableName);
     List<QLCEViewFieldInput> groupByEntity = getGroupByEntity(groupByList);
@@ -162,7 +176,11 @@ public class ViewsQueryBuilder {
     }
 
     if (groupByTime != null) {
-      decorateQueryWithGroupByTime(selectQuery, groupByTime, isClusterTable);
+      if (timeOffsetInDays == 0) {
+        decorateQueryWithGroupByTime(selectQuery, groupByTime, isClusterTable);
+      } else {
+        decorateQueryWithGroupByTimeWithOffset(selectQuery, groupByTime, isClusterTable, timeOffsetInDays);
+      }
     }
 
     if (!aggregations.isEmpty()) {
@@ -188,7 +206,8 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomGroupings(new CustomSql("column_name"));
 
     // Adding table name filter
-    selectQuery.addCondition(BinaryCondition.equalTo(new CustomSql("table_name"), table));
+    // Note that condition is 'like'
+    selectQuery.addCondition(BinaryCondition.like(new CustomSql("table_name"), table + "%"));
 
     log.info("Information schema query for table {}", selectQuery.toString());
     return selectQuery;
@@ -903,6 +922,28 @@ public class ViewsQueryBuilder {
     selectQuery.addCustomOrdering(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName(), OrderObject.Dir.ASCENDING);
   }
 
+  private void decorateQueryWithGroupByTimeWithOffset(SelectQuery selectQuery, QLCEViewTimeTruncGroupBy groupByTime,
+      boolean isTimeInEpochMillis, int timeOffsetInDays) {
+    if (isTimeInEpochMillis) {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          new TimeTruncatedExpression(new TimestampDiffExpression(new TimestampMillisExpression(new CustomSql(
+                                                                      ViewsMetaDataFields.START_TIME.getFieldName())),
+                                          timeOffsetInDays, DAY),
+              groupByTime.getResolution()),
+          ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+    } else {
+      selectQuery.addCustomColumns(Converter.toCustomColumnSqlObject(
+          new TimeTruncatedExpression(
+              new TimestampDiffExpression(
+                  new CustomSql(ViewsMetaDataFields.START_TIME.getFieldName()), timeOffsetInDays, DAY),
+              groupByTime.getResolution()),
+          ViewsMetaDataFields.TIME_GRANULARITY.getFieldName()));
+    }
+
+    selectQuery.addCustomGroupings(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName());
+    selectQuery.addCustomOrdering(ViewsMetaDataFields.TIME_GRANULARITY.getFieldName(), OrderObject.Dir.ASCENDING);
+  }
+
   protected List<QLCEViewFieldInput> getGroupByEntity(List<QLCEViewGroupBy> groupBy) {
     return groupBy != null ? groupBy.stream()
                                  .filter(g -> g.getEntityGroupBy() != null)
@@ -965,7 +1006,7 @@ public class ViewsQueryBuilder {
 
   public QLCEViewTimeGroupType mapViewTimeGranularityToQLCEViewTimeGroupType(ViewTimeGranularity timeGranularity) {
     if (timeGranularity.equals(ViewTimeGranularity.DAY)) {
-      return QLCEViewTimeGroupType.DAY;
+      return DAY;
     } else if (timeGranularity.equals(ViewTimeGranularity.MONTH)) {
       return QLCEViewTimeGroupType.MONTH;
     }

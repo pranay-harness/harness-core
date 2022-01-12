@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -59,15 +66,18 @@ public class PmsSdkModule extends AbstractModule {
   @NotNull
   private List<Module> getModules() {
     List<Module> modules = new ArrayList<>();
-    modules.add(PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
-                                                 .serviceName(config.getServiceName())
-                                                 .grpcClientConfig(config.getPmsGrpcClientConfig())
-                                                 .grpcServerConfig(config.getGrpcServerConfig())
-                                                 .sdkDeployMode(config.getDeploymentMode())
-                                                 .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
-                                                 .executionPoolConfig(config.getExecutionPoolConfig())
-                                                 .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
-                                                 .build()));
+    modules.add(
+        PmsSdkCoreModule.getInstance(PmsSdkCoreConfig.builder()
+                                         .serviceName(config.getServiceName())
+                                         .grpcClientConfig(config.getPmsGrpcClientConfig())
+                                         .grpcServerConfig(config.getGrpcServerConfig())
+                                         .sdkDeployMode(config.getDeploymentMode())
+                                         .eventsFrameworkConfiguration(config.getEventsFrameworkConfiguration())
+                                         .executionPoolConfig(config.getExecutionPoolConfig())
+                                         .orchestrationEventPoolConfig(config.getOrchestrationEventPoolConfig())
+                                         .planCreatorServicePoolConfig(config.getPlanCreatorServiceInternalConfig())
+                                         .pipelineSdkRedisEventsConfig(config.getPipelineSdkRedisEventsConfig())
+                                         .build()));
     modules.add(
         PmsSdkEventsFrameworkModule.getInstance(config.getEventsFrameworkConfiguration(), config.getServiceName()));
     modules.add(PmsSdkRegistryModule.getInstance(config));

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.beans.monitoredService.healthSourceSpec;
 
 import static io.harness.rule.OwnerRule.KANHAIYA;
@@ -15,6 +22,7 @@ import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.NewRelicHealt
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.MetricPackService;
 import io.harness.rule.Owner;
 
@@ -63,7 +71,8 @@ public class NewRelicHealthSourceSpecTest extends CvNextGenTestBase {
 
     identifier = "identifier";
     name = "some-name";
-    metricPackDTOS = Arrays.asList(MetricPackDTO.builder().identifier(CVMonitoringCategory.PERFORMANCE).build());
+    metricPackDTOS =
+        Arrays.asList(MetricPackDTO.builder().identifier(CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER).build());
     newRelicHealthSourceSpec = NewRelicHealthSourceSpec.builder()
                                    .applicationId(applicationId)
                                    .applicationName(applicationName)
@@ -128,8 +137,8 @@ public class NewRelicHealthSourceSpecTest extends CvNextGenTestBase {
   @Category(UnitTests.class)
   public void getCVConfigUpdateResult_checkUpdated() {
     List<CVConfig> cvConfigs = new ArrayList<>();
-    cvConfigs.add(createCVConfig(metricPackService.getMetricPack(
-        accountId, orgIdentifier, projectIdentifier, DataSourceType.NEW_RELIC, CVMonitoringCategory.PERFORMANCE)));
+    cvConfigs.add(createCVConfig(metricPackService.getMetricPack(accountId, orgIdentifier, projectIdentifier,
+        DataSourceType.NEW_RELIC, CVNextGenConstants.PERFORMANCE_PACK_IDENTIFIER)));
     CVConfigUpdateResult result = newRelicHealthSourceSpec.getCVConfigUpdateResult(accountId, orgIdentifier,
         projectIdentifier, envIdentifier, serviceIdentifier, identifier, name, cvConfigs, metricPackService);
     assertThat(result.getUpdated()).hasSize(1);

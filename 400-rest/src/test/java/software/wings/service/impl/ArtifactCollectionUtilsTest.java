@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -190,7 +197,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                                               .build();
 
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(customArtifactStream);
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, ACCOUNT_ID);
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("Delegate Tag");
     TaskData data = delegateTask.getData();
@@ -234,7 +241,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("nexus");
@@ -281,7 +288,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("jfrog");
@@ -329,7 +336,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("k8s");
@@ -375,7 +382,7 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                         .artifactType(JAR)
                         .build());
 
-    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    final DelegateTask delegateTask = artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
 
     assertThat(delegateTask.getAccountId()).isEqualTo(ACCOUNT_ID);
     assertThat(delegateTask.getTags()).contains("AWS Tag");
@@ -393,7 +400,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = SRINIVAS)
   @Category({UnitTests.class})
   public void shouldPrepareValidateTaskArtifactStreamNotExists() {
-    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
+    verify(artifactStreamService.deletePerpetualTaskByArtifactStream(null, ARTIFACT_STREAM_ID));
   }
 
   @Test(expected = InvalidRequestException.class)
@@ -412,7 +420,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
                                                         .build();
 
     when(artifactStreamService.get(ARTIFACT_STREAM_ID)).thenReturn(amazonS3ArtifactStream);
-    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID);
+    artifactCollectionUtils.prepareValidateTask(ARTIFACT_STREAM_ID, null);
+    verify(artifactStreamService.deletePerpetualTaskByArtifactStream(null, ARTIFACT_STREAM_ID));
   }
 
   @Test
@@ -529,8 +538,8 @@ public class ArtifactCollectionUtilsTest extends WingsBaseTest {
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
   public void testSupportsCleanup() {
-    List<ArtifactStreamType> supported = asList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS);
-    List<ArtifactStreamType> unsupported = asList(JENKINS, BAMBOO, AMAZON_S3, GCS, SMB, SFTP, AZURE_ARTIFACTS, CUSTOM);
+    List<ArtifactStreamType> supported = asList(DOCKER, AMI, ARTIFACTORY, GCR, ECR, ACR, NEXUS, CUSTOM);
+    List<ArtifactStreamType> unsupported = asList(JENKINS, BAMBOO, AMAZON_S3, GCS, SMB, SFTP, AZURE_ARTIFACTS);
     for (ArtifactStreamType artifactStreamType : supported) {
       assertThat(ArtifactCollectionUtils.supportsCleanup(artifactStreamType.name())).isTrue();
     }

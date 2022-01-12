@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -10,6 +17,7 @@ import io.harness.serializer.kryo.CgOrchestrationKryoRegister;
 import io.harness.serializer.kryo.CommonEntitiesKryoRegistrar;
 import io.harness.serializer.kryo.DelegateAgentBeansKryoRegister;
 import io.harness.serializer.kryo.DelegateServiceBeansKryoRegistrar;
+import io.harness.serializer.kryo.NgAuthenticationServiceKryoRegistrar;
 import io.harness.serializer.kryo.WatcherBeansKryoRegister;
 import io.harness.serializer.morphia.CgOrchestrationMorphiaRegistrar;
 import io.harness.serializer.morphia.CommonEntitiesMorphiaRegister;
@@ -39,6 +47,7 @@ public class CgOrchestrationRegistrars {
           .add(DelegateAgentBeansKryoRegister.class)
           .add(WatcherBeansKryoRegister.class)
           .addAll(DelegateTaskRegistrars.kryoRegistrars)
+          .add(NgAuthenticationServiceKryoRegistrar.class)
           .build();
 
   public static final ImmutableSet<Class<? extends MorphiaRegistrar>> morphiaRegistrars =

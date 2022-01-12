@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -34,6 +41,7 @@ import io.harness.git.model.GitFileChange;
 import io.harness.git.model.GitRepositoryType;
 import io.harness.git.model.PushResultGit;
 import io.harness.globalcontex.AuditGlobalContextData;
+import io.harness.globalcontex.DelegateTokenGlobalContextData;
 import io.harness.globalcontex.EntityOperationIdentifier;
 import io.harness.globalcontex.PurgeGlobalContextData;
 import io.harness.helm.HelmCliCommandType;
@@ -77,6 +85,7 @@ import io.harness.k8s.model.OidcGrantType;
 import io.harness.k8s.model.response.CEK8sDelegatePrerequisite;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.manifest.CustomManifestSource;
+import io.harness.manifest.CustomSourceConfig;
 import io.harness.manifest.CustomSourceFile;
 import io.harness.nexus.NexusRequest;
 import io.harness.pcf.model.CfCliVersion;
@@ -92,6 +101,13 @@ import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptionConfig;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoRegistrar;
+import io.harness.servicenow.ServiceNowActionNG;
+import io.harness.servicenow.ServiceNowFieldAllowedValueNG;
+import io.harness.servicenow.ServiceNowFieldNG;
+import io.harness.servicenow.ServiceNowFieldSchemaNG;
+import io.harness.servicenow.ServiceNowFieldTypeNG;
+import io.harness.servicenow.ServiceNowFieldValueNG;
+import io.harness.servicenow.ServiceNowTicketNG;
 import io.harness.shell.AccessType;
 import io.harness.shell.AuthenticationScheme;
 import io.harness.shell.CommandExecutionData;
@@ -369,5 +385,14 @@ public class ApiServiceBeansKryoRegister implements KryoRegistrar {
     kryo.register(JobDetails.class, 5121);
     kryo.register(AzureDevopsProject.class, 7285);
     kryo.register(AzureArtifactsPackage.class, 7287);
+    kryo.register(CustomSourceConfig.class, 97100);
+    kryo.register(ServiceNowActionNG.class, 97101);
+    kryo.register(ServiceNowFieldAllowedValueNG.class, 97102);
+    kryo.register(ServiceNowFieldNG.class, 97103);
+    kryo.register(ServiceNowFieldSchemaNG.class, 97104);
+    kryo.register(ServiceNowFieldTypeNG.class, 97105);
+    kryo.register(ServiceNowTicketNG.class, 97106);
+    kryo.register(ServiceNowFieldValueNG.class, 97107);
+    kryo.register(DelegateTokenGlobalContextData.class, 97108);
   }
 }

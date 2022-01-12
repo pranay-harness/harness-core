@@ -1,3 +1,9 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
 
 package io.harness.ngtriggers.eventmapper.filters.impl;
 
@@ -16,6 +22,7 @@ import static io.harness.ngtriggers.beans.response.TriggerEventResponse.FinalSta
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTaskRequest;
+import io.harness.beans.DelegateTaskRequest.DelegateTaskRequestBuilder;
 import io.harness.beans.IdentifierRef;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -256,14 +263,28 @@ public class FilepathTriggerFilter implements TriggerFilter {
               .latestCommit(parseWebhookResponse.getPush().getAfter())
               .previousCommit(parseWebhookResponse.getPush().getBefore());
       }
+
       ScmPathFilterEvaluationTaskParams params = paramsBuilder.build();
-      DelegateTaskRequest delegateTaskRequest = DelegateTaskRequest.builder()
-                                                    .accountId(filterRequestData.getAccountId())
-                                                    .taskType(TaskType.SCM_PATH_FILTER_EVALUATION_TASK.toString())
-                                                    .taskParameters(params)
-                                                    .executionTimeout(Duration.ofMinutes(1l))
-                                                    .build();
-      ResponseData responseData = taskExecutionUtils.executeSyncTask(delegateTaskRequest);
+      DelegateTaskRequestBuilder delegateTaskRequestBuilder =
+          DelegateTaskRequest.builder()
+              .accountId(filterRequestData.getAccountId())
+              .taskType(TaskType.SCM_PATH_FILTER_EVALUATION_TASK.toString())
+              .taskParameters(params)
+              .executionTimeout(Duration.ofMinutes(1l))
+              .taskSetupAbstraction("orgIdentifier", connectorDetails.getOrgIdentifier())
+              .taskSetupAbstraction("ng", "true");
+
+      if (connectorDetails.getProjectIdentifier() != null) {
+        delegateTaskRequestBuilder
+            .taskSetupAbstraction(
+                "owner", connectorDetails.getOrgIdentifier() + "/" + connectorDetails.getProjectIdentifier())
+            .taskSetupAbstraction("projectIdentifier", connectorDetails.getProjectIdentifier());
+      }
+      if (connectorDetails.getDelegateSelectors() != null) {
+        delegateTaskRequestBuilder.taskSelectors(connectorDetails.getDelegateSelectors());
+      }
+
+      ResponseData responseData = taskExecutionUtils.executeSyncTask(delegateTaskRequestBuilder.build());
 
       if (BinaryResponseData.class.isAssignableFrom(responseData.getClass())) {
         BinaryResponseData binaryResponseData = (BinaryResponseData) responseData;

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.core.plan.creation.beans;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -6,6 +13,7 @@ import io.harness.async.AsyncCreatorResponse;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.Dependencies;
+import io.harness.pms.contracts.plan.Dependency;
 import io.harness.pms.contracts.plan.PlanCreationContextValue;
 import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -22,6 +30,7 @@ import lombok.Singular;
 @Builder
 public class PlanCreationResponse implements AsyncCreatorResponse {
   @Singular Map<String, PlanNode> nodes;
+  PlanNode planNode;
   Dependencies dependencies;
   YamlUpdates yamlUpdates;
   @Singular("contextMap") Map<String, PlanCreationContextValue> contextMap;
@@ -31,8 +40,22 @@ public class PlanCreationResponse implements AsyncCreatorResponse {
   @Singular List<String> errorMessages;
 
   public void merge(PlanCreationResponse other) {
+    // adding PlanNode to map of nodes
+    addNode(other.getPlanNode());
+
     addNodes(other.getNodes());
     addDependencies(other.getDependencies());
+    mergeStartingNodeId(other.getStartingNodeId());
+    mergeContext(other.getContextMap());
+    mergeLayoutNodeInfo(other.getGraphLayoutResponse());
+    addYamlUpdates(other.getYamlUpdates());
+  }
+
+  public void mergeWithoutDependencies(PlanCreationResponse other) {
+    // adding PlanNode to map of nodes
+    addNode(other.getPlanNode());
+
+    addNodes(other.getNodes());
     mergeStartingNodeId(other.getStartingNodeId());
     mergeContext(other.getContextMap());
     mergeLayoutNodeInfo(other.getGraphLayoutResponse());
@@ -82,9 +105,15 @@ public class PlanCreationResponse implements AsyncCreatorResponse {
       nodes = new HashMap<>(nodes);
     }
 
+    if (newNode == null) {
+      return;
+    }
     nodes.put(newNode.getUuid(), newNode);
     if (dependencies != null) {
       dependencies = dependencies.toBuilder().removeDependencies(newNode.getUuid()).build();
+
+      // removing dependencyMetadata for this node id
+      dependencies = dependencies.toBuilder().removeDependencyMetadata(newNode.getUuid()).build();
     }
   }
 
@@ -93,6 +122,26 @@ public class PlanCreationResponse implements AsyncCreatorResponse {
       return;
     }
     dependencies.getDependenciesMap().forEach((key, value) -> addDependency(dependencies.getYaml(), key, value));
+
+    // merging the dependencyMetadata
+    dependencies.getDependencyMetadataMap().forEach(
+        (key, value) -> addDependencyMetadata(dependencies.getYaml(), key, value));
+  }
+
+  public void addDependencyMetadata(String yaml, String nodeId, Dependency value) {
+    if ((dependencies != null && dependencies.getDependencyMetadataMap().containsKey(nodeId))
+        || (nodes != null && nodes.containsKey(nodeId))) {
+      return;
+    }
+
+    if (value == null) {
+      return;
+    }
+    if (dependencies == null) {
+      dependencies = Dependencies.newBuilder().setYaml(yaml).putDependencyMetadata(nodeId, value).build();
+      return;
+    }
+    dependencies = dependencies.toBuilder().putDependencyMetadata(nodeId, value).build();
   }
 
   public void putContextValue(String key, PlanCreationContextValue value) {

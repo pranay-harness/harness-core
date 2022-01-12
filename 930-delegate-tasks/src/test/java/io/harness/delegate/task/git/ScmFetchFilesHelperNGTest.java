@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.git;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -123,6 +130,46 @@ public class ScmFetchFilesHelperNGTest extends CategoryTest {
 
     File file = new File("manifests/test2/path.txt");
     assertThat(file.exists()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testShouldDownloadFilesUsingScmByFolderRootPath() {
+    ScmFetchFilesHelperNG spyScmFetchFilesHelperNG = spy(scmFetchFilesHelperNG);
+    LogCallback logCallback = mock(NGDelegateLogCallback.class);
+    GitStoreDelegateConfig gitStoreDelegateConfig = GitStoreDelegateConfig.builder()
+                                                        .paths(Arrays.asList(".", "/"))
+                                                        .fetchType(FetchType.BRANCH)
+                                                        .branch("branch")
+                                                        .build();
+
+    when(scmDelegateClient.processScmRequest(any()))
+        .thenReturn(FileContentBatchResponse.builder()
+                        .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                                      .addFileContents(FileContent.newBuilder()
+                                                                           .setStatus(200)
+                                                                           .setContent("content")
+                                                                           .setPath("test2/path.txt")
+                                                                           .build())
+                                                      .build())
+                        .build(),
+            FileContentBatchResponse.builder()
+                .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                              .addFileContents(FileContent.newBuilder()
+                                                                   .setStatus(200)
+                                                                   .setContent("content")
+                                                                   .setPath("test3/path.txt")
+                                                                   .build())
+                                              .build())
+                .build());
+
+    spyScmFetchFilesHelperNG.downloadFilesUsingScm("manifests", gitStoreDelegateConfig, logCallback);
+
+    File file = new File("manifests/test2/path.txt");
+    File file2 = new File("manifests/test3/path.txt");
+    assertThat(file.exists()).isTrue();
+    assertThat(file2.exists()).isTrue();
   }
 
   @Test

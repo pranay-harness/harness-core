@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.url;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -91,8 +98,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
     // Set baseUrl = subDomainUrl only if subDomainUrl is not null, otherwise
     // set baseUrl equal to API URL
     log.info("Generating API URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
-    String apiUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getApiUrl().trim();
+    String apiUrl = getApiUrlForAccount(accountId);
     log.info("Returning {} from getApiBaseUrl", apiUrl);
     return appendSeparatorToUrl(apiUrl);
   }
@@ -165,8 +171,7 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
    */
   public String getManagerUrl(HttpServletRequest request, String accountId) {
     log.info("Generating manager URL for account {}", accountId);
-    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
-    String apiUrl = subdomainUrl.isPresent() ? subdomainUrl.get() : urlConfiguration.getApiUrl().trim();
+    String apiUrl = getApiUrlForAccount(accountId);
     apiUrl = removeSeparatorFromUrl(apiUrl);
     log.info("Returning manager URL {} for account {}", apiUrl, accountId);
     return !StringUtils.isEmpty(apiUrl)
@@ -220,6 +225,20 @@ public class SubdomainUrlHelper implements SubdomainUrlHelperIntfc {
       return metadataUrl;
     }
     return metadataUrl;
+  }
+
+  private String getApiUrlForAccount(String accountId) {
+    Optional<String> subdomainUrl = getCustomSubdomainUrl(accountId);
+    String apiUrl = urlConfiguration.getApiUrl().trim();
+    if (subdomainUrl.isPresent()) {
+      String subdomainUrlValue = subdomainUrl.get();
+      if (apiUrl.contains("gratis")) {
+        apiUrl = subdomainUrlValue + "/gratis";
+      } else {
+        apiUrl = subdomainUrlValue;
+      }
+    }
+    return apiUrl;
   }
 
   /**

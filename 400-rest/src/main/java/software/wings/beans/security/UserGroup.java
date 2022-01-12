@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.security;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
@@ -30,6 +37,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -154,6 +162,31 @@ public class UserGroup extends Base implements NotificationReceiverInfo, Account
     this.notificationSettings = notificationSettings;
     this.isDefault = isDefault;
     this.importedByScim = importedByScim;
+  }
+
+  public UserGroup buildUserGroupAudit() {
+    List<String> memberEmails = new ArrayList<>();
+    if (isNotEmpty(members)) {
+      for (User user : members) {
+        memberEmails.add(user.getEmail());
+      }
+    }
+    return UserGroup.builder()
+        .name(name)
+        .description(description)
+        .memberIds(memberEmails)
+        .appPermissions(appPermissions)
+        .accountPermissions(accountPermissions)
+        .isSsoLinked(isSsoLinked)
+        .linkedSsoType(linkedSsoType)
+        .linkedSsoId(linkedSsoId)
+        .linkedSsoDisplayName(linkedSsoDisplayName)
+        .notificationSettings(notificationSettings)
+        .isDefault(isDefault)
+        .ssoGroupId(ssoGroupId)
+        .ssoGroupName(ssoGroupName)
+        .importedByScim(importedByScim)
+        .build();
   }
 
   public UserGroup cloneWithNewName(final String newName, final String newDescription) {

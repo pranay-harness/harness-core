@@ -1,7 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.platform.resourcegroup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
+import static io.harness.platform.PlatformConfiguration.RESOURCE_GROUP_RESOURCES;
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
@@ -104,7 +111,7 @@ public class ResourceGroupServiceSetup {
   }
 
   private void registerResources(Environment environment, Injector injector) {
-    for (Class<?> resource : getResourceGroupServiceResourceClasses()) {
+    for (Class<?> resource : RESOURCE_GROUP_RESOURCES) {
       if (Resource.isAcceptable(resource)) {
         environment.jersey().register(injector.getInstance(resource));
       }

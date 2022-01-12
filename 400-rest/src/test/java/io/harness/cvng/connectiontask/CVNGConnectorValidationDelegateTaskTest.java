@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.connectiontask;
 
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
@@ -21,6 +28,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.WingsBaseTest;
@@ -28,7 +36,9 @@ import software.wings.WingsBaseTest;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -74,10 +84,15 @@ public class CVNGConnectorValidationDelegateTaskTest extends WingsBaseTest {
         cvngConnectorValidateTaskDelegateRunnableTask, "dataCollectionDSLService", dataCollectionDSLService, true);
     FieldUtils.writeField(cvngConnectorValidateTaskDelegateRunnableTask, "clock", clock, true);
     when(dataCollectionDSLService.execute(any(), any())).thenReturn("true");
+    List<List<EncryptedDataDetail>> encryptedDetails = new ArrayList<>();
+    List<EncryptedDataDetail> encryptedDataDetails = new ArrayList<>();
+    encryptedDataDetails.add(EncryptedDataDetail.builder().build());
+    encryptedDetails.add(encryptedDataDetails);
+
     DelegateResponseData delegateResponseData =
         cvngConnectorValidateTaskDelegateRunnableTask.run(CVConnectorTaskParams.builder()
                                                               .connectorConfigDTO(splunkConnectorDTO)
-                                                              .encryptionDetails(Collections.emptyList())
+                                                              .encryptionDetails(encryptedDetails)
                                                               .build());
     CVConnectorTaskResponse cvConnectorTaskResponse = (CVConnectorTaskResponse) delegateResponseData;
     assertThat(cvConnectorTaskResponse.isValid()).isEqualTo(true);

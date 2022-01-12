@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.infrastructuredefinition;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder;
@@ -89,12 +96,14 @@ import io.harness.expression.ExpressionReflectionUtils;
 import io.harness.expression.ExpressionReflectionUtils.NestedAnnotationResolver;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.Misc;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.queue.QueuePublisher;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.spotinst.model.ElastiGroup;
 import io.harness.spotinst.model.ElastiGroupCapacity;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.api.CloudProviderType;
@@ -280,7 +289,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   @Inject private AzureARMManager azureARMManager;
   @Inject private AzureAppServiceManager azureAppServiceManager;
 
-  @Inject @Getter private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<InfrastructureDefinitionServiceObserver> subject = new Subject<>();
 
   private static Map<CloudProviderType, EnumSet<DeploymentType>> supportedCloudProviderDeploymentTypes =
       new EnumMap<>(CloudProviderType.class);
@@ -297,6 +308,7 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
   }
 
   @Inject private WorkflowExecutionService workflowExecutionService;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<InfrastructureDefinition> list(
@@ -491,6 +503,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     try {
       subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onSaved, infrastructureDefinition);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(InfrastructureDefinitionServiceObserver.class,
+                                           "onSaved", InfrastructureDefinition.class),
+          InfrastructureDefinitionServiceImpl.class, infrastructureDefinition);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
@@ -780,6 +795,9 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
 
     try {
       subject.fireInform(InfrastructureDefinitionServiceObxxxxxxxx:onUpdated, infrastructureDefinition);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(InfrastructureDefinitionServiceObserver.class,
+                                           "onUpdated", InfrastructureDefinition.class),
+          InfrastructureDefinitionServiceImpl.class, infrastructureDefinition);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.rule;
 
 import static java.lang.String.format;
@@ -129,6 +136,7 @@ public class OwnerRule implements TestRule {
   public static final String PRANJAL = "pranjal";
   public static final String PRASHANT = "prashant.pal";
   public static final String PRASHANTSHARMA = "prashant.sharma";
+  public static final String PRATEEK = "prateek.barapatre";
   public static final String PRAVEEN = "praveen.sugavanam";
   public static final String PUNEET = "puneet.saraswat";
   public static final String RAGHU = "raghu";
@@ -140,6 +148,7 @@ public class OwnerRule implements TestRule {
   public static final String ROHIT_KUMAR = "rohit.kumar";
   public static final String ROHITKARELIA = "rohit.karelia";
   public static final String RUSHABH = "rushabh.shah";
+  public static final String SAGNIK = "sagnik.de";
   public static final String SAMARTH = "samarth.singhal";
   public static final String SANDESH = "sandesh.katta";
   public static final String SANJA = "sanja.jokic";
@@ -284,6 +293,7 @@ public class OwnerRule implements TestRule {
           .put(POOJA, defaultUserInfo(POOJA).slack("UDDA9L0D6").team(CDC).build())
           .put(PRANJAL, defaultUserInfo(PRANJAL).slack("UBV049Q5B").team(SWAT).build())
           .put(PRASHANT, defaultUserInfo(PRASHANT).slack("UJLBB7ULT").team(CDC).build())
+          .put(PRATEEK, defaultUserInfo(PRATEEK).slack("U02LG0DA988").team(PL).build())
           .put(PRAVEEN, defaultUserInfo(PRAVEEN).slack("UAQH9QHSB").team(CV).build())
           .put(PUNEET, defaultUserInfo(PUNEET).slack("U8PMB1XKM").team(CE).build())
           .put(PRASHANTSHARMA, defaultUserInfo(PRASHANTSHARMA).slack("U015LRWKR6X").team(PL).build())

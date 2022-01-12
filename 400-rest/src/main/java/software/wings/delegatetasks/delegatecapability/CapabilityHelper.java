@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks.delegatecapability;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -172,7 +179,16 @@ public class CapabilityHelper {
         new StringBuilder(128).append("Capabilities Generate for Task: ").append(taskType).append(" are: ");
 
     executionCapabilities.forEach(capability -> builder.append('\n').append(capability.toString()));
-    return builder.toString();
+    return builder.append('\n').toString();
+  }
+
+  public static String generateLogStringWithSelectionCapabilitiesGenerated(
+      String taskType, List<ExecutionCapability> executionCapabilities) {
+    StringBuilder builder =
+        new StringBuilder(128).append("Selection Capabilities for Task: ").append(taskType).append(" are: ");
+
+    executionCapabilities.forEach(capability -> builder.append('\n').append(capability.toString()));
+    return builder.append('\n').toString();
   }
 
   /**

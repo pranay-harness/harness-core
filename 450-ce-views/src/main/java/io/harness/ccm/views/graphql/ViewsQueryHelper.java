@@ -1,5 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.views.graphql;
 
+import static io.harness.ccm.commons.constants.ViewFieldConstants.NONE_FIELD;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.AFTER;
 import static io.harness.ccm.views.graphql.QLCEViewTimeFilterOperator.BEFORE;
 
@@ -254,14 +262,21 @@ public class ViewsQueryHelper {
   }
 
   public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
-      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery, int timeOffsetInDays) {
     return ViewQueryParams.builder()
         .accountId(accountId)
         .isClusterQuery(isClusterQuery)
         .isUsedByTimeSeriesStats(isUsedByTimeSeriesStats)
         .isTimeTruncGroupByRequired(isTimeTruncGroupByRequired)
         .isTotalCountQuery(isTotalCountQuery)
+        .timeOffsetInDays(timeOffsetInDays)
         .build();
+  }
+
+  public ViewQueryParams buildQueryParams(String accountId, boolean isTimeTruncGroupByRequired,
+      boolean isUsedByTimeSeriesStats, boolean isClusterQuery, boolean isTotalCountQuery) {
+    return buildQueryParams(
+        accountId, isTimeTruncGroupByRequired, isUsedByTimeSeriesStats, isClusterQuery, isTotalCountQuery, 0);
   }
 
   public ViewQueryParams buildQueryParams(String accountId, boolean isClusterQuery) {
@@ -276,6 +291,7 @@ public class ViewsQueryHelper {
         .isUsedByTimeSeriesStats(false)
         .isTimeTruncGroupByRequired(false)
         .isTotalCountQuery(false)
+        .timeOffsetInDays(0)
         .build();
   }
 
@@ -285,5 +301,23 @@ public class ViewsQueryHelper {
         .filter(f -> f.getViewMetadataFilter() != null)
         .findFirst()
         .map(x -> x.getViewMetadataFilter().getViewId());
+  }
+
+  public Boolean isGroupByNonePresent(List<QLCEViewGroupBy> groupByList) {
+    String noneFieldName = NONE_FIELD;
+    return groupByList.stream().anyMatch(groupBy
+        -> groupBy.getEntityGroupBy() != null && groupBy.getEntityGroupBy().getFieldName().equals(noneFieldName));
+  }
+
+  public Boolean isGroupByFieldPresent(List<QLCEViewGroupBy> groupByList, String fieldName) {
+    return groupByList.stream().anyMatch(
+        groupBy -> groupBy.getEntityGroupBy() != null && groupBy.getEntityGroupBy().getFieldName().equals(fieldName));
+  }
+
+  public List<QLCEViewGroupBy> removeGroupByNone(List<QLCEViewGroupBy> groupByList) {
+    return groupByList.stream()
+        .filter(groupBy
+            -> groupBy.getEntityGroupBy() != null && !groupBy.getEntityGroupBy().getFieldName().equals(NONE_FIELD))
+        .collect(Collectors.toList());
   }
 }

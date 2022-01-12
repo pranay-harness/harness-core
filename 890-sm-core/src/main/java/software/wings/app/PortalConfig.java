@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Joiner;
@@ -26,17 +34,18 @@ public class PortalConfig {
   @JsonProperty(defaultValue = "/app/%s/overview") private String applicationOverviewUrlPattern = "/app/%s/overview";
   @JsonProperty(defaultValue = "/app/%s/env/%s/execution/%s/detail")
   private String executionUrlPattern = "/app/%s/env/%s/execution/%s/detail";
-  private String jwtPasswordSecret;
-  private String jwtExternalServiceSecret;
-  private String jwtZendeskSecret;
-  private String jwtMultiAuthSecret;
-  private String jwtSsoRedirectSecret;
-  private String jwtAuthSecret;
+  @ConfigSecret private String jwtPasswordSecret;
+  @ConfigSecret private String jwtExternalServiceSecret;
+  @ConfigSecret private String jwtZendeskSecret;
+  @ConfigSecret private String jwtMultiAuthSecret;
+  @ConfigSecret private String jwtSsoRedirectSecret;
+  @ConfigSecret private String jwtAuthSecret;
   private String jwtMarketPlaceSecret;
-  private String jwtIdentityServiceSecret;
-  private String jwtDataHandlerSecret;
-  private String jwtNextGenManagerSecret;
+  @ConfigSecret private String jwtIdentityServiceSecret;
+  @ConfigSecret private String jwtDataHandlerSecret;
+  @ConfigSecret private String jwtNextGenManagerSecret;
   private String delegateDockerImage;
+  private String upgraderDockerImage;
   private int externalGraphQLRateLimitPerMinute = 500;
   private int customDashGraphQLRateLimitPerMinute = 1000;
   private Long authTokenExpiryInMillis = 24 * 60 * 60 * 1000L;

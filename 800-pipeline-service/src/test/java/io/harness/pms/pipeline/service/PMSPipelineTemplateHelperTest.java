@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.service;
 
 import static io.harness.exception.WingsException.USER;
@@ -5,6 +12,8 @@ import static io.harness.rule.OwnerRule.ARCHIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -14,11 +23,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
-import io.harness.eraro.ErrorCode;
-import io.harness.ng.core.Status;
+import io.harness.exception.ngexception.beans.templateservice.TemplateInputsErrorMetadataDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.template.TemplateApplyRequestDTO;
-import io.harness.ng.core.template.TemplateInputsErrorResponseDTO;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.ng.core.template.exception.NGTemplateResolveException;
 import io.harness.pms.helpers.PmsFeatureFlagHelper;
@@ -40,6 +47,7 @@ import retrofit2.Response;
 public class PMSPipelineTemplateHelperTest extends CategoryTest {
   @Mock private PmsFeatureFlagHelper pmsFeatureFlagHelper;
   @Mock private TemplateResourceClient templateResourceClient;
+  @Mock private PipelineEnforcementService pipelineEnforcementService;
   @InjectMocks private PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   private static final String ACCOUNT_ID = "accountId";
@@ -50,7 +58,9 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    pipelineTemplateHelper = new PMSPipelineTemplateHelper(pmsFeatureFlagHelper, templateResourceClient);
+    pipelineTemplateHelper =
+        new PMSPipelineTemplateHelper(pmsFeatureFlagHelper, templateResourceClient, pipelineEnforcementService);
+    doReturn(true).when(pipelineEnforcementService).isFeatureRestricted(any(), anyString());
   }
 
   @Test
@@ -95,14 +105,14 @@ public class PMSPipelineTemplateHelperTest extends CategoryTest {
         .when(templateResourceClient)
         .applyTemplatesOnGivenYaml(
             ACCOUNT_ID, ORG_ID, PROJECT_ID, TemplateApplyRequestDTO.builder().originalEntityYaml(GIVEN_YAML).build());
-    TemplateInputsErrorResponseDTO templateInputsErrorResponseDTO = new TemplateInputsErrorResponseDTO(
-        Status.ERROR, ErrorCode.TEMPLATE_EXCEPTION, "Template Ref resolved failed.", "", errorYaml, new HashMap<>());
+    TemplateInputsErrorMetadataDTO templateInputsErrorMetadataDTO =
+        new TemplateInputsErrorMetadataDTO(errorYaml, new HashMap<>());
     when(callRequest.execute())
         .thenThrow(new NGTemplateResolveException(
-            "Exception in resolving template refs in given yaml.", USER, templateInputsErrorResponseDTO));
+            "Exception in resolving template refs in given yaml.", USER, templateInputsErrorMetadataDTO));
     assertThatThrownBy(
         () -> pipelineTemplateHelper.resolveTemplateRefsInPipeline(ACCOUNT_ID, ORG_ID, PROJECT_ID, GIVEN_YAML))
         .isInstanceOf(NGTemplateResolveException.class)
-        .hasMessage("Exception in resolving template refs in given pipeline yaml.");
+        .hasMessage("Exception in resolving template refs in given yaml.");
   }
 }

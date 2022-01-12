@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.manifests;
 
 import static io.harness.rule.OwnerRule.ABOSII;
@@ -12,6 +19,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -133,8 +142,11 @@ public class CustomManifestValuesFetchTaskTest extends CategoryTest {
                                                                               .build()));
 
     CustomManifestValuesFetchResponse response = doRun(taskParams);
+
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(response.getValuesFilesContentMap()).isEqualTo(ImmutableMap.of("Sample", SAMPLE_1_RESULT));
+
+    verify(customManifestService, times(1)).cleanup(workingDirectoryCaptor.getValue());
   }
 
   @Test
@@ -157,6 +169,8 @@ public class CustomManifestValuesFetchTaskTest extends CategoryTest {
     assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     assertThat(response.getValuesFilesContentMap())
         .isEqualTo(ImmutableMap.of("Sample_1", SAMPLE_1_RESULT, "Sample_2", SAMPLE_2_RESULT));
+
+    verify(customManifestService, times(1)).cleanup(workingDirectoryCaptor.getValue());
   }
 
   @Test
@@ -182,6 +196,8 @@ public class CustomManifestValuesFetchTaskTest extends CategoryTest {
     List<String> usedWorkingDirectories = workingDirectoryCaptor.getAllValues();
     assertThat(usedWorkingDirectories).hasSize(2);
     assertThat(usedWorkingDirectories).containsExactly(usedWorkingDirectories.get(0), usedWorkingDirectories.get(0));
+
+    verify(customManifestService, times(1)).cleanup(workingDirectoryCaptor.getValue());
   }
 
   @Test

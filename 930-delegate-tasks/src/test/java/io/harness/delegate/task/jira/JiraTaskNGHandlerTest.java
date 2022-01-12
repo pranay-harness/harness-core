@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.rule.OwnerRule.ALEXEI;
+import static io.harness.rule.OwnerRule.MOUNIK;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -13,6 +21,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.connector.jira.JiraConnectorDTO;
 import io.harness.delegate.task.jira.JiraTaskNGParameters.JiraTaskNGParametersBuilder;
 import io.harness.encryption.SecretRefData;
+import io.harness.exception.HintException;
 import io.harness.jira.JiraClient;
 import io.harness.rule.Owner;
 
@@ -55,6 +64,20 @@ public class JiraTaskNGHandlerTest extends CategoryTest {
 
     assertThatThrownBy(() -> jiraTaskNGHandler.validateCredentials(createJiraTaskParametersBuilder().build()))
         .isNotNull();
+  }
+
+  @Test
+  @Owner(developers = MOUNIK)
+  @Category(UnitTests.class)
+  public void testValidateCredentialsExactError() throws Exception {
+    JiraClient jiraClient = Mockito.mock(JiraClient.class);
+    when(jiraClient.getProjects()).thenThrow(new RuntimeException("exception"));
+    PowerMockito.whenNew(JiraClient.class).withAnyArguments().thenReturn(jiraClient);
+
+    assertThatThrownBy(() -> jiraTaskNGHandler.validateCredentials(createJiraTaskParametersBuilder().build()))
+        .isInstanceOf(HintException.class)
+        .hasMessage(
+            "Check if the Jira URL & Jira credentials are correct. Jira URLs are different for different credentials");
   }
 
   private JiraTaskNGParametersBuilder createJiraTaskParametersBuilder() {

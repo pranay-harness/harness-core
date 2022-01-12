@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.applicationmanifest;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
@@ -29,6 +36,7 @@ import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfigValidationTaskParams;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
+import software.wings.helpers.ext.helm.request.HelmChartCollectionParams.HelmChartCollectionType;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams.HelmChartConfigParamsBuilder;
 import software.wings.service.intfc.AppService;
@@ -79,6 +87,12 @@ public class ManifestCollectionUtils {
     HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = constructHelmChartConfigParamsBuilder(
         appId, helmChartConfig, service.getHelmVersion(), appManifest.getPerpetualTaskId(), appManifestId, accountId);
 
+    boolean useRepoFlags = false;
+    if (featureFlagService.isEnabled(FeatureName.USE_HELM_REPO_FLAGS, accountId)
+        && HelmVersion.V3.equals(service.getHelmVersion())) {
+      useRepoFlags = true;
+    }
+
     return HelmChartCollectionParams.builder()
         .accountId(accountId)
         .appId(appId)
@@ -86,6 +100,45 @@ public class ManifestCollectionUtils {
         .serviceId(appManifest.getServiceId())
         .publishedVersions(getPublishedVersionsForAppManifest(accountId, appManifestId))
         .helmChartConfigParams(helmChartConfigParamsBuilder.build())
+        .useRepoFlags(useRepoFlags)
+        .build();
+  }
+
+  public ManifestCollectionParams prepareCollectTaskParamsWithChartVersion(
+      String appManifestId, String appId, HelmChartCollectionType helmChartCollectionType, String chartVersion) {
+    ApplicationManifest appManifest = applicationManifestService.getById(appId, appManifestId);
+    if (appManifest == null) {
+      throw new InvalidRequestException("Cannot find app manifest with id " + appManifestId);
+    }
+    String accountId =
+        appManifest.getAccountId() != null ? appManifest.getAccountId() : appService.getAccountIdByAppId(appId);
+
+    Service service = serviceResourceService.get(appId, appManifest.getServiceId());
+    if (service == null) {
+      throw new InvalidRequestException("Service not found for the application manifest with id " + appManifestId);
+    }
+    HelmChartConfig helmChartConfig = appManifest.getHelmChartConfig();
+
+    HelmChartConfigParamsBuilder helmChartConfigParamsBuilder = constructHelmChartConfigParamsBuilder(
+        appId, helmChartConfig, service.getHelmVersion(), appManifest.getPerpetualTaskId(), appManifestId, accountId);
+    // add version to config
+    helmChartConfigParamsBuilder.chartVersion(chartVersion);
+
+    boolean useRepoFlags = false;
+    if (featureFlagService.isEnabled(FeatureName.USE_HELM_REPO_FLAGS, accountId)
+        && HelmVersion.V3.equals(service.getHelmVersion())) {
+      useRepoFlags = true;
+    }
+
+    return HelmChartCollectionParams.builder()
+        .accountId(accountId)
+        .appId(appId)
+        .appManifestId(appManifestId)
+        .serviceId(appManifest.getServiceId())
+        .publishedVersions(getPublishedVersionsForAppManifest(accountId, appManifestId))
+        .helmChartConfigParams(helmChartConfigParamsBuilder.build())
+        .useRepoFlags(useRepoFlags)
+        .collectionType(helmChartCollectionType)
         .build();
   }
 
@@ -110,7 +163,7 @@ public class ManifestCollectionUtils {
             .chartUrl(helmChartConfig.getChartUrl())
             .basePath(helmChartConfig.getBasePath())
             .encryptedDataDetails(encryptionDataDetails)
-            .repoName(convertBase64UuidToCanonicalForm(settingAttribute.getUuid()))
+            .repoName(convertBase64UuidToCanonicalForm(appManifestId))
             .repoDisplayName(settingAttribute.getName())
             .helmVersion(helmVersion)
             .helmRepoConfig(helmRepoConfig);

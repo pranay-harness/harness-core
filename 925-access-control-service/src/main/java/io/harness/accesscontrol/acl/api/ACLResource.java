@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.accesscontrol.acl.api;
 
 import static io.harness.accesscontrol.clients.AccessControlClientUtils.checkPreconditions;
@@ -36,6 +43,7 @@ import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.Iterator;
 import java.util.List;
@@ -106,7 +114,8 @@ public class ACLResource {
       responses =
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Result of the access check request") })
   public ResponseDTO<AccessCheckResponseDTO>
-  get(@Valid @NotNull AccessCheckRequestDTO dto) {
+  get(@RequestBody(description = "These are the checks to perform for Access Control.",
+      required = true) @Valid @NotNull AccessCheckRequestDTO dto) {
     io.harness.security.dto.Principal contextPrincipal = SecurityContextBuilder.getPrincipal();
     List<PermissionCheckDTO> permissionChecksDTOs = dto.getPermissions();
     Principal principalToCheckPermissionsFor = dto.getPrincipal();

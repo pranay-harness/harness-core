@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.stateutils.buildstate;
 
 import static io.harness.common.BuildEnvironmentConstants.DRONE_AWS_REGION;
@@ -94,6 +101,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
   @Mock CILogServiceUtils logServiceUtils;
   @Mock TIServiceUtils tiServiceUtils;
   @Mock PipelineRbacHelper pipelineRbacHelper;
+  @Mock CodebaseUtils codebaseUtils;
 
   @Before
   public void setUp() {
@@ -273,7 +281,7 @@ public class K8BuildSetupUtilsTest extends CIExecutionTestBase {
             .build();
     doNothing().when(pipelineRbacHelper).checkRuntimePermissions(any(), any(), any());
     CodeBase codeBase = CodeBase.builder().repoName("test").build();
-    Map<String, String> gitEnvVariables = k8BuildSetupUtils.getGitEnvVariables(gitConnector, codeBase);
+    Map<String, String> gitEnvVariables = codebaseUtils.getGitEnvVariables(gitConnector, codeBase);
     assertThat(gitEnvVariables).containsKeys(DRONE_REMOTE_URL, DRONE_AWS_REGION);
     assertThat(gitEnvVariables.get(DRONE_REMOTE_URL))
         .isEqualTo("https://git-codecommit.eu-central-1.amazonaws.com/v1/repos/test.git");

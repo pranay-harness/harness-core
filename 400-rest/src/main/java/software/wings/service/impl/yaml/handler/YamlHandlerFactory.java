@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml.handler;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -352,6 +359,9 @@ public class YamlHandlerFactory {
       case APPLICATION_MANIFEST_OC_PARAMS_ENV_OVERRIDE:
       case APPLICATION_MANIFEST_OC_PARAMS_ENV_SERVICE_OVERRIDE:
       case APPLICATION_MANIFEST_OC_PARAMS_SERVICE_OVERRIDE:
+      case APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_OVERRIDE:
+      case APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE:
+      case APPLICATION_MANIFEST_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE:
       case APPLICATION_MANIFEST_APP_SETTINGS_ENV_OVERRIDE:
       case APPLICATION_MANIFEST_APP_SETTINGS_ENV_SERVICE_OVERRIDE:
       case APPLICATION_MANIFEST_CONN_STRINGS_ENV_OVERRIDE:
@@ -367,6 +377,9 @@ public class YamlHandlerFactory {
       case MANIFEST_FILE_OC_PARAMS_ENV_OVERRIDE:
       case MANIFEST_FILE_OC_PARAMS_ENV_SERVICE_OVERRIDE:
       case MANIFEST_FILE_OC_PARAMS_SERVICE_OVERRIDE:
+      case MANIFEST_FILE_KUSTOMIZE_PATCHES_ENV_OVERRIDE:
+      case MANIFEST_FILE_KUSTOMIZE_PATCHES_ENV_SERVICE_OVERRIDE:
+      case MANIFEST_FILE_KUSTOMIZE_PATCHES_SERVICE_OVERRIDE:
       case MANIFEST_FILE_APP_SETTINGS_ENV_OVERRIDE:
       case MANIFEST_FILE_APP_SERVICE:
       case MANIFEST_FILE_APP_SETTINGS_ENV_SERVICE_OVERRIDE:

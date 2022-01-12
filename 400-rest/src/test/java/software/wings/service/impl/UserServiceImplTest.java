@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
@@ -368,7 +375,7 @@ public class UserServiceImplTest extends WingsBaseTest {
     retrofit2.Call<ResponseDTO<Boolean>> req = mock(retrofit2.Call.class);
     when(ngInviteClient.completeInvite(anyString())).thenReturn(req);
     when(req.execute()).thenReturn(Response.success(ResponseDTO.newResponse()));
-    userServiceImpl.completeNGInvite(inviteDTO);
+    userServiceImpl.completeNGInvite(inviteDTO, false);
     verify(eventPublishHelper, times(1)).publishUserRegistrationCompletionEvent(anyString(), any());
   }
 
@@ -394,7 +401,7 @@ public class UserServiceImplTest extends WingsBaseTest {
     retrofit2.Call<ResponseDTO<Boolean>> req = mock(retrofit2.Call.class);
     when(ngInviteClient.completeInvite(anyString())).thenReturn(req);
     when(req.execute()).thenReturn(Response.success(ResponseDTO.newResponse()));
-    userServiceImpl.completeNGInvite(inviteDTO);
+    userServiceImpl.completeNGInvite(inviteDTO, false);
     verify(totpAuthHandler, times(1)).sendTwoFactorAuthenticationResetEmail(any());
     verify(eventPublishHelper, times(1)).publishUserRegistrationCompletionEvent(anyString(), any());
   }

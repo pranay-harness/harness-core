@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.authenticationsettings.dtos.mechanisms;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -25,11 +32,13 @@ public class SAMLSettings extends NGAuthSettings {
   private String groupMembershipAttr;
   private String displayName;
   private Boolean authorizationEnabled;
+  private String entityIdentifier;
 
   public SAMLSettings(@JsonProperty("origin") String origin, @JsonProperty("identifier") String identifier,
       @JsonProperty("logoutUrl") String logoutUrl, @JsonProperty("groupMembershipAttr") String groupMembershipAttr,
       @JsonProperty("displayName") String displayName,
-      @JsonProperty("authorizationEnabled") Boolean authorizationEnabled) {
+      @JsonProperty("authorizationEnabled") Boolean authorizationEnabled,
+      @JsonProperty("entityIdentifier") String entityIdentifier) {
     super(AuthenticationMechanism.SAML);
     this.identifier = identifier;
     this.displayName = displayName;
@@ -37,6 +46,7 @@ public class SAMLSettings extends NGAuthSettings {
     this.logoutUrl = logoutUrl;
     this.groupMembershipAttr = groupMembershipAttr;
     this.authorizationEnabled = authorizationEnabled;
+    this.entityIdentifier = entityIdentifier;
   }
 
   @Override

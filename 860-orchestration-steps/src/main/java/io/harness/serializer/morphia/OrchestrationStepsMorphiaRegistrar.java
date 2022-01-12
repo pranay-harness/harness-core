@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -7,6 +14,7 @@ import io.harness.morphia.MorphiaRegistrarHelperPut;
 import io.harness.steps.approval.step.entities.ApprovalInstance;
 import io.harness.steps.approval.step.harness.entities.HarnessApprovalInstance;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
+import io.harness.steps.approval.step.servicenow.entities.ServiceNowApprovalInstance;
 import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierOutcome;
@@ -31,6 +39,7 @@ public class OrchestrationStepsMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ApprovalInstance.class);
     set.add(HarnessApprovalInstance.class);
     set.add(JiraApprovalInstance.class);
+    set.add(ServiceNowApprovalInstance.class);
   }
 
   @Override

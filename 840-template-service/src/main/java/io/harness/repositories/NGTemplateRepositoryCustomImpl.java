@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.repositories;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -9,7 +16,6 @@ import io.harness.gitsync.persistance.GitAwarePersistence;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
-import io.harness.template.beans.yaml.NGTemplateConfig;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.events.TemplateCreateEvent;
@@ -40,7 +46,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   OutboxService outboxService;
 
   @Override
-  public TemplateEntity save(TemplateEntity templateToSave, NGTemplateConfig templateConfig, String comments) {
+  public TemplateEntity save(TemplateEntity templateToSave, String comments) {
     Supplier<OutboxEvent> supplier = null;
     if (shouldLogAudits(
             templateToSave.getAccountId(), templateToSave.getOrgIdentifier(), templateToSave.getProjectIdentifier())) {
@@ -112,15 +118,15 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
 
   @Override
   public TemplateEntity updateTemplateYaml(TemplateEntity templateToUpdate, TemplateEntity oldTemplateEntity,
-      NGTemplateConfig templateConfig, ChangeType changeType, String comments,
-      TemplateUpdateEventType templateUpdateEventType) {
+      ChangeType changeType, String comments, TemplateUpdateEventType templateUpdateEventType, boolean skipAudits) {
     Supplier<OutboxEvent> supplier = null;
     if (shouldLogAudits(templateToUpdate.getAccountId(), templateToUpdate.getOrgIdentifier(),
-            templateToUpdate.getProjectIdentifier())) {
+            templateToUpdate.getProjectIdentifier())
+        && !skipAudits) {
       supplier = ()
           -> outboxService.save(
               new TemplateUpdateEvent(templateToUpdate.getAccountIdentifier(), templateToUpdate.getOrgIdentifier(),
-                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity, "",
+                  templateToUpdate.getProjectIdentifier(), templateToUpdate, oldTemplateEntity, comments,
                   templateUpdateEventType != null ? templateUpdateEventType : TemplateUpdateEventType.OTHERS_EVENT));
     }
     return gitAwarePersistence.save(
@@ -128,8 +134,7 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
   }
 
   @Override
-  public TemplateEntity deleteTemplate(
-      TemplateEntity templateToDelete, NGTemplateConfig templateConfig, String comments) {
+  public TemplateEntity deleteTemplate(TemplateEntity templateToDelete, String comments) {
     Supplier<OutboxEvent> supplier = null;
     if (shouldLogAudits(templateToDelete.getAccountId(), templateToDelete.getOrgIdentifier(),
             templateToDelete.getProjectIdentifier())) {
@@ -158,12 +163,24 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
                 criteria, projectIdentifier, orgIdentifier, accountIdentifier, TemplateEntity.class));
   }
 
+  @Override
+  public boolean existsByAccountIdAndOrgIdAndProjectIdAndIdentifierAndVersionLabel(String accountId,
+      String orgIdentifier, String projectIdentifier, String templateIdentifier, String versionLabel) {
+    return gitAwarePersistence.exists(Criteria.where(TemplateEntityKeys.identifier)
+                                          .is(templateIdentifier)
+                                          .and(TemplateEntityKeys.projectIdentifier)
+                                          .is(projectIdentifier)
+                                          .and(TemplateEntityKeys.orgIdentifier)
+                                          .is(orgIdentifier)
+                                          .and(TemplateEntityKeys.accountId)
+                                          .is(accountId)
+                                          .and(TemplateEntityKeys.versionLabel)
+                                          .is(versionLabel),
+        projectIdentifier, orgIdentifier, accountId, TemplateEntity.class);
+  }
+
   boolean shouldLogAudits(String accountId, String orgIdentifier, String projectIdentifier) {
     // if git sync is disabled or if git sync is enabled (only for default branch)
-    if (!gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)) {
-      return true;
-    }
-    return gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier)
-        && gitSyncSdkService.isDefaultBranch(accountId, orgIdentifier, projectIdentifier);
+    return !gitSyncSdkService.isGitSyncEnabled(accountId, orgIdentifier, projectIdentifier);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -32,6 +39,7 @@ import java.lang.reflect.Field;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -142,6 +150,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     assertThat(cvngLogs.getContent()).hasSize(7);
     final int[] timeCounter = {0};
     final Long[] lastCreatedAt = {Long.MAX_VALUE};
+    cvngLogs.getContent().sort(Comparator.comparing(log -> ((ApiCallLogDTO) log).getRequestTime()).reversed());
     cvngLogs.getContent().forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);
@@ -153,7 +162,7 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
       assertThat(logRecord.getEndTime()).isEqualTo(endTime.toEpochMilli());
       assertThat(logRecord.getTraceableType()).isEqualTo(TraceableType.ONBOARDING);
       assertThat(logRecord.getType()).isEqualTo(CVNGLogType.API_CALL_LOG);
-      assertThat(logRecord.getCreatedAt()).isLessThan(lastCreatedAt[0]);
+      assertThat(logRecord.getCreatedAt()).isLessThanOrEqualTo(lastCreatedAt[0]);
       lastCreatedAt[0] = logRecord.getCreatedAt();
       timeCounter[0] += 10;
     });
@@ -172,12 +181,13 @@ public class CVNGLogServiceImplTest extends CvNextGenTestBase {
     CVConfigService cvConfigService = mock(CVConfigService.class);
     FieldUtils.writeField(cvngLogService, "verificationTaskService", verificationTaskService, true);
     FieldUtils.writeField(cvngLogService, "cvConfigService", cvConfigService, true);
-    when(verificationTaskService.getServiceGuardVerificationTaskIds(any(), any())).thenReturn(traceableIds);
+    when(verificationTaskService.getServiceGuardVerificationTaskIds(any(), any(List.class))).thenReturn(traceableIds);
     PageResponse<CVNGLogDTO> cvngLogs =
         cvngLogService.getCVNGLogs(accountId, "", "", null, null, startTime.minus(Duration.ofMillis(1)),
             endTime.plus(Duration.ofMillis(1)), null, CVNGLogType.API_CALL_LOG, 0, 3);
     assertThat(cvngLogs.getContent()).hasSize(3);
     final int[] timeCounter = {0};
+    cvngLogs.getContent().sort(Comparator.comparing(log -> ((ApiCallLogDTO) log).getRequestTime()).reversed());
     (cvngLogs.getContent()).forEach(logRecord -> {
       assertThat(logRecord.getAccountId()).isEqualTo(accountId);
       assertThat(logRecord.getTraceableId()).isEqualTo(traceableId);

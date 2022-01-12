@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.http;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -92,23 +99,25 @@ public class HttpServiceImpl implements HttpService {
 
     if (httpInternalConfig.isUseProxy()) {
       if (Http.shouldUseNonProxy(httpInternalConfig.getUrl())) {
-        throw new InvalidRequestException(
-            "Delegate is configured not to use proxy for the given url: " + httpInternalConfig.getUrl(),
-            WingsException.USER);
-      }
-
-      HttpHost proxyHost = Http.getHttpProxyHost();
-      if (proxyHost != null) {
-        if (isNotEmpty(Http.getProxyUserName())) {
-          httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
-          BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
-          credsProvider.setCredentials(new AuthScope(proxyHost),
-              new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
-          httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+        if (httpInternalConfig.isThrowErrorIfNoProxySetWithDelegateProxy()) {
+          throw new InvalidRequestException(
+              "Delegate is configured not to use proxy for the given url: " + httpInternalConfig.getUrl(),
+              WingsException.USER);
         }
-        httpClientBuilder.setProxy(proxyHost);
       } else {
-        log.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
+        HttpHost proxyHost = Http.getHttpProxyHost();
+        if (proxyHost != null) {
+          if (isNotEmpty(Http.getProxyUserName())) {
+            httpClientBuilder.setProxyAuthenticationStrategy(new ProxyAuthenticationStrategy());
+            BasicCredentialsProvider credsProvider = new BasicCredentialsProvider();
+            credsProvider.setCredentials(new AuthScope(proxyHost),
+                new UsernamePasswordCredentials(Http.getProxyUserName(), Http.getProxyPassword()));
+            httpClientBuilder.setDefaultCredentialsProvider(credsProvider);
+          }
+          httpClientBuilder.setProxy(proxyHost);
+        } else {
+          log.warn("Task setup to use DelegateProxy but delegate setup without any proxy");
+        }
       }
     }
 

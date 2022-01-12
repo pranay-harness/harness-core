@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.analysis.entities.ClusteredLog;
@@ -21,6 +28,7 @@ import io.harness.cvng.core.entities.demo.CVNGDemoDataIndex;
 import io.harness.cvng.core.services.api.DeletedCVConfigService;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
 import io.harness.cvng.core.services.api.VerificationTaskService;
+import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
 import io.harness.cvng.statemachine.entities.AnalysisOrchestrator;
 import io.harness.cvng.statemachine.entities.AnalysisStateMachine;
 import io.harness.persistence.HPersistence;
@@ -41,13 +49,12 @@ import lombok.extern.slf4j.Slf4j;
 public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
   @VisibleForTesting
   static final Collection<? extends Class<? extends PersistentEntity>> ENTITIES_DELETE_BLACKLIST_BY_VERIFICATION_ID =
-      Arrays.asList();
+      Arrays.asList(SLIRecord.class, DeploymentLogAnalysis.class, DeploymentTimeSeriesAnalysis.class);
   @VisibleForTesting
   static final List<Class<? extends PersistentEntity>> ENTITIES_TO_DELETE_BY_VERIFICATION_ID = Arrays.asList(
       ClusteredLog.class, TimeSeriesShortTermHistory.class, TimeSeriesRecord.class, AnalysisOrchestrator.class,
       AnalysisStateMachine.class, LearningEngineTask.class, LogRecord.class, HostRecord.class, LogAnalysisRecord.class,
-      LogAnalysisResult.class, LogAnalysisCluster.class, DeploymentTimeSeriesAnalysis.class,
-      DeploymentLogAnalysis.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
+      LogAnalysisResult.class, LogAnalysisCluster.class, TimeSeriesRiskSummary.class, TimeSeriesAnomalousPatterns.class,
       DataCollectionTask.class, TimeSeriesCumulativeSums.class, CVNGDemoDataIndex.class);
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;
@@ -69,13 +76,13 @@ public class DeletedCVConfigServiceImpl implements DeletedCVConfigService {
 
   @Override
   public void triggerCleanup(DeletedCVConfig deletedCVConfig) {
-    List<String> verificationTaskIds =
-        verificationTaskService.getVerificationTaskIds(deletedCVConfig.getCvConfig().getUuid());
+    List<String> verificationTaskIds = verificationTaskService.getServiceGuardVerificationTaskIds(
+        deletedCVConfig.getAccountId(), deletedCVConfig.getCvConfig().getUuid());
     verificationTaskIds.forEach(verificationTaskId
         -> ENTITIES_TO_DELETE_BY_VERIFICATION_ID.forEach(entity
             -> hPersistence.delete(hPersistence.createQuery(entity).filter(
                 VerificationTask.VERIFICATION_TASK_ID_KEY, verificationTaskId))));
-    verificationTaskService.removeCVConfigMappings(
+    verificationTaskService.removeLiveMonitoringMappings(
         deletedCVConfig.getCvConfig().getAccountId(), deletedCVConfig.getCvConfig().getUuid());
     monitoringSourcePerpetualTaskService.deleteTask(deletedCVConfig.getCvConfig().getAccountId(),
         deletedCVConfig.getCvConfig().getOrgIdentifier(), deletedCVConfig.getCvConfig().getProjectIdentifier(),

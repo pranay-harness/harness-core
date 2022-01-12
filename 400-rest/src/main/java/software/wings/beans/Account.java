@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -136,7 +143,7 @@ public class Account extends Base implements PersistentRegularIterable {
   private Set<TechStack> techStacks;
 
   private boolean oauthEnabled;
-
+  private String ringName;
   @Getter @Setter @JsonIgnore private boolean backgroundJobsDisabled;
 
   @FdIndex @Getter @Setter private boolean isHarnessSupportAccessAllowed = true;
@@ -350,6 +357,13 @@ public class Account extends Base implements PersistentRegularIterable {
   public void setTechStacks(Set<TechStack> techStacks) {
     this.techStacks = techStacks;
   }
+  public String getRingName() {
+    return ringName;
+  }
+
+  public void setRingName(String ringName) {
+    this.ringName = ringName;
+  }
 
   public boolean isOauthEnabled() {
     return this.oauthEnabled;
@@ -522,7 +536,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private LicenseInfo licenseInfo;
     private CeLicenseInfo ceLicenseInfo;
     private boolean emailSentToSales;
-    private Set<String> whitelistedDomains;
+    private Set<String> whitelistedDomains = new HashSet<>();
     private long lastLicenseExpiryReminderSentAt;
     private List<Long> licenseExpiryRemindersSentAt;
     private boolean oauthEnabled;
@@ -530,6 +544,7 @@ public class Account extends Base implements PersistentRegularIterable {
     private boolean cloudCostEnabled;
     private boolean ceK8sEventCollectionEnabled;
     private String subdomainUrl;
+    private String ringName;
     private boolean backgroundJobsDisabled;
     private boolean isHarnessSupportAccessAllowed = true;
     private AccountPreferences accountPreferences;
@@ -638,6 +653,11 @@ public class Account extends Base implements PersistentRegularIterable {
       return this;
     }
 
+    public Builder withRingName(String ringName) {
+      this.ringName = ringName;
+      return this;
+    }
+
     public Builder withEmailSentToSales(boolean emailSentToSales) {
       this.emailSentToSales = emailSentToSales;
       return this;
@@ -716,6 +736,7 @@ public class Account extends Base implements PersistentRegularIterable {
           .withLicenseExpiryRemindersSentAt(licenseExpiryRemindersSentAt)
           .withOauthEnabled(oauthEnabled)
           .withSubdomainUrl(subdomainUrl)
+          .withRingName(ringName)
           .withBackgroundJobsDisabled(backgroundJobsDisabled)
           .withDefaultExperience(defaultExperience)
           .withCreatedFromNG(createdFromNG)
@@ -748,6 +769,7 @@ public class Account extends Base implements PersistentRegularIterable {
       account.setCloudCostEnabled(cloudCostEnabled);
       account.setCeAutoCollectK8sEvents(ceK8sEventCollectionEnabled);
       account.setSubdomainUrl(subdomainUrl);
+      account.setRingName(ringName);
       account.setHarnessSupportAccessAllowed(isHarnessSupportAccessAllowed);
       account.setBackgroundJobsDisabled(backgroundJobsDisabled);
       account.setDefaultExperience(defaultExperience);

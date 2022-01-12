@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
 import io.harness.batch.processing.events.deployment.writer.DeploymentEventWriter;
 import io.harness.batch.processing.reader.DeploymentEventReader;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +29,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class DeploymentEventConfiguration {
   private static final int DEPLOYMENT_BATCH_SIZE = 10;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   public ItemWriter<List<String>> deploymentEventWriter() {
@@ -42,6 +51,7 @@ public class DeploymentEventConfiguration {
   public Job deploymentEventJob(JobBuilderFactory jobBuilderFactory, Step deploymentEventStep) {
     return jobBuilderFactory.get(BatchJobType.DEPLOYMENT_EVENT.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(deploymentEventStep)
         .build();
   }

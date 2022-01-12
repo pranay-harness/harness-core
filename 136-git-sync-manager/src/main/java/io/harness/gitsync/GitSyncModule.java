@@ -1,7 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync;
 
+import static io.harness.EntityType.CONNECTORS;
+import static io.harness.EntityType.FEATURE_FLAGS;
+import static io.harness.EntityType.INPUT_SETS;
+import static io.harness.EntityType.PIPELINES;
+import static io.harness.EntityType.TEMPLATE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
-import static io.harness.eventsframework.EventsFrameworkConstants.GIT_CONFIG_STREAM;
+import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 
 import io.harness.EntityType;
 import io.harness.Microservice;
@@ -12,6 +24,7 @@ import io.harness.cistatus.service.GithubService;
 import io.harness.cistatus.service.GithubServiceImpl;
 import io.harness.gitsync.client.GitSyncSdkGrpcClientModule;
 import io.harness.gitsync.common.events.FullSyncMessageListener;
+import io.harness.gitsync.common.impl.FullSyncTriggerServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchServiceImpl;
 import io.harness.gitsync.common.impl.GitBranchSyncServiceImpl;
 import io.harness.gitsync.common.impl.GitEntityServiceImpl;
@@ -24,6 +37,7 @@ import io.harness.gitsync.common.impl.ScmManagerFacilitatorServiceImpl;
 import io.harness.gitsync.common.impl.ScmOrchestratorServiceImpl;
 import io.harness.gitsync.common.impl.YamlGitConfigServiceImpl;
 import io.harness.gitsync.common.impl.gittoharness.GitToHarnessProcessorServiceImpl;
+import io.harness.gitsync.common.service.FullSyncTriggerService;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
 import io.harness.gitsync.common.service.GitEntityService;
@@ -37,10 +51,14 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.common.service.gittoharness.GitToHarnessProcessorService;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorService;
 import io.harness.gitsync.core.fullsync.FullSyncAccumulatorServiceImpl;
+import io.harness.gitsync.core.fullsync.GitFullSyncConfigService;
+import io.harness.gitsync.core.fullsync.GitFullSyncConfigServiceImpl;
 import io.harness.gitsync.core.fullsync.GitFullSyncEntityService;
 import io.harness.gitsync.core.fullsync.GitFullSyncEntityServiceImpl;
 import io.harness.gitsync.core.fullsync.GitFullSyncProcessorService;
 import io.harness.gitsync.core.fullsync.GitFullSyncProcessorServiceImpl;
+import io.harness.gitsync.core.fullsync.impl.FullSyncJobServiceImpl;
+import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.gitsync.core.impl.GitCommitServiceImpl;
 import io.harness.gitsync.core.impl.GitSyncTriggerServiceImpl;
 import io.harness.gitsync.core.impl.YamlChangeSetLifeCycleManagerServiceImpl;
@@ -67,6 +85,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Names;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
@@ -94,6 +114,12 @@ public class GitSyncModule extends AbstractModule {
         .put(EntityType.INPUT_SETS, Microservice.PMS)
         .put(EntityType.TEMPLATE, Microservice.TEMPLATESERVICE)
         .build();
+  }
+
+  @Provides
+  @Singleton
+  List<EntityType> getEntityProcessingOrder() {
+    return Arrays.asList(CONNECTORS, PIPELINES, INPUT_SETS, TEMPLATE, FEATURE_FLAGS);
   }
 
   @Override
@@ -129,19 +155,22 @@ public class GitSyncModule extends AbstractModule {
     bind(GitToHarnessProgressService.class).to(GitToHarnessProgressServiceImpl.class);
     bind(YamlChangeSetLifeCycleManagerService.class).to(YamlChangeSetLifeCycleManagerServiceImpl.class);
     bind(FullSyncAccumulatorService.class).to(FullSyncAccumulatorServiceImpl.class);
+    bind(FullSyncJobService.class).to(FullSyncJobServiceImpl.class);
     bind(GithubService.class).to(GithubServiceImpl.class);
     bind(GitFullSyncEntityService.class).to(GitFullSyncEntityServiceImpl.class);
     bind(GitFullSyncProcessorService.class).to(GitFullSyncProcessorServiceImpl.class);
     bind(ScmFacilitatorService.class).to(ScmFacilitatorServiceImpl.class);
+    bind(FullSyncTriggerService.class).to(FullSyncTriggerServiceImpl.class);
+    bind(GitFullSyncConfigService.class).to(GitFullSyncConfigServiceImpl.class);
     registerRequiredBindings();
 
-    bindGitSyncConfigMessageListeners();
+    bindFullSyncMessageListeners();
   }
 
-  private void bindGitSyncConfigMessageListeners() {
-    Multibinder<MessageListener> gitSyncConfigStreamMessageListeners =
-        Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_CONFIG_STREAM));
-    gitSyncConfigStreamMessageListeners.addBinding().to(FullSyncMessageListener.class);
+  private void bindFullSyncMessageListeners() {
+    Multibinder<MessageListener> fullSyncMessageListener =
+        Multibinder.newSetBinder(binder(), MessageListener.class, Names.named(GIT_FULL_SYNC_STREAM));
+    fullSyncMessageListener.addBinding().to(FullSyncMessageListener.class);
   }
 
   private void registerRequiredBindings() {

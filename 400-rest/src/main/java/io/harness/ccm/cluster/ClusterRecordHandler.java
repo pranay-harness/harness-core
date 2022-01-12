@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.cluster;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -11,7 +18,7 @@ import io.harness.ccm.config.CCMSettingService;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.SettingAttribute;
 import software.wings.infra.InfrastructureDefinition;
-import software.wings.service.impl.SettingAttributeObserver;
+import software.wings.service.impl.CloudProviderObserver;
 import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 import software.wings.settings.SettingVariableTypes;
@@ -31,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Singleton
 @OwnedBy(CE)
 public class ClusterRecordHandler
-    implements SettingAttributeObserver, InfrastructureDefinitionServiceObserver, InfrastructureMappingServiceObserver {
+    implements CloudProviderObserver, InfrastructureDefinitionServiceObserver, InfrastructureMappingServiceObserver {
   private final CCMSettingService ccmSettingService;
   private final ClusterRecordService clusterRecordService;
   private final CEPerpetualTaskManager cePerpetualTaskManager;

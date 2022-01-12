@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.pms.execution.strategy.plan;
 
 import static io.harness.pms.contracts.execution.Status.ERRORED;
@@ -54,9 +61,13 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
 
   @Override
   public PlanExecution triggerNode(Ambiance ambiance, Plan plan, PlanExecutionMetadata metadata) {
-    GovernanceMetadata governanceMetadata = governanceService.evaluateGovernancePolicies(metadata.getYaml(),
-        ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId),
-        OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN, ambiance.getPlanExecutionId());
+    String accountId = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.accountId);
+    String orgIdentifier = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.orgIdentifier);
+    String projectIdentifier = ambiance.getSetupAbstractionsMap().get(SetupAbstractionKeys.projectIdentifier);
+    String expandedPipelineJson = metadata.getExpandedPipelineJson();
+    GovernanceMetadata governanceMetadata =
+        governanceService.evaluateGovernancePolicies(expandedPipelineJson, accountId, orgIdentifier, projectIdentifier,
+            OpaConstants.OPA_EVALUATION_ACTION_PIPELINE_RUN, ambiance.getPlanExecutionId());
     PlanExecution planExecution = createPlanExecution(ambiance, metadata, governanceMetadata);
     eventEmitter.emitEvent(
         OrchestrationEvent.newBuilder()

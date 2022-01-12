@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
@@ -93,7 +100,6 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
   @Inject private VerificationJobService verificationJobService;
   @Inject private HeatMapService heatMapService;
   @Mock private NextGenService nextGenService;
-  private String verificationJobIdentifier;
   private Instant instant;
   private String accountId;
   BuilderFactory builderFactory;
@@ -445,6 +451,26 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
     }
   }
 
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetPreviousDeploymentAnalysis() {
+    CanaryLogAnalysisLearningEngineTask task =
+        CanaryLogAnalysisLearningEngineTask.builder().controlHosts(Sets.newHashSet("host1", "host2")).build();
+    task.setControlDataUrl("controlData");
+    task.setTestDataUrl("testData");
+    fillCommon(task, LearningEngineTaskType.CANARY_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(task);
+    DeploymentLogAnalysisDTO deploymentLogAnalysisDTO = createDeploymentAnalysisDTO();
+    logAnalysisService.saveAnalysis(task.getUuid(), deploymentLogAnalysisDTO);
+    assertThat(logAnalysisService.getPreviousDeploymentAnalysis(
+                   verificationTaskId, instant.minus(Duration.ofMinutes(10)), instant))
+        .isNull();
+    assertThat(logAnalysisService.getPreviousDeploymentAnalysis(
+                   verificationTaskId, instant.minus(Duration.ofMinutes(9)), instant))
+        .isNotNull();
+  }
+
   private List<ClusteredLog> createClusteredLogRecords(Instant startTime, Instant endTime) {
     List<ClusteredLog> logRecords = new ArrayList<>();
 
@@ -553,7 +579,7 @@ public class LogAnalysisServiceImplTest extends CvNextGenTestBase {
 
   private VerificationJob newTestVerificationJob() {
     TestVerificationJobDTO testVerificationJob = new TestVerificationJobDTO();
-    testVerificationJob.setIdentifier(verificationJobIdentifier);
+    testVerificationJob.setIdentifier(generateUuid());
     testVerificationJob.setJobName(generateUuid());
     testVerificationJob.setDataSources(Lists.newArrayList(DataSourceType.SPLUNK));
     testVerificationJob.setSensitivity(Sensitivity.MEDIUM.name());

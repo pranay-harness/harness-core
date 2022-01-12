@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.threading;
 
 import java.util.concurrent.RejectedExecutionException;
@@ -17,7 +24,8 @@ public class ForceQueuePolicy implements RejectedExecutionHandler {
   @Override
   public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
     try {
-      log.info("rejectedExecution occurred - will force the thread pool to increase pool size");
+      log.info("rejectedExecution occurred - will force the thread pool to increase pool size. Current queue size is"
+          + executor.getQueue().size());
       executor.getQueue().put(r);
     } catch (InterruptedException ex) {
       // should never happen since we never wait

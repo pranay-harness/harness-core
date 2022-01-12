@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.waiter;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -20,6 +27,7 @@ import io.harness.waiter.WaitInstance.WaitInstanceBuilder;
 import io.harness.waiter.persistence.PersistenceWrapper;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Stopwatch;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.mongodb.DuplicateKeyException;
@@ -30,6 +38,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -132,16 +141,23 @@ public class WaitNotifyEngine {
     Preconditions.checkArgument(isNotBlank(correlationId), "correlationId is null or empty");
 
     if (log.isDebugEnabled()) {
-      log.debug("notify request received for the correlationId : {}", correlationId);
+      log.debug("done with notify request received for the correlationId : {}", correlationId);
     }
 
     try {
+      final Stopwatch stopwatch = Stopwatch.createStarted();
+      long doneWithStartTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
       persistenceWrapper.save(NotifyResponse.builder()
                                   .uuid(correlationId)
                                   .createdAt(currentTimeMillis())
                                   .responseData(kryoSerializer.asDeflatedBytes(response))
                                   .error(error || response instanceof ErrorResponseData)
                                   .build());
+      long queryEndTime = stopwatch.elapsed(TimeUnit.MILLISECONDS);
+
+      if (log.isDebugEnabled()) {
+        log.debug("Process NotifyResponse mongo queryTime {}", queryEndTime - doneWithStartTime);
+      }
       handleNotifyResponse(correlationId);
       return correlationId;
     } catch (DuplicateKeyException | org.springframework.dao.DuplicateKeyException exception) {

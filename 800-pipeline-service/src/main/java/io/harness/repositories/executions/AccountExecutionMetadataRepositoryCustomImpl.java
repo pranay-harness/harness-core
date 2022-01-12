@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.repositories.executions;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -49,12 +56,23 @@ public class AccountExecutionMetadataRepositoryCustomImpl implements AccountExec
       // If there is no entry, then create an entry in the db for the given account
       if (accountExecutionMetadata == null) {
         Map<String, Long> moduleToExecutionCount = new HashMap<>();
+        Map<String, AccountExecutionInfo> moduleToExecutionInfoMap = new HashMap<>();
         for (String module : moduleNames) {
+          // create total build for given module
           moduleToExecutionCount.put(module, 1L);
+
+          // create monthly build for given module
+          LocalDate startDate = Instant.ofEpochMilli(startTS).atZone(ZoneId.systemDefault()).toLocalDate();
+          Map<String, Long> countPerMonth = new HashMap<>();
+          countPerMonth.put(YearMonth.of(startDate.getYear(), startDate.getMonth()).toString(), 1L);
+          AccountExecutionInfo accountExecutionInfo =
+              AccountExecutionInfo.builder().countPerMonth(countPerMonth).build();
+          moduleToExecutionInfoMap.put(module, accountExecutionInfo);
         }
         AccountExecutionMetadata newAccountExecutionMetadata = AccountExecutionMetadata.builder()
                                                                    .accountId(accountId)
                                                                    .moduleToExecutionCount(moduleToExecutionCount)
+                                                                   .moduleToExecutionInfoMap(moduleToExecutionInfoMap)
                                                                    .build();
         mongoTemplate.save(newAccountExecutionMetadata);
         return;

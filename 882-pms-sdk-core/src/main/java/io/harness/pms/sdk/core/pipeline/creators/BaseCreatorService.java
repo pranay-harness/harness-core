@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.core.pipeline.creators;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -7,17 +14,21 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.yaml.YamlField;
 
 import com.google.inject.Singleton;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 @Singleton
 @OwnedBy(HarnessTeam.PIPELINE)
+@Slf4j
 public abstract class BaseCreatorService<R extends CreatorResponse, M> {
   public Map<String, YamlField> getInitialDependencies(Map<String, YamlFieldBlob> dependencyBlobs) {
     Map<String, YamlField> initialDependencies = new HashMap<>();
@@ -35,39 +46,57 @@ public abstract class BaseCreatorService<R extends CreatorResponse, M> {
     return initialDependencies;
   }
 
-  public R processNodesRecursively(Map<String, YamlField> initialDependencies, M metadata, R finalResponse) {
-    if (isEmpty(initialDependencies)) {
+  public R processNodesRecursively(Dependencies initialDependencies, M metadata, R finalResponse) {
+    if (isEmpty(initialDependencies.getDependenciesMap())) {
       return finalResponse;
     }
 
-    Map<String, YamlField> dependencies = new HashMap<>(initialDependencies);
-    while (!dependencies.isEmpty()) {
+    Dependencies.Builder dependencies = Dependencies.newBuilder()
+                                            .setYaml(initialDependencies.getYaml())
+                                            .putAllDependencies(initialDependencies.getDependenciesMap());
+    while (!dependencies.getDependenciesMap().isEmpty()) {
       processNodes(dependencies, finalResponse, metadata);
-      initialDependencies.keySet().forEach(dependencies::remove);
+      for (Map.Entry<String, String> entry : initialDependencies.getDependenciesMap().entrySet()) {
+        dependencies.removeDependencies(entry.getKey());
+      }
     }
 
-    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies())) {
-      initialDependencies.keySet().forEach(k -> finalResponse.getDependencies().remove(k));
+    if (EmptyPredicate.isNotEmpty(finalResponse.getDependencies().getDependenciesMap())) {
+      for (Map.Entry<String, String> entry : initialDependencies.getDependenciesMap().entrySet()) {
+        finalResponse.getDependencies().toBuilder().removeDependencies(entry.getKey()).build();
+      }
     }
 
     return finalResponse;
   }
 
-  private void processNodes(Map<String, YamlField> dependencies, R finalResponse, M metadata) {
-    List<YamlField> dependenciesList = new ArrayList<>(dependencies.values());
-    dependencies.clear();
+  private void processNodes(Dependencies.Builder dependencies, R finalResponse, M metadata) {
+    List<String> yamlPathList = new ArrayList<>(dependencies.getDependenciesMap().values());
+    String currentYaml = dependencies.getYaml();
+    dependencies.clearDependencies();
 
-    for (YamlField yamlField : dependenciesList) {
+    for (String yamlPath : yamlPathList) {
+      YamlField yamlField = null;
+      try {
+        yamlField = YamlField.fromYamlPath(currentYaml, yamlPath);
+      } catch (IOException e) {
+        log.error("Invalid yaml field", e);
+      }
       R response = processNodeInternal(metadata, yamlField);
 
       if (response == null) {
-        finalResponse.addDependency(yamlField);
+        // do not add template yaml fields as dependency.
+        if (yamlField.getNode().getTemplate() == null) {
+          finalResponse.addDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
+        }
         continue;
       }
       mergeResponses(finalResponse, response);
-      finalResponse.addResolvedDependency(yamlField);
-      if (isNotEmpty(response.getDependencies())) {
-        response.getDependencies().values().forEach(field -> dependencies.put(field.getNode().getUuid(), field));
+      finalResponse.addResolvedDependency(currentYaml, yamlField.getNode().getUuid(), yamlPath);
+      if (isNotEmpty(response.getDependencies().getDependenciesMap())) {
+        for (Map.Entry<String, String> entry : response.getDependencies().getDependenciesMap().entrySet()) {
+          dependencies.putDependencies(entry.getKey(), entry.getValue());
+        }
       }
     }
   }

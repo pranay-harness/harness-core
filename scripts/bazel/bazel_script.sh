@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 set -ex
 
-local_repo=${HOME}/.m2/repository
+#local_repo=${HOME}/.m2/repository
 BAZEL_ARGUMENTS=
 if [ "${PLATFORM}" == "jenkins" ]; then
   bazelrc=--bazelrc=bazelrc.remote
-  local_repo=/root/.m2/repository
+  #local_repo=/root/.m2/repository
   if [ ! -z "${DISTRIBUTE_TESTING_WORKER}" ]; then
     bash scripts/bazel/testDistribute.sh
   fi
@@ -16,9 +21,9 @@ BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --show_timestamps --announce_rc"
 BAZEL_DIRS=${HOME}/.bazel-dirs
 BAZEL_ARGUMENTS="${BAZEL_ARGUMENTS} --experimental_convenience_symlinks=normal --symlink_prefix=${BAZEL_DIRS}/"
 
-if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
-  local_repo=${OVERRIDE_LOCAL_M2}
-fi
+#if [[ ! -z "${OVERRIDE_LOCAL_M2}" ]]; then
+#  local_repo=${OVERRIDE_LOCAL_M2}
+#fi
 
 # Enable caching by default. Turn it off by exporting CACHE_TEST_RESULTS=no
 # to generate full call-graph for Test Intelligence
@@ -133,6 +138,7 @@ BAZEL_MODULES="\
   //945-ng-audit-client:module \
   //946-access-control-aggregator:module \
   //947-access-control-core:module \
+  //947-scim-core:module \
   //948-access-control-admin-client:module \
   //948-access-control-sdk:module \
   //949-access-control-commons:module \
@@ -207,18 +213,6 @@ build_bazel_module() {
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
   fi
-
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/libmodule.jar"; then
-    mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/libmodule.jar \
-      -DgroupId=software.wings \
-      -DartifactId=${module} \
-      -Dversion=0.0.1-SNAPSHOT \
-      -Dpackaging=jar \
-      -DgeneratePom=true \
-      -DpomFile=${module}/pom.xml \
-      -DlocalRepositoryPath=${local_repo}
-  fi
 }
 
 build_bazel_tests() {
@@ -228,19 +222,6 @@ build_bazel_tests() {
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
-  fi
-
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-tests.jar" "${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar"; then
-    mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/libsupporter-test.jar \
-      -DgroupId=software.wings \
-      -DartifactId=${module} \
-      -Dversion=0.0.1-SNAPSHOT \
-      -Dclassifier=tests \
-      -Dpackaging=jar \
-      -DgeneratePom=true \
-      -DpomFile=${module}/pom.xml \
-      -DlocalRepositoryPath=${local_repo}
   fi
 }
 
@@ -260,31 +241,6 @@ build_bazel_application() {
     echo "$BAZEL_DEPLOY_MODULE is not in the list of modules"
     exit 1
   fi
-
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"; then
-    mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
-      -DgroupId=software.wings \
-      -DartifactId=${module} \
-      -Dversion=0.0.1-SNAPSHOT \
-      -Dpackaging=jar \
-      -DgeneratePom=true \
-      -DpomFile=${module}/pom.xml \
-      -DlocalRepositoryPath=${local_repo}
-  fi
-
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT-capsule.jar" "${BAZEL_DIRS}/bin/${module}/module_deploy.jar"; then
-    mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/module_deploy.jar \
-      -DgroupId=software.wings \
-      -DartifactId=${module} \
-      -Dversion=0.0.1-SNAPSHOT \
-      -Dclassifier=capsule \
-      -Dpackaging=jar \
-      -DgeneratePom=true \
-      -DpomFile=${module}/pom.xml \
-      -DlocalRepositoryPath=${local_repo}
-  fi
 }
 
 build_bazel_application_module() {
@@ -299,18 +255,6 @@ build_bazel_application_module() {
   if ! grep -q "$BAZEL_MODULE" <<<"$BAZEL_MODULES"; then
     echo "$BAZEL_MODULE is not in the list of modules"
     exit 1
-  fi
-
-  if ! cmp -s "${local_repo}/software/wings/${module}/0.0.1-SNAPSHOT/${module}-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${module}/module.jar"; then
-    mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${module}/module.jar \
-      -DgroupId=software.wings \
-      -DartifactId=${module} \
-      -Dversion=0.0.1-SNAPSHOT \
-      -Dpackaging=jar \
-      -DgeneratePom=true \
-      -DpomFile=${module}/pom.xml \
-      -DlocalRepositoryPath=${local_repo}
   fi
 }
 
@@ -333,18 +277,6 @@ build_proto_module() {
   fi
 
   bazel_library=$(echo ${module} | tr '-' '_')
-
-  if ! cmp -s "${local_repo}/software/wings/${module}-proto/0.0.1-SNAPSHOT/${module}-proto-0.0.1-SNAPSHOT.jar" "${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar"; then
-    mvn -B install:install-file \
-      -Dfile=${BAZEL_DIRS}/bin/${modulePath}/lib${bazel_library}_java_proto.jar \
-      -DgroupId=software.wings \
-      -DartifactId=${module}-proto \
-      -Dversion=0.0.1-SNAPSHOT \
-      -Dpackaging=jar \
-      -DgeneratePom=true \
-      -DlocalRepositoryPath=${local_repo} \
-      -f scripts/bazel/proto_pom.xml
-  fi
 }
 
 build_protocol_info(){
@@ -412,6 +344,7 @@ build_bazel_module 940-secret-manager-client
 build_bazel_module 945-ng-audit-client
 build_bazel_module 946-access-control-aggregator
 build_bazel_module 947-access-control-core
+build_bazel_module 947-scim-core
 build_bazel_module 948-access-control-admin-client
 build_bazel_module 948-access-control-sdk
 build_bazel_module 949-access-control-commons

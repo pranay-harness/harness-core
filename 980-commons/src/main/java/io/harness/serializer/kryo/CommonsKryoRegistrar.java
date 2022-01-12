@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -39,6 +46,7 @@ import io.harness.exception.UnresolvedExpressionsException;
 import io.harness.exception.VerificationOperationException;
 import io.harness.logging.LogLevel;
 import io.harness.security.PrincipalContextData;
+import io.harness.security.SimpleEncryption;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.Principal;
 import io.harness.security.dto.PrincipalType;
@@ -107,5 +115,6 @@ public class CommonsKryoRegistrar implements KryoRegistrar {
     kryo.register(KubernetesYamlException.class, 980016);
     kryo.register(GitOperationException.class, 980017);
     kryo.register(TerraformCommandExecutionException.class, 980018);
+    kryo.register(SimpleEncryption.class, 980019);
   }
 }

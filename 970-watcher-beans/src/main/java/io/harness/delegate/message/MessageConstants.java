@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.message;
 
 public interface MessageConstants {
@@ -41,7 +48,6 @@ public interface MessageConstants {
   String DELEGATE_STOP_ACQUIRING = "stop-acquiring";
   String DELEGATE_GO_AHEAD = "go-ahead";
   String DELEGATE_RESUME = "resume";
-  String DELEGATE_SEND_VERSION_HEADER = "send-version-header";
   String DELEGATE_STOP_GRPC = "stop-grpc";
   String DELEGATE_START_GRPC = "start-grpc";
 

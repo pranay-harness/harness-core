@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.rule.OwnerRule.PAVIC;
@@ -9,6 +16,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.beans.DatadogLogDataCollectionInfo;
 import io.harness.cvng.beans.datadog.DatadogLogDefinition;
 import io.harness.cvng.core.entities.DatadogLogCVConfig;
+import io.harness.cvng.core.entities.VerificationTask.TaskType;
 import io.harness.cvng.core.services.impl.monitoredService.DatadogLogDataCollectionInfoMapper;
 import io.harness.rule.Owner;
 
@@ -44,7 +52,8 @@ public class DatadogLogDataCollectionInfoMapperTest extends CvNextGenTestBase {
                                                                .serviceInstanceIdentifier(MOCKED_INSTANCE_IDENTIFIER)
                                                                .build();
 
-    DatadogLogDataCollectionInfo collectionInfoResult = classUnderTest.toDataCollectionInfo(datadogLogCVConfig);
+    DatadogLogDataCollectionInfo collectionInfoResult =
+        classUnderTest.toDataCollectionInfo(datadogLogCVConfig, TaskType.DEPLOYMENT);
 
     assertThat(collectionInfoResult).isNotNull();
     assertThat(collectionInfoResult.getLogDefinition()).isEqualTo(expectedDataLogDefinition);

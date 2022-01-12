@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.beans.details;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
@@ -23,7 +30,7 @@ import lombok.experimental.FieldDefaults;
 @JsonInclude(NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(name = "FeatureRestrictionDetails",
-    description = "This is the view of a feature restriction details object defined in Harness")
+    description = "This contains the feature restriction details object defined in Harness")
 public class FeatureRestrictionDetailsDTO {
   private FeatureRestrictionName name;
   private String description;

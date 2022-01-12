@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.config;
 
 import io.harness.batch.processing.ccm.BatchJobType;
+import io.harness.batch.processing.svcmetrics.BatchJobExecutionListener;
 import io.harness.batch.processing.tasklet.K8SSyncEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeEventTasklet;
 import io.harness.batch.processing.tasklet.K8sNodeInfoTasklet;
@@ -25,6 +33,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class K8sBatchConfiguration {
   @Autowired private StepBuilderFactory stepBuilderFactory;
+  @Autowired private BatchJobExecutionListener batchJobExecutionListener;
 
   @Bean
   public Tasklet k8sNodeInfoTasklet() {
@@ -103,6 +112,7 @@ public class K8sBatchConfiguration {
       Step k8sPodInfoStep, Step k8sPodEventStep, Step k8sPVInfoStep, Step k8sPVEventStep, Step k8sSyncEventStep) {
     return jobBuilderFactory.get(BatchJobType.K8S_EVENT.name())
         .incrementer(new RunIdIncrementer())
+        .listener(batchJobExecutionListener)
         .start(k8sNodeInfoStep)
         .next(k8sNodeEventStep)
         .next(k8sPodInfoStep)

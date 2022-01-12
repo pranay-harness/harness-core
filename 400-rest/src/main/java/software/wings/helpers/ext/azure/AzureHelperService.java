@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.azure;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -554,24 +561,6 @@ public class AzureHelperService {
       throw new AzureServiceException(
           "Failed to retrieve repository tags " + ExceptionUtils.getMessage(e), AZURE_SERVICE_EXCEPTION, USER);
     }
-  }
-
-  public List<AzureKubernetesCluster> listKubernetesClusters(
-      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
-
-    return getAzureClient(azureConfig, subscriptionId)
-        .kubernetesClusters()
-        .list()
-        .stream()
-        .map(cluster
-            -> AzureKubernetesCluster.builder()
-                   .name(cluster.name())
-                   .resourceGroup(cluster.resourceGroupName())
-                   .type(cluster.type())
-                   .id(cluster.id())
-                   .build())
-        .collect(toList());
   }
 
   public boolean isValidKubernetesCluster(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,

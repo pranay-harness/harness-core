@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -160,30 +167,5 @@ public class ServiceDependencyServiceImpl implements ServiceDependencyService {
       monitoredServiceToDependentServicesMap.put(monitoredServiceIdentifier, dependentServiceIdentifiers);
     });
     return monitoredServiceToDependentServicesMap;
-  }
-
-  @Override
-  public void deleteByProjectIdentifier(
-      Class<ServiceDependency> clazz, String accountId, String orgIdentifier, String projectIdentifier) {
-    Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier)
-                                               .filter(ServiceDependencyKeys.projectIdentifier, projectIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
-
-  @Override
-  public void deleteByOrgIdentifier(Class<ServiceDependency> clazz, String accountId, String orgIdentifier) {
-    Query<ServiceDependency> deleteQuery = hPersistence.createQuery(ServiceDependency.class)
-                                               .filter(ServiceDependencyKeys.accountId, accountId)
-                                               .filter(ServiceDependencyKeys.orgIdentifier, orgIdentifier);
-    hPersistence.deleteOnServer(deleteQuery);
-  }
-
-  @Override
-  public void deleteByAccountIdentifier(Class<ServiceDependency> clazz, String accountId) {
-    Query<ServiceDependency> deleteQuery =
-        hPersistence.createQuery(ServiceDependency.class).filter(ServiceDependencyKeys.accountId, accountId);
-    hPersistence.deleteOnServer(deleteQuery);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -7,6 +14,7 @@ import static java.lang.String.format;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.exception.GeneralException;
 import io.harness.reflection.CodeUtils;
+import io.harness.reflection.HarnessReflections;
 import io.harness.serializer.ClassResolver;
 import io.harness.serializer.HKryo;
 import io.harness.serializer.KryoRegistrar;
@@ -19,8 +27,8 @@ import com.esotericsoftware.kryo.util.IntMap;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
+import java.util.Set;
 import org.redisson.codec.KryoCodec;
-import org.reflections.Reflections;
 
 @OwnedBy(PL)
 public class RedissonKryoCodec extends KryoCodec {
@@ -47,8 +55,8 @@ public class RedissonKryoCodec extends KryoCodec {
     }
 
     try {
-      Reflections reflections = new Reflections("io.harness.serializer.kryo");
-      for (Class clazz : reflections.getSubTypesOf(KryoRegistrar.class)) {
+      Set<Class<? extends KryoRegistrar>> kryoRegistrars = HarnessReflections.get().getSubTypesOf(KryoRegistrar.class);
+      for (Class<? extends KryoRegistrar> clazz : kryoRegistrars) {
         Constructor<?> constructor = clazz.getConstructor();
         final KryoRegistrar kryoRegistrar = (KryoRegistrar) constructor.newInstance();
 

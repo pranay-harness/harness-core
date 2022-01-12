@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.accesscontrol.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -52,7 +59,8 @@ public class MockRoleAssignmentResource {
       @QueryParam(NGCommonEntityConstants.ORG_KEY) String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Body RoleAssignmentFilterDTO roleAssignmentFilter) {
-    PageResponse<RoleAssignmentResponseDTO> pageResponse = PageResponse.<RoleAssignmentResponseDTO>builder().build();
+    PageResponse<RoleAssignmentResponseDTO> pageResponse =
+        PageResponse.<RoleAssignmentResponseDTO>builder().content(new ArrayList<>()).empty(true).build();
     return ResponseDTO.newResponse(pageResponse);
   }
 

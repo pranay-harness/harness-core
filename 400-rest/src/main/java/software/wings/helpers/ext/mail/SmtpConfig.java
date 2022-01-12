@@ -1,14 +1,22 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.mail;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.audit.ResourceType.COLLABORATION_PROVIDER;
-import static software.wings.yaml.YamlHelper.ENCRYPTED_VALUE_STR;
+import static software.wings.beans.CGConstants.ENCRYPTED_VALUE_STR;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.SocketConnectivityCapabilityGenerator;
 import io.harness.encryption.Encrypted;
 import io.harness.expression.ExpressionEvaluator;
+import io.harness.secret.ConfigSecret;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.jersey.JsonViews;
@@ -46,7 +54,7 @@ public class SmtpConfig extends SettingValue implements EncryptableSetting {
   @DefaultValue("wings") @Attributes(title = "From Address") private String fromAddress;
   @DefaultValue("true") @Attributes(title = "SSL") private boolean useSSL;
   @DefaultValue("false") @Attributes(title = "Start TLS") private boolean startTLS;
-  @Attributes(title = "Username") private String username;
+  @Attributes(title = "Username") @ConfigSecret private String username;
   @Attributes(title = "Password") @Encrypted(fieldName = "password") private char[] password;
   @SchemaIgnore @NotEmpty private String accountId;
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.nexus;
 
 import static io.harness.annotations.dev.HarnessModule._960_API_SERVICES;
@@ -63,6 +70,7 @@ import java.io.InputStream;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
@@ -1435,8 +1443,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus3x() {
-    List<BuildDetails> buildDetails =
-        nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, "harness-npm", "npm-app1");
+    List<BuildDetails> buildDetails = nexusService.getVersions(
+        RepositoryFormat.npm.name(), nexusThreeConfig, "harness-npm", "npm-app1", new HashSet<>());
     assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1450,8 +1458,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus3xForGroupRepos() {
-    List<BuildDetails> buildDetails =
-        nexusService.getVersions(RepositoryFormat.npm.name(), nexusThreeConfig, "harness-npm-group", "npm-app1");
+    List<BuildDetails> buildDetails = nexusService.getVersions(
+        RepositoryFormat.npm.name(), nexusThreeConfig, "harness-npm-group", "npm-app1", new HashSet<>());
     assertThat(buildDetails).hasSize(1);
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1466,7 +1474,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus3x() {
     List<BuildDetails> buildDetails = nexusService.getVersions(
-        RepositoryFormat.nuget.name(), nexusThreeConfig, "nuget-group", "NuGet.Sample.Package");
+        RepositoryFormat.nuget.name(), nexusThreeConfig, "nuget-group", "NuGet.Sample.Package", new HashSet<>());
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0.0.0", "1.0.0.18279");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1486,8 +1494,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = ROHITKARELIA)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus3xForGroupRepos() {
-    List<BuildDetails> buildDetails = nexusService.getVersions(
-        RepositoryFormat.nuget.name(), nexusThreeConfig, "nuget-hosted-group-repo", "NuGet.Sample.Package");
+    List<BuildDetails> buildDetails = nexusService.getVersions(RepositoryFormat.nuget.name(), nexusThreeConfig,
+        "nuget-hosted-group-repo", "NuGet.Sample.Package", new HashSet<>());
     assertThat(buildDetails).hasSize(2).extracting(BuildDetails::getNumber).contains("1.0.0.0", "1.0.0.18279");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1519,8 +1527,8 @@ public class NexusServiceTest extends WingsBaseTest {
   @Owner(developers = AADITI)
   @Category(UnitTests.class)
   public void shouldGetVersionsForNugetNexus2x() {
-    List<BuildDetails> buildDetails =
-        nexusService.getVersions(RepositoryFormat.nuget.name(), nexusConfig, "MyNuGet", "NuGet.Sample.Package");
+    List<BuildDetails> buildDetails = nexusService.getVersions(
+        RepositoryFormat.nuget.name(), nexusConfig, "MyNuGet", "NuGet.Sample.Package", new HashSet<>());
     assertThat(buildDetails).hasSize(1).extracting(BuildDetails::getNumber).contains("1.0.0.18279");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)
@@ -1536,7 +1544,7 @@ public class NexusServiceTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void shouldGetVersionsForNPMNexus2x() {
     List<BuildDetails> buildDetails =
-        nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, "npmjs", "abbrev");
+        nexusService.getVersions(RepositoryFormat.npm.name(), nexusConfig, "npmjs", "abbrev", new HashSet<>());
     assertThat(buildDetails).hasSize(3).extracting(BuildDetails::getNumber).contains("1.0.3", "1.0.4", "1.0.5");
     assertThat(buildDetails.get(0).getArtifactFileMetadataList().get(0))
         .extracting(ArtifactFileMetadata::getFileName)

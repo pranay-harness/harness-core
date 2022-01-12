@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.beans.connector.azurekeyvaultconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -17,6 +24,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -35,6 +43,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
+@Schema(name = "AzureKeyVaultConnector", description = "Returns Azure KeyVault Secret Manager configuration")
 public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @NotNull private String clientId;
   @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;

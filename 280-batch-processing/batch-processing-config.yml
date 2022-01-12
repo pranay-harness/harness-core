@@ -80,7 +80,9 @@ cfClientConfig:
   eventUrl: "https://event.feature-flags.uat.harness.io/api/1.0"
   analyticsEnabled: true
   connectionTimeout: 10000
-  readTimeout: 30000
+  readTimeout: 45000
+  retries: 6
+  sleepInterval: 5000
 
 cfMigrationConfig:
   enabled: false
@@ -105,6 +107,7 @@ scheduler-jobs-config:
   budgetAlertsJobCron: "0 30 14 * * ?"
   weeklyReportsJobCron: "0 0 14 * * MON"
   budgetCostUpdateJobCron: "0 0 14 * * ?"
+  connectorHealthUpdateJobCron: "0 0 14 * * ?"
 
 cePythonService:
   pythonServiceUrl: "http://0.0.0.0:8081"
@@ -127,3 +130,11 @@ banzaiRecommenderConfig:
 
 ngManagerServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 awsCurBilling: true
+
+connectorHealthUpdateJobConfig:
+  enabled: true
+
+gcpConfig:
+  gcpProjectId: "ccm-play"
+  gcpAwsConnectorCrudPubSubTopic: "ce-aws-connector-crud"
+

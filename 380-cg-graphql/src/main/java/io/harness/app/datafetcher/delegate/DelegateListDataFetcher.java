@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.app.datafetcher.delegate;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -29,7 +36,7 @@ import org.mongodb.morphia.query.Sort;
 public class DelegateListDataFetcher
     extends AbstractConnectionV2DataFetcher<QLDelegateFilter, QLNoOpSortCriteria, QLDelegateList> {
   @Override
-  @AuthRule(permissionType = PermissionAttribute.PermissionType.LOGGED_IN)
+  @AuthRule(permissionType = PermissionAttribute.PermissionType.MANAGE_DELEGATES)
   protected QLDelegateList fetchConnection(List<QLDelegateFilter> qlDelegateFilters,
       QLPageQueryParameters pageQueryParameters, List<QLNoOpSortCriteria> sortCriteria) {
     Query<Delegate> delegateQuery = populateFilters(wingsPersistence, qlDelegateFilters, Delegate.class, true)

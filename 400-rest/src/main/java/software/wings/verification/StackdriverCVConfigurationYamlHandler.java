@@ -1,3 +1,10 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.verification;
 
 import io.harness.exception.WingsException;
@@ -26,6 +33,7 @@ public class StackdriverCVConfigurationYamlHandler extends LogsCVConfigurationYa
     yaml.setHostnameField(stackdriverCVConfiguration.getHostnameField());
     yaml.setMessageField(stackdriverCVConfiguration.getMessageField());
     yaml.setLogsConfiguration(stackdriverCVConfiguration.isLogsConfiguration());
+    yaml.setProjectId(stackdriverCVConfiguration.getProjectId());
     return yaml;
   }
 
@@ -43,6 +51,7 @@ public class StackdriverCVConfigurationYamlHandler extends LogsCVConfigurationYa
     bean.setHostnameField(yaml.getHostnameField());
     bean.setMessageField(yaml.getMessageField());
     bean.setLogsConfiguration(yaml.isLogsConfiguration());
+    bean.setProjectId(yaml.getProjectId());
 
     saveToDatabase(bean, previous, appId);
 

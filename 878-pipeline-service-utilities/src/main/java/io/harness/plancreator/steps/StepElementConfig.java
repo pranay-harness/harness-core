@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.plancreator.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -13,8 +20,6 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
-import io.harness.template.yaml.TemplateLinkConfig;
-import io.harness.validation.OneOfSet;
 import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.when.beans.StepWhenCondition;
 import io.harness.yaml.core.StepSpecType;
@@ -41,7 +46,6 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("stepElementConfig")
-@OneOfSet(fields = {"type, stepSpecType, timeout, failureStrategies, when, delegateSelectors", "template"})
 @OwnedBy(CDC)
 // TODO this should go to yaml commons
 @TargetModule(HarnessModule._884_PMS_COMMONS)
@@ -73,8 +77,6 @@ public class StepElementConfig {
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
   @ApiModelProperty(hidden = true)
   ParameterField<List<String>> delegateSelectors;
-
-  TemplateLinkConfig template;
 
   @Builder
   public StepElementConfig(String uuid, String identifier, String name, String description,

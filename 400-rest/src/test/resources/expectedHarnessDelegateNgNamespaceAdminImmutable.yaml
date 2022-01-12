@@ -1,0 +1,234 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: test-namespace
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: harness-namespace-admin
+  namespace: test-namespace
+rules:
+  - apiGroups:
+    - '*'
+    resources:
+    - '*'
+    verbs:
+    - '*'
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: test-namespace-harness-namespace-admin
+  namespace: test-namespace
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: test-namespace
+roleRef:
+  kind: Role
+  name: harness-namespace-admin
+  apiGroup: rbac.authorization.k8s.io
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: harness-delegate-proxy
+  namespace: test-namespace
+type: Opaque
+data:
+  # Enter base64 encoded username and password, if needed
+  PROXY_USER: ""
+  PROXY_PASSWORD: ""
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    harness.io/name: harness-delegate
+  name: harness-delegate
+  namespace: test-namespace
+spec:
+  revisionHistoryLimit: 3
+  replicas: 8
+  selector:
+    matchLabels:
+      harness.io/name: harness-delegate
+  template:
+    metadata:
+      labels:
+        harness.io/name: harness-delegate
+    spec:
+      containers:
+      - image: harness/delegate:latest
+        imagePullPolicy: Always
+        name: harness-delegate-instance
+        resources:
+          limits:
+            cpu: "0.5"
+            memory: "2048Mi"
+          requests:
+            cpu: "0.5"
+            memory: "2048Mi"
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3460
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3460
+            scheme: HTTP
+          initialDelaySeconds: 240
+          periodSeconds: 10
+          failureThreshold: 2
+        env:
+        - name: JAVA_OPTS
+          value: "-Xms64M"
+        - name: ACCOUNT_ID
+          value: ACCOUNT_ID
+        - name: ACCOUNT_SECRET
+          value: ACCOUNT_KEY
+        - name: MANAGER_HOST_AND_PORT
+          value: https://localhost:9090
+        - name: DEPLOY_MODE
+          value: KUBERNETES
+        - name: DELEGATE_NAME
+          value: harness-delegate
+        - name: DELEGATE_TYPE
+          value: "KUBERNETES"
+        - name: PROXY_HOST
+          value: ""
+        - name: PROXY_PORT
+          value: ""
+        - name: PROXY_SCHEME
+          value: ""
+        - name: NO_PROXY
+          value: ""
+        - name: PROXY_MANAGER
+          value: "true"
+        - name: PROXY_USER
+          valueFrom:
+            secretKeyRef:
+              name: harness-delegate-proxy
+              key: PROXY_USER
+        - name: PROXY_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: harness-delegate-proxy
+              key: PROXY_PASSWORD
+        - name: POLL_FOR_TASKS
+          value: "false"
+        - name: ENABLE_CE
+          value: "false"
+        - name: GRPC_SERVICE_ENABLED
+          value: "false"
+        - name: GRPC_SERVICE_CONNECTOR_PORT
+          value: "0"
+        - name: DELEGATE_NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: DELEGATE_DESCRIPTION
+          value: "desc"
+        - name: DELEGATE_TAGS
+          value: ""
+        - name: DELEGATE_ORG_IDENTIFIER
+          value: "9S5HMP0xROugl3_QgO62rQO"
+        - name: DELEGATE_PROJECT_IDENTIFIER
+          value: "9S5HMP0xROugl3_QgO62rQP"
+        - name: INIT_SCRIPT
+          value: ""
+        - name: NEXT_GEN
+          value: "true"
+        - name: CLIENT_TOOLS_DOWNLOAD_DISABLED
+          value: "true"
+      restartPolicy: Always
+
+
+---
+
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: upgrader-cronjob
+  namespace: test-namespace
+rules:
+  - apiGroups: ["batch", "apps", "extensions"]
+    resources: ["cronjobs"]
+    verbs: ["get", "list", "watch", "update", "patch"]
+  - apiGroups: ["extensions", "apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch", "create", "update", "patch"]
+
+---
+
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: harness-delegate-upgrader-cronjob
+  namespace: test-namespace
+subjects:
+  - kind: ServiceAccount
+    name: upgrader-cronjob-sa
+    namespace: test-namespace
+roleRef:
+  kind: Role
+  name: upgrader-cronjob
+  apiGroup: ""
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: upgrader-cronjob-sa
+  namespace: test-namespace
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    harness.io/name: harness-delegate-upgrader-job
+  name: harness-delegate-upgrader-job
+  namespace: test-namespace
+spec:
+  schedule: "0 */1 * * *"
+  concurrencyPolicy: Forbid
+  startingDeadlineSeconds: 20
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: upgrader-cronjob-sa
+          containers:
+          - image: harness/upgrader:latest
+            name: upgrader
+            imagePullPolicy: Always
+            env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: ACCOUNT_ID
+              value: ACCOUNT_ID
+            - name: ACCOUNT_SECRET
+              value: ACCOUNT_KEY
+            - name: MANAGER_HOST_AND_PORT
+              value: https://localhost:9090
+            - name: DELEGATE_NAME
+              value: harness-delegate
+          restartPolicy: Never

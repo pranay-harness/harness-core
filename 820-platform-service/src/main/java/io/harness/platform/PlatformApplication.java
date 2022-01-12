@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.platform;
 
 import static io.harness.AuthorizationServiceHeader.BEARER;
@@ -5,8 +12,8 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
+import static io.harness.platform.PlatformConfiguration.RESOURCE_GROUP_RESOURCES;
 import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombinedResourceClasses;
-import static io.harness.platform.PlatformConfiguration.getResourceGroupServiceResourceClasses;
 import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
 import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
 import static io.harness.platform.resourcegroup.ResourceGroupServiceSetup.RESOURCE_GROUP_SERVICE;
@@ -38,6 +45,7 @@ import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
 import io.harness.security.annotations.PublicApi;
+import io.harness.swagger.SwaggerBundleConfigurationFactory;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
 import io.harness.token.TokenClientModule;
@@ -225,7 +233,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     OpenAPI oas = new OpenAPI();
     Info info =
         new Info()
-            .title("CD NextGen API Reference")
+            .title("Platform Service API Reference")
             .description(
                 "This is the Open Api Spec 3 for the Platform Service. This is under active development. Beware of the breaking change with respect to the generated code stub")
             .termsOfService("https://harness.io/terms-of-use/")
@@ -259,8 +267,10 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   }
 
   public SwaggerBundleConfiguration getSwaggerConfiguration(PlatformConfiguration appConfig) {
-    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration = new SwaggerBundleConfiguration();
-    String resourcePackage = String.join(",", getUniquePackages(getPlatformServiceCombinedResourceClasses(appConfig)));
+    Collection<Class<?>> classes = getPlatformServiceCombinedResourceClasses(appConfig);
+    SwaggerBundleConfiguration defaultSwaggerBundleConfiguration =
+        SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration(classes);
+    String resourcePackage = String.join(",", getUniquePackages(classes));
     defaultSwaggerBundleConfiguration.setResourcePackage(resourcePackage);
     defaultSwaggerBundleConfiguration.setSchemes(new String[] {"https", "http"});
     defaultSwaggerBundleConfiguration.setHost(appConfig.hostname);
@@ -330,9 +340,6 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
   }
 
   public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
-    return getResourceGroupServiceResourceClasses()
-        .stream()
-        .filter(x -> x.isAnnotationPresent(Tag.class))
-        .collect(Collectors.toList());
+    return RESOURCE_GROUP_RESOURCES.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.api;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -277,6 +284,44 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = ABHIJITH)
   @Category(UnitTests.class)
+  public void testGetServiceInstanceMetricPath() throws IOException, IllegalAccessException {
+    String textLoad = Resources.toString(
+        AppDynamicsServiceimplTest.class.getResource("/appd/appd_file_structure_dsl_sample_output.json"),
+        Charsets.UTF_8);
+    JsonUtils.asObject(textLoad, OnboardingResponseDTO.class);
+
+    DataCollectionRequest request = AppDynamicFetchFileStructureRequest.builder()
+                                        .appName("appName")
+                                        .path("baseFolder|tier|metricPath")
+                                        .type(DataCollectionRequestType.APPDYNAMICS_FETCH_METRIC_STRUCTURE)
+                                        .build();
+
+    OnboardingRequestDTO onboardingRequestDTO =
+        OnboardingRequestDTO.builder()
+            .dataCollectionRequest(request)
+            .connectorIdentifier(connectorIdentifier)
+            .accountId(builderFactory.getContext().getProjectParams().getAccountIdentifier())
+            .tracingId("tracingId")
+            .orgIdentifier(builderFactory.getContext().getProjectParams().getOrgIdentifier())
+            .projectIdentifier(builderFactory.getContext().getProjectParams().getProjectIdentifier())
+            .build();
+
+    OnboardingService mockOnboardingService = mock(OnboardingService.class);
+    FieldUtils.writeField(appDynamicsService, "onboardingService", mockOnboardingService, true);
+    when(mockOnboardingService.getOnboardingResponse(
+             eq(builderFactory.getContext().getAccountId()), eq(onboardingRequestDTO)))
+        .thenReturn(JsonUtils.asObject(textLoad, OnboardingResponseDTO.class));
+
+    String serviceInstanceMetricPath =
+        appDynamicsService.getServiceInstanceMetricPath(builderFactory.getContext().getProjectParams(),
+            connectorIdentifier, "appName", "baseFolder", "tier", "metricPath", "tracingId");
+
+    assertThat(serviceInstanceMetricPath).isEqualTo("Individual Nodes|*|metricPath");
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
   public void testGetMetricData() throws IOException, IllegalAccessException {
     final List<MetricPackDTO> metricPacks =
         metricPackService.getMetricPacks(DataSourceType.APP_DYNAMICS, accountId, orgIdentifier, projectIdentifier);
@@ -291,7 +336,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
                                         .endTime(builderFactory.getClock().instant())
                                         .startTime(builderFactory.getClock().instant().minus(Duration.ofHours(1)))
                                         .metricPath("baseFolder|tier|metricPath")
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO =
@@ -320,7 +365,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
     assertThat(appdynamicsMetricDataResponse.getEndTime())
         .isEqualTo(builderFactory.getClock().instant().toEpochMilli());
     assertThat(appdynamicsMetricDataResponse.getDataPoints().size()).isEqualTo(4);
-    assertThat(appdynamicsMetricDataResponse.getDataPoints().get(0).getTimestamp()).isEqualTo(1616754300000L);
+    assertThat(appdynamicsMetricDataResponse.getDataPoints().get(0).getTimestamp()).isEqualTo(1595760660000L);
     assertThat(appdynamicsMetricDataResponse.getDataPoints().get(0).getValue()).isEqualTo(233.0);
   }
 
@@ -341,7 +386,7 @@ public class AppDynamicsServiceimplTest extends CvNextGenTestBase {
                                         .endTime(builderFactory.getClock().instant())
                                         .startTime(builderFactory.getClock().instant().minus(Duration.ofHours(1)))
                                         .metricPath("baseFolder|tier|metricPath")
-                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_METRIC_DATA)
+                                        .type(DataCollectionRequestType.APPDYNAMICS_GET_SINGLE_METRIC_DATA)
                                         .build();
 
     OnboardingRequestDTO onboardingRequestDTO =

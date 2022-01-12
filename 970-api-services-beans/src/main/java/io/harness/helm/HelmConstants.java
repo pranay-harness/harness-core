@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -22,6 +29,7 @@ public final class HelmConstants {
   public static final String HELM_COMMAND_FLAG_PLACEHOLDER = "${COMMAND_FLAGS}";
   public static final String ADD_COMMAND_FOR_REPOSITORY = "helm repo add command for repository ";
   public static final String REPO_NAME = "${REPO_NAME}";
+  public static final String HELM_CACHE_HOME_PLACEHOLDER = "${HELM_CACHE_HOME}";
   public static final String REPO_URL = "${REPO_URL}";
   public static final String USERNAME = "${USERNAME}";
   public static final String PASSWORD = "${PASSWORD}";
@@ -29,6 +37,7 @@ public final class HelmConstants {
   public static final String WORKING_DIR_BASE = "./repository/helm-values/";
   public static final String VALUES_YAML = "values.yaml";
   public static final String CHARTS_YAML_KEY = "Chart.yaml";
+  public static final String CHART_VERSION = "${CHART_VERSION}";
 
   // Add more command types as needed
   enum CommandType { REPO_ADD, REPO_UPDATE }
@@ -107,6 +116,10 @@ public final class HelmConstants {
     public static final String HELM_VERSION_COMMAND_TEMPLATE = "${HELM_PATH} version --short ${COMMAND_FLAGS}";
     public static final String HELM_FETCH_ALL_VERSIONS_COMMAND_TEMPLATE =
         "${HELM_PATH} search repo ${REPO_NAME}/${CHART_NAME} -l --devel --max-col-width 300";
+    public static final String HELM_REPO_FLAGS = " --repository-config ${HELM_CACHE_HOME}/repo-${REPO_NAME}.yaml";
+    public static final String HELM_CACHE_HOME = "XDG_CACHE_HOME";
+    public static final String HELM_CACHE_HOME_PATH = "${HELM_CACHE_HOME}/repo-${REPO_NAME}";
+    public static final String HELM_CHART_VERSION_FLAG = " --version ${CHART_VERSION}";
 
     private V3Commands() {
       throw new UnsupportedOperationException("This is a utility class and cannot be instantiated");
@@ -135,4 +148,12 @@ public final class HelmConstants {
       + "#\n"
       + "# ---\n"
       + "namespace : ${NAMESPACE}\n";
+
+  public class ReleaseRecordConstants {
+    public static final String NAME = "NAME";
+    public static final String REVISION = "REVISION";
+    public static final String STATUS = "STATUS";
+    public static final String CHART = "CHART";
+    public static final String NAMESPACE = "NAMESPACE";
+  }
 }

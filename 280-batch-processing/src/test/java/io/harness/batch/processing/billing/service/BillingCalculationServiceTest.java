@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.billing.service;
 
 import static io.harness.ccm.commons.constants.InstanceMetaDataConstants.GCE_STORAGE_CLASS;
@@ -579,9 +586,9 @@ public class BillingCalculationServiceTest extends CategoryTest {
     BillingData billingAmount = billingCalculationService.getInstanceBillingAmount(
         instanceData, utilizationData, 86400.0, INSTANCE_START_TIMESTAMP, INSTANCE_STOP_TIMESTAMP);
     Assertions.assertThat(billingAmount.getBillingAmountBreakup().getBillingAmount()).isEqualTo(new BigDecimal("24.0"));
-    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.ZERO);
-    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(BigDecimal.ZERO);
+    Assertions.assertThat(billingAmount.getIdleCostData().getIdleCost()).isEqualTo(BigDecimal.valueOf(12.0));
+    Assertions.assertThat(billingAmount.getIdleCostData().getMemoryIdleCost()).isEqualTo(BigDecimal.valueOf(6.0));
+    Assertions.assertThat(billingAmount.getIdleCostData().getCpuIdleCost()).isEqualTo(BigDecimal.valueOf(6.0));
     Assertions.assertThat(billingAmount.getUsageDurationSeconds()).isEqualTo(HALF_DAY_SECONDS.doubleValue());
     Assertions.assertThat(billingAmount.getCpuUnitSeconds()).isEqualTo(320 * HALF_DAY_SECONDS);
     Assertions.assertThat(billingAmount.getMemoryMbSeconds()).isEqualTo(2048 * HALF_DAY_SECONDS);

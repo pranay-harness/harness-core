@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -238,6 +245,20 @@ public class SettingValidationService {
         return ValidationResult.builder().valid(false).errorMessage(ExceptionUtils.getMessage(ex)).build();
       }
     }
+  }
+
+  public boolean validateConnectorName(String name, String accountId, String appId, String envId) {
+    SettingAttribute sa = wingsPersistence.createQuery(SettingAttribute.class)
+                              .filter(SettingAttributeKeys.accountId, accountId)
+                              .filter("appId", appId)
+                              .filter(SettingAttributeKeys.envId, envId)
+                              .filter(SettingAttributeKeys.name, name)
+                              .filter(SettingAttributeKeys.category, SettingAttribute.SettingCategory.CONNECTOR)
+                              .get();
+    if (sa != null) {
+      return false;
+    }
+    return true;
   }
 
   public boolean validate(SettingAttribute settingAttribute) {

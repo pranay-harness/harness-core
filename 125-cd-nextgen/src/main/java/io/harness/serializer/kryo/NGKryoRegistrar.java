@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -13,10 +20,17 @@ import io.harness.cdng.artifact.bean.yaml.EcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.GcrArtifactConfig;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.environment.yaml.EnvironmentYaml;
+import io.harness.cdng.helm.HelmDeployStepInfo;
+import io.harness.cdng.helm.HelmDeployStepParams;
+import io.harness.cdng.helm.NativeHelmStepPassThroughData;
+import io.harness.cdng.helm.rollback.HelmRollbackStepInfo;
+import io.harness.cdng.helm.rollback.HelmRollbackStepParams;
 import io.harness.cdng.infra.InfrastructureDef;
 import io.harness.cdng.infra.beans.InfraUseFromStage;
+import io.harness.cdng.infra.steps.InfraSectionStepParameters;
 import io.harness.cdng.infra.steps.InfraStepParameters;
 import io.harness.cdng.infra.yaml.K8SDirectInfrastructure;
 import io.harness.cdng.infra.yaml.K8sGcpInfrastructure;
@@ -40,6 +54,7 @@ import io.harness.cdng.k8s.beans.GitFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.HelmValuesFetchResponsePassThroughData;
 import io.harness.cdng.k8s.beans.K8sExecutionPassThroughData;
 import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
+import io.harness.cdng.manifest.ManifestConfigType;
 import io.harness.cdng.manifest.yaml.BitbucketStore;
 import io.harness.cdng.manifest.yaml.GcsStoreConfig;
 import io.harness.cdng.manifest.yaml.GitLabStore;
@@ -47,6 +62,7 @@ import io.harness.cdng.manifest.yaml.GitStore;
 import io.harness.cdng.manifest.yaml.GithubStore;
 import io.harness.cdng.manifest.yaml.HttpStoreConfig;
 import io.harness.cdng.manifest.yaml.ManifestConfig;
+import io.harness.cdng.manifest.yaml.ManifestConfigWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSetWrapper;
 import io.harness.cdng.manifest.yaml.ManifestOverrideSets;
 import io.harness.cdng.manifest.yaml.ManifestsOutcome;
@@ -58,6 +74,7 @@ import io.harness.cdng.manifest.yaml.kinds.KustomizePatchesManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftManifest;
 import io.harness.cdng.manifest.yaml.kinds.OpenshiftParamManifest;
 import io.harness.cdng.manifest.yaml.kinds.ValuesManifest;
+import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.cdng.pipeline.PipelineInfrastructure;
 import io.harness.cdng.pipeline.beans.DeploymentStageStepParameters;
@@ -71,8 +88,10 @@ import io.harness.cdng.service.beans.NativeHelmServiceSpec;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.service.beans.ServiceConfigOutcome;
 import io.harness.cdng.service.beans.ServiceDefinition;
+import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.cdng.service.beans.ServiceUseFromStage;
 import io.harness.cdng.service.beans.ServiceUseFromStage.Overrides;
+import io.harness.cdng.service.beans.ServiceYaml;
 import io.harness.cdng.service.beans.StageOverridesConfig;
 import io.harness.cdng.service.steps.ServiceStepParameters;
 import io.harness.cdng.tasks.manifestFetch.step.ManifestFetchOutcome;
@@ -165,10 +184,24 @@ public class NGKryoRegistrar implements KryoRegistrar {
     kryo.register(HelmValuesFetchResponsePassThroughData.class, 12544);
     kryo.register(StepExceptionPassThroughData.class, 12545);
 
+    kryo.register(HelmDeployStepInfo.class, 13001);
+    kryo.register(HelmDeployStepParams.class, 13002);
+    kryo.register(NativeHelmStepPassThroughData.class, 13003);
+    kryo.register(HelmRollbackStepInfo.class, 13004);
+    kryo.register(HelmRollbackStepParams.class, 13005);
+
     kryo.register(StoreConfigWrapper.class, 8045);
 
     kryo.register(K8sExecutionPassThroughData.class, 12546);
     kryo.register(KustomizePatchesManifest.class, 12549);
     kryo.register(CDAccountExecutionMetadata.class, 12550);
+
+    kryo.register(ServiceDefinitionType.class, 12551);
+    kryo.register(InfraSectionStepParameters.class, 12552);
+    kryo.register(ServiceYaml.class, 12553);
+    kryo.register(SidecarArtifactWrapper.class, 12554);
+    kryo.register(ManifestConfigWrapper.class, 12555);
+    kryo.register(StoreConfigType.class, 12556);
+    kryo.register(ManifestConfigType.class, 12557);
   }
 }

@@ -1,9 +1,18 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
+// dependencies: lodash3
+
 // The number of approvals required to merge.
 let numApprovalsRequired = 1;
 
-if (review.pullRequest.title.startsWith('[CDP') ||
-    review.pullRequest.title.startsWith('[CVNG') ||
-    review.pullRequest.title.startsWith('[CV')) {
+let re = /(feat|fix|techdebt).*(:).*(\[CDP|\[PIE|\[PL)/gi;
+
+if (review.pullRequest.title.match(re)) {
   numApprovalsRequired = 2;
 }
 
@@ -14,17 +23,17 @@ let numApprovals = _.where(approvals, 'approved').length;
 const numRejections = _.where(approvals, 'changes_requested').length;
 
 const discussionBlockers = _(review.discussions)
-  .where({resolved: false})
-  .pluck('participants')
-  .flatten()
-  .where({resolved: false})
-  .map(user => _.pick(user, 'username'))
-  .value();
+                               .where({resolved: false})
+                               .pluck('participants')
+                               .flatten()
+                               .reject(
+                                   participant => participant.username ===
+                                       review.pullRequest.author.username)
+                               .where({resolved: false})
+                               .map(user => _.pick(user, 'username'))
+                               .value();
 
-let pendingReviewers = _(discussionBlockers)
-  .map(user => _.pick(user, 'username'))
-  .value();
-
+let pendingReviewers = [];
 let required = _.pluck(review.pullRequest.assignees, 'username');
 
 _.pull(required, review.pullRequest.author.username);
@@ -52,6 +61,10 @@ let numUnreviewedFiles = 0;
 let fileBlockers = [];
 _.forEach(review.files, function(file) {
   const lastRev = _(file.revisions).reject('obsolete').last();
+  if (!lastRev) {
+    // When there are reverted files it seems that all revisions on it are obsolete, so break early. 
+    return;
+  }
   const reviewers = _(lastRev.reviewers)
     .pluck('username')
     .without(review.pullRequest.author.username)
@@ -68,12 +81,9 @@ _.forEach(review.files, function(file) {
   );
 });
 
-const completed =
-      !tooOld &&
-      numUnreviewedFiles == 0 &&
-      pendingReviewers.length == 0 &&
-      numApprovals >= numApprovalsRequired &&
-      Object.keys(requestedTeams).length == 0;
+const completed = !tooOld && numUnreviewedFiles === 0 &&
+    pendingReviewers.length === 0 && numApprovals >= numApprovalsRequired &&
+    discussionBlockers.length === 0 && Object.keys(requestedTeams).length === 0;
 
 const description = (completed ? "✓" :
   (tooOld ? `Some of the checks are too old. ` : '') +
@@ -85,6 +95,4 @@ const description = (completed ? "✓" :
 
 const shortDescription = (completed ? "✓" : "✗");
 
-return {
-  completed: completed, description, shortDescription, pendingReviewers
-};
+return {completed, description, shortDescription, pendingReviewers};

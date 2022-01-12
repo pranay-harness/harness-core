@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.k8s.kustomize;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -70,7 +77,7 @@ public class KustomizeTaskHelper {
 
   @NotNull
   public List<FileData> buildForApply(@Nonnull String kustomizeBinaryPath, String pluginRootDir,
-      @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply, boolean useLatestKustomizeVersion,
+      @Nonnull String manifestFilesDirectory, @NotEmpty List<String> filesToApply, boolean useVarSupportForKustomize,
       List<String> kustomizePatchesFiles, LogCallback executionLogCallback) {
     if (isEmpty(filesToApply)) {
       throw new InvalidRequestException("Apply files can't be empty", USER);
@@ -78,7 +85,7 @@ public class KustomizeTaskHelper {
     if (filesToApply.size() > 1) {
       throw new InvalidRequestException("Apply with Kustomize is supported for single file only", USER);
     }
-    if (useLatestKustomizeVersion) {
+    if (useVarSupportForKustomize) {
       String kustomizePath = manifestFilesDirectory + '/' + filesToApply.get(0);
       k8sTaskHelperBase.savingPatchesToDirectory(kustomizePath, kustomizePatchesFiles, executionLogCallback);
     }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.secret;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -24,9 +31,11 @@ public class ConfigSecretResolver {
   public void resolveSecret(Object config) throws IOException {
     for (Field field : FieldUtils.getFieldsListWithAnnotation(config.getClass(), ConfigSecret.class)) {
       try {
+        log.info("Resolving secret in field '{}'...", field);
+
         if (Modifier.isFinal(field.getModifiers())) {
-          throw new ConfigSecretException(
-              String.format("Annotation '%s' can't be used on final fields", ConfigSecret.class.getSimpleName()));
+          throw new ConfigSecretException(String.format(
+              "Annotation '%s' can't be used on final field '%s'", ConfigSecret.class.getSimpleName(), field));
         }
 
         Object fieldValue = FieldUtils.readField(field, config, true);

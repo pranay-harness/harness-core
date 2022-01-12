@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.configuration;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -103,13 +110,13 @@ public class InstallUtilsTest extends CategoryTest implements MockableTestMixin 
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", false);
       assertThat(InstallUtils.getScmDownloadUrl(delegateConfiguration))
           .isEqualTo(
-              "https://app.harness.io/storage/harness-download/harness-scm/release/72f01538/bin/linux/amd64/scm");
+              "https://app.harness.io/storage/harness-download/harness-scm/release/0e23b6f1/bin/linux/amd64/scm");
 
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", false);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", true);
       assertThat(InstallUtils.getScmDownloadUrl(delegateConfiguration))
           .isEqualTo(
-              "https://app.harness.io/storage/harness-download/harness-scm/release/72f01538/bin/darwin/amd64/scm");
+              "https://app.harness.io/storage/harness-download/harness-scm/release/0e23b6f1/bin/darwin/amd64/scm");
     } finally {
       setStaticFieldValue(SystemUtils.class, "IS_OS_WINDOWS", win);
       setStaticFieldValue(SystemUtils.class, "IS_OS_MAC", mac);

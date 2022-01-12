@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service;
 
 import static io.harness.annotations.dev.HarnessModule._970_RBAC_CORE;
@@ -1027,7 +1034,6 @@ public class UserServiceTest extends WingsBaseTest {
     userService.inviteUsers(userInvite);
     verify(wingsPersistence).save(any(UserInvite.class));
     verify(wingsPersistence).saveAndGet(eq(User.class), any(User.class));
-    verify(cache).remove(USER_ID);
     verify(auditServiceHelper, times(userInvite.getEmails().size()))
         .reportForAuditingUsingAccountId(eq(ACCOUNT_ID), eq(null), any(UserInvite.class), eq(Type.CREATE));
 

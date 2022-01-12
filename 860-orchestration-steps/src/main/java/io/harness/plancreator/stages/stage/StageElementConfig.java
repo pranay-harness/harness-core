@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.plancreator.stages.stage;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -11,6 +18,8 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.EntityName;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
+import io.harness.template.yaml.TemplateLinkConfig;
+import io.harness.validation.OneOfSet;
 import io.harness.validator.NGRegexValidatorConstants;
 import io.harness.when.beans.StageWhenCondition;
 import io.harness.yaml.core.failurestrategy.FailureStrategyConfig;
@@ -38,6 +47,8 @@ import org.springframework.data.annotation.TypeAlias;
 @TypeAlias("stageElementConfig")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@OneOfSet(fields = {"skipCondition, when, failureStrategies, type, stageType, variables, tags", "template"},
+    requiredFieldNames = {"type", "template"})
 public class StageElementConfig {
   @JsonProperty(YamlNode.UUID_FIELD_NAME)
   @Getter(onMethod_ = { @ApiModelProperty(hidden = true) })
@@ -57,10 +68,11 @@ public class StageElementConfig {
   List<FailureStrategyConfig> failureStrategies;
   List<NGVariable> variables;
   Map<String, String> tags;
-  @NotNull String type;
+  String type;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   StageInfoConfig stageType;
+  TemplateLinkConfig template;
 
   @Builder
   public StageElementConfig(String uuid, String identifier, String name, ParameterField<String> description,

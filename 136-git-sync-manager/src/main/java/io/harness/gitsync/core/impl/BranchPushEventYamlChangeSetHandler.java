@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.core.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -20,6 +27,7 @@ import io.harness.gitsync.common.dtos.GitToHarnessGetFilesStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepRequest;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitConnectivityExceptionHelper;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.helper.YamlGitConfigHelper;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -64,7 +72,8 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
     String repoURL = yamlChangeSetDTO.getRepoUrl();
 
-    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoURL);
+    List<YamlGitConfigDTO> yamlGitConfigDTOList =
+        yamlGitConfigService.getByAccountAndRepo(yamlChangeSetDTO.getAccountId(), repoURL);
     if (yamlGitConfigDTOList.isEmpty()) {
       log.info("Repo {} doesn't exist, ignoring the branch push change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;
@@ -135,6 +144,10 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       return YamlChangeSetStatus.COMPLETED;
     } catch (Exception ex) {
       log.error("Error while processing branch push event {}", yamlChangeSetDTO, ex);
+      String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      if (!gitConnectivityErrorMessage.isEmpty()) {
+        recordConnectivityErrors(yamlChangeSetDTO, gitConnectivityErrorMessage);
+      }
       // Update the g2h status to ERROR
       gitToHarnessProgressService.updateProgressStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProgressStatus.ERROR);
@@ -167,7 +180,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
           gitFileChangeDTO -> gitFileChangeDTOListAsString.append(gitFileChangeDTO.toString()).append(" :::: "));
       log.info(gitFileChangeDTOListAsString.toString());
     } catch (Exception ex) {
-      log.error("Error occurred while perform step : {}", GitToHarnessProcessingStepType.GET_FILES);
+      log.error("Error occurred while perform step : {}" + GitToHarnessProcessingStepType.GET_FILES, ex);
       // Mark step status error
       gitToHarnessProgressService.updateStepStatus(
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProcessingStepStatus.ERROR);
@@ -187,6 +200,11 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .processingCommitId(filesFromDiffResponse.getProcessingCommitId())
         .commitMessage(filesFromDiffResponse.getCommitMessage())
         .build();
+  }
+
+  private void recordConnectivityErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
+    gitSyncErrorService.recordConnectivityError(
+        yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);
   }
 
   private GitToHarnessProcessMsvcStepResponse performBranchSync(GitToHarnessGetFilesStepRequest request) {

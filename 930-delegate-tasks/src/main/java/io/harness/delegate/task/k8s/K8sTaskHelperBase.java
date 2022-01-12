@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -26,6 +33,7 @@ import static io.harness.k8s.model.Release.Status.Failed;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
 import static io.harness.threading.Morpheus.sleep;
 
@@ -44,6 +52,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.time.Duration.ofMinutes;
 import static java.time.Duration.ofSeconds;
 import static java.util.Collections.emptyList;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.EMPTY;
@@ -57,6 +66,7 @@ import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
+import io.harness.connector.task.git.GitDecryptionHelper;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.CEFeatures;
@@ -77,7 +87,6 @@ import io.harness.delegate.expression.DelegateExpressionEvaluator;
 import io.harness.delegate.k8s.kustomize.KustomizeTaskHelper;
 import io.harness.delegate.k8s.openshift.OpenShiftDelegateService;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
-import io.harness.delegate.task.git.GitDecryptionHelper;
 import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.helm.HelmCommandFlag;
 import io.harness.delegate.task.helm.HelmTaskHelperBase;
@@ -210,6 +219,7 @@ import me.snowdrop.istio.api.networking.v1alpha3.VirtualService;
 import me.snowdrop.istio.api.networking.v1alpha3.VirtualServiceBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -227,9 +237,11 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @OwnedBy(CDP)
 public class K8sTaskHelperBase {
   public static final Set<String> openshiftResources = ImmutableSet.of("Route");
-  public static final String kustomizeFileName = "kustomization.yaml";
+  public static final String kustomizeFileNameYaml = "kustomization.yaml";
+  public static final String kustomizeFileNameYml = "kustomization.yml";
   public static final String patchFieldName = "patchesStrategicMerge";
   public static final String patchYaml = "patches-%d.yaml";
+  public static final String kustomizePatchesDirPrefix = "kustomizePatches-";
 
   @Inject private TimeLimiter timeLimiter;
   @Inject private KubernetesContainerService kubernetesContainerService;
@@ -1721,9 +1733,13 @@ public class K8sTaskHelperBase {
     return valuesFilesOptionsBuilder.toString();
   }
 
-  static JSONObject readAndConvertYamlToJson(String yamlFilePath) throws IOException {
+  public static JSONObject readAndConvertYamlToJson(String yamlFilePath, LogCallback executionLogCallback)
+      throws IOException {
     Yaml yaml = new Yaml();
     Map<String, Object> obj = yaml.load(getYaml(yamlFilePath));
+    if (isNull(obj)) {
+      executionLogCallback.saveExecutionLog(color("File is Empty in the path " + yamlFilePath, Yellow, Bold), WARN);
+    }
     log.debug("Returning json of yaml file  ", yamlFilePath);
     return new JSONObject(obj);
   }
@@ -1735,7 +1751,8 @@ public class K8sTaskHelperBase {
 
   public String convertJsonToYaml(JSONObject jsonObject) {
     String prettyJSONString = jsonObject.toString();
-    Yaml yaml = new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+    Yaml yaml =
+        new Yaml(new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
     Map<String, Object> map = yaml.load(prettyJSONString);
     return yaml.dump(map);
   }
@@ -1751,29 +1768,39 @@ public class K8sTaskHelperBase {
     return patchList;
   }
 
-  public void updateKustomizationYaml(String kustomizePath, JSONArray patchList) throws IOException {
-    String kustomizationYamlPath = kustomizePath + '/' + kustomizeFileName;
-
-    JSONObject kustomizationJson = readAndConvertYamlToJson(kustomizationYamlPath);
+  public void updateKustomizationYaml(String kustomizePath, JSONArray patchList, LogCallback executionLogCallback)
+      throws IOException {
+    String kustomizationYamlPath = Paths.get(kustomizePath, kustomizeFileNameYaml).toString();
+    String kustomizationYmlPath = Paths.get(kustomizePath, kustomizeFileNameYml).toString();
+    String kustomizationPath = new File(kustomizationYmlPath).exists() ? kustomizationYmlPath : kustomizationYamlPath;
+    JSONObject kustomizationJson = readAndConvertYamlToJson(kustomizationPath, executionLogCallback);
 
     JSONArray updatedPatchList = updatePatchList(kustomizationJson, patchList);
     kustomizationJson.put(patchFieldName, updatedPatchList);
+    JSONObject patchesStrategicMerge = new JSONObject();
+    patchesStrategicMerge.put(patchFieldName, updatedPatchList);
+    executionLogCallback.saveExecutionLog(
+        color("PatchesStrategicMerge Field in Kustomization Yaml after update :\n", White, Bold));
+    executionLogCallback.saveExecutionLog(convertJsonToYaml(patchesStrategicMerge));
 
     String newKustomize = convertJsonToYaml(kustomizationJson);
-    FileIo.deleteFileIfExists(kustomizationYamlPath);
-    FileIo.writeUtf8StringToFile(kustomizationYamlPath, newKustomize);
+    FileIo.deleteFileIfExists(kustomizationPath);
+    FileIo.writeUtf8StringToFile(kustomizationPath, newKustomize);
   }
 
   public JSONArray writePatchesToDirectory(String kustomizePath, List<String> patchesFiles) throws IOException {
     StringBuilder patchesFilesOptionsBuilder = new StringBuilder(128);
     JSONArray patchList = new JSONArray();
+    String kustomizePatchesDir = kustomizePatchesDirPrefix + RandomStringUtils.randomAlphanumeric(4);
+    Path outputTemporaryDir = Files.createDirectories(Paths.get(kustomizePath, kustomizePatchesDir));
 
     for (int i = 0; i < patchesFiles.size(); i++) {
       validateValuesFileContents(patchesFiles.get(i));
       String patchesFileName = format(patchYaml, i);
-      FileIo.writeUtf8StringToFile(kustomizePath + '/' + patchesFileName, patchesFiles.get(i));
+      FileIo.writeUtf8StringToFile(
+          Paths.get(outputTemporaryDir.toString(), patchesFileName).toString(), patchesFiles.get(i));
       patchesFilesOptionsBuilder.append(" -f ").append(patchesFileName);
-      patchList.put(patchesFileName);
+      patchList.put(Paths.get(kustomizePatchesDir, patchesFileName));
     }
 
     log.info("Patches file options: " + patchesFilesOptionsBuilder.toString());
@@ -1782,16 +1809,20 @@ public class K8sTaskHelperBase {
 
   public void savingPatchesToDirectory(
       String kustomizePath, List<String> patchesFiles, LogCallback executionLogCallback) {
+    executionLogCallback.saveExecutionLog("\nUpdating patchesStrategicMerge in Kustomization Yaml :\n");
+
     if (isEmpty(patchesFiles)) {
-      executionLogCallback.saveExecutionLog("No Patches files found. Skipping kustomization.yaml updation");
+      executionLogCallback.saveExecutionLog("\nNo Patches files found. Skipping kustomization.yaml updation\n");
       return;
     }
 
     try {
       JSONArray patchList = writePatchesToDirectory(kustomizePath, patchesFiles);
-      updateKustomizationYaml(kustomizePath, patchList);
+      updateKustomizationYaml(kustomizePath, patchList, executionLogCallback);
     } catch (IOException ioException) {
       log.error("Error in Updating kustomization.yaml " + ioException);
+      throw new IllegalArgumentException(
+          " Unable to find one of 'kustomization.yaml' or 'kustomization.yml'  in directory " + kustomizePath);
     }
   }
 
@@ -1872,8 +1903,8 @@ public class K8sTaskHelperBase {
     }
 
     String releaseHistoryDataString = releaseHistoryPresent(releaseSecret)
-        ? new String(releaseSecret.getData().get(ReleaseHistoryKeyName), UTF_8)
-        : releaseConfigMap.getData().get(ReleaseHistoryKeyName);
+        ? kubernetesContainerService.fetchReleaseHistoryValue(releaseSecret)
+        : kubernetesContainerService.fetchReleaseHistoryValue(releaseConfigMap);
     ReleaseHistory releaseHistory = ReleaseHistory.createFromData(releaseHistoryDataString);
 
     if (isEmpty(releaseHistory.getReleases())) {
@@ -2185,11 +2216,12 @@ public class K8sTaskHelperBase {
     };
   }
 
-  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryData(KubernetesConfig kubernetesConfig, String releaseName) throws IOException {
     return getReleaseHistoryDataK8sClient(kubernetesConfig, releaseName);
   }
 
-  private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName) {
+  private String getReleaseHistoryDataK8sClient(KubernetesConfig kubernetesConfig, String releaseName)
+      throws IOException {
     String releaseHistoryData = null;
     try {
       releaseHistoryData = kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
@@ -2204,21 +2236,22 @@ public class K8sTaskHelperBase {
     return releaseHistoryData;
   }
 
-  public String getReleaseHistoryDataFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryDataFromConfigMap(KubernetesConfig kubernetesConfig, String releaseName)
+      throws IOException {
     return kubernetesContainerService.fetchReleaseHistoryFromConfigMap(kubernetesConfig, releaseName);
   }
 
   public void saveReleaseHistoryInConfigMap(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistoryAsYaml) {
-    kubernetesContainerService.saveReleaseHistoryInConfigMap(kubernetesConfig, releaseName, releaseHistoryAsYaml);
+      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistoryAsYaml) throws IOException {
+    kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistoryAsYaml, false);
   }
 
-  public void saveReleaseHistory(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets) {
+  public void saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
+      boolean storeInSecrets) throws IOException {
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, releaseName, releaseHistory, storeInSecrets);
   }
 
-  public String getReleaseHistoryFromSecret(KubernetesConfig kubernetesConfig, String releaseName) {
+  public String getReleaseHistoryFromSecret(KubernetesConfig kubernetesConfig, String releaseName) throws IOException {
     return kubernetesContainerService.fetchReleaseHistoryFromSecrets(kubernetesConfig, releaseName);
   }
 
@@ -2249,7 +2282,7 @@ public class K8sTaskHelperBase {
       case KUSTOMIZE:
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
 
-        if (k8sDelegateTaskParams.isUseLatestKustomizeVersion()) {
+        if (k8sDelegateTaskParams.isUseVarSupportForKustomize()) {
           String kustomizePath = manifestFilesDirectory + '/' + kustomizeManifest.getKustomizeDirPath();
           savingPatchesToDirectory(kustomizePath, manifestOverrideFiles, executionLogCallback);
         }
@@ -2294,7 +2327,7 @@ public class K8sTaskHelperBase {
         KustomizeManifestDelegateConfig kustomizeManifest = (KustomizeManifestDelegateConfig) manifestDelegateConfig;
         return kustomizeTaskHelper.buildForApply(k8sDelegateTaskParams.getKustomizeBinaryPath(),
             kustomizeManifest.getPluginPath(), manifestFilesDirectory, filesList,
-            k8sDelegateTaskParams.isUseLatestKustomizeVersion(), manifestOverrideFiles, executionLogCallback);
+            k8sDelegateTaskParams.isUseVarSupportForKustomize(), manifestOverrideFiles, executionLogCallback);
 
       default:
         throw new UnsupportedOperationException(
@@ -2424,7 +2457,7 @@ public class K8sTaskHelperBase {
     executionLogCallback.saveExecutionLog(sb.toString());
   }
 
-  private boolean downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,
+  public boolean downloadFilesFromChartRepo(ManifestDelegateConfig manifestDelegateConfig, String destinationDirectory,
       LogCallback logCallback, long timeoutInMillis) {
     if (!(manifestDelegateConfig instanceof HelmChartManifestDelegateConfig)) {
       throw new InvalidArgumentsException(
@@ -2508,7 +2541,7 @@ public class K8sTaskHelperBase {
                              .message("Please install metrics server on your cluster")
                              .reason("couldn't access metrics server")
                              .build());
-        errorSummary += metricsServerCheck.getMessage();
+        errorSummary += metricsServerCheck.getMessage() + ", ";
       }
 
       List<CEK8sDelegatePrerequisite.Rule> ruleList =
@@ -2524,13 +2557,7 @@ public class K8sTaskHelperBase {
                                            .code(0)
                                            .build())
                                 .collect(toList()));
-        errorSummary += "; few permissions are missing.";
-      }
-
-      if (featuresEnabled.contains(CEFeatures.OPTIMIZATION)) {
-        errorDetails.addAll(this.validateLightwingResourceExists(kubernetesConfig));
-
-        errorDetails.addAll(this.validateLightwingResourcePermissions(kubernetesConfig));
+        errorSummary += "few of the visibility permissions are missing, ";
       }
 
       if (!errorDetails.isEmpty()) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -28,6 +35,7 @@ public final class PerpetualTaskType {
   public static final String K8S_INSTANCE_SYNC = "K8S_INSTANCE_SYNC";
   public static final String MANIFEST_COLLECTION_NG = "MANIFEST_COLLECTION_NG";
   public static final String ARTIFACT_COLLECTION_NG = "ARTIFACT_COLLECTION_NG";
+  public static final String NATIVE_HELM_INSTANCE_SYNC = "NATIVE_HELM_INSTANCE_SYNC";
 
   private PerpetualTaskType() {}
 }

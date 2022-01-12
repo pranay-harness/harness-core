@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -24,6 +31,7 @@ import io.harness.perpetualtask.instancesync.AzureWebAppInstanceSyncPerpetualPro
 import io.harness.perpetualtask.instancesync.ContainerInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.CustomDeploymentInstanceSyncTaskParams;
 import io.harness.perpetualtask.instancesync.K8sInstanceSyncPerpetualTaskParams;
+import io.harness.perpetualtask.instancesync.NativeHelmInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.PcfInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.instancesync.SpotinstAmiInstanceSyncPerpetualTaskParams;
 import io.harness.perpetualtask.k8s.watch.K8SWatchTaskExecutor;
@@ -89,6 +97,8 @@ public class PerpetualTaskWorkerModule extends AbstractModule {
         .to(ConnectorHeartbeatPerpetualTaskExecutor.class);
 
     // NG
+    mapBinder.addBinding(NativeHelmInstanceSyncPerpetualTaskParams.class.getSimpleName())
+        .to(NativeHelmInstanceSyncPerpetualTaskExcecutor.class);
     mapBinder.addBinding(K8sInstanceSyncPerpetualTaskParams.class.getSimpleName())
         .to(K8sInstanceSyncPerpetualTaskExecutor.class);
     mapBinder.addBinding(ManifestCollectionTaskParamsNg.class.getSimpleName())

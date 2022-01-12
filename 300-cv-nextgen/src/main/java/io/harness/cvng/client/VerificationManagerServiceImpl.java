@@ -1,8 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.client;
 
 import static io.harness.cvng.beans.DataCollectionType.KUBERNETES;
 
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.change.HarnessCDCurrentGenEventMetadata;
@@ -141,6 +149,12 @@ public class VerificationManagerServiceImpl implements VerificationManagerServic
     return requestExecutor
         .execute(verificationManagerClient.getCDCurrentGenChangeEvents(accountId, harnessApplicationId,
             harnessServiceId, harnessEnvironmentId, startTime.toEpochMilli(), endTime.toEpochMilli()))
+        .getResource();
+  }
+
+  @Override
+  public CVNGPerpetualTaskDTO getPerpetualTaskStatus(String perpetualTaskId) {
+    return requestExecutor.execute(verificationManagerClient.getDataCollectionPerpetualTaskStatus(perpetualTaskId))
         .getResource();
   }
 }

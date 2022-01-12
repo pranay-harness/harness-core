@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.remote.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
@@ -14,10 +22,8 @@ import io.harness.exception.HintException;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
-import java.util.Collections;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
@@ -25,7 +31,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
-@Slf4j
 @RunWith(MockitoJUnitRunner.class)
 public class CEYamlResourceTest extends CategoryTest {
   @Mock private HttpServletRequest mockHttpServletRequest;
@@ -36,12 +41,12 @@ public class CEYamlResourceTest extends CategoryTest {
   @Owner(developers = OwnerRule.UTSAV)
   @Category(UnitTests.class)
   public void testCloudCostK8sClusterSetupThrowsDelegateNAException() throws Exception {
-    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any()))
+    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any(), anyBoolean(), anyBoolean()))
         .thenThrow(new DelegateServiceDriverException(""));
 
     assertThatThrownBy(()
-                           -> ceYamlResource.cloudCostK8sClusterSetup(mockHttpServletRequest, null,
-                               K8sClusterSetupRequest.builder().featuresEnabled(Collections.emptyList()).build()))
+                           -> ceYamlResource.cloudCostK8sClusterSetupV2(mockHttpServletRequest,
+                               "kmpySmUISimoRrJL6NL73w", true, true, K8sClusterSetupRequest.builder().build()))
         .isExactlyInstanceOf(HintException.class)
         .hasMessageContaining("Please make sure that your delegates are connected");
   }
@@ -51,10 +56,11 @@ public class CEYamlResourceTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCloudCostK8sClusterSetup() throws Exception {
     final String YAML_CONTENT = "yaml content";
-    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any())).thenReturn(YAML_CONTENT);
+    when(ceYamlService.unifiedCloudCostK8sClusterYaml(any(), any(), any(), any(), anyBoolean(), anyBoolean()))
+        .thenReturn(YAML_CONTENT);
 
-    final Response response = ceYamlResource.cloudCostK8sClusterSetup(mockHttpServletRequest, null,
-        K8sClusterSetupRequest.builder().featuresEnabled(Collections.emptyList()).build());
+    final Response response = ceYamlResource.cloudCostK8sClusterSetupV2(
+        mockHttpServletRequest, "kmpySmUISimoRrJL6NL73w", true, true, K8sClusterSetupRequest.builder().build());
 
     assertThat(response.getEntity()).isNotNull();
     assertThat(response.getEntity().toString()).isEqualTo(YAML_CONTENT);

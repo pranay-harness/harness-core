@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -103,7 +110,6 @@ import software.wings.api.SpotinstAmiDeploymentInfo;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.arm.ARMOutputVariables;
 import software.wings.api.artifact.ServiceArtifactElement;
 import software.wings.api.artifact.ServiceArtifactElements;
@@ -209,7 +215,6 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.GcpKubernetesInfrastructureMapping;
 import software.wings.beans.GcsFileMetadata;
 import software.wings.beans.GitCommit;
-import software.wings.beans.GitConfig;
 import software.wings.beans.GitFileActivitySummary;
 import software.wings.beans.HarnessTag;
 import software.wings.beans.HarnessTagLink;
@@ -219,7 +224,6 @@ import software.wings.beans.InformationNotification;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureProvisioner;
 import software.wings.beans.InstanaConfig;
-import software.wings.beans.JenkinsConfig;
 import software.wings.beans.JiraConfig;
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.beans.LambdaSpecification;
@@ -275,7 +279,6 @@ import software.wings.beans.alert.Alert;
 import software.wings.beans.alert.AlertNotificationRule;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
-import software.wings.beans.alert.DelegateProfileErrorAlert;
 import software.wings.beans.alert.DelegatesDownAlert;
 import software.wings.beans.alert.DeploymentFreezeEventAlert;
 import software.wings.beans.alert.DeploymentRateApproachingLimitAlert;
@@ -287,12 +290,7 @@ import software.wings.beans.alert.InvalidSMTPConfigAlert;
 import software.wings.beans.alert.KmsSetupAlert;
 import software.wings.beans.alert.ManifestCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.beans.alert.NotificationRulesStatus;
-import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.beans.alert.ResourceUsageApproachingLimitAlert;
 import software.wings.beans.alert.SSOSyncFailedAlert;
 import software.wings.beans.alert.SettingAttributeValidationFailedAlert;
@@ -370,7 +368,6 @@ import software.wings.beans.command.SpotinstDummyCommandUnit;
 import software.wings.beans.command.TerragruntDummyCommandUnit;
 import software.wings.beans.commandlibrary.CommandEntity;
 import software.wings.beans.commandlibrary.CommandVersionEntity;
-import software.wings.beans.config.ArtifactSourceable;
 import software.wings.beans.config.ArtifactoryConfig;
 import software.wings.beans.config.LogzConfig;
 import software.wings.beans.config.NexusConfig;
@@ -446,11 +443,6 @@ import software.wings.beans.trigger.Trigger;
 import software.wings.beans.trigger.TriggerExecution;
 import software.wings.beans.trigger.WebHookTriggerCondition;
 import software.wings.beans.trigger.WorkflowAction;
-import software.wings.beans.yaml.GitCommandExecutionResponse;
-import software.wings.beans.yaml.GitCommitAndPushResult;
-import software.wings.beans.yaml.GitCommitRequest;
-import software.wings.beans.yaml.GitDiffRequest;
-import software.wings.beans.yaml.GitDiffResult;
 import software.wings.beans.yaml.GitFetchFilesFromMultipleRepoResult;
 import software.wings.beans.yaml.GitSuccessFulChangeDetail;
 import software.wings.beans.yaml.HarnessSuccessFulChangeDetail;
@@ -479,6 +471,7 @@ import software.wings.helpers.ext.ecs.response.EcsRunTaskDeployResponse;
 import software.wings.helpers.ext.ecs.response.EcsServiceSetupResponse;
 import software.wings.helpers.ext.external.comm.CollaborationProviderResponse;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
+import software.wings.helpers.ext.helm.response.HelmCollectChartResponse;
 import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.k8s.response.K8sApplyResponse;
 import software.wings.helpers.ext.k8s.response.K8sBlueGreenDeployResponse;
@@ -655,7 +648,6 @@ import software.wings.sm.states.HttpState;
 import software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 import software.wings.sm.states.InstanaState;
 import software.wings.sm.states.JenkinsState;
-import software.wings.sm.states.JenkinsState.JenkinsExecutionResponse;
 import software.wings.sm.states.KubernetesDeploy;
 import software.wings.sm.states.KubernetesDeployRollback;
 import software.wings.sm.states.KubernetesSetup;
@@ -788,7 +780,6 @@ import software.wings.yaml.gitSync.GitFileProcessingSummary;
 import software.wings.yaml.gitSync.GitSyncMetadata;
 import software.wings.yaml.gitSync.GitSyncWebhook;
 import software.wings.yaml.gitSync.YamlChangeSet;
-import software.wings.yaml.gitSync.YamlGitConfig;
 
 import java.security.Principal;
 import java.util.Set;
@@ -819,7 +810,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(ApprovalPollingJobEntity.class);
     set.add(Artifact.class);
     set.add(ArtifactoryArtifactStream.class);
-    set.add(ArtifactSourceable.class);
     set.add(ArtifactStream.class);
     set.add(ArtifactStreamWithOnlyAuditNeededData.class);
     set.add(AuditHeader.class);
@@ -1038,7 +1028,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     set.add(WorkflowExecution.class);
     set.add(WorkflowExecutionBaseline.class);
     set.add(YamlChangeSet.class);
-    set.add(YamlGitConfig.class);
     set.add(YamlHistory.class);
     set.add(YamlSuccessfulChange.class);
     set.add(YamlVersion.class);
@@ -1167,7 +1156,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("api.terragrunt.TerragruntProvisionInheritPlanElement", TerragruntProvisionInheritPlanElement.class);
     w.put("api.terragrunt.TerragruntApplyMarkerParam", TerragruntApplyMarkerParam.class);
     w.put("api.TerraformApplyMarkerParam", TerraformApplyMarkerParam.class);
-    w.put("api.TerraformPlanParam", TerraformPlanParam.class);
     w.put("api.TerraformExecutionData", TerraformExecutionData.class);
     w.put("api.TerraformOutputInfoElement", TerraformOutputInfoElement.class);
     w.put("api.EcsSetupElement", EcsSetupElement.class);
@@ -1177,7 +1165,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.ArtifactCollectionFailedAlert", ArtifactCollectionFailedAlert.class);
     w.put("beans.alert.cv.ContinuousVerificationAlertData", ContinuousVerificationAlertData.class);
     w.put("beans.alert.cv.ContinuousVerificationDataCollectionAlert", ContinuousVerificationDataCollectionAlert.class);
-    w.put("beans.alert.DelegateProfileErrorAlert", DelegateProfileErrorAlert.class);
     w.put("beans.alert.DelegatesDownAlert", DelegatesDownAlert.class);
     w.put("beans.alert.DeploymentFreezeEventAlert", DeploymentFreezeEventAlert.class);
     w.put("beans.alert.DeploymentRateApproachingLimitAlert", DeploymentRateApproachingLimitAlert.class);
@@ -1189,11 +1176,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.alert.KmsSetupAlert", KmsSetupAlert.class);
     w.put("beans.alert.ManifestCollectionFailedAlert", ManifestCollectionFailedAlert.class);
     w.put("beans.alert.ManualInterventionNeededAlert", ManualInterventionNeededAlert.class);
-    w.put("beans.alert.NoActiveDelegatesAlert", NoActiveDelegatesAlert.class);
-    w.put("beans.alert.NoInstalledDelegatesAlert", NoInstalledDelegatesAlert.class);
-    w.put("beans.alert.NoEligibleDelegatesAlert", NoEligibleDelegatesAlert.class);
-    w.put("beans.alert.NoEligibleDelegatesAlertReconciliation", NoEligibleDelegatesAlertReconciliation.class);
-    w.put("beans.alert.PerpetualTaskAlert", PerpetualTaskAlert.class);
     w.put("beans.alert.ResourceUsageApproachingLimitAlert", ResourceUsageApproachingLimitAlert.class);
     w.put("beans.alert.SettingAttributeValidationFailedAlert", SettingAttributeValidationFailedAlert.class);
     w.put("beans.alert.SSOSyncFailedAlert", SSOSyncFailedAlert.class);
@@ -1265,7 +1247,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.ElkConfig", ElkConfig.class);
     w.put("beans.EntityVersion", EntityVersion.class);
     w.put("beans.GcpConfig", GcpConfig.class);
-    w.put("beans.GitConfig", GitConfig.class);
     w.put("beans.HostConnectionAttributes", HostConnectionAttributes.class);
     w.put("beans.infrastructure.instance.info.AutoScalingGroupInstanceInfo", AutoScalingGroupInstanceInfo.class);
     w.put("beans.infrastructure.instance.info.AwsLambdaInstanceInfo", AwsLambdaInstanceInfo.class);
@@ -1280,7 +1261,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.infrastructure.instance.info.AzureVMSSInstanceInfo", AzureVMSSInstanceInfo.class);
     w.put("beans.infrastructure.instance.info.AzureWebAppInstanceInfo", AzureWebAppInstanceInfo.class);
     w.put("beans.InstanaConfig", InstanaConfig.class);
-    w.put("beans.JenkinsConfig", JenkinsConfig.class);
     w.put("beans.JiraConfig", JiraConfig.class);
     w.put("beans.KubernetesClusterConfig", KubernetesClusterConfig.class);
     w.put("beans.MultiServiceOrchestrationWorkflow", MultiServiceOrchestrationWorkflow.class);
@@ -1316,11 +1296,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("beans.trigger.WebHookTriggerCondition", WebHookTriggerCondition.class);
     w.put("beans.trigger.WorkflowAction", WorkflowAction.class);
     w.put("beans.WinRmConnectionAttributes", WinRmConnectionAttributes.class);
-    w.put("beans.yaml.GitCommandExecutionResponse", GitCommandExecutionResponse.class);
-    w.put("beans.yaml.GitCommitAndPushResult", GitCommitAndPushResult.class);
-    w.put("beans.yaml.GitCommitRequest", GitCommitRequest.class);
-    w.put("beans.yaml.GitDiffRequest", GitDiffRequest.class);
-    w.put("beans.yaml.GitDiffResult", GitDiffResult.class);
     w.put("beans.yaml.GitFetchFilesFromMultipleRepoResult", GitFetchFilesFromMultipleRepoResult.class);
     w.put("beans.yaml.GitSuccessFulChangeDetail", GitSuccessFulChangeDetail.class);
     w.put("beans.yaml.HarnessSuccessFulChangeDetail", HarnessSuccessFulChangeDetail.class);
@@ -1347,6 +1322,7 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("helpers.ext.external.comm.CollaborationProviderResponse", CollaborationProviderResponse.class);
     w.put("helpers.ext.helm.HelmCommandExecutionResponse", HelmCommandExecutionResponse.class);
     w.put("helpers.ext.helm.response.HelmValuesFetchTaskResponse", HelmValuesFetchTaskResponse.class);
+    w.put("helpers.ext.helm.response.HelmCollectChartResponse", HelmCollectChartResponse.class);
     w.put("helpers.ext.k8s.response.K8sApplyResponse", K8sApplyResponse.class);
     w.put("helpers.ext.k8s.response.K8sBlueGreenDeployResponse", K8sBlueGreenDeployResponse.class);
     w.put("helpers.ext.k8s.response.K8sCanaryDeployResponse", K8sCanaryDeployResponse.class);
@@ -1483,7 +1459,6 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.HttpState$HttpStateExecutionResponse", HttpStateExecutionResponse.class);
     w.put("sm.states.InstanaState", InstanaState.class);
     w.put("sm.states.JenkinsState", JenkinsState.class);
-    w.put("sm.states.JenkinsState$JenkinsExecutionResponse", JenkinsExecutionResponse.class);
     w.put("sm.states.k8s.K8sApplyState", K8sApplyState.class);
     w.put("sm.states.k8s.K8sBlueGreenDeploy", K8sBlueGreenDeploy.class);
     w.put("sm.states.k8s.K8sCanaryDeploy", K8sCanaryDeploy.class);

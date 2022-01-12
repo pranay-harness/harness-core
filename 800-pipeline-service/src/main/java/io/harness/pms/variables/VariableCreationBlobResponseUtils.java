@@ -1,15 +1,25 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.variables;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.contracts.plan.VariablesCreationBlobResponse;
 import io.harness.pms.contracts.plan.YamlOutputProperties;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.variables.VariableMergeServiceResponse.ServiceExpressionProperties;
 import io.harness.pms.variables.VariableMergeServiceResponse.VariableResponseMapValue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +70,7 @@ public class VariableCreationBlobResponseUtils {
     mergeResolvedDependencies(builder, otherResponse);
     mergeDependencies(builder, otherResponse);
     mergeErrorResponses(builder, otherResponse);
+    addYamlUpdates(builder, otherResponse);
   }
 
   public static void mergeErrorResponses(
@@ -96,22 +107,33 @@ public class VariableCreationBlobResponseUtils {
 
   public void mergeResolvedDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getResolvedDependenciesMap())) {
-      otherResponse.getResolvedDependenciesMap().forEach((key, value) -> {
-        builder.putResolvedDependencies(key, value);
-        builder.removeDependencies(key);
+    if (isNotEmpty(otherResponse.getResolvedDeps().getDependenciesMap())) {
+      otherResponse.getResolvedDeps().getDependenciesMap().forEach((key, value) -> {
+        builder.setResolvedDeps(builder.getResolvedDeps().toBuilder().putDependencies(key, value));
+        builder.setDeps(builder.getDeps().toBuilder().removeDependencies(key));
       });
     }
   }
 
   public void mergeDependencies(
       VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse otherResponse) {
-    if (isNotEmpty(otherResponse.getDependenciesMap())) {
-      otherResponse.getDependenciesMap().forEach((key, value) -> {
-        if (!builder.containsResolvedDependencies(key)) {
-          builder.putDependencies(key, value);
+    if (isNotEmpty(otherResponse.getDeps().getDependenciesMap())) {
+      otherResponse.getDeps().getDependenciesMap().forEach((key, value) -> {
+        if (!builder.getResolvedDeps().containsDependencies(key)) {
+          builder.setDeps(builder.getDeps().toBuilder().putDependencies(key, value));
         }
       });
     }
+  }
+
+  public VariablesCreationBlobResponse addYamlUpdates(
+      VariablesCreationBlobResponse.Builder builder, VariablesCreationBlobResponse currResponse) {
+    if (EmptyPredicate.isEmpty(currResponse.getYamlUpdates().getFqnToYamlMap())) {
+      return builder.build();
+    }
+    Map<String, String> yamlUpdateFqnMap = new HashMap<>(builder.getYamlUpdates().getFqnToYamlMap());
+    yamlUpdateFqnMap.putAll(currResponse.getYamlUpdates().getFqnToYamlMap());
+    builder.setYamlUpdates(YamlUpdates.newBuilder().putAllFqnToYaml(yamlUpdateFqnMap).build());
+    return builder.build();
   }
 }

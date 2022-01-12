@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.stateutils.buildstate;
 
 import static io.harness.govern.Switch.unhandled;
@@ -20,15 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(HarnessTeam.CI)
 public class BuildSetupUtils {
   @Inject private K8BuildSetupUtils k8BuildSetupUtils;
-  @Inject private AWSVmInitializeTaskUtils awsVmInitializeTaskUtils;
+  @Inject private VmInitializeTaskUtils vmInitializeTaskUtils;
 
   public CIInitializeTaskParams getBuildSetupTaskParams(InitializeStepInfo initializeStepInfo, Ambiance ambiance,
       Map<String, String> taskIds, String logPrefix, Map<String, String> stepLogKeys) {
     switch (initializeStepInfo.getBuildJobEnvInfo().getType()) {
       case K8:
         return k8BuildSetupUtils.getCIk8BuildTaskParams(initializeStepInfo, ambiance, taskIds, logPrefix, stepLogKeys);
-      case AWS_VM:
-        return awsVmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, logPrefix);
+      case VM:
+        return vmInitializeTaskUtils.getInitializeTaskParams(initializeStepInfo, ambiance, logPrefix);
       default:
         unhandled(initializeStepInfo.getBuildJobEnvInfo().getType());
     }

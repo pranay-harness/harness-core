@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -43,6 +50,7 @@ public class UserGroupMapper {
               .name(userGroup.getName())
               .ssoGroupId(userGroup.getSsoGroupId())
               .ssoGroupName(userGroup.getSsoGroupName())
+              .externallyManaged(userGroup.isExternallyManaged())
               .linkedSsoDisplayName(userGroup.getLinkedSsoDisplayName())
               .linkedSsoId(userGroup.getLinkedSsoId())
               .isSsoLinked(TRUE.equals(userGroup.getIsSsoLinked()))
@@ -61,6 +69,7 @@ public class UserGroupMapper {
               .projectIdentifier(userGroupDTO.getProjectIdentifier())
               .identifier(userGroupDTO.getIdentifier())
               .name(userGroupDTO.getName())
+              .externallyManaged(userGroupDTO.isExternallyManaged())
               .notificationConfigs((Optional.ofNullable(userGroupDTO.getNotificationConfigs()).orElse(emptyList()))
                                        .stream()
                                        .map(UserGroupMapper::toEntity)

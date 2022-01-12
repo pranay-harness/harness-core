@@ -1,24 +1,46 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.yaml.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.yaml.schema.beans.SchemaConstants.EXECUTION_WRAPPER_CONFIG_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.ONE_OF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.REF_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.STEP_NODE;
 
 import io.harness.EntityType;
+import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
+import io.harness.jackson.JsonNodeUtils;
 import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
+import io.harness.yaml.schema.beans.YamlSchemaMetadata;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.cfg.MapperConfig;
 import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.io.File;
@@ -269,5 +291,121 @@ public class YamlSchemaUtils {
     // Generating only for harness classes hence checking if package is software.wings or io.harness.
     return !clazz.isPrimitive() && !clazz.isEnum()
         && (clazz.getCanonicalName().startsWith("io.harness") || clazz.getCanonicalName().startsWith("software.wings"));
+  }
+
+  public void addOneOfInExecutionWrapperConfig(
+      JsonNode pipelineSchema, Set<Class<?>> newYamlSchemaSubtypesToBeAdded, String namespace) {
+    String nameSpaceString = "";
+    if (isNotEmpty(namespace)) {
+      nameSpaceString = namespace + "/";
+    }
+    JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
+    ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
+    JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
+
+    for (Class<?> clazz : newYamlSchemaSubtypesToBeAdded) {
+      oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
+          "#/definitions/" + nameSpaceString + clazz.getSimpleName()));
+    }
+    ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
+  }
+  public void addOneOfInExecutionWrapperConfig(JsonNode pipelineSchema,
+      List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType,
+      Collection<String> enabledFeatureFlags) {
+    JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
+    ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
+    JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
+
+    for (YamlSchemaWithDetails schemaWithDetails : stepSchemaWithDetails) {
+      String nameSpaceString = getNamespaceFromModuleType(schemaWithDetails.getModuleType());
+      if (validateSchemaMetadata(schemaWithDetails, moduleType, enabledFeatureFlags)) {
+        oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
+            "#/definitions/" + nameSpaceString + schemaWithDetails.getSchemaClassName()));
+      }
+    }
+
+    ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
+  }
+
+  private boolean validateSchemaMetadata(
+      YamlSchemaWithDetails yamlSchemaWithDetails, ModuleType moduleType, Collection<String> enabledFeatureFlags) {
+    YamlSchemaMetadata yamlSchemaMetadata = yamlSchemaWithDetails.getYamlSchemaMetadata();
+    if (yamlSchemaMetadata == null) {
+      return false;
+    }
+    List<ModuleType> supportedModules = yamlSchemaMetadata.getModulesSupported();
+    if (supportedModules == null || !supportedModules.contains(moduleType)) {
+      return false;
+    }
+
+    List<String> requiredFeatureFlags = yamlSchemaMetadata.getFeatureFlags();
+    if (requiredFeatureFlags == null) {
+      return true;
+    }
+    for (String featureFlag : requiredFeatureFlags) {
+      if (!enabledFeatureFlags.contains(featureFlag)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean validateByFeatureFlags(
+      YamlSchemaMetadata yamlSchemaMetadata, Collection<String> enabledFeatureFlags) {
+    List<String> requiredFeatureFlags = yamlSchemaMetadata.getFeatureFlags();
+    for (String featureFlag : CollectionUtils.emptyIfNull(requiredFeatureFlags)) {
+      if (!enabledFeatureFlags.contains(featureFlag)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private String getNamespaceFromModuleType(ModuleType moduleType) {
+    if (moduleType == ModuleType.CD) {
+      return "cd/";
+    } else if (moduleType == ModuleType.CI) {
+      return "ci/";
+    } else if (moduleType == ModuleType.CE) {
+      return "ce/";
+    } else if (moduleType == ModuleType.CF) {
+      return "cf/";
+    }
+    return "";
+  }
+
+  private ArrayNode getOneOfNode(JsonNode executionWrapperConfig) {
+    ArrayNode oneOfList = new ArrayNode(JsonNodeFactory.instance);
+    JsonNode stepsNode = executionWrapperConfig.get(STEP_NODE);
+    if (executionWrapperConfig.get(STEP_NODE).get(REF_NODE) != null) {
+      String stepElementConfigRef = executionWrapperConfig.get(STEP_NODE).get(REF_NODE).toString().replace("\"", "");
+      JsonNodeUtils.deletePropertiesInJsonNode((ObjectNode) stepsNode, REF_NODE);
+      oneOfList.add(JsonNodeUtils.upsertPropertyInObjectNode(
+          new ObjectNode(JsonNodeFactory.instance), REF_NODE, stepElementConfigRef));
+    } else if (executionWrapperConfig.get(STEP_NODE).get(ONE_OF_NODE) != null) {
+      return (ArrayNode) executionWrapperConfig.get(STEP_NODE).get(ONE_OF_NODE);
+    }
+    return oneOfList;
+  }
+
+  public Set<Class<?>> getNodeClassesByYamlGroup(
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup, Collection<String> enabledFeatureFlags) {
+    return yamlSchemaRootClasses.stream()
+        .filter(yamlSchemaRootClass
+            -> yamlSchemaRootClass.getYamlSchemaMetadata() != null
+                && yamlSchemaRootClass.getYamlSchemaMetadata().getYamlGroup().getGroup().equals(yamlGroup))
+        .filter(o -> validateByFeatureFlags(o.getYamlSchemaMetadata(), enabledFeatureFlags))
+        .map(YamlSchemaRootClass::getClazz)
+        .collect(Collectors.toSet());
+  }
+
+  public List<EntityType> getNodeEntityTypesByYamlGroup(
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup) {
+    return yamlSchemaRootClasses.stream()
+        .filter(yamlSchemaRootClass
+            -> yamlSchemaRootClass.getYamlSchemaMetadata() != null
+                && yamlSchemaRootClass.getYamlSchemaMetadata().getYamlGroup().getGroup().equals(yamlGroup))
+        .map(YamlSchemaRootClass::getEntityType)
+        .collect(Collectors.toList());
   }
 }

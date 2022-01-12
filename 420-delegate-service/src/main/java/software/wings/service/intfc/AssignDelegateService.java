@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -30,8 +37,6 @@ public interface AssignDelegateService {
 
   List<String> extractSelectors(DelegateTask task);
 
-  String pickFirstAttemptDelegate(DelegateTask task);
-
   void refreshWhitelist(DelegateTask task, String delegateId);
 
   void saveConnectionResults(List<DelegateConnectionResult> results);
@@ -43,4 +48,13 @@ public interface AssignDelegateService {
   List<String> retrieveActiveDelegates(String accountId, BatchDelegateSelectionLog batch);
 
   boolean noInstalledDelegates(String accountId);
+
+  List<String> getEligibleDelegatesToExecuteTask(DelegateTask task, BatchDelegateSelectionLog batch);
+
+  List<String> getConnectedDelegateList(List<String> delegates, String accountId, BatchDelegateSelectionLog batch);
+
+  boolean canAssignTask(BatchDelegateSelectionLog batch, String delegateId, DelegateTask task,
+      Map<String, List<String>> nonAssignableDelegates);
+
+  List<Delegate> fetchActiveDelegates(String accountId);
 }

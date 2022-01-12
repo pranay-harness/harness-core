@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng;
 
 import static io.harness.AuthorizationServiceHeader.NG_MANAGER;
@@ -13,6 +20,7 @@ import static org.mockito.Mockito.mock;
 import io.harness.ModuleType;
 import io.harness.OrchestrationModule;
 import io.harness.OrchestrationModuleConfig;
+import io.harness.account.AccountClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cache.CacheConfig;
@@ -22,6 +30,7 @@ import io.harness.callback.DelegateCallbackToken;
 import io.harness.cdng.orchestration.NgStepRegistrar;
 import io.harness.connector.services.ConnectorService;
 import io.harness.delegate.DelegateServiceGrpc;
+import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.engine.expressions.AmbianceExpressionEvaluatorProvider;
 import io.harness.engine.pms.tasks.NgDelegate2TaskExecutor;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
@@ -190,6 +199,13 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
       }
 
       @Provides
+      @Named("new-yaml-schema-subtypes-cd")
+      @Singleton
+      public Map<Class<?>, Set<Class<?>>> newCdYamlSchemaSubtypes() {
+        return Mockito.mock(Map.class);
+      }
+
+      @Provides
       @Named("disableDeserialization")
       @Singleton
       public boolean getSerializationForDelegate() {
@@ -211,6 +227,8 @@ public class CDNGTestRule implements InjectorRuleMixin, MethodRule, MongoRuleMix
         bind(UserClient.class).toInstance(mock(UserClient.class));
         bind(OpaServiceClient.class).toInstance(mock(OpaServiceClient.class));
         bind(EntitySetupUsageClient.class).toInstance(mock(EntitySetupUsageClient.class));
+        bind(EnforcementClientService.class).toInstance(mock(EnforcementClientService.class));
+        bind(AccountClient.class).toInstance(mock(AccountClient.class));
         bind(new TypeLiteral<Supplier<DelegateCallbackToken>>() {
         }).toInstance(Suppliers.ofInstance(DelegateCallbackToken.newBuilder().build()));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {

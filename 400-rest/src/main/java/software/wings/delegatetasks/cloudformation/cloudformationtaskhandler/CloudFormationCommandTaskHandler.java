@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks.cloudformation.cloudformationtaskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -114,7 +121,9 @@ public abstract class CloudFormationCommandTaskHandler {
             "No specific cloudformation role provided will use the default permissions on delegate.");
       }
       awsHelperService.deleteStack(request.getRegion(), deleteStackRequest, request.getAwsConfig());
-      sleep(ofSeconds(30));
+      if (!request.isSkipWaitForResources()) {
+        sleep(ofSeconds(30));
+      }
 
       executionLogCallback.saveExecutionLog(
           String.format("# Request to delete stack: %s submitted. Now beginning to poll.", stackName));

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.resources;
 
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
@@ -23,6 +30,10 @@ import io.harness.ng.core.user.UserInfo;
 import io.harness.ng.core.user.UserRequestDTO;
 import io.harness.ng.core.user.UtmInfo;
 import io.harness.rest.RestResponse;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
+import io.harness.scim.service.ScimUserService;
 import io.harness.security.SourcePrincipalContextBuilder;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.dto.UserPrincipal;
@@ -50,6 +61,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import javax.ws.rs.BeanParam;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -77,6 +89,7 @@ public class UserResourceNG {
   private final SignupService signupService;
   private final TwoFactorAuthenticationManager twoFactorAuthenticationManager;
   private final AccountService accountService;
+  private final ScimUserService scimUserService;
   private static final String COMMUNITY_ACCOUNT_EXISTS = "A community account already exists";
   private static final String ACCOUNT_ADMINISTRATOR_USER_GROUP = "Account Administrator";
 
@@ -161,6 +174,43 @@ public class UserResourceNG {
     return new RestResponse<>(convertUserInviteToSignupInviteDTO(userInvite));
   }
 
+  @DELETE
+  public RestResponse<Boolean> deleteUser(
+      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId) {
+    userService.delete(accountId, userId);
+    return new RestResponse<>(true);
+  }
+
+  @GET
+  @Path("/scim/search")
+  public RestResponse<ScimListResponse<ScimUser>> searchScimUsers(@QueryParam("accountId") String accountId,
+      @QueryParam("searchQuery") String searchQuery, @QueryParam("count") Integer count,
+      @QueryParam("startIndex") Integer startIndex) {
+    return new RestResponse<>(scimUserService.searchUser(accountId, searchQuery, count, startIndex));
+  }
+
+  @PUT
+  @Path("/scim/disabled")
+  public RestResponse<Boolean> disableScimUser(@QueryParam("accountId") String accountId,
+      @QueryParam("userId") String userId, @QueryParam("disabled") boolean disabled) {
+    return new RestResponse<>(scimUserService.changeScimUserDisabled(accountId, userId, disabled));
+  }
+
+  @PUT
+  @Path("/scim/patch")
+  public RestResponse<ScimUser> patchUpdateScimUser(
+      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId, @Body PatchRequest patchRequest) {
+    return new RestResponse<>(scimUserService.updateUser(accountId, userId, patchRequest));
+  }
+
+  @PUT
+  @Path("/scim")
+  public RestResponse<Boolean> updateScimUser(
+      @QueryParam("accountId") String accountId, @QueryParam("userId") String userId, @Body ScimUser scimUser) {
+    scimUserService.updateUser(userId, accountId, scimUser);
+    return new RestResponse<>(true);
+  }
+
   @POST
   @Path("/oauth")
   public RestResponse<UserInfo> createNewOAuthUserAndSignIn(UserRequestDTO userRequest) {
@@ -221,8 +271,9 @@ public class UserResourceNG {
 
   @PUT
   @Path("invites/create-user")
-  public RestResponse<Boolean> createUserForInvite(@Body @NotNull UserInviteDTO userInvite) {
-    userService.completeNGInvite(userInvite);
+  public RestResponse<Boolean> createUserForInvite(
+      @Body @NotNull UserInviteDTO userInvite, @QueryParam("isScimInvite") boolean isScimInvite) {
+    userService.completeNGInvite(userInvite, isScimInvite);
     return new RestResponse<>(true);
   }
 
@@ -333,6 +384,8 @@ public class UserResourceNG {
                               .orElse(false))
                    .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
                    .emailVerified(user.isEmailVerified())
+                   .disabled(user.isDisabled())
+                   .externallyManaged(user.isImported())
                    .build())
         .collect(Collectors.toList());
   }
@@ -346,6 +399,8 @@ public class UserResourceNG {
         .name(user.getName())
         .uuid(user.getUuid())
         .locked(user.isUserLocked())
+        .disabled(user.isDisabled())
+        .externallyManaged(user.isImported())
         .defaultAccountId(user.getDefaultAccountId())
         .twoFactorAuthenticationEnabled(user.isTwoFactorAuthenticationEnabled())
         .emailVerified(user.isEmailVerified())

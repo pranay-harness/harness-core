@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.BRIJESH;
+import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SAMARTH;
 
@@ -11,17 +19,28 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.joor.Reflect.on;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
+import io.harness.pms.PmsFeatureFlagService;
+import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
+import io.harness.pms.contracts.governance.ExpansionResponseBatch;
+import io.harness.pms.contracts.governance.ExpansionResponseProto;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepMetaData;
+import io.harness.pms.gitsync.PmsGitSyncHelper;
+import io.harness.pms.governance.ExpansionRequest;
+import io.harness.pms.governance.ExpansionRequestsExtractor;
+import io.harness.pms.governance.JsonExpander;
 import io.harness.pms.pipeline.ExecutionSummaryInfo;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
@@ -34,9 +53,11 @@ import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.repositories.pipeline.PMSPipelineRepositoryCustomImpl;
 import io.harness.rule.Owner;
+import io.harness.telemetry.TelemetryReporter;
 
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -45,6 +66,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
@@ -67,7 +89,12 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private VariableCreatorMergeService variableCreatorMergeService;
   @Mock private PMSPipelineRepositoryCustomImpl pmsPipelineRepositoryCustom;
   @Mock private OutboxServiceImpl outboxService;
+  @Mock private TelemetryReporter telemetryReporter;
   @Mock private Subject<PipelineActionObserver> pipelineSubject;
+  @Mock private PmsGitSyncHelper gitSyncHelper;
+  @Mock private ExpansionRequestsExtractor expansionRequestsExtractor;
+  @Mock private JsonExpander jsonExpander;
+  @Mock PmsFeatureFlagService pmsFeatureFlagService;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   StepCategory library;
@@ -77,8 +104,6 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   private final String ORG_IDENTIFIER = "orgId";
   private final String PROJ_IDENTIFIER = "projId";
   private final String PIPELINE_IDENTIFIER = "myPipeline";
-
-  private String yaml;
 
   PipelineEntity pipelineEntity;
   PipelineEntity updatedPipelineEntity;
@@ -118,7 +143,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
 
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "failure-strategy.yaml";
-    yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    String yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
 
     pipelineEntity = PipelineEntity.builder()
                          .accountId(accountId)
@@ -302,7 +327,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Test
   @Owner(developers = BRIJESH)
   @Category(UnitTests.class)
-  public void testGetThrowException() throws IOException {
+  public void testGetThrowException() {
     assertThatThrownBy(
         () -> pmsPipelineService.get(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, false))
         .isInstanceOf(InvalidRequestException.class);
@@ -318,5 +343,44 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
                        -> pmsPipelineService.saveExecutionInfo(
                            accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, PIPELINE_IDENTIFIER, executionSummaryInfo))
         .doesNotThrowAnyException();
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testFetchExpandedPipelineJSONFromYaml() {
+    doReturn(true).when(pmsFeatureFlagService).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
+    String dummyYaml = "don't really need a proper yaml cuz only testing the flow";
+    ByteString randomByteString = ByteString.copyFromUtf8("sss");
+    ExpansionRequestMetadata expansionRequestMetadata = ExpansionRequestMetadata.newBuilder()
+                                                            .setAccountId(accountId)
+                                                            .setOrgId(ORG_IDENTIFIER)
+                                                            .setProjectId(PROJ_IDENTIFIER)
+                                                            .setGitSyncBranchContext(randomByteString)
+                                                            .build();
+    ExpansionRequest dummyRequest = ExpansionRequest.builder().fqn("fqn").build();
+    Set<ExpansionRequest> dummyRequestSet = Collections.singleton(dummyRequest);
+    doReturn(randomByteString).when(gitSyncHelper).getGitSyncBranchContextBytesThreadLocal();
+    doReturn(dummyRequestSet).when(expansionRequestsExtractor).fetchExpansionRequests(dummyYaml);
+    ExpansionResponseProto dummyResponse =
+        ExpansionResponseProto.newBuilder().setSuccess(false).setErrorMessage("just because").build();
+    ExpansionResponseBatch dummyResponseBatch =
+        ExpansionResponseBatch.newBuilder().addExpansionResponseProto(dummyResponse).build();
+    Set<ExpansionResponseBatch> dummyResponseSet = Collections.singleton(dummyResponseBatch);
+    doReturn(dummyResponseSet).when(jsonExpander).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);
+    pmsPipelineService.fetchExpandedPipelineJSONFromYaml(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, dummyYaml);
+    verify(pmsFeatureFlagService, times(1)).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
+    verify(gitSyncHelper, times(1)).getGitSyncBranchContextBytesThreadLocal();
+    verify(expansionRequestsExtractor, times(1)).fetchExpansionRequests(dummyYaml);
+    verify(jsonExpander, times(1)).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);
+
+    doReturn(false).when(pmsFeatureFlagService).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
+    String noExp =
+        pmsPipelineService.fetchExpandedPipelineJSONFromYaml(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, dummyYaml);
+    assertThat(noExp).isEqualTo(dummyYaml);
+    verify(pmsFeatureFlagService, times(2)).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
+    verify(gitSyncHelper, times(1)).getGitSyncBranchContextBytesThreadLocal();
+    verify(expansionRequestsExtractor, times(1)).fetchExpansionRequests(dummyYaml);
+    verify(jsonExpander, times(1)).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);
   }
 }

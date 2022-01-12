@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 set -x
 
 if [[ "$BUILD_TAG" == *pr-portal-* || "${PLATFORM}" != jenkins ]]
@@ -17,6 +22,10 @@ buildMajorVersion=$(getProperty "build.properties" "build.majorVersion")
 buildMinorVersion=$(getProperty "build.properties" "build.minorVersion")
 patch=$(getProperty "build.properties" "build.patch")
 timestamp=$( date +'%y%m%d-%H%M')
+
+echo "----------------------------------------------------------------------------"
+echo $buildNo $GIT_COMMIT $GIT_BRANCH $timestamp $patch $buildMajorVersion $buildMinorVersion
+echo "----------------------------------------------------------------------------"
 
 sed -i.bak "s|\${build.number}|${buildNo}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"
 sed -i.bak "s|\${gitCommitId}|${GIT_COMMIT}|g"  "980-commons/src/main/resources-filtered/versionInfo.yaml"

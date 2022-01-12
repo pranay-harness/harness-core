@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.core.impl;
 
 import static io.harness.gitsync.common.beans.BranchSyncStatus.SYNCED;
@@ -16,6 +23,7 @@ import io.harness.gitsync.common.beans.YamlChangeSetEventType;
 import io.harness.gitsync.common.beans.YamlChangeSetStatus;
 import io.harness.gitsync.common.dtos.GitToHarnessProcessMsvcStepResponse;
 import io.harness.gitsync.common.dtos.GitToHarnessProgressDTO;
+import io.harness.gitsync.common.helper.GitConnectivityExceptionHelper;
 import io.harness.gitsync.common.helper.GitToHarnessProgressHelper;
 import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.GitBranchSyncService;
@@ -23,6 +31,7 @@ import io.harness.gitsync.common.service.GitToHarnessProgressService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.dtos.YamlChangeSetDTO;
 import io.harness.gitsync.core.service.YamlChangeSetHandler;
+import io.harness.gitsync.gitsyncerror.service.GitSyncErrorService;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -40,6 +49,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
   private GitBranchService gitBranchService;
   private GitToHarnessProgressService gitToHarnessProgressService;
   private GitToHarnessProgressHelper gitToHarnessProgressHelper;
+  private GitSyncErrorService gitSyncErrorService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -47,7 +57,7 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
     String repoURL = yamlChangeSetDTO.getRepoUrl();
     String branch = yamlChangeSetDTO.getBranch();
 
-    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByRepo(repoURL);
+    List<YamlGitConfigDTO> yamlGitConfigDTOList = yamlGitConfigService.getByAccountAndRepo(accountIdentifier, repoURL);
     if (yamlGitConfigDTOList.isEmpty()) {
       log.info("Repo {} doesn't exist, ignoring the branch sync change set event : {}", repoURL, yamlChangeSetDTO);
       return YamlChangeSetStatus.SKIPPED;
@@ -97,6 +107,10 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
       }
     } catch (Exception ex) {
       log.error("Error encountered while syncing the branch [{}]", branch, ex);
+      String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
+      if (!gitConnectivityErrorMessage.isEmpty()) {
+        recordConnectivityErrors(accountIdentifier, repoURL, gitConnectivityErrorMessage);
+      }
       gitBranchService.updateBranchSyncStatus(yamlChangeSetDTO.getAccountId(), repoURL, branch, SYNCED);
       // TODO adding it here for safer side as of now. Ideally should be part of step service to mark it
       gitToHarnessProgressService.updateStepStatus(
@@ -106,5 +120,9 @@ public class BranchSyncEventYamlChangeSetHandler implements YamlChangeSetHandler
           gitToHarnessProgressRecord.getUuid(), GitToHarnessProgressStatus.ERROR);
       return YamlChangeSetStatus.FAILED_WITH_RETRY;
     }
+  }
+
+  private void recordConnectivityErrors(String accountId, String repo, String errorMessage) {
+    gitSyncErrorService.recordConnectivityError(accountId, repo, errorMessage);
   }
 }

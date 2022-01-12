@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -79,6 +86,44 @@ public class ScmFetchFilesHelperTest extends WingsBaseTest {
     spyScmFetchFilesHelper.downloadFilesUsingScm("manifests", gitFileConfig, gitConfig, logCallback);
     File file = new File("manifests/test2/path.txt");
     assertThat(file.exists()).isTrue();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testShouldDownloadFilesUsingScmByFolderRootPath() {
+    ScmFetchFilesHelper spyScmFetchFilesHelper = spy(scmFetchFilesHelper);
+    LogCallback logCallback = mock(ExecutionLogCallback.class);
+    GitConfig gitConfig = GitConfig.builder().repoUrl("helm-url").build();
+    GitFileConfig gitFileConfigSlashRootPath = GitFileConfig.builder().filePath("/").build();
+    GitFileConfig gitFileConfigDotRootPath = GitFileConfig.builder().filePath(".").build();
+    doReturn(GithubConnectorDTO.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
+    doReturn(GitlabConnectorDTO.builder().build()).when(spyScmFetchFilesHelper).getScmConnector(any());
+    when(scmDelegateClient.processScmRequest(any()))
+        .thenReturn(FileContentBatchResponse.builder()
+                        .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                                      .addFileContents(FileContent.newBuilder()
+                                                                           .setStatus(200)
+                                                                           .setContent("content")
+                                                                           .setPath("test2/path.txt")
+                                                                           .build())
+                                                      .build())
+                        .build(),
+            FileContentBatchResponse.builder()
+                .fileBatchContentResponse(FileBatchContentResponse.newBuilder()
+                                              .addFileContents(FileContent.newBuilder()
+                                                                   .setStatus(200)
+                                                                   .setContent("content")
+                                                                   .setPath("test3/path.txt")
+                                                                   .build())
+                                              .build())
+                .build());
+    spyScmFetchFilesHelper.downloadFilesUsingScm("manifests", gitFileConfigSlashRootPath, gitConfig, logCallback);
+    spyScmFetchFilesHelper.downloadFilesUsingScm("manifests", gitFileConfigDotRootPath, gitConfig, logCallback);
+    File file = new File("manifests/test2/path.txt");
+    File file2 = new File("manifests/test3/path.txt");
+    assertThat(file.exists()).isTrue();
+    assertThat(file2.exists()).isTrue();
   }
 
   @Test

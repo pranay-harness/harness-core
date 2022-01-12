@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.workflow;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -87,8 +94,6 @@ import static software.wings.sm.StepType.AZURE_WEBAPP_SLOT_SWAP;
 import static software.wings.sm.StepType.K8S_TRAFFIC_SPLIT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT;
 import static software.wings.sm.StepType.SPOTINST_LISTENER_ALB_SHIFT_ROLLBACK;
-import static software.wings.sm.StepType.TERRAGRUNT_DESTROY;
-import static software.wings.sm.StepType.TERRAGRUNT_PROVISION;
 import static software.wings.stencils.WorkflowStepType.SERVICE_COMMAND;
 
 import static java.lang.String.format;
@@ -1444,12 +1449,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   @Override
   public boolean deleteWorkflow(String appId, String workflowId) {
-    String accountId = appService.getAccountIdByAppId(appId);
-    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
-        new Action(accountId, ActionType.CREATE_WORKFLOW));
-
-    return LimitEnforcementUtils.withCounterDecrement(
-        checker, () -> { return deleteWorkflow(appId, workflowId, false, false); });
+    return deleteWorkflow(appId, workflowId, false, false);
   }
 
   private boolean deleteWorkflow(String appId, String workflowId, boolean forceDelete, boolean syncFromGit) {
@@ -1458,14 +1458,25 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       return true;
     }
 
-    if (!forceDelete) {
-      ensureWorkflowSafeToDelete(workflow);
-    }
+    String accountId =
+        workflow.getAccountId() == null ? appService.getAccountIdByAppId(appId) : workflow.getAccountId();
+    StaticLimitCheckerWithDecrement checker = (StaticLimitCheckerWithDecrement) limitCheckerFactory.getInstance(
+        new Action(accountId, ActionType.CREATE_WORKFLOW));
 
-    String accountId = appService.getAccountIdByAppId(workflow.getAppId());
-    yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
+    return LimitEnforcementUtils.withCounterDecrement(checker, () -> {
+      if (!forceDelete) {
+        ensureWorkflowSafeToDelete(workflow);
+      }
 
-    return pruneWorkflow(appId, workflowId);
+      yamlPushService.pushYamlChangeSet(accountId, workflow, null, Type.DELETE, syncFromGit, false);
+
+      if (!pruneWorkflow(appId, workflowId)) {
+        throw new InvalidRequestException(
+            String.format("Workflow %s does not exist or might already be deleted.", workflow.getName()));
+      }
+
+      return true;
+    });
   }
 
   @Override
@@ -2674,8 +2685,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
         .filter(WorkflowExecutionKeys.accountId, workflow.getAccountId())
         .filter(WorkflowExecutionKeys.appId, workflow.getAppId())
         .filter(WorkflowExecutionKeys.workflowId, workflow.getUuid())
-        .field(WorkflowExecutionKeys.serviceIds)
-        .contains(serviceId)
+        .filter(WorkflowExecutionKeys.serviceIds, serviceId)
         .filter(WorkflowExecutionKeys.status, SUCCESS)
         .order(Sort.descending(WorkflowExecutionKeys.createdAt))
         .get();
@@ -3076,7 +3086,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
       if (preOrPostDeploymentStepNeededManifest) {
         if (!manifestRequiredServiceIds.contains(serviceId)
-            && hasPollingEnabled(serviceId, appId, pollingDisabledServices)) {
+            && requiresManifest(serviceId, appId, pollingDisabledServices)) {
           manifestRequiredServiceIds.add(serviceId);
         }
       }
@@ -3114,15 +3124,15 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     return requiredEntityTypes;
   }
 
-  private boolean hasPollingEnabled(String serviceId, String appId, List<String> pollingDisabledServices) {
+  private boolean requiresManifest(String serviceId, String appId, List<String> pollingDisabledServices) {
     if (serviceId == null) {
       return false;
     }
     if (pollingDisabledServices.contains(serviceId)) {
       return false;
     }
-    ApplicationManifest appManifest = applicationManifestService.getManifestByServiceId(appId, serviceId);
-    if (appManifest != null && Boolean.TRUE.equals(appManifest.getPollForChanges())) {
+    Service service = serviceResourceService.get(appId, serviceId);
+    if (Boolean.TRUE.equals(service.getArtifactFromManifest())) {
       return true;
     }
     pollingDisabledServices.add(serviceId);
@@ -3247,7 +3257,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     }
 
     if (featureFlagService.isEnabled(HELM_CHART_AS_ARTIFACT, accountId)
-        && hasPollingEnabled(serviceId, appId, pollingDisabledServices)
+        && requiresManifest(serviceId, appId, pollingDisabledServices)
         && phaseStep.getSteps().stream().anyMatch(this::checkManifestNeededForStep)) {
       requiredEntityTypes.add(HELM_CHART);
     }
@@ -4286,9 +4296,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
                                         .build();
         if (!step.getType().equals(
                 StateType.CVNG.name())) { // TODO: Hiding it for now. We can remove it after few months.
-          if (shouldHideStep(step, accountId)) {
-            continue;
-          }
           steps.put(step.getType(), stepMeta);
         }
       }
@@ -4305,11 +4312,6 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
     addServiceCommandsToWorkflowCategories(steps, fetchServiceCommandNames(workflowPhase, appId), categories);
 
     return WorkflowCategorySteps.builder().steps(steps).categories(categories).build();
-  }
-
-  private boolean shouldHideStep(StepType stepType, String accountId) {
-    List<StepType> terragruntSteps = asList(TERRAGRUNT_DESTROY, StepType.TERRAGRUNT_ROLLBACK, TERRAGRUNT_PROVISION);
-    return terragruntSteps.contains(stepType) && !featureFlagService.isEnabled(FeatureName.TERRAGRUNT, accountId);
   }
 
   private List<StepType> filterSelectNodesStep(List<StepType> stepTypesList, StepType filteredSelectNode) {

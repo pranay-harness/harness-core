@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._930_DELEGATE_TASKS;
@@ -111,7 +118,8 @@ public class NexusBuildServiceImpl implements NexusBuildService {
     } else if (artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.nuget.name())
         || artifactStreamAttributes.getRepositoryFormat().equals(RepositoryFormat.npm.name())) {
       return nexusService.getVersions(artifactStreamAttributes.getRepositoryFormat(), nexusRequest,
-          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName());
+          artifactStreamAttributes.getJobName(), artifactStreamAttributes.getNexusPackageName(),
+          artifactStreamAttributes.getSavedBuildDetailsKeys());
     } else {
       return nexusService.getVersions(nexusRequest, artifactStreamAttributes.getJobName(),
           artifactStreamAttributes.getGroupId(), artifactStreamAttributes.getArtifactName(),

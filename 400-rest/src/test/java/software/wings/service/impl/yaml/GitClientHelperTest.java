@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
+import static io.harness.rule.OwnerRule.JELENA;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -16,6 +24,7 @@ import software.wings.beans.GitOperationContext;
 
 import com.google.inject.Inject;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.errors.TransportException;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,6 +46,13 @@ public class GitClientHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void test_checkIfGitConnectivityIssueIsNotTrownInCaseOfOtherExceptions() {
     gitClientHelper.checkIfGitConnectivityIssue(new GitAPIException("newTransportException") {});
+  }
+
+  @Test(expected = GitConnectionDelegateException.class)
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void test_checkIfGitConnectivityIssueInCaseOfRefNotFoundException() {
+    gitClientHelper.checkIfGitConnectivityIssue(new RefNotFoundException("Invalid commit Id"));
   }
 
   @Test

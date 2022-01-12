@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.mongo.queue;
 
 import static io.harness.manage.GlobalContextManager.obtainGlobalContext;
@@ -30,6 +37,8 @@ public class MongoQueuePublisher<T extends Queuable> implements QueuePublisher<T
   private void store(T payload) {
     try (AutoLogRemoveContext ignore = new AutoLogRemoveContext(
              MessageLogContext.MESSAGE_CLASS, MessageLogContext.MESSAGE_ID, MessageLogContext.MESSAGE_TOPIC)) {
+      log.debug("Notification saved [{}]", payload);
+      log.debug("Current Size: [{}]", persistence.createQuery(payload.getClass()).count());
       payload.setGlobalContext(obtainGlobalContext());
     }
     persistence.insertIgnoringDuplicateKeys(payload);

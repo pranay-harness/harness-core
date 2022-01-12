@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Shield 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+
 syntax = "proto3";
 
 package io.harness.capability;
@@ -28,6 +33,7 @@ message CapabilityParameters {
     PcfAutoScalarParameters pcf_auto_scalar_parameters = 14;
     PcfConnectivityParameters pcf_connectivity_parameters = 15;
     PcfInstallationParameters pcf_installation_parameters = 18;
+    CIVMParameters ci_vm_parameters = 19;
     ProcessExecutorParameters process_executor_parameters = 7;
     SftpCapabilityParameters sftp_capability_parameters = 3;
     SmbConnectionParameters smb_connection_parameters = 2;
@@ -161,4 +167,9 @@ message LiteEngineConnectionParameters {
   string ip = 1;
   int32 port = 2;
   bool is_local = 3;
+}
+
+// Testing whether a delegate can connect to a given VM pool (CI)
+message CIVMParameters {
+  string pool_id = 1;
 }

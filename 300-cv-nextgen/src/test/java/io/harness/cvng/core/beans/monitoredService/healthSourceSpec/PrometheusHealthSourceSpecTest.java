@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.beans.monitoredService.healthSourceSpec;
 
 import static io.harness.rule.OwnerRule.DEEPAK_CHHIKARA;
@@ -66,6 +73,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric")
+            .identifier("sampleMetric")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage.total")
             .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
@@ -110,6 +118,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     assertThat(metricInfo.getServiceInstanceFieldName()).isEqualTo(metricDefinition.getServiceInstanceFieldName());
     assertThat(metricInfo.getAggregation()).isEqualTo(metricDefinition.getAggregation());
     assertThat(metricInfo.getAdditionalFilters()).isEqualTo(metricDefinition.getAdditionalFilters());
+    assertThat(metricInfo.getIdentifier()).isEqualTo("sampleMetric");
   }
 
   @Test
@@ -119,6 +128,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric")
+            .identifier("sampleMetric")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage.total")
             .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
@@ -204,6 +214,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     PrometheusMetricDefinition metricDefinition2 =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric2")
+            .identifier("identifier")
             .groupName("groupName")
             .prometheusMetric("container.cpu.usage")
             .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
@@ -244,6 +255,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     PrometheusMetricDefinition metricDefinition2 =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric2")
+            .identifier("identifier")
             .groupName("groupNameNew")
             .prometheusMetric("container.cpu.usage")
             .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
@@ -284,6 +296,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric")
+            .identifier("sampleMetric")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage.total")
             .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()
@@ -351,6 +364,7 @@ public class PrometheusHealthSourceSpecTest extends CvNextGenTestBase {
     PrometheusMetricDefinition metricDefinition =
         PrometheusMetricDefinition.builder()
             .metricName("sampleMetric")
+            .identifier("sampleMetric")
             .groupName("myMetricGroupName")
             .prometheusMetric("container.cpu.usage.total")
             .serviceFilter(Arrays.asList(PrometheusMetricDefinition.PrometheusFilter.builder()

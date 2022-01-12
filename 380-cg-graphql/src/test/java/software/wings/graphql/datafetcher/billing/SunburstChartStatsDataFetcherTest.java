@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.billing;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -6,6 +13,7 @@ import static io.harness.rule.OwnerRule.ROHIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyDouble;
 import static org.mockito.Matchers.anyObject;
 import static org.mockito.Matchers.anyString;
@@ -146,6 +154,7 @@ public class SunburstChartStatsDataFetcherTest extends AbstractDataFetcherTestBa
     billingDataMetaDataFieldsList.add(BillingDataMetaDataFields.CLUSTERTYPE);
     doReturn(billingDataMetaDataFieldsList).when(queryMetadataMock).getFieldNames();
     doCallRealMethod().when(billingDataHelper).roundingDoubleFieldValue(any(), anyObject());
+    doCallRealMethod().when(billingDataHelper).roundingDoubleFieldValue(any(), anyObject(), anyBoolean());
     doCallRealMethod().when(billingDataHelper).getRoundedDoubleValue(anyDouble());
     QLSunburstChartData data = (QLSunburstChartData) sunburstChartStatsDataFetcher.fetch(
         ACCOUNT1_ID, aggregateFunction, filters, groupByList, sort, LIMIT, OFFSET);

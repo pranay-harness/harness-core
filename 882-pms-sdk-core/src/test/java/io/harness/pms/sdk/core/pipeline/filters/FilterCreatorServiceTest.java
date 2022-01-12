@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.core.pipeline.filters;
 
 import static io.harness.rule.OwnerRule.SAHIL;
@@ -11,6 +18,7 @@ import static org.mockito.Mockito.when;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.SetupMetadata;
 import io.harness.pms.contracts.plan.YamlFieldBlob;
 import io.harness.pms.filter.creation.FilterCreationResponse;
@@ -45,11 +53,12 @@ public class FilterCreatorServiceTest extends PmsSdkCoreTestBase {
   @InjectMocks FilterCreatorService filterCreatorService;
 
   private YamlField pipelineField;
+  String yamlContent;
   @Before
   public void setup() throws IOException {
     ClassLoader classLoader = this.getClass().getClassLoader();
     final URL testFile = classLoader.getResource("pipeline.yaml");
-    String yamlContent = Resources.toString(testFile, Charsets.UTF_8);
+    yamlContent = Resources.toString(testFile, Charsets.UTF_8);
     pipelineField = YamlUtils.extractPipelineField(YamlUtils.injectUuid(yamlContent));
     when(pipelineServiceInfoProvider.getFilterJsonCreators()).thenReturn(Arrays.asList(new NoopFilterJsonCreator()));
     doNothing().when(filterCreationResponseMerger).mergeFilterCreationResponse(any(), any());
@@ -93,11 +102,15 @@ public class FilterCreatorServiceTest extends PmsSdkCoreTestBase {
   @Test
   @Owner(developers = SAHIL)
   @Category(UnitTests.class)
-  public void testProcessNodesRecursively() {
+  public void testProcessNodesRecursively() throws IOException {
     Map<String, YamlField> dependencies = new HashMap<>();
     dependencies.put(NODE_UUID, pipelineField);
+    Dependencies initialDependencies = Dependencies.newBuilder()
+                                           .setYaml(YamlUtils.injectUuid(yamlContent))
+                                           .putDependencies(NODE_UUID, pipelineField.getYamlPath())
+                                           .build();
     FilterCreationResponse filterCreationResponse = filterCreatorService.processNodesRecursively(
-        dependencies, SetupMetadata.newBuilder().build(), FilterCreationResponse.builder().build());
+        initialDependencies, SetupMetadata.newBuilder().build(), FilterCreationResponse.builder().build());
     assertThat(filterCreationResponse).isNotNull();
     assertThat(filterCreationResponse.getStageNames()).isEmpty();
   }

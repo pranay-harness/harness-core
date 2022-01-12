@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -5,7 +12,6 @@ import static io.harness.annotations.dev.HarnessTeam.DEL;
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
-import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.delegate.beans.DelegateProgressData;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskAbortEvent;
@@ -18,7 +24,6 @@ import software.wings.service.intfc.ownership.OwnedByAccount;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import javax.validation.Valid;
 import ru.vyarus.guice.validator.group.annotation.ValidationGroups;
 
@@ -31,16 +36,17 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
 
   <T extends DelegateResponseData> T executeTask(DelegateTask task) throws InterruptedException;
 
-  void saveDelegateTask(DelegateTask task, DelegateTask.Status status);
+  void processDelegateTask(DelegateTask task, DelegateTask.Status taskStatus);
 
   String queueParkedTask(String accountId, String taskId);
 
   byte[] getParkedTaskResults(String accountId, String taskId, String driverId);
 
-  DelegateTaskPackage acquireDelegateTask(String accountId, String delegateId, String taskId);
+  DelegateTaskPackage acquireDelegateTask(
+      String accountId, String delegateId, String taskId, String delegateInstanceId);
 
-  DelegateTaskPackage reportConnectionResults(
-      String accountId, String delegateId, String taskId, List<DelegateConnectionResult> results);
+  DelegateTaskPackage reportConnectionResults(String accountId, String delegateId, String taskId,
+      String delegateInstanceId, List<DelegateConnectionResult> results);
 
   void failIfAllDelegatesFailed(String accountId, String delegateId, String taskId, boolean areClientToolsInstalled);
 
@@ -59,12 +65,9 @@ public interface DelegateTaskServiceClassic extends OwnedByAccount {
 
   void convertToExecutionCapability(DelegateTask task);
 
-  void executeBatchCapabilityCheckTask(String accountId, String delegateId,
-      List<CapabilitySubjectPermission> capabilitySubjectPermissions, String blockedTaskSelectionDetailsId);
-
-  String obtainCapableDelegateId(DelegateTask task, Set<String> alreadyTriedDelegates);
-
   boolean checkDelegateConnected(String accountId, String delegateId);
 
   void markAllTasksFailedForDelegate(String accountId, String delegateId);
+
+  void addToTaskActivityLog(DelegateTask task, String message);
 }

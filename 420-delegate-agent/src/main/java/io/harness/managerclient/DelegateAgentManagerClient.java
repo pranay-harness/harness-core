@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.managerclient;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -140,8 +147,8 @@ public interface DelegateAgentManagerClient {
 
   @KryoResponse
   @PUT("agent/delegates/{delegateId}/tasks/{taskId}/acquire")
-  Call<DelegateTaskPackage> acquireTask(
-      @Path("delegateId") String delegateId, @Path("taskId") String uuid, @Query("accountId") String accountId);
+  Call<DelegateTaskPackage> acquireTask(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
+      @Query("accountId") String accountId, @Query("delegateInstanceId") String delegateInstanceId);
 
   @POST("agent/delegates/heartbeat-with-polling")
   Call<RestResponse<DelegateHeartbeatResponse>> delegateHeartbeat(
@@ -154,5 +161,6 @@ public interface DelegateAgentManagerClient {
   @KryoResponse
   @POST("agent/delegates/{delegateId}/tasks/{taskId}/report")
   Call<DelegateTaskPackage> reportConnectionResults(@Path("delegateId") String delegateId, @Path("taskId") String uuid,
-      @Query("accountId") String accountId, @Body List<DelegateConnectionResultDetail> results);
+      @Query("accountId") String accountId, @Query("delegateInstanceId") String delegateInstanceId,
+      @Body List<DelegateConnectionResultDetail> results);
 }

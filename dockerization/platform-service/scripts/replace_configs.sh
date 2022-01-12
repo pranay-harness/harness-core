@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 CONFIG_FILE=/opt/harness/config.yml
 
@@ -125,10 +129,10 @@ if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$AUDIT_MONGO_URI" ]]; then
@@ -203,7 +207,6 @@ if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   done
 fi
 
-
 if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$LOCK_CONFIG_REDIS_SENTINELS"
   INDEX=0
@@ -212,6 +215,47 @@ if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
     INDEX=$(expr $INDEX + 1)
   done
 fi
+
+if [[ "" != "$NOTIFICATION_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE notificationServiceConfig.mongo.uri
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.hosts[0].host ${NOTIFICATION_MONGO_HOSTS_AND_PORTS%%:*}
+  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.hosts[0].port ${NOTIFICATION_MONGO_HOSTS_AND_PORTS##*:}
+fi
+
+if [[ "" != "$AUDIT_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE auditServiceConfig.mongo.uri
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.hosts[0].host ${AUDIT_MONGO_HOSTS_AND_PORTS%%:*}
+  yq write -i $CONFIG_FILE auditServiceConfig.mongo.hosts[0].port ${AUDIT_MONGO_HOSTS_AND_PORTS##*:}
+fi
+
+if [[ "" != "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE resourceGroupServiceConfig.mongo.uri
+  yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].host ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS%%:*}
+  yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].port ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS##*:}
+fi
+
+replace_key_value ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+
+replace_key_value resourceGroupServiceConfig.mongo.username "$RESOURCE_GROUP_MONGO_USERNAME"
+replace_key_value resourceGroupServiceConfig.mongo.password "$RESOURCE_GROUP_MONGO_PASSWORD"
+
+replace_key_value auditServiceConfig.mongo.username "$AUDIT_MONGO_USERNAME"
+replace_key_value auditServiceConfig.mongo.password "$AUDIT_MONGO_PASSWORD"
+
+replace_key_value notificationServiceConfig.mongo.username "$NOTIFICATION_MONGO_USERNAME"
+replace_key_value notificationServiceConfig.mongo.password "$NOTIFICATION_MONGO_PASSWORD"
+
+replace_key_value resourceGroupServiceConfig.mongo.params.replicaSet "$RESOURCE_GROUP_MONGO_REPLICA_SET"
+
+replace_key_value resourceGroupServiceConfig.mongo.params.authSource "$RESOURCE_GROUP_MONGO_AUTH_SOURCE"
+
+replace_key_value auditServiceConfig.mongo.params.replicaSet "$AUDIT_MONGO_REPLICA_SET"
+
+replace_key_value auditServiceConfig.mongo.params.authSource "$AUDIT_MONGO_AUTH_SOURCE"
+
+replace_key_value notificationServiceConfig.mongo.params.replicaSet "$NOTIFICATION_MONGO_REPLICA_SET"
+
+replace_key_value notificationServiceConfig.mongo.params.authSource "$NOTIFICATION_MONGO_AUTH_SOURCE"
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
 
@@ -278,3 +322,5 @@ replace_key_value resourceGroupServiceConfig.enableResourceGroup "${ENABLE_RESOU
 replace_key_value resourceGroupServiceConfig.resourceClients.template-service.baseUrl "$TEMPLATE_SERVICE_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.resourceClients.template-service.secret "$TEMPLATE_SERVICE_SECRET"
+
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"

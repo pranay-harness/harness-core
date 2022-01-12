@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
@@ -96,6 +103,7 @@ import software.wings.service.intfc.template.TemplateService;
 import software.wings.service.intfc.yaml.YamlGitService;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.yaml.gitSync.YamlGitConfig;
+import software.wings.yaml.gitSync.YamlGitConfig.YamlGitConfigKeys;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -281,14 +289,13 @@ public class AppServiceImpl implements AppService {
     String[] appIdArray = appIdList.toArray(new String[0]);
     if (isNotEmpty(applicationList)) {
       accountId = applicationList.get(0).getAccountId();
-      PageRequest<YamlGitConfig> yamlPageRequest = PageRequestBuilder.aPageRequest()
-                                                       .addFilter("accountId", Operator.EQ, accountId)
-                                                       .addFilter("entityId", Operator.IN, appIdArray)
-                                                       .addFilter("entityType", Operator.EQ, EntityType.APPLICATION)
-                                                       .build();
 
-      List<YamlGitConfig> yamlGitConfigList =
-          wingsPersistence.getAllEntities(yamlPageRequest, () -> yamlGitService.list(yamlPageRequest));
+      List<YamlGitConfig> yamlGitConfigList = wingsPersistence.createQuery(YamlGitConfig.class)
+                                                  .filter(YamlGitConfigKeys.accountId, accountId)
+                                                  .field(YamlGitConfigKeys.entityId)
+                                                  .in(appIdList)
+                                                  .filter(YamlGitConfigKeys.entityType, EntityType.APPLICATION)
+                                                  .asList();
       Map<String, YamlGitConfig> yamlGitConfigMap =
           yamlGitConfigList.stream().collect(Collectors.toMap(YamlGitConfig::getEntityId, identity()));
 
@@ -431,6 +438,9 @@ public class AppServiceImpl implements AppService {
       // Now we are ready to delete the object.
       if (wingsPersistence.delete(Application.class, appId)) {
         sendNotification(application, NotificationMessageType.ENTITY_DELETE_NOTIFICATION);
+      } else {
+        throw new InvalidRequestException(
+            String.format("Application %s does not exist or might already be deleted.", application.getName()));
       }
 
       // Note that if we failed to delete the object we left without the yaml. Likely the users

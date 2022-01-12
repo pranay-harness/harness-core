@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
@@ -17,11 +24,7 @@ import static io.harness.persistence.HQuery.excludeAuthority;
 import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityPopoverResultDTO;
-import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentResultSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.activity.beans.DeploymentActivityVerificationResultDTO;
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
@@ -64,6 +67,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
@@ -101,7 +105,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private NextGenService nextGenService;
-  @Inject private AlertRuleService alertRuleService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricService metricService;
 
@@ -378,8 +381,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       Set<String> verificatioTaskIds = verificationTaskService.getVerificationTaskIds(
           verificationJobInstance.getAccountId(), verificationJobInstanceId);
       orchestrationService.markCompleted(verificatioTaskIds);
-
-      alertRuleService.processDeploymentVerificationJobInstanceId(verificationJobInstanceId);
     }
   }
 
@@ -390,59 +391,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     return verificationJob.getPreActivityTimeRange(verificationJobInstance.getDeploymentStartTime());
   }
 
-  @Override
-  public DeploymentActivityVerificationResultDTO getAggregatedVerificationResult(
-      List<String> verificationJobInstanceIds) {
-    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        getPostDeploymentVerificationJobInstances(verificationJobInstances);
-    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        getPreAndProductionDeploymentGroup(verificationJobInstances);
-
-    return DeploymentActivityVerificationResultDTO.builder()
-        .preProductionDeploymentSummary(
-            getActivityVerificationSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
-        .productionDeploymentSummary(
-            getActivityVerificationSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
-        .postDeploymentSummary(getActivityVerificationSummary(postDeploymentVerificationJobInstances))
-        .build();
-  }
-
-  @Override
-  public void addResultsToDeploymentResultSummary(
-      String accountId, List<String> verificationJobInstanceIds, DeploymentResultSummary deploymentResultSummary) {
-    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        getPostDeploymentVerificationJobInstances(verificationJobInstances);
-    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        getPreAndProductionDeploymentGroup(verificationJobInstances);
-    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction),
-        deploymentResultSummary.getPreProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(preAndProductionDeploymentGroup.get(EnvironmentType.Production),
-        deploymentResultSummary.getProductionDeploymentVerificationJobInstanceSummaries());
-    addDeploymentVerificationJobInstanceSummaries(postDeploymentVerificationJobInstances,
-        deploymentResultSummary.getPostDeploymentVerificationJobInstanceSummaries());
-  }
-
-  @Override
-  public DeploymentActivityPopoverResultDTO getDeploymentVerificationPopoverResult(
-      List<String> verificationJobInstanceIds) {
-    List<VerificationJobInstance> verificationJobInstances = get(verificationJobInstanceIds);
-    Preconditions.checkState(isNotEmpty(verificationJobInstances), "No VerificationJobInstance found with IDs %s",
-        verificationJobInstanceIds.toString());
-    List<VerificationJobInstance> postDeploymentVerificationJobInstances =
-        getPostDeploymentVerificationJobInstances(verificationJobInstances);
-    Map<EnvironmentType, List<VerificationJobInstance>> preAndProductionDeploymentGroup =
-        getPreAndProductionDeploymentGroup(verificationJobInstances);
-
-    return DeploymentActivityPopoverResultDTO.builder()
-        .preProductionDeploymentSummary(
-            deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.PreProduction)))
-        .productionDeploymentSummary(
-            deploymentPopoverSummary(preAndProductionDeploymentGroup.get(EnvironmentType.Production)))
-        .postDeploymentSummary(deploymentPopoverSummary(postDeploymentVerificationJobInstances))
-        .build();
-  }
   @Override
   public List<TestVerificationBaselineExecutionDTO> getTestJobBaselineExecutions(
       String accountId, String orgIdentifier, String projectIdentifier, String verificationJobIdentifier) {
@@ -530,7 +478,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  private ActivityVerificationStatus getDeploymentVerificationStatus(VerificationJobInstance verificationJobInstance) {
+  @VisibleForTesting
+  ActivityVerificationStatus getDeploymentVerificationStatus(VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getExecutionStatus()) {
       case QUEUED:
         return ActivityVerificationStatus.NOT_STARTED;
@@ -711,31 +660,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
         .collect(Collectors.toList());
   }
 
-  @Nullable
-  private DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary deploymentPopoverSummary(
-      List<VerificationJobInstance> verificationJobInstances) {
-    if (isEmpty(verificationJobInstances)) {
-      return null;
-    }
-
-    List<DeploymentActivityPopoverResultDTO.VerificationResult> verificationResults =
-        verificationJobInstances.stream()
-            .map(verificationJobInstance
-                -> DeploymentActivityPopoverResultDTO.VerificationResult.builder()
-                       .status(getDeploymentVerificationStatus(verificationJobInstance))
-                       .jobName(verificationJobInstance.getResolvedJob().getJobName())
-                       .progressPercentage(verificationJobInstance.getProgressPercentage())
-                       .remainingTimeMs(verificationJobInstance.getRemainingTime(clock.instant()).toMillis())
-                       .startTime(verificationJobInstance.getStartTime().toEpochMilli())
-                       .risk(getLatestRisk(verificationJobInstance).orElse(null))
-                       .build())
-            .collect(Collectors.toList());
-    return DeploymentActivityPopoverResultDTO.DeploymentPopoverSummary.builder()
-        .total(verificationJobInstances.size())
-        .verificationResults(verificationResults)
-        .build();
-  }
-
   private EnvironmentResponseDTO getEnvironment(VerificationJob verificationJob) {
     return nextGenService.getEnvironment(verificationJob.getAccountId(), verificationJob.getOrgIdentifier(),
         verificationJob.getProjectIdentifier(), verificationJob.getEnvIdentifier());
@@ -764,7 +688,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType());
 
       if (preDeploymentTimeRange.isPresent()) {
-        DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo preDeploymentDataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         preDeploymentDataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
         dataCollectionTasks.add(DeploymentDataCollectionTask.builder()
@@ -784,7 +709,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       }
 
       timeRanges.forEach(timeRange -> {
-        DataCollectionInfo dataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo dataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         // TODO: For Now the DSL is same for both. We need to see how this evolves when implementation other provider.
         // Keeping this simple for now.
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());

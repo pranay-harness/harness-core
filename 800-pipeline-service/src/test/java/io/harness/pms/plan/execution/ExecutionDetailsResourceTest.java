@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static io.harness.rule.OwnerRule.SAMARTH;
@@ -24,7 +31,6 @@ import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
-import io.harness.pms.pipeline.mappers.PipelineExecutionSummaryDtoMapper;
 import io.harness.pms.pipeline.service.PMSPipelineService;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.plan.execution.beans.dto.PipelineExecutionDetailDTO;
@@ -51,7 +57,6 @@ import org.springframework.data.domain.Sort.Direction;
 public class ExecutionDetailsResourceTest extends CategoryTest {
   @InjectMocks ExecutionDetailsResource executionDetailsResource;
   @Mock PMSExecutionService pmsExecutionService;
-  @Mock PipelineExecutionSummaryDtoMapper pipelineExecutionSummaryDtoMapper;
   @Mock PMSPipelineService pmsPipelineService;
   @Mock AccessControlClient accessControlClient;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
@@ -132,12 +137,6 @@ public class ExecutionDetailsResourceTest extends CategoryTest {
     doReturn(Optional.of(PipelineEntity.builder().build()))
         .when(pmsPipelineService)
         .get(anyString(), anyString(), anyString(), anyString(), anyBoolean());
-    doReturn(PipelineExecutionSummaryDTO.builder()
-                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                 .planExecutionId(PLAN_EXECUTION_ID)
-                 .build())
-        .when(pipelineExecutionSummaryDtoMapper)
-        .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
 
     doReturn(null).when(pmsGitSyncHelper).getGitSyncBranchContextBytesThreadLocal();
 
@@ -171,13 +170,6 @@ public class ExecutionDetailsResourceTest extends CategoryTest {
                              .build()))
         .when(pmsPipelineService)
         .getWithoutIsDeleted(anyString(), anyString(), anyString(), anyString());
-
-    doReturn(PipelineExecutionSummaryDTO.builder()
-                 .pipelineIdentifier(PIPELINE_IDENTIFIER)
-                 .planExecutionId(PLAN_EXECUTION_ID)
-                 .build())
-        .when(pipelineExecutionSummaryDtoMapper)
-        .toDto(executionSummaryEntity, executionSummaryEntity.getEntityGitDetails());
 
     doNothing().when(accessControlClient).checkForAccessOrThrow(any(), any(), any());
 

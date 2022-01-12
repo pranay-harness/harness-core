@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,6 +20,7 @@ import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.beans.DatasourceTypeDTO;
+import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.beans.params.ServiceEnvironmentParams;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVConfig.CVConfigKeys;
@@ -336,6 +344,17 @@ public class CVConfigServiceImpl implements CVConfigService {
   }
 
   @Override
+  public List<CVConfig> list(ProjectParams projectParams, List<String> identifiers) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(CVConfigKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(CVConfigKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .field(CVConfigKeys.identifier)
+        .in(identifiers)
+        .asList();
+  }
+
+  @Override
   public Map<String, DataSourceType> getDataSourceTypeForCVConfigs(
       ServiceEnvironmentParams serviceEnvironmentParams, List<String> cvConfigIds) {
     Map<String, DataSourceType> cvConfigIdDataSourceTypeMap = new HashMap<>();
@@ -520,5 +539,15 @@ public class CVConfigServiceImpl implements CVConfigService {
     return cvConfigs.stream()
         .filter(cvConfig -> monitoringSources.contains(cvConfig.getIdentifier()))
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public List<CVConfig> getCVConfigs(ProjectParams projectParams, String identifier) {
+    return hPersistence.createQuery(CVConfig.class, excludeAuthority)
+        .filter(CVConfigKeys.accountId, projectParams.getAccountIdentifier())
+        .filter(CVConfigKeys.orgIdentifier, projectParams.getOrgIdentifier())
+        .filter(CVConfigKeys.projectIdentifier, projectParams.getProjectIdentifier())
+        .filter(CVConfigKeys.identifier, identifier)
+        .asList();
   }
 }

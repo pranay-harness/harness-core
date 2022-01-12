@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 import datetime
 import os
 import util
@@ -60,6 +65,7 @@ def main(jsonData, context):
     # clusterdata-prod/WhejVM7NTJe2fZ99Pdo2YA/*.avro
     jsonData["fileName"] = filePath.split("/")[-1]
     jsonData["accountId"] = filePath.split("/")[-2]
+    jsonData["cloudProvider"] = "CLUSTER"
     if jsonData["accountId"] in os.environ.get("disable_for_accounts", "").split(","):
         print_("Execution disabled for this account :%s" % jsonData["accountId"])
         return
@@ -111,7 +117,7 @@ def main(jsonData, context):
 
 
 def create_dataset_and_tables(jsonData):
-    create_dataset(client, jsonData["datasetName"])
+    create_dataset(client, jsonData["datasetName"], jsonData.get("accountId"))
     dataset = client.dataset(jsonData["datasetName"])
 
     cluster_data_table_ref = dataset.table(jsonData["tableName"])

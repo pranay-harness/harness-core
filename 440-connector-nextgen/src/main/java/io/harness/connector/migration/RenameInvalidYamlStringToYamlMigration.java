@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.connector.migration;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -30,14 +37,17 @@ public class RenameInvalidYamlStringToYamlMigration implements NGMigration {
 
     log.info("Starting migration to rename invalid yaml string field to yaml for connectors");
     while (iterator.hasNext()) {
-      Connector connector = iterator.next();
-      if (connector.isEntityInvalid()) {
-        connector.setYaml(connector.getInvalidYamlString());
-        connector.setInvalidYamlString(null);
-        mongoTemplate.save(connector);
+      try {
+        Connector connector = iterator.next();
+        if (connector.isEntityInvalid()) {
+          connector.setYaml(connector.getInvalidYamlString());
+          connector.setInvalidYamlString(null);
+          mongoTemplate.save(connector);
+        }
+      } catch (Exception exception) {
+        log.error("unable to run rename invalid yaml string to yaml for entity, ignoring it...", exception);
       }
     }
-
     log.info("Migration to rename invalid yaml string field to yaml for connectors completed successfully");
   }
 }

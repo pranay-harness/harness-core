@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.ngpipeline.inputset.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -23,6 +30,7 @@ import io.harness.pms.ngpipeline.inputset.beans.resource.InputSetTemplateRespons
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.service.PMSPipelineService;
+import io.harness.pms.pipeline.service.PipelineCRUDErrorResponse;
 import io.harness.pms.plan.execution.StagesExecutionHelper;
 import io.harness.pms.stages.StagesExpressionExtractor;
 
@@ -50,6 +58,9 @@ public class ValidateAndMergeHelper {
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
     }
+    if (identifier.length() > 63) {
+      throw new InvalidRequestException("Input Set identifier length cannot be more that 63 characters.");
+    }
     InputSetYamlHelper.confirmPipelineIdentifierInInputSet(yaml, pipelineIdentifier);
     InputSetYamlHelper.confirmOrgAndProjectIdentifier(yaml, "inputSet", orgIdentifier, projectIdentifier);
 
@@ -73,7 +84,8 @@ public class ValidateAndMergeHelper {
       if (pipelineEntity.isPresent()) {
         pipelineYaml = pipelineEntity.get().getYaml();
       } else {
-        throw new InvalidRequestException("Pipeline does not exist");
+        throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+            orgIdentifier, projectIdentifier, pipelineIdentifier));
       }
     }
     return pipelineYaml;
@@ -84,6 +96,9 @@ public class ValidateAndMergeHelper {
     String identifier = InputSetYamlHelper.getStringField(yaml, "identifier", "overlayInputSet");
     if (EmptyPredicate.isEmpty(identifier)) {
       throw new InvalidRequestException("Identifier cannot be empty");
+    }
+    if (identifier.length() > 63) {
+      throw new InvalidRequestException("Overlay Input Set identifier length cannot be more that 63 characters.");
     }
     List<String> inputSetReferences = InputSetYamlHelper.getReferencesFromOverlayInputSetYaml(yaml);
     if (inputSetReferences.isEmpty()) {
@@ -115,9 +130,13 @@ public class ValidateAndMergeHelper {
   private List<Optional<InputSetEntity>> findAllReferredInputSets(List<String> referencesInOverlay, String accountId,
       String orgIdentifier, String projectIdentifier, String pipelineIdentifier) {
     List<Optional<InputSetEntity>> inputSets = new ArrayList<>();
-    referencesInOverlay.forEach(identifier
-        -> inputSets.add(pmsInputSetService.get(
-            accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false)));
+    referencesInOverlay.forEach(identifier -> {
+      if (EmptyPredicate.isEmpty(identifier)) {
+        throw new InvalidRequestException("Empty Input Set Identifier not allowed in Input Set References");
+      }
+      inputSets.add(
+          pmsInputSetService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, identifier, false));
+    });
     return inputSets;
   }
 
@@ -141,9 +160,11 @@ public class ValidateAndMergeHelper {
       return InputSetTemplateResponseDTOPMS.builder()
           .inputSetTemplateYaml(template)
           .replacedExpressions(replacedExpressions)
+          .modules(optionalPipelineEntity.get().getFilters().keySet())
           .build();
     } else {
-      throw new InvalidRequestException("Could not find pipeline");
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
   }
 
@@ -160,7 +181,8 @@ public class ValidateAndMergeHelper {
       }
 
     } else {
-      throw new InvalidRequestException("Could not find pipeline");
+      throw new InvalidRequestException(PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(
+          orgIdentifier, projectIdentifier, pipelineIdentifier));
     }
   }
 

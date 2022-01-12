@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static java.lang.String.format;
@@ -44,6 +51,8 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -70,7 +79,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Tag(name = "execute", description = "This contains APIs related to pipeline execution")
+@Tag(name = "Execute", description = "This contains APIs for executing a Pipeline.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {
@@ -82,6 +91,11 @@ import org.hibernate.validator.constraints.NotEmpty;
     {
       @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorDTO.class))
       , @Content(mediaType = "application/yaml", schema = @Schema(implementation = ErrorDTO.class))
+    })
+@ApiResponses(value =
+    {
+      @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
+      , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @OwnedBy(HarnessTeam.PIPELINE)
 @Api("/pipeline/execute")
@@ -587,22 +601,24 @@ public class PlanExecutionResource {
   }
 
   @GET
-  @ApiOperation(value = "Run a schema on db.", nickname = "runSchemaOnDb")
-  @Path("/internal/runSchema")
-  public ResponseDTO<String> runASchemaMigration() {
-    orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
-    return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
-  }
-
-  @GET
   @ApiOperation(value = "get list of stages for stage execution", nickname = "getStagesExecutionList")
   @Path("/stagesExecutionList")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
-  public ResponseDTO<List<StageExecutionResponse>> getStagesExecutionList(
-      @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
-      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
-      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
-      @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty String pipelineIdentifier,
+  @Operation(operationId = "getStagesExecutionList", summary = "Get list of Stages to select for Stage executions",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "Returns list of Stage identifiers with their names and stage dependencies")
+      })
+  public ResponseDTO<List<StageExecutionResponse>>
+  getStagesExecutionList(@NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier @Parameter(
+                             description = PipelineResourceConstants.ACCOUNT_PARAM_MESSAGE) String accountId,
+      @NotNull @QueryParam(NGCommonEntityConstants.ORG_KEY) @OrgIdentifier @Parameter(
+          description = PipelineResourceConstants.ORG_PARAM_MESSAGE) String orgIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier @Parameter(
+          description = PipelineResourceConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier,
+      @NotNull @QueryParam(NGCommonEntityConstants.PIPELINE_KEY) @ResourceIdentifier @NotEmpty @Parameter(
+          description = PipelineResourceConstants.PIPELINE_ID_PARAM_MESSAGE) String pipelineIdentifier,
       @BeanParam GitEntityFindInfoDTO gitEntityBasicInfo) {
     Optional<PipelineEntity> optionalPipelineEntity =
         pmsPipelineService.get(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier, false);

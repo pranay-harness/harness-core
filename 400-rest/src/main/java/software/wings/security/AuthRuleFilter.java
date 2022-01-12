@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -33,6 +40,7 @@ import io.harness.security.annotations.LearningEngineAuth;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.security.annotations.PublicApi;
 import io.harness.security.annotations.PublicApiWithWhitelist;
+import io.harness.security.annotations.ScimAPI;
 
 import software.wings.beans.Account;
 import software.wings.beans.AccountStatus;
@@ -51,7 +59,6 @@ import software.wings.security.annotations.AuthRule;
 import software.wings.security.annotations.ExternalFacingApiAuth;
 import software.wings.security.annotations.IdentityServiceAuth;
 import software.wings.security.annotations.ListAPI;
-import software.wings.security.annotations.ScimAPI;
 import software.wings.security.annotations.Scope;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -112,7 +119,8 @@ public class AuthRuleFilter implements ContainerRequestFilter {
   private static final String[] EXEMPTED_URI_PREFIXES = new String[] {"limits/configure", "account/license",
       "account/export", "account/import", "account/delete/", "account/disable", "account/enable", "users/reset-cache",
       "executions/workflow-variables", "executions/nodeSubGraphs", "executions/deployment-metadata",
-      "setup-as-code/yaml/internal/template-yaml-sync", "infrastructure-definitions/list"};
+      "setup-as-code/yaml/internal/template-yaml-sync", "infrastructure-definitions/list",
+      "usageRestrictions/references", "setup/delegates/ng/v2"};
   private static final String[] EXEMPTED_URI_SUFFIXES = new String[] {"sales-contacts", "addSubdomainUrl"};
   private static final String USER_NOT_AUTHORIZED = "User not authorized";
   private static final String X_FORWARDED_FOR = "X-Forwarded-For";

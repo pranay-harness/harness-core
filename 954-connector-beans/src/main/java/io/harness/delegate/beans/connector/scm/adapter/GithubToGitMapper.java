@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.beans.connector.scm.adapter;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -43,15 +50,19 @@ public class GithubToGitMapper {
         usernameRef = githubUsernameTokenDTO.getUsernameRef();
         passwordRef = githubUsernameTokenDTO.getTokenRef();
       }
-      return GitConfigCreater.getGitConfigForHttp(connectionType, url, validationRepo, username, usernameRef,
-          passwordRef, githubConnectorDTO.getDelegateSelectors());
+      GitConfigDTO gitConfigForHttp = GitConfigCreater.getGitConfigForHttp(connectionType, url, validationRepo,
+          username, usernameRef, passwordRef, githubConnectorDTO.getDelegateSelectors());
+      gitConfigForHttp.setExecuteOnDelegate(githubConnectorDTO.getExecuteOnDelegate());
+      return gitConfigForHttp;
 
     } else if (authType == GitAuthType.SSH) {
       final GithubSshCredentialsDTO credentials =
           (GithubSshCredentialsDTO) githubConnectorDTO.getAuthentication().getCredentials();
       final SecretRefData sshKeyRef = credentials.getSshKeyRef();
-      return GitConfigCreater.getGitConfigForSsh(
+      GitConfigDTO gitConfigForSsh = GitConfigCreater.getGitConfigForSsh(
           connectionType, url, validationRepo, sshKeyRef, githubConnectorDTO.getDelegateSelectors());
+      gitConfigForSsh.setExecuteOnDelegate(githubConnectorDTO.getExecuteOnDelegate());
+      return gitConfigForSsh;
     }
     throw new InvalidRequestException("Unknown auth type: " + authType);
   }

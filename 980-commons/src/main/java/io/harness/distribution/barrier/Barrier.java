@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.distribution.barrier;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -14,7 +21,6 @@ import java.util.Deque;
 import java.util.List;
 import lombok.Builder;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
 
 /*
  * Distributed Barrier is designed to provide a very well known inproc pattern of waiting until every thread hits a
@@ -40,11 +46,9 @@ import lombok.extern.slf4j.Slf4j;
 
 @Value
 @Builder
-@Slf4j
 public class Barrier {
   private BarrierId id;
   private Forcer forcer;
-  private static final String DEBUG_LINE = "CDC_10273_TEST_LOG:";
 
   public enum State {
     // Standing when the barrier is standing because not all of the forcers are inline.
@@ -94,8 +98,6 @@ public class Barrier {
       forcerCount++;
 
       final Forcer.State forcerState = proctor.getForcerState(firstForcer.getId(), firstForcer.getMetadata());
-      log.info("{} Time taken till getting forcer state for {}: {}", DEBUG_LINE, firstForcer.getId().getValue(),
-          getDuration(startTime));
       switch (forcerState) {
         case ABSENT:
           // If the forcer is absent, the barrier stands, but there is no reason to check the children
@@ -130,7 +132,6 @@ public class Barrier {
       }
     }
 
-    log.info("{} Total number of forcers processed: {}", DEBUG_LINE, forcerCount);
     return result;
   }
 

@@ -1,10 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.steps.approval.step.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.CollectionUtils;
-import io.harness.exception.JiraStepException;
+import io.harness.exception.ApprovalStepNGException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.AsyncExecutableWithRollback;
 import io.harness.pms.contracts.ambiance.Ambiance;
@@ -54,7 +61,7 @@ public class JiraApprovalStep extends AsyncExecutableWithRollback {
     JiraApprovalInstance instance =
         (JiraApprovalInstance) approvalInstanceService.get(jiraApprovalResponseData.getInstanceId());
     if (instance.getStatus() == ApprovalStatus.FAILED) {
-      throw new JiraStepException(
+      throw new ApprovalStepNGException(
           instance.getErrorMessage() != null ? instance.getErrorMessage() : "Unknown error polling jira issue");
     }
     return StepResponse.builder()

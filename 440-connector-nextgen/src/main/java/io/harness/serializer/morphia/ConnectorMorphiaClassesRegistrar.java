@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -30,6 +37,7 @@ import io.harness.connector.entities.embedded.ceawsconnector.CURAttributes;
 import io.harness.connector.entities.embedded.ceawsconnector.S3BucketDetails;
 import io.harness.connector.entities.embedded.ceazure.CEAzureConfig;
 import io.harness.connector.entities.embedded.cek8s.CEK8sDetails;
+import io.harness.connector.entities.embedded.customhealthconnector.CustomHealthConnector;
 import io.harness.connector.entities.embedded.datadogconnector.DatadogConnector;
 import io.harness.connector.entities.embedded.docker.DockerConnector;
 import io.harness.connector.entities.embedded.docker.DockerUserNamePasswordAuthentication;
@@ -73,6 +81,7 @@ import io.harness.connector.entities.embedded.nexusconnector.NexusConnector;
 import io.harness.connector.entities.embedded.nexusconnector.NexusUserNamePasswordAuthentication;
 import io.harness.connector.entities.embedded.pagerduty.PagerDutyConnector;
 import io.harness.connector.entities.embedded.prometheusconnector.PrometheusConnector;
+import io.harness.connector.entities.embedded.servicenow.ServiceNowConnector;
 import io.harness.connector.entities.embedded.splunkconnector.SplunkConnector;
 import io.harness.connector.entities.embedded.sumologic.SumoLogicConnector;
 import io.harness.connector.entities.embedded.vaultconnector.VaultConnector;
@@ -117,6 +126,8 @@ public class ConnectorMorphiaClassesRegistrar implements MorphiaRegistrar {
     set.add(SumoLogicConnector.class);
     set.add(DynatraceConnector.class);
     set.add(PagerDutyConnector.class);
+    set.add(CustomHealthConnector.class);
+    set.add(ServiceNowConnector.class);
   }
 
   @Override

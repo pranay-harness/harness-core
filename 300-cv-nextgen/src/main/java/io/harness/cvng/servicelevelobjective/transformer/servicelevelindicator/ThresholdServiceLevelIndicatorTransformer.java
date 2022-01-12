@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator;
 
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -10,8 +17,9 @@ import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndic
 public class ThresholdServiceLevelIndicatorTransformer
     extends ServiceLevelIndicatorTransformer<ThresholdServiceLevelIndicator, ServiceLevelIndicatorSpec> {
   @Override
-  public ThresholdServiceLevelIndicator getEntity(
-      ProjectParams projectParams, ServiceLevelIndicatorDTO serviceLevelIndicatorDTO) {
+  public ThresholdServiceLevelIndicator getEntity(ProjectParams projectParams,
+      ServiceLevelIndicatorDTO serviceLevelIndicatorDTO, String monitoredServiceIdentifier,
+      String healthSourceIdentifier) {
     ThresholdSLIMetricSpec thresholdSLIMetricSpec =
         (ThresholdSLIMetricSpec) serviceLevelIndicatorDTO.getSpec().getSpec();
 
@@ -22,7 +30,12 @@ public class ThresholdServiceLevelIndicatorTransformer
         .identifier(serviceLevelIndicatorDTO.getIdentifier())
         .name(serviceLevelIndicatorDTO.getName())
         .type(serviceLevelIndicatorDTO.getType())
+        .sliMissingDataType(serviceLevelIndicatorDTO.getSliMissingDataType())
         .metric1(thresholdSLIMetricSpec.getMetric1())
+        .thresholdValue(thresholdSLIMetricSpec.getThresholdValue())
+        .thresholdType(thresholdSLIMetricSpec.getThresholdType())
+        .monitoredServiceIdentifier(monitoredServiceIdentifier)
+        .healthSourceIdentifier(healthSourceIdentifier)
         .build();
   }
 
@@ -30,7 +43,11 @@ public class ThresholdServiceLevelIndicatorTransformer
   protected ServiceLevelIndicatorSpec getSpec(ThresholdServiceLevelIndicator serviceLevelIndicator) {
     return ServiceLevelIndicatorSpec.builder()
         .type(SLIMetricType.THRESHOLD)
-        .spec(ThresholdSLIMetricSpec.builder().metric1(serviceLevelIndicator.getMetric1()).build())
+        .spec(ThresholdSLIMetricSpec.builder()
+                  .metric1(serviceLevelIndicator.getMetric1())
+                  .thresholdValue(serviceLevelIndicator.getThresholdValue())
+                  .thresholdType(serviceLevelIndicator.getThresholdType())
+                  .build())
         .build();
   }
 }

@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.service.yamlschema;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
 import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
 
+import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.jackson.JsonNodeUtils;
@@ -10,14 +18,18 @@ import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
+import io.harness.yaml.schema.YamlSchemaTransientHelper;
 import io.harness.yaml.schema.beans.FieldEnumData;
 import io.harness.yaml.schema.beans.FieldSubtypeData;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
+import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -31,6 +43,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -48,16 +61,24 @@ public class PmsYamlSchemaHelper {
   public static final Class<StageElementConfig> STAGE_ELEMENT_CONFIG_CLASS = StageElementConfig.class;
 
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
+  private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   private final YamlSchemaGenerator yamlSchemaGenerator;
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   @Inject
   public PmsYamlSchemaHelper(@Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      YamlSchemaGenerator yamlSchemaGenerator) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, YamlSchemaGenerator yamlSchemaGenerator,
+      PmsFeatureFlagHelper pmsFeatureFlagHelper) {
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
+    this.yamlSchemaRootClasses = yamlSchemaRootClasses;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.pmsFeatureFlagHelper = pmsFeatureFlagHelper;
   }
 
   public void modifyStepElementSchema(ObjectNode jsonNode) {
+    if (jsonNode == null) {
+      return;
+    }
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     Map<String, SwaggerDefinitionsMetaInfo> swaggerDefinitionsMetaInfoMap = new HashMap<>();
     Field typedField = io.harness.yaml.utils.YamlSchemaUtils.getTypedField(STEP_ELEMENT_CONFIG_CLASS);
@@ -95,6 +116,10 @@ public class PmsYamlSchemaHelper {
 
   public void processPartialStageSchema(ObjectNode pipelineDefinitions, ObjectNode pipelineSteps,
       ObjectNode stageElementConfig, PartialSchemaDTO partialSchemaDTO) {
+    YamlSchemaTransientHelper.removeV2StepEnumsFromStepElementConfig(partialSchemaDTO.getSchema()
+                                                                         .get(DEFINITIONS_NODE)
+                                                                         .get(partialSchemaDTO.getNamespace())
+                                                                         .get(STEP_ELEMENT_CONFIG));
     SubtypeClassMap subtypeClassMap =
         SubtypeClassMap.builder()
             .subTypeDefinitionKey(partialSchemaDTO.getNamespace() + "/" + partialSchemaDTO.getNodeName())
@@ -182,5 +207,23 @@ public class PmsYamlSchemaHelper {
                                .fieldName("type")
                                .enumValues(ImmutableSet.of(subtypeClassMap.getSubtypeEnum()))
                                .build());
+  }
+
+  public List<EntityType> getNodeEntityTypesByYamlGroup(String yamlGroup) {
+    return YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, yamlGroup);
+  }
+
+  public Set<String> getEnabledFeatureFlags(
+      String accountIdentifier, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
+    Set<String> enabledFeatureFlags = new HashSet<>();
+    for (YamlSchemaWithDetails yamlSchemaWithDetails : yamlSchemaWithDetailsList) {
+      List<String> featureFlags = yamlSchemaWithDetails.getYamlSchemaMetadata().getFeatureFlags();
+      if (featureFlags != null) {
+        enabledFeatureFlags.addAll(featureFlags.stream()
+                                       .filter(o -> pmsFeatureFlagHelper.isEnabled(accountIdentifier, o))
+                                       .collect(Collectors.toList()));
+      }
+    }
+    return enabledFeatureFlags;
   }
 }

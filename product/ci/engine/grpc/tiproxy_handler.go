@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package grpc
 
 import (
@@ -111,6 +116,7 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 	stepId := ""
 	repo := ""
 	sha := ""
+	commitLink := ""
 	for {
 		msg, err := stream.Recv()
 		if err == io.EOF {
@@ -123,6 +129,7 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 		stepId = msg.GetStepId()
 		repo = msg.GetRepo()
 		sha = msg.GetSha()
+		commitLink = msg.GetCommitLink()
 		ret := msg.GetTests()
 		for _, bt := range ret {
 			t := &types.TestCase{}
@@ -157,7 +164,7 @@ func (h *tiProxyHandler) WriteTests(stream pb.TiProxy_WriteTestsServer) error {
 		return err
 	}
 	report := "junit" // get from proto if we need other reports in the future
-	err = tc.Write(stream.Context(), org, project, pipeline, build, stage, stepId, report, repo, sha, tests)
+	err = tc.Write(stream.Context(), org, project, pipeline, build, stage, stepId, report, repo, sha, commitLink, tests)
 	if err != nil {
 		h.log.Errorw("could not write test cases: ", zap.Error(err))
 		return err

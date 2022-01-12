@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.migrations.all;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -67,11 +74,6 @@ public class EnableIteratorsForLdapSync implements Migration {
       ldapSettings.setNextIterations(new ArrayList<>());
       ldapSettings.setCronExpression(ldapSyncJobConfig.getDefaultCronExpression());
       List<Long> nextFireTime = ldapSettings.recalculateNextIterations(SSOSettingsKeys.nextIterations, true, 0);
-      if (!nextFireTime.isEmpty()) {
-        // It automatically adds current timestamp when list is empty. This is not desired
-        nextFireTime = nextFireTime.subList(1, nextFireTime.size());
-      }
-
       // Update the current ldapSettings to use the IteratorsFramework
       Query<LdapSettings> query = wingsPersistence.createQuery(LdapSettings.class)
                                       .filter(SSOSettings.UUID_KEY, ldapSettings.getUuid())

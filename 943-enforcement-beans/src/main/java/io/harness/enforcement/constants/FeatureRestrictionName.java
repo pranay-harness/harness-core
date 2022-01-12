@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.constants;
 
 /**
@@ -10,10 +17,13 @@ public enum FeatureRestrictionName {
   TEST3,
   TEST4,
   TEST5,
+  TEST6,
+  TEST7,
 
   // CCM Features
   PERSPECTIVES,
   CCM_K8S_CLUSTERS,
+  CCM_AUTOSTOPPING_RULES,
 
   // All Features
   MULTIPLE_ORGANIZATIONS,
@@ -36,6 +46,7 @@ public enum FeatureRestrictionName {
   MAX_BUILDS_PER_MONTH,
   ACTIVE_COMMITTERS,
   TEST_INTELLIGENCE,
+  TEMPLATE_SERVICE,
 
   // CD Step Palette
   K8S_BG_SWAP_SERVICES,
@@ -50,5 +61,10 @@ public enum FeatureRestrictionName {
   TERRAFORM_APPLY,
   TERRAFORM_PLAN,
   TERRAFORM_DESTROY,
-  TERRAFORM_ROLLBACK;
+  TERRAFORM_ROLLBACK,
+  INTEGRATED_APPROVALS_WITH_SERVICE_NOW,
+
+  // FF Features
+  DEVELOPERS,
+  MONTHLY_ACTIVE_USERS;
 }

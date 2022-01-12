@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.rule;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -17,6 +24,7 @@ import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.ng.NextGenConfiguration;
 import io.harness.ng.userprofile.commons.SCMType;
 import io.harness.ng.userprofile.entities.AwsCodeCommitSCM.AwsCodeCommitSCMMapper;
 import io.harness.ng.userprofile.entities.AzureDevOpsSCM.AzureDevOpsSCMMapper;
@@ -24,6 +32,7 @@ import io.harness.ng.userprofile.entities.BitbucketSCM.BitbucketSCMMapper;
 import io.harness.ng.userprofile.entities.GithubSCM.GithubSCMMapper;
 import io.harness.ng.userprofile.entities.GitlabSCM.GitlabSCMMapper;
 import io.harness.ng.userprofile.entities.SourceCodeManager.SourceCodeManagerMapper;
+import io.harness.oas.OASModule;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.serializer.jackson.PmsBeansJacksonModule;
 import io.harness.serializer.KryoModule;
@@ -52,6 +61,7 @@ import io.dropwizard.jackson.Jackson;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -78,6 +88,12 @@ public class NgManagerRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
     modules.add(TestMongoModule.getInstance());
     modules.add(KryoModule.getInstance());
     modules.add(YamlSdkModule.getInstance());
+    modules.add(new OASModule() {
+      @Override
+      public Collection<Class<?>> getResourceClasses() {
+        return NextGenConfiguration.getResourceClasses();
+      }
+    });
     modules.add(new AbstractModule() {
       @Override
       protected void configure() {

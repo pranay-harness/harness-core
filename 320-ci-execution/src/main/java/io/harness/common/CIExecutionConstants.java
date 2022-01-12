@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.common;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -105,6 +112,14 @@ public class CIExecutionConstants {
   public static final String HARNESS_SERVICE_ARGS = "HARNESS_SERVICE_ARGS";
 
   public static final String HARNESS_WORKSPACE = "HARNESS_WORKSPACE";
+
+  public static final String PLUGIN_USERNAME = "PLUGIN_USERNAME";
+  public static final String PLUGIN_PASSW = "PLUGIN_PASSWORD";
+  public static final String PLUGIN_REGISTRY = "PLUGIN_REGISTRY";
+  public static final String PLUGIN_ACCESS_KEY = "PLUGIN_ACCESS_KEY";
+  public static final String PLUGIN_SECRET_KEY = "PLUGIN_SECRET_KEY";
+  public static final String PLUGIN_JSON_KEY = "PLUGIN_JSON_KEY";
+  public static final String PLUGIN_URL = "PLUGIN_URL";
 
   // All FFs go here
   public static final String HARNESS_CI_INDIRECT_LOG_UPLOAD_FF = "HARNESS_CI_INDIRECT_LOG_UPLOAD_FF";

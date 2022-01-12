@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.common.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -131,9 +138,10 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
         entityRef.getOrgIdentifier(), entityRef.getAccountIdentifier(), pushInfo.getYamlGitConfigId());
     // todo(abhinav): Think about what if something happens in middle of operations.
     saveGitEntity(pushInfo, entityDetail, yamlGitConfigDTO);
+    resolveConnectivityErrors(pushInfo, yamlGitConfigDTO);
     if (!pushInfo.getIsSyncFromGit()) {
       saveGitCommit(pushInfo, yamlGitConfigDTO);
-      markResolvedErrors(pushInfo, yamlGitConfigDTO);
+      resolveGitToHarnessErrors(pushInfo, yamlGitConfigDTO);
     }
     shortListTheBranch(
         yamlGitConfigDTO, entityRef.getAccountIdentifier(), pushInfo.getBranchName(), pushInfo.getIsNewBranch());
@@ -148,9 +156,13 @@ public class HarnessToGitHelperServiceImpl implements HarnessToGitHelperService 
     }
   }
 
-  private void markResolvedErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
+  private void resolveConnectivityErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
+    gitSyncErrorService.resolveConnectivityErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo());
+  }
+
+  private void resolveGitToHarnessErrors(PushInfo pushInfo, YamlGitConfigDTO yamlGitConfigDTO) {
     String completeFilePath = ScmGitUtils.createFilePath(pushInfo.getFolderPath(), pushInfo.getFilePath());
-    gitSyncErrorService.markResolvedErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
+    gitSyncErrorService.resolveGitToHarnessErrors(pushInfo.getAccountId(), yamlGitConfigDTO.getRepo(),
         pushInfo.getBranchName(), new HashSet<>(Collections.singleton(completeFilePath)), pushInfo.getCommitId());
   }
 

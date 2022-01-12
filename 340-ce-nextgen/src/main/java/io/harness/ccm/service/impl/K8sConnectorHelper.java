@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm.service.impl;
 
 import io.harness.connector.ConnectorDTO;
@@ -7,6 +14,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesAuthCredentialD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsDTO;
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialType;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.remote.client.NGRestUtils;
@@ -15,7 +23,6 @@ import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.hazelcast.util.Preconditions;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,10 +62,12 @@ public class K8sConnectorHelper {
       String connectorIdentifier, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     Optional<ConnectorDTO> response = NGRestUtils.getResponse(
         connectorResourceClient.get(connectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier));
-    Preconditions.checkState(response.isPresent(),
-        String.format("connectorIdentifier=[%s] in org=[%s], project=[%s] doesnt exist", connectorIdentifier,
-            orgIdentifier, projectIdentifier));
 
-    return response.get().getConnectorInfo().getConnectorConfig();
+    if (response.isPresent()) {
+      return response.get().getConnectorInfo().getConnectorConfig();
+    }
+
+    throw new InvalidArgumentsException(String.format("connectorIdentifier=[%s] in org=[%s], project=[%s] doesnt exist",
+        connectorIdentifier, orgIdentifier, projectIdentifier));
   }
 }

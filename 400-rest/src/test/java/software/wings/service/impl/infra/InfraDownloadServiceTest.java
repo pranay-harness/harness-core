@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.infra;
 
 import static io.harness.rule.OwnerRule.BRETT;
@@ -7,12 +14,9 @@ import static io.harness.rule.OwnerRule.RUSHABH;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyLong;
-import static org.mockito.Matchers.anyString;
-import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
-import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.environment.SystemEnvironment;
 import io.harness.ff.FeatureFlagService;
@@ -78,7 +82,6 @@ public class InfraDownloadServiceTest extends CategoryTest {
     when(mainConfiguration.getPortal()).thenReturn(portalConfig);
     PowerMockito.when(GoogleCredential.fromStream(any(InputStream.class))).thenReturn(credential);
     when(credential.createScoped(any())).thenReturn(credential);
-    when(featureFlagService.isEnabled(FeatureName.USE_CDN_FOR_STORAGE_FILES, eq(anyString()))).thenReturn(true);
   }
 
   @Test

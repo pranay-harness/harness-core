@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 
+import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
 import io.harness.cdng.instance.info.InstanceInfoService;
@@ -54,6 +62,7 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
   @Inject ExecutionSweepingOutputService executionSweepingOutputService;
   @Inject private InstanceInfoService instanceInfoService;
   @Inject private StepHelper stepHelper;
+  @Inject private AccountService accountService;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -132,7 +141,9 @@ public class K8sRollingRollbackStep extends TaskExecutableWithRollbackAndRbac<K8
 
       stepResponse = generateStepResponse(ambiance, executionResponse, stepResponseBuilder);
     } finally {
-      stepHelper.sendRollbackTelemetryEvent(ambiance, stepResponse == null ? Status.FAILED : stepResponse.getStatus());
+      String accountName = accountService.getAccount(AmbianceUtils.getAccountId(ambiance)).getName();
+      stepHelper.sendRollbackTelemetryEvent(
+          ambiance, stepResponse == null ? Status.FAILED : stepResponse.getStatus(), accountName);
     }
 
     return stepResponse;

@@ -1,3 +1,8 @@
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 ### Dockerization of Manager ####### Doc
 set -x
 set -e
@@ -116,14 +121,13 @@ fi
 
 cd ../..
 
-
 mkdir -p dist/delegate
-if [ ${USE_BAZEL_DELEGATE} == "true" ]; then
-  echo "building bazel 260-delegate"
-  cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
-else
+if [ ${USE_MAVEN_DELEGATE} == "true" ]; then
   echo "building maven 260-delegate"
   cp 260-delegate/target/delegate-capsule.jar dist/delegate/delegate-capsule.jar
+else
+  echo "building bazel 260-delegate"
+  cp ${HOME}/.bazel-dirs/bin/260-delegate/module_deploy.jar dist/delegate/delegate-capsule.jar
 fi
 
 cp 260-delegate/config-delegate.yml dist/delegate/config-delegate.yml

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.beans.connector.vaultconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -21,6 +28,7 @@ import io.harness.security.encryption.AccessType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -40,6 +48,7 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
+@Schema(name = "VaultConnector", description = "This contains the Vault Connector configuration")
 public class VaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData authToken;
   private String basePath;

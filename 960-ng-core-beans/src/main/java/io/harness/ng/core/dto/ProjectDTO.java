@@ -1,5 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.dto;
 
+import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include.NON_NULL;
@@ -31,15 +40,18 @@ import lombok.experimental.FieldDefaults;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
 @ApiModel(value = "Project")
-@Schema(name = "Project", description = "This is the view of the Project entity defined in Harness")
+@Schema(name = "Project", description = "This is the Project Entity details defined in Harness")
 public class ProjectDTO {
-  @EntityIdentifier(allowBlank = true) String orgIdentifier;
-  @ApiModelProperty(required = true) @EntityIdentifier(allowBlank = false) String identifier;
-  @ApiModelProperty(required = true) @NGEntityName String name;
-  String color;
-  @Size(max = 1024) List<ModuleType> modules;
-  @Size(max = 1024) String description;
-  @Size(max = 128) Map<String, String> tags;
+  @EntityIdentifier(allowBlank = true) @Schema(description = ORG_PARAM_MESSAGE) String orgIdentifier;
+  @ApiModelProperty(required = true)
+  @Schema(description = PROJECT_PARAM_MESSAGE)
+  @EntityIdentifier(allowBlank = false)
+  String identifier;
+  @ApiModelProperty(required = true) @Schema(description = "Project Name for the entity") @NGEntityName String name;
+  @Schema(description = "Color") String color;
+  @Size(max = 1024) @Schema(description = "List of modules") List<ModuleType> modules;
+  @Size(max = 1024) @Schema(description = "Description") String description;
+  @Size(max = 128) @Schema(description = "Tags") Map<String, String> tags;
   @JsonIgnore Long version;
 
   @Builder

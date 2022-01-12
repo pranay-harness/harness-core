@@ -59,10 +59,12 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+#not needed for dms, keeping it for dependency injection
 segmentConfiguration:
   enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
+  certValidationRequired: false
 
 distributedLockImplementation: MONGO
 
@@ -185,7 +187,7 @@ deployMode: KUBERNETES
 envPath: ""
 
 kubectlVersion: v1.13.2
-scmVersion: 72f01538
+scmVersion: 0e23b6f1
 
 portal:
   url: https://localhost:8000

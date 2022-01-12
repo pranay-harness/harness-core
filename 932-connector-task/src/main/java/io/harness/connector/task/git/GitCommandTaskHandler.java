@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.connector.task.git;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -15,6 +22,7 @@ import io.harness.cistatus.service.GithubAppConfig;
 import io.harness.cistatus.service.GithubService;
 import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorValidationResult;
+import io.harness.connector.ManagerExecutable;
 import io.harness.connector.helper.GitApiAccessDecryptionHelper;
 import io.harness.connector.service.git.NGGitService;
 import io.harness.connector.service.scm.ScmDelegateClient;
@@ -32,6 +40,7 @@ import io.harness.exception.runtime.SCMRuntimeException;
 import io.harness.git.GitClientHelper;
 import io.harness.product.ci.scm.proto.GetUserReposResponse;
 import io.harness.product.ci.scm.proto.SCMGrpc;
+import io.harness.service.ScmClient;
 import io.harness.service.ScmServiceClient;
 import io.harness.shell.SshSessionConfig;
 
@@ -49,6 +58,7 @@ public class GitCommandTaskHandler {
   @Inject private NGErrorHelper ngErrorHelper;
   @Inject private ScmDelegateClient scmDelegateClient;
   @Inject private ScmServiceClient scmServiceClient;
+  @Inject(optional = true) private ScmClient scmClient;
 
   public ConnectorValidationResult validateGitCredentials(GitConfigDTO gitConnector, ScmConnector scmConnector,
       String accountIdentifier, SshSessionConfig sshSessionConfig) {
@@ -74,7 +84,12 @@ public class GitCommandTaskHandler {
       GitConfigDTO gitConfig, ScmConnector scmConnector, String accountId, SshSessionConfig sshSessionConfig) {
     log.info("Processing Git command: VALIDATE");
     handleGitValidation(gitConfig, accountId, sshSessionConfig);
-    handleApiAccessValidation(scmConnector);
+    Boolean executeOnDelegate = Boolean.TRUE;
+    if (gitConfig instanceof ManagerExecutable) {
+      executeOnDelegate = ((ManagerExecutable) gitConfig).getExecuteOnDelegate();
+    }
+
+    handleApiAccessValidation(scmConnector, executeOnDelegate);
     return GitCommandExecutionResponse.builder()
         .gitCommandStatus(SUCCESS)
         .connectorValidationResult(ConnectorValidationResult.builder()
@@ -96,7 +111,7 @@ public class GitCommandTaskHandler {
     gitService.validateOrThrow(gitConfig, accountId, sshSessionConfig);
   }
 
-  private void handleApiAccessValidation(ScmConnector scmConnector) {
+  private void handleApiAccessValidation(ScmConnector scmConnector, Boolean executeOnDelegate) {
     if (!GitApiAccessDecryptionHelper.hasApiAccess(scmConnector)) {
       return;
     }
@@ -111,8 +126,12 @@ public class GitCommandTaskHandler {
 
     GetUserReposResponse reposResponse;
     try {
-      reposResponse = scmDelegateClient.processScmRequest(
-          c -> scmServiceClient.getUserRepos(scmConnector, SCMGrpc.newBlockingStub(c)));
+      if (executeOnDelegate == Boolean.FALSE) {
+        reposResponse = scmClient.getUserRepos(scmConnector);
+      } else {
+        reposResponse = scmDelegateClient.processScmRequest(
+            c -> scmServiceClient.getUserRepos(scmConnector, SCMGrpc.newBlockingStub(c)));
+      }
     } catch (Exception e) {
       throw SCMRuntimeException.builder().errorCode(ErrorCode.UNEXPECTED).cause(e).build();
     }

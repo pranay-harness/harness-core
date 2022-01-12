@@ -1,5 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.user.service.impl;
 
+import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 import static io.harness.accesscontrol.principals.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.accesscontrol.principals.PrincipalType.USER;
 import static io.harness.accesscontrol.principals.PrincipalType.USER_GROUP;
@@ -7,6 +18,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.invites.mapper.RoleBindingMapper.createRoleAssignmentDTOs;
+import static io.harness.ng.core.invites.mapper.RoleBindingMapper.getDefaultResourceGroupIdentifier;
 import static io.harness.outbox.TransactionOutboxModule.OUTBOX_TRANSACTION_TEMPLATE;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 import static io.harness.springdata.TransactionUtils.DEFAULT_TRANSACTION_RETRY_POLICY;
@@ -69,6 +81,9 @@ import io.harness.remote.client.NGRestUtils;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.repositories.user.spring.UserMembershipRepository;
 import io.harness.repositories.user.spring.UserMetadataRepository;
+import io.harness.scim.PatchRequest;
+import io.harness.scim.ScimListResponse;
+import io.harness.scim.ScimUser;
 import io.harness.user.remote.UserClient;
 import io.harness.user.remote.UserFilterNG;
 import io.harness.utils.PageUtils;
@@ -120,9 +135,10 @@ public class NgUserServiceImpl implements NgUserService {
   private static final String ORG_ADMIN = "_organization_admin";
   private static final String PROJECT_ADMIN = "_project_admin";
   private static final String PROJECT_VIEWER = "_project_viewer";
-  private static final String DEFAULT_RESOURCE_GROUP_NAME = "All Resources";
-  private static final String DEFAULT_RESOURCE_GROUP_IDENTIFIER = "_all_resources";
-  private final List<String> MANAGED_ROLE_IDENTIFIERS =
+  private static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS =
+      ImmutableList.of(DEFAULT_RESOURCE_GROUP_IDENTIFIER, DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER,
+          DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER, DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER);
+  private static final List<String> MANAGED_ROLE_IDENTIFIERS =
       ImmutableList.of(ACCOUNT_VIEWER, ORGANIZATION_VIEWER, PROJECT_VIEWER);
   public static final int DEFAULT_PAGE_SIZE = 10000;
   private final UserClient userClient;
@@ -274,6 +290,8 @@ public class NgUserServiceImpl implements NgUserService {
                                                        .name(user.getName())
                                                        .email(user.getEmail())
                                                        .locked(user.isLocked())
+                                                       .disabled(user.isDisabled())
+                                                       .externallyManaged(user.isExternallyManaged())
                                                        .build())
                                             .orElse(null);
       return Optional.ofNullable(userMetadataDTO);
@@ -284,6 +302,13 @@ public class NgUserServiceImpl implements NgUserService {
   public List<UserInfo> listCurrentGenUsers(String accountId, UserFilterNG userFilter) {
     return RestClientUtils.getResponse(userClient.listUsers(
         accountId, UserFilterNG.builder().emailIds(userFilter.getEmailIds()).userIds(userFilter.getUserIds()).build()));
+  }
+
+  @Override
+
+  public ScimListResponse<ScimUser> searchScimUsersByEmailQuery(
+      String accountId, String searchQuery, Integer count, Integer startIndex) {
+    return RestClientUtils.getResponse(userClient.searchScimUsers(accountId, searchQuery, count, startIndex));
   }
 
   @Override
@@ -474,7 +499,7 @@ public class NgUserServiceImpl implements NgUserService {
               .roleIdentifier(roleIdentifier)
               .disabled(false)
               .principal(PrincipalDTO.builder().type(SERVICE_ACCOUNT).identifier(serviceAccountId).build())
-              .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+              .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(scope))
               .build();
       roleAssignmentDTOs.add(roleAssignmentDTO);
     }
@@ -487,7 +512,7 @@ public class NgUserServiceImpl implements NgUserService {
     ensureUserMetadata(userId);
     addUserToScopeInternal(userId, source, scope, getDefaultRoleIdentifier(scope));
     addUserToParentScope(userId, scope, source);
-    createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId));
+    createRoleAssignments(userId, scope, createRoleAssignmentDTOs(roleBindings, userId, scope));
     userGroupService.addUserToUserGroups(scope, userId, getValidUserGroups(scope, userGroups));
   }
 
@@ -537,7 +562,8 @@ public class NgUserServiceImpl implements NgUserService {
   private boolean isRoleAssignmentManaged(RoleAssignmentDTO roleAssignmentDTO) {
     return MANAGED_ROLE_IDENTIFIERS.stream().anyMatch(
                roleIdentifier -> roleIdentifier.equals(roleAssignmentDTO.getRoleIdentifier()))
-        && DEFAULT_RESOURCE_GROUP_IDENTIFIER.equals(roleAssignmentDTO.getResourceGroupIdentifier());
+        && MANAGED_RESOURCE_GROUP_IDENTIFIERS.stream().anyMatch(
+            resourceGroupIdentifier -> resourceGroupIdentifier.equals(roleAssignmentDTO.getResourceGroupIdentifier()));
   }
 
   private String getDefaultRoleIdentifier(Scope scope) {
@@ -564,6 +590,8 @@ public class NgUserServiceImpl implements NgUserService {
                                     .name(userInfo.getName())
                                     .email(userInfo.getEmail())
                                     .locked(userInfo.isLocked())
+                                    .disabled(userInfo.isDisabled())
+                                    .externallyManaged(userInfo.isExternallyManaged())
                                     .build();
     try {
       userMetadataRepository.save(userMetadata);
@@ -603,8 +631,9 @@ public class NgUserServiceImpl implements NgUserService {
         //  This is benign. Move on.
       }
       if (userMembership != null) {
+        String userName = userMetadata.map(UserMetadata::getName).orElse(null);
         outboxService.save(
-            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            new AddCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, userName, source));
       }
       return userMembership;
     });
@@ -612,7 +641,7 @@ public class NgUserServiceImpl implements NgUserService {
     try {
       RoleAssignmentDTO roleAssignmentDTO = RoleAssignmentDTO.builder()
                                                 .principal(PrincipalDTO.builder().type(USER).identifier(userId).build())
-                                                .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
+                                                .resourceGroupIdentifier(getDefaultResourceGroupIdentifier(scope))
                                                 .disabled(false)
                                                 .roleIdentifier(roleIdentifier)
                                                 .build();
@@ -654,6 +683,8 @@ public class NgUserServiceImpl implements NgUserService {
       Update update = new Update();
       update.set(UserMetadataKeys.name, user.getName());
       update.set(UserMetadataKeys.locked, user.isLocked());
+      update.set(UserMetadataKeys.disabled, user.isDisabled());
+      update.set(UserMetadataKeys.externallyManaged, user.isExternallyManaged());
       return userMetadataRepository.updateFirst(user.getUuid(), update) != null;
     }
     return true;
@@ -674,12 +705,34 @@ public class NgUserServiceImpl implements NgUserService {
 
       Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
       String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      String userName = userMetadata.map(UserMetadata::getName).orElse(null);
 
       userMemberships.forEach(
           userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
             userMembershipRepository.delete(userMembership);
-            outboxService.save(
-                new RemoveCollaboratorEvent(scope.getAccountIdentifier(), scope, publicIdentifier, userId, source));
+            outboxService.save(new RemoveCollaboratorEvent(
+                scope.getAccountIdentifier(), scope, publicIdentifier, userId, userName, source));
+            return userMembership;
+          })));
+    }
+    return true;
+  }
+
+  @Override
+  public boolean removeUserWithCriteria(String userId, UserMembershipUpdateSource source, Criteria criteria) {
+    log.info("Trying to remove user {} with criteria {}", userId, criteria.toString());
+    try (TimeLogger timeLogger = new TimeLogger(LoggerFactory.getLogger(getClass().getName()))) {
+      List<UserMembership> userMemberships = userMembershipRepository.findAll(criteria);
+
+      Optional<UserMetadata> userMetadata = userMetadataRepository.findDistinctByUserId(userId);
+      String publicIdentifier = userMetadata.map(UserMetadata::getEmail).orElse(userId);
+      String userName = userMetadata.map(UserMetadata::getName).orElse(null);
+
+      userMemberships.forEach(
+          userMembership -> Failsafe.with(transactionRetryPolicy).get(() -> transactionTemplate.execute(status -> {
+            userMembershipRepository.delete(userMembership);
+            outboxService.save(new RemoveCollaboratorEvent(userMembership.getScope().getAccountIdentifier(),
+                userMembership.getScope(), publicIdentifier, userId, userName, source));
             return userMembership;
           })));
     }
@@ -774,5 +827,25 @@ public class NgUserServiceImpl implements NgUserService {
           .collect(Collectors.toList());
     }
     return Collections.emptyList();
+  }
+
+  @Override
+  public boolean removeUser(String userId, String accountId) {
+    return RestClientUtils.getResponse(userClient.deleteUser(userId, accountId));
+  }
+
+  @Override
+  public ScimUser updateScimUser(String accountId, String userId, PatchRequest patchRequest) {
+    return RestClientUtils.getResponse(userClient.scimUserPatchUpdate(accountId, userId, patchRequest));
+  }
+
+  @Override
+  public boolean updateScimUser(String accountId, String userId, ScimUser scimUser) {
+    return RestClientUtils.getResponse(userClient.scimUserUpdate(accountId, userId, scimUser));
+  }
+
+  @Override
+  public boolean updateUserDisabled(String accountId, String userId, boolean disabled) {
+    return RestClientUtils.getResponse(userClient.updateUserDisabled(accountId, userId, disabled));
   }
 }

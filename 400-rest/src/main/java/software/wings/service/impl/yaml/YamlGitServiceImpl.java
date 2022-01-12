@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -83,6 +90,7 @@ import io.harness.waiter.WaitNotifyEngine;
 import software.wings.beans.Account;
 import software.wings.beans.Application;
 import software.wings.beans.Application.ApplicationKeys;
+import software.wings.beans.CGConstants;
 import software.wings.beans.EntityType;
 import software.wings.beans.GitCommit;
 import software.wings.beans.GitCommit.GitCommitKeys;
@@ -238,12 +246,12 @@ public class YamlGitServiceImpl implements YamlGitService {
     }
 
     ygs.setSyncMode(SyncMode.BOTH);
-    YamlGitConfig yamlGitSync = wingsPersistence.saveAndGet(YamlGitConfig.class, ygs);
+    String yamlGitConfigId = wingsPersistence.save(ygs);
     if (performFullSync) {
       executorService.submit(() -> fullSync(ygs.getAccountId(), ygs.getEntityId(), ygs.getEntityType(), true));
     }
 
-    return yamlGitSync;
+    return wingsPersistence.get(YamlGitConfig.class, yamlGitConfigId);
   }
 
   @Override
@@ -1347,7 +1355,7 @@ public class YamlGitServiceImpl implements YamlGitService {
       // Delete yamlGitConfig documents whose gitConnectorId is not among
       // the list of selected git connectors
       wingsPersistence.delete(wingsPersistence.createQuery(YamlGitConfig.class)
-                                  .filter(YamlGitConfig.ACCOUNT_ID_KEY2, accountId)
+                                  .filter(CGConstants.ACCOUNT_ID_KEY, accountId)
                                   .field(YamlGitConfig.GIT_CONNECTOR_ID_KEY)
                                   .hasNoneOf(selectedGitConnectors));
       return true;

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -80,7 +87,9 @@ import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.serializer.KryoSerializer;
 import io.harness.serializer.MapperUtils;
 import io.harness.state.inspection.ExpressionVariableUsage;
@@ -107,6 +116,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.RuntimeInputsRequiredAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.StateExecutionInstanceUpdateException;
 import software.wings.exception.StateMachineIssueException;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
@@ -185,6 +195,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   public static final String APPLICATION_URL = "APPLICATION_URL";
   public static final String DEBUG_LINE = "stateMachine processor: ";
   private static final String STATE_PARAMS = "stateParams";
+  private static final String STATE_MACHINE_EXECUTOR_DEBUG_LINE = "STATE_MACHINE_EXECUTOR_DEBUG_LOG: ";
 
   @Getter private Subject<StateStatusUpdate> statusUpdateSubject = new Subject<>();
 
@@ -210,7 +221,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private PipelineConfig pipelineConfig;
   @Inject private KryoSerializer kryoSerializer;
-
+  @Inject private RemoteObserverInformer remoteObserverInformer;
   /**
    * Execute.
    *
@@ -611,6 +622,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       executionResponse = getExecutionResponseWithAdvise(context, executionResponse, currentState);
 
       handleResponse(context, executionResponse);
+    } catch (StateExecutionInstanceUpdateException exception) {
+      log.error("Exception occurred while updating state execution instance : {}", exception);
     } catch (WingsException exception) {
       ex = exception;
       log.error("Exception occurred while starting state execution : {}", exception);
@@ -765,7 +778,9 @@ public class StateMachineExecutor implements StateInspectionListener {
           StateExecutionInstance dbStateExecutionInstance =
               wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
           if (ExecutionStatus.isFinalStatus(dbStateExecutionInstance.getStatus())) {
-            throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+            log.warn("updateStateExecutionData failed. StateExecutionInstance is in status: "
+                + stateExecutionInstance.getStatus());
+            throw new StateExecutionInstanceUpdateException("updateStateExecutionData failed");
           } else {
             throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
           }
@@ -833,6 +848,16 @@ public class StateMachineExecutor implements StateInspectionListener {
       StateMachine stateMachine, StateExecutionInstance stateExecutionInstance, ExecutionContext context) {
     State state =
         stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+    if (state == null) {
+      log.warn(STATE_MACHINE_EXECUTOR_DEBUG_LINE + "State fetched from state machine is null. This is very bad");
+      stateMachine.clearCache();
+      state =
+          stateMachine.getState(stateExecutionInstance.getChildStateMachineId(), stateExecutionInstance.getStateName());
+      if (state == null) {
+        log.error(STATE_MACHINE_EXECUTOR_DEBUG_LINE
+            + "State fetched is still null. The states in the state machine are:" + stateMachine.getStates());
+      }
+    }
     Integer executionInstanceTimeout = getDefaultTimeout(state, context);
     final Query<StateExecutionInstance> stateExecutionInstanceQuery =
         wingsPersistence.createQuery(StateExecutionInstance.class)
@@ -1045,8 +1070,12 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionInstance.getUuid(), status);
     }
 
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
+    final StateStatusUpdateInfo arg =
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false);
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, arg);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(StateStatusUpdate.class, "stateExecutionStatusUpdated", StateStatusUpdateInfo.class),
+        StateMachineExecutor.class, arg);
   }
 
   private void updateStateExecutionInstanceForManualInterventions(StateExecutionInstance stateExecutionInstance,
@@ -1080,8 +1109,12 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionInstance.getUuid(), status);
     }
 
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
+    final StateStatusUpdateInfo arg =
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false);
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, arg);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(StateStatusUpdate.class, "stateExecutionStatusUpdated", StateStatusUpdateInfo.class),
+        StateMachineExecutor.class, arg);
   }
 
   private boolean checkIfOnDemand(String appId, String executionUuid) {
@@ -1728,12 +1761,14 @@ public class StateMachineExecutor implements StateInspectionListener {
           stateExecutionInstance.getUuid(), status, existingExecutionStatus);
       return false;
     }
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
-            reason != null
-                && (RESUME_ALL == reason.getExecutionInterruptType()
-                    || CONTINUE_PIPELINE_STAGE == reason.getExecutionInterruptType())));
-
+    final StateStatusUpdateInfo arg = StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
+        reason != null
+            && (RESUME_ALL == reason.getExecutionInterruptType()
+                || CONTINUE_PIPELINE_STAGE == reason.getExecutionInterruptType()));
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, arg);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(StateStatusUpdate.class, "stateExecutionStatusUpdated", StateStatusUpdateInfo.class),
+        StateMachineExecutor.class, arg);
     return true;
   }
 
@@ -1860,9 +1895,12 @@ public class StateMachineExecutor implements StateInspectionListener {
       return false;
     }
 
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
-            isApprovalResumed(stateExecutionInstance.getStateType(), stateExecutionInstance.getStatus())));
+    final StateStatusUpdateInfo arg = StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance,
+        isApprovalResumed(stateExecutionInstance.getStateType(), stateExecutionInstance.getStatus()));
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, arg);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(StateStatusUpdate.class, "stateExecutionStatusUpdated", StateStatusUpdateInfo.class),
+        StateMachineExecutor.class, arg);
     log.info("State Execution data updated successfully");
     return true;
   }
@@ -2145,8 +2183,12 @@ public class StateMachineExecutor implements StateInspectionListener {
     if (updateResult == null || updateResult.getWriteResult() == null || updateResult.getWriteResult().getN() != 1) {
       throw new WingsException(ErrorCode.RETRY_FAILED).addParam("displayName", stateExecutionInstance.getDisplayName());
     }
-    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated,
-        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false));
+    final StateStatusUpdateInfo arg =
+        StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false);
+    statusUpdateSubject.fireInform(StateStatusUpdate::stateExecutionStatusUpdated, arg);
+    remoteObserverInformer.sendEvent(
+        ReflectionUtils.getMethod(StateStatusUpdate.class, "stateExecutionStatusUpdated", StateStatusUpdateInfo.class),
+        StateMachineExecutor.class, arg);
   }
 
   private boolean markAbortingState(@NotNull ExecutionInterrupt workflowExecutionInterrupt,

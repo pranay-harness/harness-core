@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -189,14 +196,14 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
             .releaseName(releaseName)
             .kustomizePatchesList(kustomizePatchesList)
             .manifestDelegateConfig(KustomizeManifestDelegateConfig.builder().build())
-            .useLatestKustomizeVersion(true)
+            .useVarSupportForKustomize(true)
             .accountId(accountId)
             .build();
     assertThat(k8sCanaryRequestHandler.getManifestOverrideFlies(canaryDeployRequest).get(0)).isEqualTo("patch1");
 
     canaryDeployRequest = K8sCanaryDeployRequest.builder()
                               .releaseName(releaseName)
-                              .useLatestKustomizeVersion(true)
+                              .useVarSupportForKustomize(true)
                               .manifestDelegateConfig(K8sManifestDelegateConfig.builder().build())
                               .valuesYamlList(valuesYamlList)
                               .accountId(accountId)
@@ -207,7 +214,7 @@ public class K8sCanaryRequestHandlerTest extends CategoryTest {
                               .releaseName(releaseName)
                               .openshiftParamList(openShiftParamList)
                               .manifestDelegateConfig(OpenshiftManifestDelegateConfig.builder().build())
-                              .useLatestKustomizeVersion(true)
+                              .useVarSupportForKustomize(true)
                               .accountId(accountId)
                               .build();
     assertThat(k8sCanaryRequestHandler.getManifestOverrideFlies(canaryDeployRequest).get(0)).isEqualTo("param1");

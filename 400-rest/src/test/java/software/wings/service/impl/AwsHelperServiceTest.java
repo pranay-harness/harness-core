@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -9,6 +16,7 @@ import static io.harness.rule.OwnerRule.MILOS;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.RUSHABH;
 import static io.harness.rule.OwnerRule.SATYAM;
+import static io.harness.rule.OwnerRule.TMACARI;
 
 import static software.wings.utils.WingsTestConstants.ACCESS_KEY;
 import static software.wings.utils.WingsTestConstants.SECRET_KEY;
@@ -54,6 +62,7 @@ import software.wings.service.intfc.security.EncryptionService;
 import software.wings.sm.states.ManagerExecutionLogCallback;
 
 import com.amazonaws.SDKGlobalConfiguration;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.WebIdentityTokenCredentialsProvider;
 import com.amazonaws.client.builder.AwsClientBuilder;
 import com.amazonaws.regions.Regions;
@@ -84,6 +93,7 @@ import com.amazonaws.services.ecr.model.DescribeRepositoriesRequest;
 import com.amazonaws.services.ecr.model.DescribeRepositoriesResult;
 import com.amazonaws.services.ecr.model.Image;
 import com.amazonaws.services.ecr.model.ImageIdentifier;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
@@ -624,10 +634,41 @@ public class AwsHelperServiceTest extends WingsBaseTest {
     doCallRealMethod()
         .when(awsApiHelperService)
         .attachCredentialsAndBackoffPolicy(eq(awsClientBuilder), eq(awsInternalConfig));
+    doCallRealMethod().when(awsApiHelperService).getAwsCredentialsProvider(eq(awsInternalConfig));
 
     awsApiHelperService.attachCredentialsAndBackoffPolicy(awsClientBuilder, awsInternalConfig);
 
     assertThat(awsClientBuilder.getCredentials()).isInstanceOf(WebIdentityTokenCredentialsProvider.class);
     awsClientBuilder.getCredentials().getCredentials().getAWSSecretKey();
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetAmazonAWSSecurityTokenServiceClient() {
+    AWSSecurityTokenServiceClient awsSecurityTokenServiceClient = new AWSSecurityTokenServiceClient();
+    when(awsApiHelperService.getAWSSecurityTokenServiceClient(any(), any())).thenReturn(awsSecurityTokenServiceClient);
+
+    AwsHelperService service = spy(new AwsHelperService());
+    Reflect.on(service).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
+    AWSSecurityTokenServiceClient result = service.getAmazonAWSSecurityTokenServiceClient(new AwsConfig(), "region");
+    assertThat(result).isEqualTo(awsSecurityTokenServiceClient);
+    verify(awsApiHelperService, times(1)).getAWSSecurityTokenServiceClient(any(), any());
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void testGetAWSCredentialsProvider() {
+    AWSCredentialsProvider awsCredentialsProvider = mock(AWSCredentialsProvider.class);
+    when(awsApiHelperService.getAwsCredentialsProvider(any())).thenReturn(awsCredentialsProvider);
+
+    AwsHelperService service = spy(new AwsHelperService());
+    Reflect.on(service).set("tracker", tracker);
+    Reflect.on(service).set("awsApiHelperService", awsApiHelperService);
+    AWSCredentialsProvider result = service.getAWSCredentialsProvider(new AwsConfig());
+    assertThat(result).isEqualTo(awsCredentialsProvider);
+    verify(awsApiHelperService, times(1)).getAwsCredentialsProvider(any());
   }
 }

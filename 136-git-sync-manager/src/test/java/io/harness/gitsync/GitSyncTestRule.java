@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync;
 
 import static io.harness.connector.ConnectorModule.DEFAULT_CONNECTOR_SERVICE;
@@ -18,6 +25,8 @@ import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
 import io.harness.factory.ClosingFactory;
+import io.harness.ff.FeatureFlagService;
+import io.harness.ff.FeatureFlagServiceImpl;
 import io.harness.govern.ProviderModule;
 import io.harness.govern.ServersModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
@@ -115,6 +124,9 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
             .annotatedWith(Names.named(EventsFrameworkConstants.GIT_CONFIG_STREAM))
             .toInstance(mock(NoOpProducer.class));
         bind(Producer.class)
+            .annotatedWith(Names.named(EventsFrameworkConstants.GIT_FULL_SYNC_STREAM))
+            .toInstance(mock(NoOpProducer.class));
+        bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.ENTITY_CRUD))
             .toInstance(mock(NoOpProducer.class));
         bind(ExecutorService.class).toInstance(mock(ExecutorService.class));
@@ -123,6 +135,7 @@ public class GitSyncTestRule implements InjectorRuleMixin, MethodRule, MongoRule
         bind(WebhookEventService.class).toInstance(mock(WebhookEventService.class));
         bind(AccountClient.class).toInstance(mock(AccountClient.class));
         bind(NGEncryptorService.class).toInstance(mock(NGEncryptorServiceImpl.class));
+        bind(FeatureFlagService.class).toInstance(mock(FeatureFlagServiceImpl.class));
         bind(Producer.class)
             .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
             .toInstance(mock(NoOpProducer.class));

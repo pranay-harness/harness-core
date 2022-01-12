@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
@@ -70,11 +77,14 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.KubernetesConvention;
 import io.harness.k8s.KubernetesHelperService;
 import io.harness.logging.Misc;
+import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HQuery.QueryChecks;
 import io.harness.queue.QueuePublisher;
+import io.harness.reflection.ReflectionUtils;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.validation.Create;
+import io.harness.validation.SuppressValidation;
 
 import software.wings.annotation.BlueprintProcessor;
 import software.wings.annotation.EncryptableSetting;
@@ -221,7 +231,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   private static final String COMPUTE_PROVIDER_SETTING_ID_KEY = "computeProviderSettingId";
   private static final Integer REFERENCED_ENTITIES_TO_SHOW = 10;
   private static final String DEFAULT = "default";
-  @Inject @Getter private Subject<InfrastructureMappingServiceObserver> subject = new Subject<>();
+  @Inject
+  @Getter(onMethod = @__(@SuppressValidation))
+  private Subject<InfrastructureMappingServiceObserver> subject = new Subject<>();
 
   @Inject private WingsPersistence wingsPersistence;
   @Inject private Map<String, InfrastructureProvider> infrastructureProviders;
@@ -259,6 +271,7 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
   @Inject private SweepingOutputService sweepingOutputService;
   @Inject private SSHVaultService sshVaultService;
   @Inject private QueuePublisher<PruneEvent> pruneQueue;
+  @Inject private RemoteObserverInformer remoteObserverInformer;
 
   @Override
   public PageResponse<InfrastructureMapping> list(PageRequest<InfrastructureMapping> pageRequest) {
@@ -511,6 +524,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onSaved, infraMapping);
+      remoteObserverInformer.sendEvent(
+          ReflectionUtils.getMethod(InfrastructureMappingServiceObserver.class, "onSaved", InfrastructureMapping.class),
+          InfrastructureMappingServiceImpl.class, infraMapping);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }
@@ -872,6 +888,9 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
 
     try {
       subject.fireInform(InfrastructureMappingServiceObxxxxxxxx:onUpdated, updatedInfraMapping);
+      remoteObserverInformer.sendEvent(ReflectionUtils.getMethod(InfrastructureMappingServiceObserver.class,
+                                           "onUpdated", InfrastructureMapping.class),
+          InfrastructureMappingServiceImpl.class, updatedInfraMapping);
     } catch (Exception e) {
       log.error("Encountered exception while informing the observers of Infrastructure Mappings.", e);
     }

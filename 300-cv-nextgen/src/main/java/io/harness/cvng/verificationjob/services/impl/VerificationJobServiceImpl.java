@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.beans.job.VerificationJobType.HEALTH;
@@ -19,12 +26,8 @@ import io.harness.persistence.HPersistence;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.mongodb.DuplicateKeyException;
-import java.net.URISyntaxException;
-import java.util.List;
 import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.http.NameValuePair;
-import org.apache.http.client.utils.URIBuilder;
 
 @Slf4j
 @OwnedBy(HarnessTeam.CV)
@@ -93,28 +96,6 @@ public class VerificationJobServiceImpl implements VerificationJobService {
     defaultHealthVerificationJob.setEnvIdentifier(envIdentifier, false);
     defaultHealthVerificationJob.setDuration("15m", false);
     return defaultHealthVerificationJob;
-  }
-
-  private String getParamFromUrl(String url, String paramName) {
-    try {
-      List<NameValuePair> queryParams = new URIBuilder(url).getQueryParams();
-      return queryParams.stream()
-          .filter(param -> param.getName().equalsIgnoreCase(paramName))
-          .map(NameValuePair::getValue)
-          .findFirst()
-          .orElse(null);
-    } catch (URISyntaxException ex) {
-      log.error("Exception while parsing URL: " + url, ex);
-      throw new IllegalStateException("Exception while parsing URL: " + url);
-    }
-  }
-
-  private List<VerificationJob> verificationJobList(String accountId, String projectIdentifier, String orgIdentifier) {
-    return hPersistence.createQuery(VerificationJob.class)
-        .filter(VerificationJobKeys.accountId, accountId)
-        .filter(VerificationJobKeys.orgIdentifier, orgIdentifier)
-        .filter(VerificationJobKeys.projectIdentifier, projectIdentifier)
-        .asList();
   }
 
   @Override

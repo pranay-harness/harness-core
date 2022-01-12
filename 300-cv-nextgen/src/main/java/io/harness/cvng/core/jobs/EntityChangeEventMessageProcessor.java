@@ -1,9 +1,14 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.jobs;
 
 import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
-import io.harness.cvng.alert.entities.AlertRule;
-import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -16,11 +21,9 @@ import io.harness.cvng.core.entities.changeSource.ChangeSource;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.DeleteEntityByHandler;
 import io.harness.cvng.core.services.api.MonitoringSourcePerpetualTaskService;
-import io.harness.cvng.core.services.api.WebhookService;
-import io.harness.cvng.core.services.api.monitoredService.ChangeSourceService;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
-import io.harness.cvng.core.services.api.monitoredService.ServiceDependencyService;
 import io.harness.cvng.dashboard.entities.HeatMap;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.UserJourney;
@@ -40,9 +43,10 @@ public abstract class EntityChangeEventMessageProcessor implements ConsumerMessa
   static {
     // Add the service for project level default deletion
     final List<Class<? extends PersistentEntity>> deleteEntitiesWithDefaultHandler =
-        Arrays.asList(VerificationJob.class, Activity.class, ActivitySource.class, AlertRule.class, MetricPack.class,
-            HeatMap.class, TimeSeriesThreshold.class, AlertRuleAnomaly.class, CVNGStepTask.class,
-            ServiceLevelObjective.class, UserJourney.class, ServiceLevelIndicator.class);
+        Arrays.asList(VerificationJob.class, Activity.class, ActivitySource.class, MetricPack.class, HeatMap.class,
+            TimeSeriesThreshold.class, CVNGStepTask.class, ServiceLevelObjective.class, UserJourney.class,
+            ServiceLevelIndicator.class, ChangeSource.class, Webhook.class, ServiceDependency.class,
+            SLOHealthIndicator.class);
     ENTITIES_MAP = new HashMap<>();
     deleteEntitiesWithDefaultHandler.forEach(entity -> ENTITIES_MAP.put(entity, DeleteEntityByHandler.class));
 
@@ -50,8 +54,5 @@ public abstract class EntityChangeEventMessageProcessor implements ConsumerMessa
     ENTITIES_MAP.put(CVConfig.class, CVConfigService.class);
     ENTITIES_MAP.put(MonitoringSourcePerpetualTask.class, MonitoringSourcePerpetualTaskService.class);
     ENTITIES_MAP.put(MonitoredService.class, MonitoredServiceService.class);
-    ENTITIES_MAP.put(ChangeSource.class, ChangeSourceService.class);
-    ENTITIES_MAP.put(ServiceDependency.class, ServiceDependencyService.class);
-    ENTITIES_MAP.put(Webhook.class, WebhookService.class);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.utils.monitoredService;
 
 import static io.harness.rule.OwnerRule.PAVIC;
@@ -55,6 +62,7 @@ public class DatadogMetricHealthSourceSpecTransformerTest extends CvNextGenTestB
     assertThat(metricDefinition.getQuery()).isEqualTo(MOCKED_METRIC_QUERY);
     assertThat(metricDefinition.getRiskProfile().getCategory()).isEqualTo(CVMonitoringCategory.ERRORS);
     assertThat(metricDefinition.getRiskProfile().getMetricType()).isEqualTo(TimeSeriesMetricType.RESP_TIME);
+    assertThat(metricDefinition.getIdentifier()).isEqualTo(MOCKED_METRIC_NAME);
   }
 
   private DatadogMetricCVConfig createCVConfig() {
@@ -66,6 +74,7 @@ public class DatadogMetricHealthSourceSpecTransformerTest extends CvNextGenTestB
                                    .mapToObj(index
                                        -> DatadogMetricCVConfig.MetricInfo.builder()
                                               .metricName(MOCKED_METRIC_NAME)
+                                              .identifier(MOCKED_METRIC_NAME)
                                               .metricType(TimeSeriesMetricType.RESP_TIME)
                                               .query(MOCKED_METRIC_QUERY)
                                               .build())

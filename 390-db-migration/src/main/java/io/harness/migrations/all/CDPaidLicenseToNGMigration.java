@@ -1,5 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.migrations.all;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.persistence.HQuery.excludeAuthorityCount;
 import static io.harness.remote.client.NGRestUtils.getResponse;
 
@@ -102,10 +110,11 @@ public class CDPaidLicenseToNGMigration implements Migration {
     AccountLicenseDTO accountLicenseDTO = getResponse(adminLicenseHttpClient.getAccountLicense(account.getUuid()));
     LicenseInfo licenseInfo = account.getLicenseInfo();
 
-    if (migrationType.contains(licenseInfo.getAccountType())) {
+    if (licenseInfo != null && migrationType.contains(licenseInfo.getAccountType())) {
       log.info("Account {} requires a migrate", account.getUuid());
+      List<ModuleLicenseDTO> CDNGLicenses = accountLicenseDTO.getAllModuleLicenses().get(ModuleType.CD);
       // Only migrate PAID and ESSENTIALS
-      if (accountLicenseDTO.getAllModuleLicenses().get(ModuleType.CD) == null) {
+      if (isEmpty(CDNGLicenses)) {
         // no ng cd license, create one
         log.info("Account {} doesn't have a NG CD license, create a new one", account.getUuid());
         createNewNGLicense(licenseInfo, account.getUuid());

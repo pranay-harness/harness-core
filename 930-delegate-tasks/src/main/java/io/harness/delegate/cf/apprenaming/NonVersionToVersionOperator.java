@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.cf.apprenaming;
+
+import static io.harness.pcf.model.PcfConstants.DELIMITER;
 
 import io.harness.delegate.beans.pcf.CfRouteUpdateRequestConfigData;
 import io.harness.delegate.cf.PcfCommandTaskBaseHelper;
@@ -18,16 +27,17 @@ import org.cloudfoundry.operations.applications.ApplicationSummary;
  * OrderService_0
  * OrderService_INACTIVE
  * OrderService
- * OrderService_STAGE
  *
  * After renaming
  * --------------
  * OrderService_0           -->   OrderService_0
- * OrderService_INACTIVE    -->   OrderService_1
+ * OrderService_1           -->   OrderService_1 (Renamed during App Setup)
  * OrderService             -->   OrderService_2
- * OrderService_STAGE       -->   OrderService_3
+ * OrderService_INACTIVE    -->   OrderService_3
  *
- * The app should be renamed in these order --> INACTIVE --> ACTIVE --> STAGE
+ * The app should be renamed in these order  --> ACTIVE --> NEW
+ * OrderService             -->   OrderService_2
+ * OrderService_INACTIVE    -->   OrderService_3
  */
 
 public class NonVersionToVersionOperator implements AppRenamingOperator {
@@ -46,7 +56,7 @@ public class NonVersionToVersionOperator implements AppRenamingOperator {
     Set<Map.Entry<AppType, AppRenamingData>> entries = appTypeApplicationSummaryMap.entrySet();
     for (Map.Entry<AppType, AppRenamingData> entry : entries) {
       ApplicationSummary applicationSummary = entry.getValue().getAppSummary();
-      String newAppName = cfAppNamePrefix + PcfCommandTaskBaseHelper.DELIMITER + ++versionNumber;
+      String newAppName = cfAppNamePrefix + DELIMITER + ++versionNumber;
       pcfCommandTaskBaseHelper.renameApp(applicationSummary, cfRequestConfig, executionLogCallback, newAppName);
     }
   }

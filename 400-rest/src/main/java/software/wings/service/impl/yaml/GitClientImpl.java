@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.yaml;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -42,6 +49,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.YamlException;
 import io.harness.filesystem.FileIo;
+import io.harness.git.ExceptionSanitizer;
 import io.harness.git.UsernamePasswordCredentialsProviderWithSkipSslVerify;
 import io.harness.git.model.ChangeType;
 import io.harness.git.model.GitFile;
@@ -172,7 +180,7 @@ public class GitClientImpl implements GitClient {
                        .call()) {
       return GitCloneResult.builder().build();
     } catch (GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Error in cloning repo: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in cloning repo", USER);
     }
@@ -255,7 +263,7 @@ public class GitClientImpl implements GitClient {
       }
 
     } catch (IOException | GitAPIException ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in getting commit diff", ADMIN_SRE);
     }
@@ -359,37 +367,31 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext) {
+  private synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext)
+      throws GitAPIException, IOException {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
-
-    try (Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)))) {
-      try {
-        if (isNotEmpty(gitConfig.getBranch())) {
-          Ref ref = git.checkout()
-                        .setCreateBranch(true)
-                        .setName(gitConfig.getBranch())
-                        .setUpstreamMode(SetupUpstreamMode.TRACK)
-                        .setStartPoint("origin/" + gitConfig.getBranch())
-                        .call();
-        }
-
-      } catch (RefAlreadyExistsException refExIgnored) {
-        log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
-            + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
+    Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)));
+    try {
+      if (isNotEmpty(gitConfig.getBranch())) {
+        Ref ref = git.checkout()
+                      .setCreateBranch(true)
+                      .setName(gitConfig.getBranch())
+                      .setUpstreamMode(SetupUpstreamMode.TRACK)
+                      .setStartPoint("origin/" + gitConfig.getBranch())
+                      .call();
       }
 
-      String gitRef = gitConfig.getReference() != null ? gitConfig.getReference() : gitConfig.getBranch();
-      if (StringUtils.isNotEmpty(gitRef)) {
-        git.checkout().setName(gitRef).call();
-      }
-
-      return GitCheckoutResult.builder().build();
-    } catch (IOException | GitAPIException ex) {
-      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
-      throw new YamlException(format("Unable to checkout given reference: %s",
-                                  isEmpty(gitConfig.getReference()) ? gitConfig.getBranch() : gitConfig.getReference()),
-          USER);
+    } catch (RefAlreadyExistsException refExIgnored) {
+      log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+          + "Reference already exist do nothing."); // TODO:: check gracefully instead of relying on Exception
     }
+
+    String gitRef = gitConfig.getReference() != null ? gitConfig.getReference() : gitConfig.getBranch();
+    if (StringUtils.isNotEmpty(gitRef)) {
+      git.checkout().setName(gitRef).call();
+    }
+
+    return GitCheckoutResult.builder().build();
   }
 
   @VisibleForTesting
@@ -858,7 +860,8 @@ public class GitClientImpl implements GitClient {
       checkoutCommand.call();
       log.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
-      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+          + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
@@ -874,7 +877,7 @@ public class GitClientImpl implements GitClient {
       checkoutCommand.call();
       log.info("Successfully Checked out commitId: " + commitId);
     } catch (Exception ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out commit id " + commitId, USER);
     }
@@ -915,7 +918,7 @@ public class GitClientImpl implements GitClient {
       return latestCommitSha;
 
     } catch (Exception ex) {
-      log.error(GIT_YAML_LOG_PREFIX + "Exception: ", ex);
+      log.error(GIT_YAML_LOG_PREFIX + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in checking out Branch " + branch, USER);
     }
@@ -936,7 +939,8 @@ public class GitClientImpl implements GitClient {
       resetCommand.call();
       log.info("Resetting repo completed successfully");
     } catch (Exception ex) {
-      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+          + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
       gitClientHelper.checkIfGitConnectivityIssue(ex);
       throw new YamlException("Error in resetting repo", USER);
     }
@@ -1016,7 +1020,8 @@ public class GitClientImpl implements GitClient {
         } else {
           log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
               gitConfig.getBranch());
-          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+          log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+              + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
           gitClientHelper.checkIfGitConnectivityIssue(ex);
         }
       } finally {
@@ -1064,7 +1069,8 @@ public class GitClientImpl implements GitClient {
           if (ex instanceof GitAPIException) {
             log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Hard reset failed for branch [{}]",
                 gitConfig.getBranch());
-            log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Exception: ", ex);
+            log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType())
+                + "Exception: " + ExceptionSanitizer.sanitizeForLogging(ex));
             gitClientHelper.checkIfGitConnectivityIssue(ex);
           }
         }

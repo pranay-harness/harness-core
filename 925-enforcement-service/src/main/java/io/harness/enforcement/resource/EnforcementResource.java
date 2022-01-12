@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.enforcement.resource;
+
+import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
 
 import io.harness.NGCommonEntityConstants;
 import io.harness.accesscontrol.AccountIdentifier;
@@ -22,6 +31,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -61,6 +71,7 @@ import retrofit2.http.Body;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
+@Hidden
 @NextGenManagerAuth
 public class EnforcementResource {
   private static final String FEATURE_RESTRICTION_NAME = "featureRestrictionName";
@@ -69,65 +80,64 @@ public class EnforcementResource {
   @Inject EnforcementService featureService;
 
   @POST
-  @ApiOperation(value = "Gets Feature Restriction Detail", nickname = "getFeatureRestrictionDetail")
-  @Operation(operationId = "getFeatureRestrictionDetail", summary = "Gets Feature Restriction Detail",
+  @ApiOperation(value = "Fetch Feature Restriction Detail", nickname = "getFeatureRestrictionDetail")
+  @Operation(operationId = "getFeatureRestrictionDetail", summary = "Fetch Feature Restriction Detail",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a feature restriction details DTO")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "This returns a list of Feature Restrictions and their details.")
       })
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
   public ResponseDTO<FeatureRestrictionDetailsDTO>
   getFeatureRestrictionDetail(@NotNull @Valid @Body FeatureRestrictionDetailRequestDTO requestDTO,
-      @Parameter(description = "Account id to get the feature restriction detail.") @NotNull @QueryParam(
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureDetail(requestDTO.getName(), accountIdentifier));
   }
 
   @POST
   @Path("/details")
-  @ApiOperation(value = "Gets List of Feature Restriction Detail", nickname = "getFeatureRestrictionDetails")
-  @Operation(operationId = "getFeatureRestrictionDetails", summary = "Gets List of Feature Restriction Detail",
+  @ApiOperation(value = "Fetch List of Feature Restriction Detail", nickname = "getFeatureRestrictionDetails")
+  @Operation(operationId = "getFeatureRestrictionDetails", summary = "Fetch List of Feature Restriction Detail",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a list of feature restriction details DTO")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "This returns a list of Feature Restrictions and their details")
       })
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
   public ResponseDTO<List<FeatureRestrictionDetailsDTO>>
   getFeatureRestrictionDetails(@NotNull @Valid @Body FeatureRestrictionDetailListRequestDTO requestDTO,
-      @Parameter(description = "Account id to get the feature restriction detail.") @NotNull @QueryParam(
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureDetails(requestDTO.getNames(), accountIdentifier));
   }
 
   @GET
   @Path("/enabled")
-  @ApiOperation(value = "Gets List of Enabled Feature Restriction Detail for The Account",
+  @ApiOperation(value = "Fetch the List of enabled Feature Restriction Detail for this Account",
       nickname = "getEnabledFeatureRestrictionDetailByAccountId")
   @Operation(operationId = "getEnabledFeatureRestrictionDetailByAccountId",
-      summary = "Gets List of Enabled Feature Restriction Detail for The Account",
+      summary = "Fetch the List of enabled Feature Restriction Detail for this Account",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a list of freature restriction details DTO")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
+            description = "This returns the list of enabled Feature Restrictions and their details")
       })
   @NGAccessControlCheck(resourceType = RESOURCE_TYPE, permission = PERMISSION)
   public ResponseDTO<List<FeatureRestrictionDetailsDTO>>
-  getEnabledFeatureRestrictionForAccount(
-      @Parameter(description = "Account id to get the enable features for the account") @NotNull @QueryParam(
-          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
+  getEnabledFeatureRestrictionForAccount(@Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @NotNull
+      @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getEnabledFeatureDetails(accountIdentifier));
   }
 
   @GET
   @Path("/metadata")
-  @ApiOperation(value = "Gets All Feature Restriction Metadata", nickname = "getAllFeatureRestrictionMetadata")
-  @Operation(operationId = "getAllFeatureRestrictionMetadata", summary = "Gets All Feature Restriction Metadata",
+  @ApiOperation(value = "Fetch All Feature Restriction Metadata", nickname = "getAllFeatureRestrictionMetadata")
+  @Operation(operationId = "getAllFeatureRestrictionMetadata", summary = "Fetch All Feature Restriction Metadata",
       responses =
       {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(responseCode = "default", description = "Returns a list of feature restriction metadata dto")
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "default", description = "This returns a list of Feature Restrictions and their metadata")
       })
   public ResponseDTO<List<FeatureRestrictionMetadataDTO>>
   getAllFeatureRestrictionMetadata() {
@@ -136,24 +146,25 @@ public class EnforcementResource {
 
   @GET
   @Path("/{featureRestrictionName}/metadata")
-  @ApiOperation(value = "Get Feature Restriction Metadata", nickname = "getFeatureRestrictionMetadata", hidden = true)
+  @ApiOperation(value = "Fetch Feature Restriction Metadata", nickname = "fetchFeatureRestrictionMetadata")
   @InternalApi
-  public ResponseDTO<FeatureRestrictionMetadataDTO> getFeatureRestrictionMetadata(
-      @Parameter(description = "The feature restriction to retrieve metadata from.") @NotNull @PathParam(
+  public ResponseDTO<FeatureRestrictionMetadataDTO> fetchFeatureRestrictionMetadata(
+      @Parameter(description = "The feature restriction name to retrieve metadata from.") @NotNull @PathParam(
           FEATURE_RESTRICTION_NAME) FeatureRestrictionName featureRestrictionName,
-      @Parameter(description = "Account id to get the feature metadata.") @NotNull @QueryParam(
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureMetadata(featureRestrictionName, accountIdentifier));
   }
 
   @POST
   @Path("/metadata")
-  @ApiOperation(value = "Get Map of Feature Restriction and its Metadata",
-      nickname = "getFeatureRestrictionMetadataMap", hidden = true)
+  @ApiOperation(value = "Fetch Map of Feature Restriction and its Metadata",
+      nickname = "fetchFeatureRestrictionMetadataMap", hidden = true)
+  @Hidden
   @InternalApi
   public ResponseDTO<RestrictionMetadataMapResponseDTO>
-  getFeatureRestrictionMetadataMap(@NotNull @Body RestrictionMetadataMapRequestDTO restrictionMetadataMapRequestDTO,
-      @Parameter(description = "Account id to get all metadata from.") @NotNull @QueryParam(
+  fetchFeatureRestrictionMetadataMap(@NotNull @Body RestrictionMetadataMapRequestDTO restrictionMetadataMapRequestDTO,
+      @Parameter(required = true, description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
           NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountIdentifier) {
     return ResponseDTO.newResponse(featureService.getFeatureRestrictionMetadataMap(
         restrictionMetadataMapRequestDTO.getNames(), accountIdentifier));

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -44,6 +51,9 @@ import io.harness.delegate.beans.connector.ceawsconnector.CEAwsConnectorDTO;
 import io.harness.delegate.beans.connector.ceazure.BillingExportSpecDTO;
 import io.harness.delegate.beans.connector.ceazure.CEAzureConnectorDTO;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthConnectorDTO;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthKeyAndValue;
+import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthCredentialsDTO;
 import io.harness.delegate.beans.connector.docker.DockerAuthType;
@@ -139,6 +149,7 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabSshCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.gitlab.GitlabUsernameTokenDTO;
+import io.harness.delegate.beans.connector.servicenow.ServiceNowConnectorDTO;
 import io.harness.delegate.beans.connector.splunkconnector.SplunkConnectorDTO;
 import io.harness.delegate.beans.connector.sumologic.SumoLogicConnectorDTO;
 import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
@@ -296,6 +307,10 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CEFeatures.class, 19671);
     kryo.register(SumoLogicConnectorDTO.class, 19672);
     kryo.register(DynatraceConnectorDTO.class, 19673);
+    kryo.register(CustomHealthKeyAndValue.class, 19674);
     kryo.register(PagerDutyConnectorDTO.class, 19675);
+    kryo.register(CustomHealthConnectorDTO.class, 19676);
+    kryo.register(CustomHealthMethod.class, 19677);
+    kryo.register(ServiceNowConnectorDTO.class, 19678);
   }
 }

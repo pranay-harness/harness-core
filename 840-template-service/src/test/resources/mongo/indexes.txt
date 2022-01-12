@@ -98,6 +98,16 @@ secretUsageLogs {"name": "appId_1", "background": true} {"appId": 1}
 secretUsageLogs {"name": "createdAt_1", "background": true} {"createdAt": 1}
 secretUsageLogs {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 serviceSecrets {"name": "serviceType_1", "unique": true} {"serviceType": 1}
+settingAttributes {"name": "accountIdAppIdCategoryCreatedAt", "background": true} {"accountId": 1, "appId": 1, "category": 1, "createdAt": -1}
+settingAttributes {"name": "acctCatTypeIdx", "background": true} {"accountId": 1, "category": 1, "value.type": 1}
+settingAttributes {"name": "acctValTypeIdx", "background": true} {"accountId": 1, "value.type": 1}
+settingAttributes {"name": "appId_1", "background": true} {"appId": 1}
+settingAttributes {"name": "createdAt_1", "background": true} {"createdAt": 1}
+settingAttributes {"name": "locate", "unique": true} {"accountId": 1, "appId": 1, "envId": 1, "name": 1, "value.type": 1}
+settingAttributes {"name": "nextIteration_1", "background": true} {"nextIteration": 1}
+settingAttributes {"name": "secretsMigrationIdx", "background": true} {"value.type": 1, "nextSecretMigrationIteration": 1}
+settingAttributes {"name": "secretsMigrationPerAccountIdx", "background": true} {"value.type": 1, "secretsMigrated": 1, "accountId": 1}
+settingAttributes {"name": "typeNextIterationIdx", "background": true} {"value.type": 1, "nextIteration": 1}
 taskSelectorMaps {"name": "createdAt_1", "background": true} {"createdAt": 1}
 taskSelectorMaps {"name": "uniqueGroup", "unique": true} {"accountId": 1, "taskGroup": 1}
 templatesNG {"name": "accountId_org_project_childType", "background": true} {"accountId": 1, "orgIdentifier": 1, "projectIdentifier": 1, "childType": 1}
@@ -119,3 +129,6 @@ timeoutInstances {"name": "validUntil_1", "background": true, "expireAfterSecond
 waitInstances {"name": "correlationIds_1", "background": true} {"correlationIds": 1}
 waitInstances {"name": "validUntil_1", "background": true, "expireAfterSeconds": 0} {"validUntil": 1}
 waitInstances {"name": "waitingOnCorrelationIds_1", "background": true} {"waitingOnCorrelationIds": 1}
+yamlGitConfig {"name": "appId_1", "background": true} {"appId": 1}
+yamlGitConfig {"name": "createdAt_1", "background": true} {"createdAt": 1}
+yamlGitConfig {"name": "unique_locate", "unique": true} {"accountId": 1, "entityId": 1, "entityType": 1}

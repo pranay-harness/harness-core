@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -6,13 +13,10 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.ActivitySource;
 import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.activity.entities.HarnessCDCurrentGenActivity;
-import io.harness.cvng.activity.entities.InfrastructureActivity;
 import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
-import io.harness.cvng.alert.entities.AlertRule;
-import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
@@ -36,6 +40,7 @@ import io.harness.cvng.cdng.entities.CVNGStepTask;
 import io.harness.cvng.core.entities.AppDynamicsCVConfig;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.CVNGLog;
+import io.harness.cvng.core.entities.CustomHealthCVConfig;
 import io.harness.cvng.core.entities.DataCollectionTask;
 import io.harness.cvng.core.entities.DatadogLogCVConfig;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig;
@@ -51,6 +56,7 @@ import io.harness.cvng.core.entities.MonitoringSourcePerpetualTask;
 import io.harness.cvng.core.entities.NewRelicCVConfig;
 import io.harness.cvng.core.entities.PagerDutyWebhook;
 import io.harness.cvng.core.entities.PrometheusCVConfig;
+import io.harness.cvng.core.entities.SLIDataCollectionTask;
 import io.harness.cvng.core.entities.ServiceDependency;
 import io.harness.cvng.core.entities.ServiceGuardDataCollectionTask;
 import io.harness.cvng.core.entities.SplunkCVConfig;
@@ -71,6 +77,8 @@ import io.harness.cvng.dashboard.entities.HealthVerificationHeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator;
+import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
@@ -100,6 +108,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(HeatMap.class);
     set.add(DataCollectionTask.class);
     set.add(ServiceGuardDataCollectionTask.class);
+    set.add(SLIDataCollectionTask.class);
     set.add(DeploymentDataCollectionTask.class);
     set.add(CVConfig.class);
     set.add(CVNGSchema.class);
@@ -135,7 +144,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(TestLogAnalysisLearningEngineTask.class);
     set.add(TimeSeriesLoadTestLearningEngineTask.class);
     set.add(MetricCVConfig.class);
-    set.add(AlertRuleAnomaly.class);
     set.add(HostRecord.class);
     set.add(HealthVerificationJob.class);
     set.add(SplunkCVConfig.class);
@@ -146,12 +154,10 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(ServiceGuardDataCollectionTask.class);
     set.add(LogAnalysisCluster.class);
     set.add(LogClusterLearningEngineTask.class);
-    set.add(InfrastructureActivity.class);
     set.add(LogAnalysisLearningEngineTask.class);
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
     set.add(LogAnalysisRecord.class);
-    set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
     set.add(CanaryBlueGreenVerificationJob.class);
     set.add(DeploymentActivity.class);
@@ -163,6 +169,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(CVNGStepTask.class);
     set.add(Comparable.class);
     set.add(PrometheusCVConfig.class);
+    set.add(CustomHealthCVConfig.class);
     set.add(StackdriverLogCVConfig.class);
     set.add(DatadogMetricCVConfig.class);
     set.add(DatadogLogCVConfig.class);
@@ -184,7 +191,9 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(CVNGDemoPerpetualTask.class);
     set.add(ServiceLevelIndicator.class);
     set.add(RatioServiceLevelIndicator.class);
+    set.add(SLOHealthIndicator.class);
     set.add(ThresholdServiceLevelIndicator.class);
+    set.add(SLIRecord.class);
   }
 
   @Override

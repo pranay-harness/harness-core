@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.ce.exportData;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -5,6 +12,7 @@ import static io.harness.rule.OwnerRule.SHUBHANSHU;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -86,6 +94,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
   @Mock private DataFetchingEnvironment environment;
   @Mock private K8sWorkloadDao k8sWorkloadDao;
   @Mock CeAccountExpirationChecker accountChecker;
+  @Mock CEExportDataNodeAndPodDetailsHelper nodeAndPodDetailsHelper;
   @InjectMocks CEExportDataQueryBuilder queryBuilder;
   @Inject @InjectMocks CeClusterBillingDataDataFetcher ceClusterBillingDataDataFetcher;
 
@@ -155,6 +164,7 @@ public class CeClusterBillingDataDataFetcherTest extends AbstractDataFetcherTest
     when(mockConnection.createStatement()).thenReturn(mockStatement);
     when(mockStatement.executeQuery(anyString())).thenReturn(resultSet);
     doNothing().when(accountChecker).checkIsCeEnabled(anyString());
+    when(nodeAndPodDetailsHelper.isNodeAndPodQuery(anyList())).thenReturn(false);
     mockResultSet();
   }
 

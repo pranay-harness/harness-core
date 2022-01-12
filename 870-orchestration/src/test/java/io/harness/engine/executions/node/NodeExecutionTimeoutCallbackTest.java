@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.executions.node;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -19,6 +26,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.interrupts.InterruptType;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.rule.Owner;
 import io.harness.timeout.TimeoutInstance;
 
@@ -50,11 +58,12 @@ public class NodeExecutionTimeoutCallbackTest extends OrchestrationTestBase {
   @Owner(developers = ALEXEI)
   @Category(UnitTests.class)
   public void shouldTestOnTimeoutWhenNodeExecutionNull() {
-    when(nodeExecutionService.get(nodeExecutionId)).thenReturn(null);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(null);
 
     callback.onTimeout(TimeoutInstance.builder().build());
 
-    verify(nodeExecutionService).get(nodeExecutionId);
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
     verify(nodeExecutionService, never()).update(any(), any());
     verify(interruptManager, never()).register(any());
   }
@@ -64,11 +73,12 @@ public class NodeExecutionTimeoutCallbackTest extends OrchestrationTestBase {
   @Category(UnitTests.class)
   public void shouldTestOnTimeoutWhenNodeExecutionIsNotInFinalizableStatus() {
     NodeExecution nodeExecution = NodeExecution.builder().status(Status.FAILED).build();
-    when(nodeExecutionService.get(nodeExecutionId)).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
 
     callback.onTimeout(TimeoutInstance.builder().build());
 
-    verify(nodeExecutionService).get(nodeExecutionId);
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
     verify(nodeExecutionService, never()).update(any(), any());
     verify(interruptManager, never()).register(any());
   }
@@ -79,7 +89,8 @@ public class NodeExecutionTimeoutCallbackTest extends OrchestrationTestBase {
   public void shouldTestOnTimeoutWhenIsParentMode() {
     NodeExecution nodeExecution =
         NodeExecution.builder().uuid(nodeExecutionId).status(Status.RUNNING).mode(ExecutionMode.CHILD).build();
-    when(nodeExecutionService.get(nodeExecutionId)).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
 
     callback.onTimeout(TimeoutInstance.builder().uuid(generateUuid()).build());
 
@@ -89,8 +100,8 @@ public class NodeExecutionTimeoutCallbackTest extends OrchestrationTestBase {
     InterruptPackage interruptPackage = interruptPackageArgumentCaptor.getValue();
     assertThat(interruptPackage.getInterruptType()).isEqualTo(InterruptType.EXPIRE_ALL);
 
-    verify(nodeExecutionService).get(nodeExecutionId);
-    verify(nodeExecutionService).update(any(), any());
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
+    verify(nodeExecutionService).updateV2(any(), any());
   }
 
   @Test
@@ -99,7 +110,8 @@ public class NodeExecutionTimeoutCallbackTest extends OrchestrationTestBase {
   public void shouldTestOnTimeout() {
     NodeExecution nodeExecution =
         NodeExecution.builder().uuid(nodeExecutionId).status(Status.RUNNING).mode(ExecutionMode.TASK).build();
-    when(nodeExecutionService.get(nodeExecutionId)).thenReturn(nodeExecution);
+    when(nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode))
+        .thenReturn(nodeExecution);
 
     callback.onTimeout(TimeoutInstance.builder().uuid(generateUuid()).build());
 
@@ -109,7 +121,7 @@ public class NodeExecutionTimeoutCallbackTest extends OrchestrationTestBase {
     InterruptPackage interruptPackage = interruptPackageArgumentCaptor.getValue();
     assertThat(interruptPackage.getInterruptType()).isEqualTo(InterruptType.MARK_EXPIRED);
 
-    verify(nodeExecutionService).get(nodeExecutionId);
-    verify(nodeExecutionService).update(any(), any());
+    verify(nodeExecutionService).getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withStatusAndMode);
+    verify(nodeExecutionService).updateV2(any(), any());
   }
 }
