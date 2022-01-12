@@ -25,7 +25,7 @@ public class StackDriverMetricsCVConfigurationYamlHandler
     StackDriverMetricCVConfigurationYaml yaml = StackDriverMetricCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setMetricDefinitions(bean.getMetricDefinitions());
-
+    yaml.setProjectId(bean.getProjectId());
     yaml.setType(StateType.STACK_DRIVER.name());
     return yaml;
   }
@@ -50,6 +50,7 @@ public class StackDriverMetricsCVConfigurationYamlHandler
     bean.setMetricDefinitions(changeContext.getYaml().getMetricDefinitions());
     bean.setMetricFilters();
     bean.setStateType(StateType.STACK_DRIVER);
+    bean.setProjectId(changeContext.getYaml().getProjectId());
 
     if (previous != null) {
       bean.setUuid(previous.getUuid());
