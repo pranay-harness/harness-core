@@ -37,6 +37,7 @@ public class CloudFormationCommandRequest implements ExecutionCapabilityDemander
   private int timeoutInMs;
   private String region;
   private String cloudFormationRoleArn;
+  private boolean skipWaitForResources;
 
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {

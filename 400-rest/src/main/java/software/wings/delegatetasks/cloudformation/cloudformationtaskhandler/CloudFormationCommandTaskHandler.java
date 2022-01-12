@@ -121,7 +121,9 @@ public abstract class CloudFormationCommandTaskHandler {
             "No specific cloudformation role provided will use the default permissions on delegate.");
       }
       awsHelperService.deleteStack(request.getRegion(), deleteStackRequest, request.getAwsConfig());
-      sleep(ofSeconds(30));
+      if (!request.isSkipWaitForResources()) {
+        sleep(ofSeconds(30));
+      }
 
       executionLogCallback.saveExecutionLog(
           String.format("# Request to delete stack: %s submitted. Now beginning to poll.", stackName));
