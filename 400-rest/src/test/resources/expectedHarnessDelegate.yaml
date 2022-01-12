@@ -126,8 +126,6 @@ spec:
           value: "false"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
-        - name: VERSION_CHECK_DISABLED
-          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

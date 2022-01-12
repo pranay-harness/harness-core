@@ -20,7 +20,6 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
@@ -640,8 +639,6 @@ public class WatcherServiceImpl implements WatcherService {
 
               if (multiVersion) {
                 if (!expectedVersions.contains(delegateVersion) && !shutdownPending) {
-                  messageService.writeMessageToChannel(
-                      DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
                   log.info("Delegate version {} ({}) is not a published version. Future requests will go to primary.",
                       delegateVersion, delegateProcess);
                   drainingNeededList.add(delegateProcess);

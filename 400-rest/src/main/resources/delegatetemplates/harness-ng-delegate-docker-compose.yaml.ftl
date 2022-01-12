@@ -29,5 +29,4 @@ services:
       - DELEGATE_ORG_IDENTIFIER=${delegateOrgIdentifier}
       - DELEGATE_PROJECT_IDENTIFIER=${delegateProjectIdentifier}
       - PROXY_MANAGER=true
-      - VERSION_CHECK_DISABLED=${versionCheckDisabled}
       - INIT_SCRIPT=echo "Docker delegate init script executed."

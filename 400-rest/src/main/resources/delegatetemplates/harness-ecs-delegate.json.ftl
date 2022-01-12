@@ -113,10 +113,6 @@
         {
           "name": "INSTALL_CLIENT_TOOLS_IN_BACKGROUND",
           "value": "true"
-        },
-        {
-          "name": "VERSION_CHECK_DISABLED",
-          "value": "${versionCheckDisabled}"
         }
       ],
       "memory": 6144,
