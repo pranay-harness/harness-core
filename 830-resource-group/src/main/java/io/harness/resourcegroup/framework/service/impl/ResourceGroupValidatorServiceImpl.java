@@ -10,6 +10,7 @@ package io.harness.resourcegroup.framework.service.impl;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_IDENTIFIER;
 import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
 
 import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
@@ -88,7 +89,12 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
     return resourceMap.containsKey(resourceType)
         && resourceMap.get(resourceType).getValidScopeLevels().contains(scopeLevel)
         && resourceMap.get(resourceType).getSelectorKind().containsKey(scopeLevel)
-        && resourceMap.get(resourceType).getSelectorKind().get(scopeLevel).contains(BY_RESOURCE_TYPE);
+        && (Boolean.FALSE.equals(resourceSelector.getIncludeChildScopes())
+                ? resourceMap.get(resourceType).getSelectorKind().get(scopeLevel).contains(BY_RESOURCE_TYPE)
+                : resourceMap.get(resourceType)
+                      .getSelectorKind()
+                      .get(scopeLevel)
+                      .contains(BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES));
   }
 
   private boolean sanitizeStaticResourceSelector(Scope scope, StaticResourceSelector resourceSelector) {
