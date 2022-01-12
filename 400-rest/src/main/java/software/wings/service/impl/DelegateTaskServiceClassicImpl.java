@@ -1343,16 +1343,14 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
 
   private List<DelegateTaskEvent> getQueuedEvents(String accountId, String delegateId, boolean sync) {
     // TODO - add assignment filter here (scopes. selectors, ...)
-    Query<DelegateTask> delegateTaskQuery =
-        persistence.createQuery(DelegateTask.class)
-            .filter(DelegateTaskKeys.accountId, accountId)
-            .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
-            .filter(DelegateTaskKeys.status, QUEUED)
-            .filter(DelegateTaskKeys.data_async, !sync)
-            .field(DelegateTaskKeys.delegateId)
-            .doesNotExist()
-            .field(DelegateTaskKeys.expiry)
-            .greaterThan(currentTimeMillis());
+    Query<DelegateTask> delegateTaskQuery = persistence.createQuery(DelegateTask.class)
+                                                .filter(DelegateTaskKeys.accountId, accountId)
+                                                .filter(DelegateTaskKeys.status, QUEUED)
+                                                .filter(DelegateTaskKeys.data_async, !sync)
+                                                .field(DelegateTaskKeys.delegateId)
+                                                .doesNotExist()
+                                                .field(DelegateTaskKeys.expiry)
+                                                .greaterThan(currentTimeMillis());
     List<DelegateTask> delegateTasks =
         delegateTaskQuery.asList()
             .stream()
