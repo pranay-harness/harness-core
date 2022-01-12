@@ -35,4 +35,4 @@ COPY ./delegate.jar ./delegate.jar
 
 USER 1001
 
-CMD ./start.sh
+CMD [ "./start.sh" ]
