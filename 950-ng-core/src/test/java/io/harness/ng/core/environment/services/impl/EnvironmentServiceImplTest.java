@@ -132,11 +132,34 @@ public class EnvironmentServiceImplTest extends NGCoreTestBase {
 
     list = environmentService.list(criteriaFromFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
-    assertThat(list.getContent().size()).isEqualTo(2);
+    assertThat(list.getContent().size()).isEqualTo(0);
+
+    // Upsert operations in org level
+    Environment upsertEnvironmentRequestOrgLevel = Environment.builder()
+                                                       .accountId("ACCOUNT_ID")
+                                                       .identifier("NEW_ENV")
+                                                       .orgIdentifier("ORG_ID")
+                                                       .name("UPSERTED_ENV")
+                                                       .description("NEW_DESCRIPTION")
+                                                       .build();
+    upsertEnv = environmentService.upsert(upsertEnvironmentRequestOrgLevel);
+    assertThat(upsertEnv).isNotNull();
+    assertThat(upsertEnv.getAccountId()).isEqualTo(upsertEnvironmentRequest.getAccountId());
+    assertThat(upsertEnv.getOrgIdentifier()).isEqualTo(upsertEnvironmentRequest.getOrgIdentifier());
+    assertThat(upsertEnv.getProjectIdentifier()).isNull();
+    assertThat(upsertEnv.getIdentifier()).isEqualTo(upsertEnvironmentRequest.getIdentifier());
+    assertThat(upsertEnv.getName()).isEqualTo(upsertEnvironmentRequest.getName());
+    assertThat(upsertEnv.getDescription()).isEqualTo(upsertEnvironmentRequest.getDescription());
+
+    criteriaFromFilter = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
+    pageRequest = PageUtils.getPageRequest(0, 100, null);
+
+    list = environmentService.list(criteriaFromFilter, pageRequest);
+    assertThat(list.getContent()).isNotNull();
+    assertThat(list.getContent().size()).isEqualTo(1);
     List<EnvironmentResponseDTO> dtoList =
         list.getContent().stream().map(EnvironmentMapper::writeDTO).collect(Collectors.toList());
-    assertThat(dtoList).containsOnly(
-        EnvironmentMapper.writeDTO(updatedEnvironment), EnvironmentMapper.writeDTO(upsertEnv));
+    assertThat(dtoList).containsOnly(EnvironmentMapper.writeDTO(upsertEnv));
 
     // Delete operations
     boolean delete = environmentService.delete("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "IDENTIFIER", 1L);
