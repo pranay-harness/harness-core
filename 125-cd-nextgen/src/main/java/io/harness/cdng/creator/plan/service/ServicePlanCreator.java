@@ -78,8 +78,6 @@ import java.util.stream.Collectors;
 public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
   @Inject EnforcementValidator enforcementValidator;
   @Inject KryoSerializer kryoSerializer;
-  ServiceConfig actualServiceConfig;
-  private String serviceConfigNodeId;
 
   @Override
   public Class<ServiceConfig> getFieldClass() {
@@ -91,8 +89,8 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
     return Collections.singletonMap(YamlTypes.SERVICE_CONFIG, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
-  public String addDependenciesForArtifacts(
-      PlanCreationContext ctx, LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
+  public String addDependenciesForArtifacts(PlanCreationContext ctx,
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, ServiceConfig actualServiceConfig) {
     YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     boolean isUseFromStage = actualServiceConfig.getUseFromStage() != null;
     YamlField artifactYamlField =
@@ -134,7 +132,7 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
             ctx.getDependency().getMetadataMap().get(YamlTypes.INFRASTRUCTURE_STEP_PARAMETERS).toByteArray());
 
     YamlNode serviceNode = serviceField.getNode();
-    actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
+    ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
 
     List<String> serviceSpecChildrenIds = new ArrayList<>();
@@ -142,7 +140,7 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
 
     boolean createPlanForArtifacts = validateCreatePlanNodeForArtifacts(actualServiceConfig);
     if (createPlanForArtifacts) {
-      String artifactNodeId = addDependenciesForArtifacts(ctx, planCreationResponseMap);
+      String artifactNodeId = addDependenciesForArtifacts(ctx, planCreationResponseMap, actualServiceConfig);
       serviceSpecChildrenIds.add(artifactNodeId);
     }
 
@@ -153,10 +151,10 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
       planCreationResponseMap.put(finalManifestId, response);
     }
 
-    serviceConfigNodeId = serviceNode.getUuid();
-    String serviceDefinitionNodeId = addServiceDefinitionNode(
-        actualServiceConfig, planCreationResponseMap, serviceSpecChildrenIds, infraSectionStepParameters);
-    addServiceNode(actualServiceConfig, planCreationResponseMap, serviceDefinitionNodeId);
+    String serviceConfigNodeId = serviceNode.getUuid();
+    String serviceDefinitionNodeId = addServiceDefinitionNode(actualServiceConfig, planCreationResponseMap,
+        serviceConfigNodeId, serviceSpecChildrenIds, infraSectionStepParameters);
+    addServiceNode(actualServiceConfig, planCreationResponseMap, serviceConfigNodeId, serviceDefinitionNodeId);
 
     return planCreationResponseMap;
   }
@@ -167,9 +165,10 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
     YamlField serviceField = ctx.getCurrentField();
     YamlNode serviceNode = serviceField.getNode();
 
-    actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
+    ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
 
+    String serviceConfigNodeId = serviceField.getNode().getUuid();
     String serviceNodeUuId = "service-" + serviceConfigNodeId;
     ServiceConfigStepParameters serviceConfigStepParameters = ServiceConfigStepParameters.builder()
                                                                   .useFromStage(actualServiceConfig.getUseFromStage())
@@ -223,7 +222,8 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
   }
 
   private String addServiceNode(ServiceConfig actualServiceConfig,
-      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, String serviceDefinitionNodeId) {
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, String serviceConfigNodeId,
+      String serviceDefinitionNodeId) {
     ServiceStepParameters stepParameters = ServiceStepParameters.fromServiceConfig(actualServiceConfig);
     PlanNode node =
         PlanNode.builder()
@@ -250,8 +250,8 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
   }
 
   private String addServiceDefinitionNode(ServiceConfig actualServiceConfig,
-      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, List<String> serviceSpecChildrenIds,
-      InfraSectionStepParameters infraSectionStepParameters) {
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, String serviceConfigNodeId,
+      List<String> serviceSpecChildrenIds, InfraSectionStepParameters infraSectionStepParameters) {
     String serviceSpecNodeId =
         addServiceSpecNode(actualServiceConfig, planCreationResponseMap, serviceConfigNodeId, serviceSpecChildrenIds);
     String environmentStepNodeId =

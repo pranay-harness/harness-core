@@ -242,8 +242,8 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     YamlField serviceField = YamlUtils.readTree(yaml);
 
     PlanCreationContext ctx = PlanCreationContext.builder().currentField(serviceField).build();
-    servicePlanCreator.actualServiceConfig = ServiceConfig.builder().build();
-    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap);
+    ServiceConfig actualServiceConfig = ServiceConfig.builder().build();
+    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap, actualServiceConfig);
     assertThat(planCreationResponseMap.size()).isEqualTo(1);
     assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
@@ -259,7 +259,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
   public void testAddDependenciesForArtifactsWithUseFromStageWithoutStageOverride() throws IOException {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
-    servicePlanCreator.actualServiceConfig =
+    ServiceConfig actualServiceConfig =
         ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test2.yml");
@@ -270,7 +270,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     YamlField serviceField = YamlUtils.readTree(yaml);
 
     PlanCreationContext ctx = PlanCreationContext.builder().currentField(serviceField).build();
-    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap);
+    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap, actualServiceConfig);
     assertThat(planCreationResponseMap.size()).isEqualTo(1);
     assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
@@ -278,7 +278,6 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
         .isEqualTo("stageOverrides/artifacts");
     assertThat(planCreationResponse1.getYamlUpdates().getFqnToYamlCount()).isEqualTo(1);
-    servicePlanCreator.actualServiceConfig = ServiceConfig.builder().build();
   }
 
   @Test
@@ -287,7 +286,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
   public void testAddDependenciesForArtifactsWithUseFromStageWithoutArtifacts() throws IOException {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
-    servicePlanCreator.actualServiceConfig =
+    ServiceConfig actualServiceConfig =
         ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test3.yml");
@@ -298,7 +297,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     YamlField serviceField = YamlUtils.readTree(yaml);
 
     PlanCreationContext ctx = PlanCreationContext.builder().currentField(serviceField).build();
-    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap);
+    String nodeUuid = servicePlanCreator.addDependenciesForArtifacts(ctx, planCreationResponseMap, actualServiceConfig);
     assertThat(planCreationResponseMap.size()).isEqualTo(1);
     assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
@@ -307,6 +306,5 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
         .isEqualTo("stageOverrides/artifacts");
 
     assertThat(planCreationResponse1.getYamlUpdates().getFqnToYamlCount()).isEqualTo(1);
-    servicePlanCreator.actualServiceConfig = ServiceConfig.builder().build();
   }
 }
