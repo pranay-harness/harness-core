@@ -18,6 +18,7 @@ import io.harness.plancreator.stages.parallel.ParallelStageElementConfig;
 import io.harness.plancreator.stages.stage.StageElementConfig;
 import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
+import io.harness.pms.helpers.PmsFeatureFlagHelper;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaTransientHelper;
@@ -28,6 +29,7 @@ import io.harness.yaml.schema.beans.SchemaConstants;
 import io.harness.yaml.schema.beans.SubtypeClassMap;
 import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -41,6 +43,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -60,13 +63,16 @@ public class PmsYamlSchemaHelper {
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
   private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   private final YamlSchemaGenerator yamlSchemaGenerator;
+  private final PmsFeatureFlagHelper pmsFeatureFlagHelper;
 
   @Inject
   public PmsYamlSchemaHelper(@Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      List<YamlSchemaRootClass> yamlSchemaRootClasses, YamlSchemaGenerator yamlSchemaGenerator) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, YamlSchemaGenerator yamlSchemaGenerator,
+      PmsFeatureFlagHelper pmsFeatureFlagHelper) {
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
+    this.pmsFeatureFlagHelper = pmsFeatureFlagHelper;
   }
 
   public void modifyStepElementSchema(ObjectNode jsonNode) {
@@ -205,5 +211,19 @@ public class PmsYamlSchemaHelper {
 
   public List<EntityType> getNodeEntityTypesByYamlGroup(String yamlGroup) {
     return YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, yamlGroup);
+  }
+
+  public Set<String> getEnabledFeatureFlags(
+      String accountIdentifier, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
+    Set<String> enabledFeatureFlags = new HashSet<>();
+    for (YamlSchemaWithDetails yamlSchemaWithDetails : yamlSchemaWithDetailsList) {
+      List<String> featureFlags = yamlSchemaWithDetails.getYamlSchemaMetadata().getFeatureFlags();
+      if (featureFlags != null) {
+        enabledFeatureFlags.addAll(featureFlags.stream()
+                                       .filter(o -> pmsFeatureFlagHelper.isEnabled(accountIdentifier, o))
+                                       .collect(Collectors.toList()));
+      }
+    }
+    return enabledFeatureFlags;
   }
 }
