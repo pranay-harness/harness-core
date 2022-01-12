@@ -149,7 +149,7 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
           planExecutionId, serviceName, pipelineExecutionSummaryEntity.getPipelineIdentifier());
     }
 
-    sendCountOfDistinctActiveServicesEvent(pipelineId, identity, accountId, accountName, orgId, projectId);
+    // sendCountOfDistinctActiveServicesEvent(pipelineId, identity, accountId, accountName, orgId, projectId);
   }
 
   @VisibleForTesting
