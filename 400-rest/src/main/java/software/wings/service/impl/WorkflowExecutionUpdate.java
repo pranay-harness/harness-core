@@ -37,6 +37,7 @@ import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineExecData;
 import io.harness.beans.event.cg.pipeline.PipelineStageInfo;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.event.handler.impl.segment.SegmentHandler;
@@ -344,6 +345,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                 CgPipelineCompletePayload.builder()
                     .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
                     .executionId(execution.getUuid())
+                    .pipelineExecution(PipelineExecData.builder().id(execution.getUuid()).build())
                     .services(isEmpty(execution.getServiceIds())
                             ? Collections.emptyList()
                             : execution.getServiceIds()
@@ -429,6 +431,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                 CgPipelinePausePayload.builder()
                     .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
                     .executionId(execution.getUuid())
+                    .pipelineExecution(PipelineExecData.builder().id(execution.getUuid()).build())
                     .services(isEmpty(execution.getServiceIds())
                             ? Collections.emptyList()
                             : execution.getServiceIds()
@@ -491,6 +494,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
                 CgPipelineResumePayload.builder()
                     .application(ApplicationEventData.builder().id(appId).name(application.getName()).build())
                     .executionId(execution.getUuid())
+                    .pipelineExecution(PipelineExecData.builder().id(execution.getUuid()).build())
                     .services(isEmpty(execution.getServiceIds())
                             ? Collections.emptyList()
                             : execution.getServiceIds()
