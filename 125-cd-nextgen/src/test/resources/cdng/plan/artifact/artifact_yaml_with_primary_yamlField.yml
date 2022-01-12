@@ -1,0 +1,13 @@
+primary:
+  type: DockerRegistry
+  spec:
+    connectorRef: org.DockerConnectorForAutomationTest
+    imagePath: harness/todolist-sample
+    tag: "10"
+
+
+
+
+
+
+

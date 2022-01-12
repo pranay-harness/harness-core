@@ -94,7 +94,7 @@ public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
     YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     boolean isUseFromStage = actualServiceConfig.getUseFromStage() != null;
     YamlField artifactYamlField =
-        ArtifactsUtility.fetchArtifactYamlField(ctx.getCurrentField(), isUseFromStage, yamlUpdates);
+        ArtifactsUtility.fetchArtifactYamlFieldAndSetYamlUpdates(ctx.getCurrentField(), isUseFromStage, yamlUpdates);
     String artifactsPlanNodeId = UUIDGenerator.generateUuid();
 
     Map<String, ByteString> metadataDependency =

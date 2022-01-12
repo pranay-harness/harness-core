@@ -37,6 +37,7 @@ import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
@@ -120,7 +121,6 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
       String primaryId, ArtifactStepParameters params) {
     Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(primaryId)));
-    // TODO: Find an efficient way to not pass whole service config
     metadataDependency.put(
         YamlTypes.PRIMARY_STEP_PARAMETERS, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(params)));
     return metadataDependency;
@@ -146,8 +146,8 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     }
 
     if (artifactList.getPrimary() != null) {
-      String primaryPlanNodeId =
-          addDependenciesForPrimaryNode(ctx.getCurrentField(), artifactList.getPrimary(), planCreationResponseMap);
+      String primaryPlanNodeId = addDependenciesForPrimaryNode(
+          ctx.getCurrentField(), artifactList.getPrimary().getParams(), planCreationResponseMap);
     }
     if (EmptyPredicate.isNotEmpty(artifactList.getSidecars())) {
       final String sideCarsPlanNodeId = "sidecars-" + artifactsId;
@@ -157,7 +157,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     return planCreationResponseMap;
   }
 
-  private String addDependenciesForPrimaryNode(YamlField artifactField, ArtifactInfo primaryInfo,
+  public String addDependenciesForPrimaryNode(YamlField artifactField, ArtifactStepParameters artifactStepParameters,
       LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
     YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder(); //.build()
     YamlField primaryYamlField =
@@ -165,16 +165,15 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
 
     String primaryId = primaryYamlField.getNode().getUuid();
     Map<String, ByteString> metadataDependency =
-        prepareMetadataForPrimaryArtifactPlanCreator(primaryId, primaryInfo.getParams());
+        prepareMetadataForPrimaryArtifactPlanCreator(primaryId, artifactStepParameters);
 
     Map<String, YamlField> dependenciesMap = new HashMap<>();
     dependenciesMap.put(primaryId, primaryYamlField);
-    PlanCreationResponse.PlanCreationResponseBuilder primaryPlanCreationResponse =
-        PlanCreationResponse.builder().dependencies(
-            DependenciesUtils.toDependenciesProto(dependenciesMap)
-                .toBuilder()
-                .putDependencyMetadata(primaryId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
-                .build());
+    PlanCreationResponseBuilder primaryPlanCreationResponse = PlanCreationResponse.builder().dependencies(
+        DependenciesUtils.toDependenciesProto(dependenciesMap)
+            .toBuilder()
+            .putDependencyMetadata(primaryId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
+            .build());
     if (yamlUpdates.getFqnToYamlCount() > 0) {
       primaryPlanCreationResponse.yamlUpdates(yamlUpdates.build());
     }

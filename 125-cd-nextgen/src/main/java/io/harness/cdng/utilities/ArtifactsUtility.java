@@ -38,7 +38,7 @@ public class ArtifactsUtility {
     return artifactsYamlField.getNode().getCurrJsonNode();
   }
 
-  public YamlField fetchArtifactYamlField(
+  public YamlField fetchArtifactYamlFieldAndSetYamlUpdates(
       YamlField serviceField, Boolean isUseFromStage, YamlUpdates.Builder yamlUpdates) {
     if (isUseFromStage == false) {
       return serviceField.getNode()
