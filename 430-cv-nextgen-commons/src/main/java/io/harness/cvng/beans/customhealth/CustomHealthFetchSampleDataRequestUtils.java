@@ -12,6 +12,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.serializer.JsonUtils;
 
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 public class CustomHealthFetchSampleDataRequestUtils {
@@ -23,16 +24,25 @@ public class CustomHealthFetchSampleDataRequestUtils {
     commonEnvVariables.put("body", isNotEmpty(body) ? JsonUtils.asMap(body) : null);
 
     commonEnvVariables.put("startTimePlaceholder", startTime.getPlaceholder());
-    commonEnvVariables.put("startTimeFormat", startTime.getTimestampFormat().toString());
+    Instant instant = Instant.now();
+
     if (startTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.CUSTOM)) {
-      commonEnvVariables.put("startTimeCustomFormat", startTime.getCustomTimestampFormat());
+      commonEnvVariables.put("startTimeValue", startTime.getCustomTimestampFormat());
+    } else if (startTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.MILLISECONDS)) {
+      commonEnvVariables.put("startTimeValue", String.valueOf(instant.minusSeconds(30 * 60).toEpochMilli()));
+    } else if (startTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.SECONDS)) {
+      commonEnvVariables.put("startTimeValue", String.valueOf(instant.minusSeconds(30 * 60).getEpochSecond()));
     }
 
     commonEnvVariables.put("endTimePlaceholder", endTime.getPlaceholder());
-    commonEnvVariables.put("endTimeFormat", endTime.getTimestampFormat().toString());
     if (endTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.CUSTOM)) {
-      commonEnvVariables.put("endTimeCustomFormat", endTime.getCustomTimestampFormat());
+      commonEnvVariables.put("endTimeValue", endTime.getCustomTimestampFormat());
+    } else if (endTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.MILLISECONDS)) {
+      commonEnvVariables.put("endTimeValue", String.valueOf(instant.toEpochMilli()));
+    } else if (endTime.getTimestampFormat().equals(TimestampInfo.TimestampFormat.SECONDS)) {
+      commonEnvVariables.put("endTimeValue", String.valueOf(instant.getEpochSecond()));
     }
+
     return commonEnvVariables;
   }
 }
