@@ -126,6 +126,7 @@ import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineExecData;
 import io.harness.cache.MongoStore;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.CollectionUtils;
@@ -1802,6 +1803,7 @@ public class WorkflowExecutionServiceImpl implements WorkflowExecutionService {
                 .data(CgPipelineStartPayload.builder()
                           .application(ApplicationEventData.builder().id(app.getAppId()).name(app.getName()).build())
                           .executionId(execution.getUuid())
+                          .pipelineExecution(PipelineExecData.builder().id(execution.getUuid()).build())
                           .services(isEmpty(execution.getServiceIds())
                                   ? Collections.emptyList()
                                   : execution.getServiceIds()
