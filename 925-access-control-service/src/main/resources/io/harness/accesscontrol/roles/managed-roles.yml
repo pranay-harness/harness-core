@@ -1,6 +1,6 @@
 # Any edit in this file should accompany an increment in version.
 name: rolesConfiguration
-version: 14
+version: 15
 roles:
     - identifier: _project_admin
       name: Project Admin
@@ -320,22 +320,6 @@ roles:
         - ff_targetgroup_view
         - ff_target_view
         - ff_environment_apiKeyView
-      managed: true
-      allowedScopeLevels:
-        - account
-        - organization
-        - project
-    - identifier: _governance_admin
-      name: Governance Admin
-      description: Can view, edit, and delete Policies and Policy Sets
-      permissions:
-        - core_governancePolicySets_view
-        - core_governancePolicySets_edit
-        - core_governancePolicySets_delete
-        - core_governancePolicySets_evaluate
-        - core_governancePolicy_view
-        - core_governancePolicy_edit
-        - core_governancePolicy_delete
       managed: true
       allowedScopeLevels:
         - account
