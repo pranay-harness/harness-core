@@ -3,9 +3,9 @@ category: Performance
 metrics:
   - name: Method Response time
     type: RESP_TIME
-    path: builtin:service.keyRequest.response.time
+    path: builtin:host.cpu.idle
     responseJsonPath: TBD
-    validationPath: builtin:service.keyRequest.response.time
+    validationPath: builtin:host.cpu.idle
     validationResponseJsonPath: TBD
     included: true
   - name: Request Count total

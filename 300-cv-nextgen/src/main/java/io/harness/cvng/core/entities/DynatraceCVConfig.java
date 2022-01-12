@@ -41,6 +41,7 @@ public class DynatraceCVConfig extends MetricCVConfig {
   private List<DynatraceMetricInfo> metricInfos;
   private HealthSourceQueryType queryType;
   private List<String> serviceMethodIds;
+  private List<String> serviceMethodGroupIds;
 
   @Override
   protected void validateParams() {}

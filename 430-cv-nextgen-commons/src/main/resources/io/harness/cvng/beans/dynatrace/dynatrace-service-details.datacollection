@@ -1,24 +1,23 @@
-Var servicesUrl = concat(Env:baseUrl, "api/v2/entities")
+Var servicesUrl = concat(Env:baseUrl, "api/v2/entities/", Env:entityId)
 Var params = {}
 Var:params.put("fields", Env:fields)
-Var:params.put("entitySelector", Env:entitySelector)
-Var servicesResponse = sync-call(url=Var:servicesUrl, header=Env:commonHeaders, options=Var:params)
-
+Var servicesDetailsResponse = sync-call(url=Var:servicesUrl, header=Env:commonHeaders, options=Var:params)
 Var nullObject = null
-Var entities = extract(Var:servicesResponse, $.entities)
-Var lengthOfEntities = Var:entities.length()
-Var emptyListCount = 0
-if Var:lengthOfEntities != Var:emptyListCount {
-   Var entity = Var:entities[0]
-   Var serviceMap = {}
-   Var entityId = extract(Var:entity, $.entityId)
-   Var displayName = extract(Var:entity, $.displayName)
-   Var serviceMethodIds = extract(Var:entity, $.isServiceMethodOfService)
-   Var:serviceMap.put("entityId", Var:entityId)
-   Var:serviceMap.put("displayName", Var:displayName)
-   Var:serviceMap.put("serviceMethodIds", Var:serviceMethodIds)
-   Var:responseList.append(Var:serviceMap)
-   return serviceMap
-  }
+Var entityId = extract(Var:servicesDetailsResponse, $.entityId)
+Var displayName = extract(Var:servicesDetailsResponse, $.displayName)
+Var toRelationships = extract(Var:servicesDetailsResponse, $.toRelationships)
+Var serviceMethods = extract(Var:toRelationships, $.isServiceMethodOfService)
+Var serviceMap = {}
+Var:serviceMap.put("entityId", Var:entityId)
+Var:serviceMap.put("displayName", Var:displayName)
+if Var:serviceMethods != Var:nullObject {
+ Var serviceMethodIds = []
+ foreach serviceMethodId in Var:serviceMethods {
+  Var methodId = extract(Var:serviceMethodId, $.id)
+  Var methodType = extract(Var:serviceMethodId, $.type)
+  Var:serviceMethodIds.add(Var:methodId)
+ }
+ Var:serviceMap.put("serviceMethodIds", Var:serviceMethodIds)
+}
+return Var:serviceMap
 
-return null

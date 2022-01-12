@@ -1,0 +1,24 @@
+Var metricsUrl = concat(Env:baseUrl, "api/v2/metrics/query")
+Var params = {}
+Var:params.put("resolution", Env:resolution)
+Var nullObject = null
+Var returnList = []
+foreach metricToValidate in Env:metricsToValidate {
+  Var query = extract(Var:metricToValidate, $.query)
+  Var:params.put("metricSelector", Var:query)
+  Var metricName = extract(Var:metricToValidate, $.metricName)
+  Var resp = sync-call(url=Var:metricsUrl, header=Env:commonHeaders, options=Var:params)
+  Var value = null
+  Var metricDataArray = extract(Var:resp, $.result[0].data[0].timestamps)
+  Var validateMap = {}
+  Var:validateMap.put("metricName", Var:metricName)
+  if Var:metricDataArray != Var:nullObject {
+    Var lengthOfMetricValues = Var:metricDataArray.length()
+    Var emptyListCount = 0
+    if Var:lengthOfMetricValues != Var:emptyListCount {
+       Var:validateMap.put("value", Var:lengthOfMetricValues)
+    }
+  }
+  Var:returnList.append(Var:validateMap)
+}
+return Var:returnList

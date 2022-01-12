@@ -2,9 +2,11 @@ package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.beans.DynatraceDataCollectionInfo;
 import io.harness.cvng.core.entities.DynatraceCVConfig;
+import io.harness.cvng.core.entities.VerificationTask;
 import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.cvng.core.services.api.DataCollectionInfoMapper;
 import io.harness.cvng.core.services.api.DataCollectionSLIInfoMapper;
+import io.harness.cvng.core.utils.dataCollection.MetricDataCollectionUtils;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 
 import com.google.common.base.Preconditions;
@@ -16,7 +18,7 @@ public class DynatraceDataCollectionInfoMapper
     implements DataCollectionInfoMapper<DynatraceDataCollectionInfo, DynatraceCVConfig>,
                DataCollectionSLIInfoMapper<DynatraceDataCollectionInfo, DynatraceCVConfig> {
   @Override
-  public DynatraceDataCollectionInfo toDataCollectionInfo(DynatraceCVConfig cvConfig) {
+  public DynatraceDataCollectionInfo toDataCollectionInfo(DynatraceCVConfig cvConfig, VerificationTask.TaskType taskType) {
     DynatraceDataCollectionInfo dynatraceDataCollectionInfo =
         DynatraceDataCollectionInfo.builder()
             .metricPack(cvConfig.getMetricPack().toDTO())
@@ -24,6 +26,8 @@ public class DynatraceDataCollectionInfoMapper
             //                    .customMetrics(
             //                            CollectionUtils.emptyIfNull(cvConfig.getMetricInfos())
             //                                    .stream()
+             //   .filter(metricInfo
+             //           -> MetricDataCollectionUtils.isMetricApplicableForDataCollection(metricInfo, taskType))
             //                                    .map(metricInfo
             //                                            -> AppDynamicsDataCollectionInfo.AppMetricInfoDTO.builder()
             //                                            .metricName(metricInfo.getMetricName())

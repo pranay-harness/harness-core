@@ -48,6 +48,9 @@ public class MetricPackServiceImpl implements MetricPackService {
   static final List<String> NEWRELIC_METRICPACK_FILES = Lists.newArrayList(
       "/newrelic/metric-packs/performance-pack.yml", "/newrelic/metric-packs/default-custom-pack.yml");
 
+  static final List<String> DYNATRACE_METRIC_FILES = Lists.newArrayList(
+      "/dynatrace/metric-packs/performance-pack.yml", "/dynatrace/metric-packs/infrastructure-pack.yml");
+
   static final List<String> STACKDRIVER_METRICPACK_FILES =
       Lists.newArrayList("/stackdriver/metric-packs/default-performance-pack.yaml",
           "/stackdriver/metric-packs/default-error-pack.yaml", "/stackdriver/metric-packs/default-infra-pack.yaml");
@@ -75,6 +78,14 @@ public class MetricPackServiceImpl implements MetricPackService {
   private static final URL APPDYNAMICS_CUSTOM_PACK_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/appdynamics/dsl/custom-pack.datacollection");
   public static final String APPDYNAMICS_CUSTOM_PACK_DSL;
+
+  private static final URL DYNATRACE_PERFORMANCE_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/dynatrace/dsl/performance-pack.datacollection");
+  public static final String DYNATRACE_PERFORMANCE_PACK_DSL;
+
+  private static final URL DYNATRACE_INFRASTRUCTURE_PACK_DSL_PATH =
+      MetricPackServiceImpl.class.getResource("/dynatrace/dsl/infrastructure-pack.datacollection");
+  public static final String DYNATRACE_INFRASTRUCTURE_PACK_DSL;
 
   private static final URL STACKDRIVER_DSL_PATH =
       MetricPackServiceImpl.class.getResource("/stackdriver/dsl/metric-collection.datacollection");
@@ -110,6 +121,8 @@ public class MetricPackServiceImpl implements MetricPackService {
     String prometheusDsl = null;
     String datadogDsl = null;
     String customHealthDsl = null;
+    String dynatracePerformancePackDsl = null;
+    String dynatraceInfrastructurePackDsl = null;
     try {
       appDPeformancePackDsl = Resources.toString(APPDYNAMICS_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
       appDqualityPackDsl = Resources.toString(APPDYNAMICS_QUALITY_PACK_DSL_PATH, Charsets.UTF_8);
@@ -121,6 +134,8 @@ public class MetricPackServiceImpl implements MetricPackService {
       prometheusDsl = Resources.toString(PROMETHEUS_DSL_PATH, Charsets.UTF_8);
       datadogDsl = Resources.toString(DATADOG_DSL_PATH, Charsets.UTF_8);
       customHealthDsl = Resources.toString(CUSTOM_HEALTH_DSL_PATH, Charsets.UTF_8);
+      dynatracePerformancePackDsl = Resources.toString(DYNATRACE_PERFORMANCE_PACK_DSL_PATH, Charsets.UTF_8);
+      dynatraceInfrastructurePackDsl = Resources.toString(DYNATRACE_INFRASTRUCTURE_PACK_DSL_PATH, Charsets.UTF_8);
     } catch (Exception e) {
       // TODO: this should throw an exception but we risk delegate not starting up. We can remove this log term and
       // throw and exception once things stabilize
@@ -130,6 +145,8 @@ public class MetricPackServiceImpl implements MetricPackService {
     APPDYNAMICS_QUALITY_PACK_DSL = appDqualityPackDsl;
     APPDYNAMICS_INFRASTRUCTURE_PACK_DSL = appDInfrastructurePackDsl;
     APPDYNAMICS_CUSTOM_PACK_DSL = appDCustomPackDsl;
+    DYNATRACE_PERFORMANCE_PACK_DSL = dynatracePerformancePackDsl;
+    DYNATRACE_INFRASTRUCTURE_PACK_DSL = dynatraceInfrastructurePackDsl;
     STACKDRIVER_DSL = stackDriverDsl;
     NEW_RELIC_DSL = newrelicDsl;
     NEWRELIC_CUSTOM_PACK_DSL = newrelicCustomDsl;
@@ -237,6 +254,9 @@ public class MetricPackServiceImpl implements MetricPackService {
         break;
       case NEW_RELIC:
         yamlFileNames.addAll(NEWRELIC_METRICPACK_FILES);
+        break;
+      case DYNATRACE:
+        yamlFileNames.addAll(DYNATRACE_METRIC_FILES);
         break;
       case CUSTOM_HEALTH:
         yamlFileNames.addAll(CUSTOM_HEALTH_METRICPACK_FILES);
@@ -420,6 +440,9 @@ public class MetricPackServiceImpl implements MetricPackService {
       case NEW_RELIC:
         metricPack.setDataCollectionDsl(getNewRelicMetricPackDsl(metricPack));
         break;
+      case DYNATRACE:
+        metricPack.setDataCollectionDsl(getDynatraceMetricPackDsl(metricPack));
+        break;
       case CUSTOM_HEALTH:
         metricPack.setDataCollectionDsl(CUSTOM_HEALTH_DSL);
         break;
@@ -449,6 +472,17 @@ public class MetricPackServiceImpl implements MetricPackService {
         return NEW_RELIC_DSL;
       case CUSTOM_PACK_IDENTIFIER:
         return NEWRELIC_CUSTOM_PACK_DSL;
+      default:
+        throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
+    }
+  }
+
+  private String getDynatraceMetricPackDsl(MetricPack metricPack) {
+    switch (metricPack.getIdentifier()) {
+      case PERFORMANCE_PACK_IDENTIFIER:
+        return DYNATRACE_PERFORMANCE_PACK_DSL;
+      case INFRASTRUCTURE_PACK_IDENTIFIER:
+        return DYNATRACE_INFRASTRUCTURE_PACK_DSL;
       default:
         throw new IllegalArgumentException("Invalid identifier " + metricPack.getIdentifier());
     }

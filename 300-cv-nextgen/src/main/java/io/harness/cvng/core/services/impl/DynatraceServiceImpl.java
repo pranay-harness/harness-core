@@ -2,8 +2,12 @@ package io.harness.cvng.core.services.impl;
 
 import io.harness.cvng.beans.DataCollectionRequest;
 import io.harness.cvng.beans.DataCollectionRequestType;
+import io.harness.cvng.beans.MetricPackDTO;
+import io.harness.cvng.beans.ThirdPartyApiResponseStatus;
+import io.harness.cvng.beans.dynatrace.DynatraceMetricPackValidationRequest;
 import io.harness.cvng.beans.dynatrace.DynatraceServiceDetailsRequest;
 import io.harness.cvng.beans.dynatrace.DynatraceServiceListRequest;
+import io.harness.cvng.core.beans.MetricPackValidationResponse;
 import io.harness.cvng.core.beans.OnboardingRequestDTO;
 import io.harness.cvng.core.beans.OnboardingResponseDTO;
 import io.harness.cvng.core.beans.dynatrace.DynatraceServiceDTO;
@@ -17,7 +21,9 @@ import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
 import java.lang.reflect.Type;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DynatraceServiceImpl implements DynatraceService {
   @Inject private OnboardingService onboardingService;
@@ -43,6 +49,36 @@ public class DynatraceServiceImpl implements DynatraceService {
 
     Type type = new TypeToken<DynatraceServiceDTO>() {}.getType();
     return performRequestAndGetDataResult(request, type, projectParams, connectorIdentifier, tracingId);
+  }
+
+  @Override
+  public Set<MetricPackValidationResponse> validateData(ProjectParams projectParams, String connectorIdentifier,
+      String serviceId, List<MetricPackDTO> metricPacks, String tracingId) {
+    Set<MetricPackValidationResponse> metricPackValidationResponses = new HashSet<>();
+    metricPacks.forEach(metricPack -> {
+      DataCollectionRequest<DynatraceConnectorDTO> request =
+          DynatraceMetricPackValidationRequest.builder()
+              .serviceId(serviceId)
+              .metricPack(metricPack)
+              .type(DataCollectionRequestType.DYNATRACE_VALIDATION_REQUEST)
+              .build();
+
+      Type type = new TypeToken<List<MetricPackValidationResponse.MetricValidationResponse>>() {}.getType();
+      List<MetricPackValidationResponse.MetricValidationResponse> validationResponses =
+          performRequestAndGetDataResult(request, type, projectParams, connectorIdentifier, tracingId);
+
+      MetricPackValidationResponse.MetricPackValidationResponseBuilder metricPackValidationResponseBuilder =
+          MetricPackValidationResponse.builder()
+              .metricPackName(metricPack.getIdentifier())
+              .metricValidationResponses(validationResponses);
+
+      MetricPackValidationResponse metricPackValidationResponse =
+          metricPackValidationResponseBuilder.overallStatus(ThirdPartyApiResponseStatus.SUCCESS).build();
+      metricPackValidationResponse.updateStatus();
+      metricPackValidationResponses.add(metricPackValidationResponse);
+    });
+
+    return metricPackValidationResponses;
   }
 
   @Override

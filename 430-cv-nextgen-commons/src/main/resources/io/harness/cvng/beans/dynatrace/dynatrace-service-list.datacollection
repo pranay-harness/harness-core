@@ -3,11 +3,14 @@ Var params = {}
 Var:params.put("fields", Env:fields)
 Var:params.put("pageSize", Env:pageSize)
 Var:params.put("entitySelector", Env:entitySelector)
-Var servicesResponse = sync-call(url=Var:servicesUrl, header=Env:commonHeaders, options=Var:params)
+Var:params.put("from", Env:from)
 
+Var servicesResponse = sync-call(url=Var:servicesUrl, header=Env:commonHeaders, options=Var:params)
+Var nullObject = null
 Var responseList = []
 
 Var entities = extract(Var:servicesResponse, $.entities)
+print Var:entities
 foreach entity in Var:entities {
     Var serviceMap = {}
     Var entityId = extract(Var:entity, $.entityId)
@@ -15,8 +18,18 @@ foreach entity in Var:entities {
     Var:serviceMap.put("entityId", Var:entityId)
     Var:serviceMap.put("displayName", Var:displayName)
 
+    Var toRelationships = extract(Var:entity, $.toRelationships)
+    Var serviceMethods = extract(Var:entity, $.isServiceMethodOfService)
+    if Var:serviceMethods != Var:nullObject {
+      Var serviceMethodIds = []
+      foreach serviceMethodId in Var:serviceMethods {
+        Var methodId = extract(Var:serviceMethodId, $.id)
+        Var methodType = extract(Var:serviceMethodId, $.type)
+        Var:serviceMethodIds.add(Var:methodId)
+      }
+      Var:serviceMap.put("serviceMethodIds", Var:serviceMethodIds)
+    }
     Var:responseList.append(Var:serviceMap)
-
 }
 
 return Var:responseList

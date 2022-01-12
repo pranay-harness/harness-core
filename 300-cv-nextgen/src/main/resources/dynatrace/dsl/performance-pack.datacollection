@@ -1,0 +1,35 @@
+Var metricsUrl = concat(Env:baseUrl, "api/v2/metrics/query")
+Var params = {}
+Var:params.put("from", Env:startTimeMillis)
+Var:params.put("to", Env:endTimeMillis)
+Var:params.put("resolution", Env:resolution)
+
+Var nullObject = null
+Var returnList = []
+foreach metricToValidate in Env:metricsToValidate {
+  Var query = extract(Var:metricToValidate, $.querySelector)
+  Var:params.put("metricSelector", Var:query)
+  Var metricName = extract(Var:metricToValidate, $.metricName)
+  Var resp = sync-call(url=Var:metricsUrl, header=Env:commonHeaders, options=Var:params)
+  Var value = null
+  Var metricDataArray = extract(Var:resp, $.result[0].data)
+
+  foreach metricData in Var:metricDataArray {
+  print Var:metricData
+    Var index = 0
+    Var one = 1
+    Var metricTimestamps = extract(Var:metricData, $.timestamps)
+    Var metricValues = extract(Var:metricData, $.values)
+    if Var:metricTimestamps != Var:nullObject {
+    foreach metricTimestamp in Var:metricTimestamps {
+           Var metricValue = Var:metricValues[Var:index]
+           if Var:metricValue != Var:nullObject {
+              Var tsRecord = new TimeseriesRecord(txnName=Env:groupName, metricName=Var:metricName, metricValue=Var:metricValue, timestamp=Var:metricTimestamp, host=Env:host)
+              Var:returnList.append(Var:tsRecord)
+           }
+           index = Var:index + Var:one
+        }
+    }
+  }
+}
+return Var:returnList

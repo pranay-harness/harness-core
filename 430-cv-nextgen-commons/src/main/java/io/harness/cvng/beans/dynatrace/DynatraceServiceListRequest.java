@@ -6,28 +6,31 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.beans.DataCollectionRequest;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
+
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
 import lombok.experimental.SuperBuilder;
 
 @JsonTypeName("DYNATRACE_SERVICE_LIST")
+@Data
 @SuperBuilder
 @NoArgsConstructor
 @OwnedBy(CV)
 @EqualsAndHashCode(callSuper = true)
-@FieldNameConstants(innerTypeName = "DynatraceServiceListRequestKeys")
 public class DynatraceServiceListRequest extends DynatraceRequest {
   private static final List<String> FIELDS = Arrays.asList("lastSeenTms", "properties", "fromRelationships", "toRelationships");
+  private static final Long PAGE_SIZE = 500L;
+  private static final String ENTITY_SELECTOR = "type(\"SERVICE\")";
+  private static final String FROM_PARAM = "now-1y";
 
   private static final String DSL =
       DataCollectionRequest.readDSL("dynatrace-service-list.datacollection", DynatraceServiceListRequest.class);
-
-  private Long pageSize = 500L;
-  private String entitySelector = "type(\"SERVICE\")";
 
   @Override
   public String getDSL() {
@@ -37,11 +40,11 @@ public class DynatraceServiceListRequest extends DynatraceRequest {
   @Override
   public Map<String, Object> fetchDslEnvVariables() {
     Map<String, Object> commonEnvVariables = super.fetchDslEnvVariables();
-    commonEnvVariables.put(DynatraceServiceListRequestKeys.entitySelector, entitySelector);
+    commonEnvVariables.put("entitySelector", ENTITY_SELECTOR);
     String fieldsParam = String.join(",", FIELDS);
     commonEnvVariables.put("fields", fieldsParam);
-    commonEnvVariables.put(DynatraceServiceListRequestKeys.pageSize, pageSize);
-
+    commonEnvVariables.put("pageSize", PAGE_SIZE);
+    commonEnvVariables.put("from", FROM_PARAM);
     return commonEnvVariables;
   }
 }
