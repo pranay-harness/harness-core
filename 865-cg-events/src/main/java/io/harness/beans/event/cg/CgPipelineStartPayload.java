@@ -18,6 +18,7 @@ import io.harness.beans.event.cg.entities.InfraDefinitionEntity;
 import io.harness.beans.event.cg.entities.ServiceEntity;
 import io.harness.beans.event.cg.pipeline.ExecutionArgsEventData;
 import io.harness.beans.event.cg.pipeline.PipelineEventData;
+import io.harness.beans.event.cg.pipeline.PipelineExecData;
 
 import java.util.List;
 import lombok.Builder;
@@ -32,8 +33,8 @@ public class CgPipelineStartPayload extends CgPipelineExecutionPayload {
   public CgPipelineStartPayload(ApplicationEventData application, PipelineEventData pipeline,
       ExecutionArgsEventData executionArgs, EmbeddedUser triggeredBy, CreatedByType triggeredByType, long startedAt,
       List<ServiceEntity> services, List<EnvironmentEntity> environments, List<InfraDefinitionEntity> infraDefinitions,
-      String executionId) {
+      String executionId, PipelineExecData pipelineExecution) {
     super(application, pipeline, executionArgs, triggeredBy, triggeredByType, startedAt, services, environments,
-        infraDefinitions, executionId);
+        infraDefinitions, executionId, pipelineExecution);
   }
 }
