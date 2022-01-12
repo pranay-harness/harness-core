@@ -8,9 +8,12 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.JELENA;
 
+import static software.wings.beans.CloudFormationSourceType.TEMPLATE_URL;
 import static software.wings.beans.Environment.Builder.anEnvironment;
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
 import static software.wings.helpers.ext.cloudformation.request.CloudFormationCommandRequest.CloudFormationCommandType.DELETE_STACK;
@@ -20,6 +23,7 @@ import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ENV_ID;
 import static software.wings.utils.WingsTestConstants.ENV_NAME;
 import static software.wings.utils.WingsTestConstants.TAG_NAME;
+import static software.wings.utils.WingsTestConstants.TEMPLATE_FILE_PATH;
 import static software.wings.utils.WingsTestConstants.UUID;
 
 import static java.util.Collections.emptyList;
@@ -39,6 +43,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
 import io.harness.category.element.UnitTests;
+import io.harness.ff.FeatureFlagService;
 import io.harness.rule.Owner;
 import io.harness.tasks.ResponseData;
 
@@ -92,6 +97,7 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
   @Mock private ActivityService activityService;
   @Mock private SettingsService settingsService;
   @Mock private StateExecutionService stateExecutionService;
+  @Mock private FeatureFlagService featureFlagService;
 
   @InjectMocks private CloudFormationDeleteStackState state = new CloudFormationDeleteStackState("stateName");
 
@@ -201,5 +207,45 @@ public class CloudFormationDeleteStackStateTest extends WingsBaseTest {
     assertThat(response.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
     assertThat(response.getContextElements()).isEmpty();
     assertThat(response.getNotifyElements()).isEmpty();
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testIsNoTimeoutFalse() {
+    when(featureFlagService.isEnabled(CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES, mockContext.getAccountId()))
+        .thenReturn(false);
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(TEMPLATE_FILE_PATH)
+                                                              .build();
+
+    state.buildAndQueueDelegateTask(mockContext, provisioner, AwsConfig.builder().tag(TAG_NAME).build(), ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    CloudFormationDeleteStackRequest request =
+        (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.isSkipWaitForResources()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void testIsNoTimeoutTrue() {
+    when(featureFlagService.isEnabled(CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES, mockContext.getAccountId()))
+        .thenReturn(true);
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(TEMPLATE_FILE_PATH)
+                                                              .build();
+
+    state.buildAndQueueDelegateTask(mockContext, provisioner, AwsConfig.builder().tag(TAG_NAME).build(), ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    CloudFormationDeleteStackRequest request =
+        (CloudFormationDeleteStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.isSkipWaitForResources()).isTrue();
   }
 }
