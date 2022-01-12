@@ -76,6 +76,7 @@ public class NotificationHelperTest extends CategoryTest {
               ExecutionMetadata.newBuilder()
                   .setModuleType("cd")
                   .setPipelineIdentifier("dummyPipeline")
+                  .setIsNotificationConfigured(true)
                   .setTriggerInfo(
                       io.harness.pms.contracts.plan.ExecutionTriggerInfo.newBuilder()
                           .setTriggeredBy(
