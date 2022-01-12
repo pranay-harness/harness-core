@@ -13,6 +13,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldNameConstants;
 import org.hibernate.validator.constraints.NotEmpty;
@@ -21,6 +24,8 @@ import org.mongodb.morphia.annotations.Id;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Data
+@Builder
+@AllArgsConstructor
 @FieldNameConstants(innerTypeName = "DelegateRingKeys")
 @Entity(value = "delegateRing", noClassnameStored = true)
 @HarnessEntity(exportable = false)
@@ -33,6 +38,8 @@ public class DelegateRing implements PersistentEntity {
   }
 
   @Id @NotEmpty private String ringName;
-  @NotEmpty private String delegateImageTag;
-  @NotEmpty private String upgraderImageTag;
+  private String delegateImageTag;
+  private String upgraderImageTag;
+  private List<String> delegateVersions;
+  private List<String> watcherVersions;
 }
