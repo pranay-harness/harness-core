@@ -60,6 +60,7 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
   @InjectMocks private CEKubernetesConnectionValidator ceKubernetesConnectionValidator;
 
   private static final String CONNECTOR_REF = "account.connectorRef";
+  private static final String ACCOUNT_ID = "accountId";
   private static final String CONNECTOR_IDENTIFIER = "connectorRef";
   private static final String DELEGATE_NAME = "delegateName";
   private CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO;
@@ -92,7 +93,7 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testSuccess() {
     final ConnectorValidationResult connectorValidationResult =
-        ceKubernetesConnectionValidator.validate(ceKubernetesClusterConfigDTO, null, null, null, null);
+        ceKubernetesConnectionValidator.validate(ceKubernetesClusterConfigDTO, ACCOUNT_ID, null, null, null);
 
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(delegateTaskRequestArgumentCaptor.capture());
 
@@ -110,7 +111,7 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
     when(connectorService.get(any(), any(), any(), any())).thenReturn(Optional.empty());
 
     final ConnectorValidationResult connectorValidationResult =
-        ceKubernetesConnectionValidator.validate(ceKubernetesClusterConfigDTO, null, null, null, null);
+        ceKubernetesConnectionValidator.validate(ceKubernetesClusterConfigDTO, ACCOUNT_ID, null, null, null);
 
     verifyZeroInteractions(delegateGrpcClientWrapper);
     verify(connectorService, times(1)).get(any(), any(), any(), eq(CONNECTOR_IDENTIFIER));
@@ -134,7 +135,7 @@ public class CEKubernetesConnectionValidatorTest extends CategoryTest {
                         .build());
 
     final ConnectorValidationResult connectorValidationResult =
-        ceKubernetesConnectionValidator.validate(ceKubernetesClusterConfigDTO, null, null, null, null);
+        ceKubernetesConnectionValidator.validate(ceKubernetesClusterConfigDTO, ACCOUNT_ID, null, null, null);
 
     verify(connectorService, times(1)).get(any(), any(), any(), eq(CONNECTOR_IDENTIFIER));
     verify(delegateGrpcClientWrapper, times(1)).executeSyncTask(delegateTaskRequestArgumentCaptor.capture());

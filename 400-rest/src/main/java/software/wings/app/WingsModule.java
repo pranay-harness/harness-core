@@ -461,6 +461,8 @@ import software.wings.service.impl.aws.manager.AwsS3HelperServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureARMManagerImpl;
 import software.wings.service.impl.azure.manager.AzureAppServiceManagerImpl;
 import software.wings.service.impl.azure.manager.AzureVMSSHelperServiceManagerImpl;
+import software.wings.service.impl.azure.manager.resource.ACRResourceProvider;
+import software.wings.service.impl.azure.manager.resource.AzureK8sResourceProvider;
 import software.wings.service.impl.ce.CeAccountExpirationCheckerImpl;
 import software.wings.service.impl.compliance.GovernanceConfigServiceImpl;
 import software.wings.service.impl.customdeployment.CustomDeploymentTypeServiceImpl;
@@ -1108,6 +1110,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(DelegateTaskServiceClassic.class).to(DelegateTaskServiceClassicImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
+    bind(ACRResourceProvider.class);
+    bind(AzureK8sResourceProvider.class);
 
     bind(GraphQLRateLimiter.class);
     bind(GraphQLUtils.class);

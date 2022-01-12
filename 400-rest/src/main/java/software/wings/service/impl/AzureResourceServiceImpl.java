@@ -24,6 +24,8 @@ import software.wings.beans.AzureResourceGroup;
 import software.wings.beans.NameValuePair;
 import software.wings.beans.SettingAttribute;
 import software.wings.helpers.ext.azure.AzureHelperService;
+import software.wings.service.impl.azure.manager.resource.ACRResourceProvider;
+import software.wings.service.impl.azure.manager.resource.AzureK8sResourceProvider;
 import software.wings.service.intfc.AzureResourceService;
 import software.wings.service.intfc.BuildSourceService;
 import software.wings.service.intfc.SettingsService;
@@ -49,6 +51,8 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   @Inject private MainConfiguration mainConfiguration;
 
   @Inject private AzureHelperService azureHelperService;
+  @Inject private ACRResourceProvider containerRegistryResourceProvider;
+  @Inject private AzureK8sResourceProvider kubernetesResourceProvider;
   @Inject private SettingsService settingService;
   @Inject private SecretManager secretManager;
   @Inject private BuildSourceService buildSourceService;
@@ -79,7 +83,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
       String cloudProviderId, String subscriptionId, String registryName, String repositoryName) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listRepositoryTags(azureConfig,
+    return containerRegistryResourceProvider.listRepositoryTags(azureConfig,
         secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId, registryName, repositoryName);
   }
 
@@ -87,7 +91,7 @@ public class AzureResourceServiceImpl implements AzureResourceService {
   public List<AzureKubernetesCluster> listKubernetesClusters(String cloudProviderId, String subscriptionId) {
     SettingAttribute cloudProviderSetting = settingService.get(cloudProviderId);
     AzureConfig azureConfig = validateAndGetAzureConfig(cloudProviderSetting);
-    return azureHelperService.listKubernetesClusters(
+    return kubernetesResourceProvider.listKubernetesClusters(
         azureConfig, secretManager.getEncryptionDetails(azureConfig, null, null), subscriptionId);
   }
 

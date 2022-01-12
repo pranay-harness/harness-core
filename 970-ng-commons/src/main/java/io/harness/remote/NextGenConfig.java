@@ -26,4 +26,5 @@ public class NextGenConfig {
   @ConfigSecret String jwtIdentityServiceSecret;
   @ConfigSecret String ciManagerSecret;
   @ConfigSecret String ceNextGenServiceSecret;
+  @ConfigSecret String ffServiceSecret;
 }

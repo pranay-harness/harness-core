@@ -16,12 +16,17 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
+import io.harness.exception.InvalidRequestException;
 import io.harness.gitsync.FileChange;
 import io.harness.gitsync.FileChanges;
 import io.harness.gitsync.FullSyncEventRequest;
 import io.harness.gitsync.FullSyncServiceGrpc.FullSyncServiceBlockingStub;
 import io.harness.gitsync.ScopeDetails;
+import io.harness.gitsync.common.beans.BranchSyncStatus;
+import io.harness.gitsync.common.beans.GitBranch;
+import io.harness.gitsync.common.beans.InfoForGitPush;
 import io.harness.gitsync.common.helper.GitSyncGrpcClientUtils;
+import io.harness.gitsync.common.service.GitBranchService;
 import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
@@ -49,6 +54,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
   private final ScmOrchestratorService scmOrchestratorService;
   private final YamlGitConfigService yamlGitConfigService;
   private final FullSyncJobService fullSyncJobService;
+  private final GitBranchService gitBranchService;
 
   @Override
   public void triggerFullSync(FullSyncEventRequest fullSyncEventRequest, String messageId) {
@@ -72,8 +78,12 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       int fileNumber = entitiesForFullSync == null ? 0 : emptyIfNull(entitiesForFullSync.getFileChangesList()).size();
       log.info("Saving {} files for the microservice {}", fileNumber, microservice);
       emptyIfNull(entitiesForFullSync.getFileChangesList()).forEach(entityForFullSync -> {
-        saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync);
+        saveFullSyncEntityInfo(
+            gitConfigScope, messageId, microservice, entityForFullSync, fullSyncEventRequest.getBranch());
       });
+    }
+    if (fullSyncEventRequest.getIsNewBranch()) {
+      createNewBranch(fullSyncEventRequest);
     }
     GitFullSyncJob gitFullSyncJob = saveTheFullSyncJob(fullSyncEventRequest, messageId);
     if (gitFullSyncJob == null) {
@@ -125,8 +135,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
         projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), yamlGitConfigDTO.getGitConnectorRef());
   }
 
-  private void saveFullSyncEntityInfo(
-      EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice, FileChange entityForFullSync) {
+  private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
+      FileChange entityForFullSync, String branchName) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())
@@ -138,6 +148,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
             .entityDetail(entityDetailProtoToRestMapper.createEntityDetailDTO(entityForFullSync.getEntityDetail()))
             .syncStatus(QUEUED.name())
             .yamlGitConfigId(entityScopeInfo.getIdentifier())
+            .branchName(branchName)
             .retryCount(0)
             .build();
     gitFullSyncEntityService.save(gitFullSyncEntityInfo);
@@ -154,5 +165,37 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       return stringValue.getValue();
     }
     return null;
+  }
+
+  private void createNewBranch(FullSyncEventRequest fullSyncEventRequest) {
+    final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
+    String projectIdentifier = gitConfigScope.getProjectId().getValue();
+    String orgIdentifier = gitConfigScope.getOrgId().getValue();
+    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(
+        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
+    GitBranch gitBranch = gitBranchService.get(
+        gitConfigScope.getAccountId(), yamlGitConfigDTO.getRepo(), fullSyncEventRequest.getBranch());
+    if (gitBranch != null) {
+      throw new InvalidRequestException(
+          String.format("A branch with name {} already exists in Harness", fullSyncEventRequest.getBranch()));
+    }
+    InfoForGitPush infoForGitPush = InfoForGitPush.builder()
+                                        .accountId(gitConfigScope.getAccountId())
+                                        .orgIdentifier(orgIdentifier)
+                                        .projectIdentifier(projectIdentifier)
+                                        .branch(fullSyncEventRequest.getBranch())
+                                        .baseBranch(fullSyncEventRequest.getBaseBranch())
+                                        .build();
+
+    scmOrchestratorService.processScmRequest(scmClientFacilitatorService
+        -> scmClientFacilitatorService.createBranch(infoForGitPush, gitConfigScope.getIdentifier()),
+        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId());
+    gitBranch = GitBranch.builder()
+                    .accountIdentifier(gitConfigScope.getAccountId())
+                    .branchName(fullSyncEventRequest.getBranch())
+                    .branchSyncStatus(BranchSyncStatus.SYNCED)
+                    .repoURL(yamlGitConfigDTO.getRepo())
+                    .build();
+    gitBranchService.save(gitBranch);
   }
 }

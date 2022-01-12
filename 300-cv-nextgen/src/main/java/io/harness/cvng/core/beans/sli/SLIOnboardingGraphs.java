@@ -11,16 +11,18 @@ import io.harness.cvng.core.beans.TimeGraphResponse;
 
 import java.util.Map;
 import lombok.Builder;
-import lombok.Value;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 
-@Value
+@Data
 @Builder
 public class SLIOnboardingGraphs {
   TimeGraphResponse sliGraph;
   Map<String, MetricGraph> metricGraphs;
 
-  @Value
+  @Data
+  @NoArgsConstructor
   @SuperBuilder
   public static class MetricGraph extends TimeGraphResponse {
     private String metricName;

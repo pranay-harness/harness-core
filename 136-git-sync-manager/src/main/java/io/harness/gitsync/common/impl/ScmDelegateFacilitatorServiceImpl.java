@@ -66,6 +66,7 @@ import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.webhook.UpsertWebhookRequestDTO;
 import io.harness.product.ci.scm.proto.Commit;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -522,6 +523,34 @@ public class ScmDelegateFacilitatorServiceImpl extends AbstractScmClientFacilita
 
     } catch (InvalidProtocolBufferException e) {
       throw new UnexpectedException("Unexpected error occurred while doing scm operation", e);
+    }
+  }
+
+  @Override
+  public CreateBranchResponse createBranch(InfoForGitPush infoForGitPush, String yamlGitConfigIdentifier) {
+    YamlGitConfigDTO yamlGitConfigDTO = getYamlGitConfigDTO(infoForGitPush.getAccountId(),
+        infoForGitPush.getOrgIdentifier(), infoForGitPush.getProjectIdentifier(), yamlGitConfigIdentifier);
+    final ScmConnector scmConnector = getScmConnector(infoForGitPush.getAccountId(), infoForGitPush.getOrgIdentifier(),
+        infoForGitPush.getProjectIdentifier(), yamlGitConfigDTO.getGitConnectorRef());
+    scmConnector.setUrl(yamlGitConfigDTO.getRepo());
+    final List<EncryptedDataDetail> encryptionDetails = getEncryptedDataDetails(infoForGitPush.getAccountId(),
+        infoForGitPush.getOrgIdentifier(), infoForGitPush.getProjectIdentifier(), scmConnector);
+    final ScmGitRefTaskParams scmGitRefTaskParams = ScmGitRefTaskParams.builder()
+                                                        .gitRefType(GitRefType.CREATE_NEW_BRANCH)
+                                                        .scmConnector(scmConnector)
+                                                        .encryptedDataDetails(encryptionDetails)
+                                                        .branch(infoForGitPush.getBranch())
+                                                        .baseBranch(infoForGitPush.getBaseBranch())
+                                                        .build();
+    DelegateTaskRequest delegateTaskRequest =
+        getDelegateTaskRequest(infoForGitPush.getAccountId(), infoForGitPush.getOrgIdentifier(),
+            infoForGitPush.getProjectIdentifier(), scmGitRefTaskParams, TaskType.SCM_GIT_REF_TASK);
+    final DelegateResponseData delegateResponseData = executeDelegateSyncTask(delegateTaskRequest);
+    ScmGitRefTaskResponseData scmGitRefTaskResponseData = (ScmGitRefTaskResponseData) delegateResponseData;
+    try {
+      return CreateBranchResponse.parseFrom(scmGitRefTaskResponseData.getCreateBranchResponse());
+    } catch (InvalidProtocolBufferException e) {
+      throw new UnexpectedException("Unexpected error occurred while doing scm operation");
     }
   }
 

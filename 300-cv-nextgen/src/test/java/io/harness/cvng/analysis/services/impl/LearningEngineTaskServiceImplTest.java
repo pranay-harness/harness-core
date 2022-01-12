@@ -7,12 +7,14 @@
 
 package io.harness.cvng.analysis.services.impl;
 
+import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.CANARY_LOG_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_FEEDBACK_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_LOG_ANALYSIS;
 import static io.harness.cvng.analysis.entities.LearningEngineTask.LearningEngineTaskType.SERVICE_GUARD_TIME_SERIES;
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.persistence.HQuery.excludeAuthority;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 import static io.harness.rule.OwnerRule.PRAVEEN;
 
@@ -24,6 +26,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.analysis.beans.ExceptionInfo;
+import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask;
 import io.harness.cvng.analysis.entities.LearningEngineTask.ExecutionStatus;
 import io.harness.cvng.analysis.entities.TimeSeriesLearningEngineTask;
@@ -106,6 +109,63 @@ public class LearningEngineTaskServiceImplTest extends CvNextGenTestBase {
     hPersistence.save(taskToSave);
 
     LearningEngineTask task = learningEngineTaskService.getNextAnalysisTask(Arrays.asList(SERVICE_GUARD_TIME_SERIES));
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("leTaskId2");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextAnalysisTask_orderOfNextTaskWithDeployment() {
+    String deploymentVerificationTaskId =
+        verificationTaskService.createDeploymentVerificationTask(accountId, cvConfigId, generateUuid(), APP_DYNAMICS);
+    String liveMonitoringVerificationTask =
+        verificationTaskService.createLiveMonitoringVerificationTask(accountId, cvConfigId, APP_DYNAMICS);
+    LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
+    taskToSave.setUuid("leTaskId1");
+    taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
+    taskToSave.setVerificationTaskId(liveMonitoringVerificationTask);
+    taskToSave.setAnalysisType(SERVICE_GUARD_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(taskToSave);
+    taskToSave = CanaryLogAnalysisLearningEngineTask.builder().build();
+    taskToSave.setUuid("leTaskId2");
+    taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
+    taskToSave.setVerificationTaskId(deploymentVerificationTaskId);
+    taskToSave.setAnalysisType(CANARY_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(taskToSave);
+
+    LearningEngineTask task = learningEngineTaskService.getNextAnalysisTask();
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("leTaskId2");
+    task = learningEngineTaskService.getNextAnalysisTask();
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("leTaskId1");
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetNextAnalysisTask_orderOfNextTask() throws InterruptedException {
+    String deploymentVerificationTaskId =
+        verificationTaskService.createDeploymentVerificationTask(accountId, cvConfigId, generateUuid(), APP_DYNAMICS);
+    LearningEngineTask taskToSave = TimeSeriesLearningEngineTask.builder().build();
+    taskToSave.setUuid("leTaskId1");
+    taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
+    taskToSave.setVerificationTaskId(deploymentVerificationTaskId);
+    taskToSave.setAnalysisType(SERVICE_GUARD_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(taskToSave);
+    Thread.sleep(1);
+    taskToSave = CanaryLogAnalysisLearningEngineTask.builder().build();
+    taskToSave.setUuid("leTaskId2");
+    taskToSave.setTaskStatus(ExecutionStatus.QUEUED);
+    taskToSave.setVerificationTaskId(deploymentVerificationTaskId);
+    taskToSave.setAnalysisType(CANARY_LOG_ANALYSIS);
+    learningEngineTaskService.createLearningEngineTask(taskToSave);
+
+    LearningEngineTask task = learningEngineTaskService.getNextAnalysisTask();
+    assertThat(task).isNotNull();
+    assertThat(task.getUuid()).isEqualTo("leTaskId1");
+    task = learningEngineTaskService.getNextAnalysisTask();
     assertThat(task).isNotNull();
     assertThat(task.getUuid()).isEqualTo("leTaskId2");
   }

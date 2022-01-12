@@ -279,13 +279,6 @@ if ! `grep installClientToolsInBackground config-delegate.yml > /dev/null`; then
   echo "installClientToolsInBackground: $INSTALL_CLIENT_TOOLS_IN_BACKGROUND" >> config-delegate.yml
 fi
 
-if ! `grep versionCheckDisabled config-delegate.yml > /dev/null`; then
-  echo "versionCheckDisabled: false" >> config-delegate.yml
-else
-  sed -i.bak "s|^versionCheckDisabled:.*$|versionCheckDisabled: false|" config-delegate.yml
-fi
-
-
 if [ ! -z "$KUSTOMIZE_PATH" ] && ! `grep kustomizePath config-delegate.yml > /dev/null` ; then
   echo "kustomizePath: $KUSTOMIZE_PATH" >> config-delegate.yml
 fi
@@ -315,7 +308,6 @@ export SCM_VERSION=542f4642
 export DELEGATE_NAME=harness-delegate
 export DELEGATE_PROFILE=QFWin33JRlKWKBzpzE5A9A
 export DELEGATE_TYPE=SHELL_SCRIPT
-export VERSION_CHECK_DISABLED=false
 
 export HOSTNAME
 export CAPSULE_CACHE_DIR="$DIR/.cache"

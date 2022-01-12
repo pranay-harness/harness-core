@@ -36,14 +36,9 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
   public BroadcastAction filter(String broadcasterId, AtmosphereResource r, Object originalMessage, Object message) {
     AtmosphereRequest req = r.getRequest();
     String delegateId = req.getParameter("delegateId");
-    String version = req.getHeader("Version");
 
     if (message instanceof DelegateTaskBroadcast) {
       DelegateTaskBroadcast broadcast = (DelegateTaskBroadcast) message;
-
-      if (version != null && !StringUtils.equals(version, broadcast.getVersion())) {
-        return abort(message);
-      }
 
       if (isNotBlank(broadcast.getPreAssignedDelegateId())
           && !StringUtils.equals(broadcast.getPreAssignedDelegateId(), delegateId)) {

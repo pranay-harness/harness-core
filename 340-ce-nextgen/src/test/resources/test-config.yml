@@ -102,3 +102,7 @@ awsConnectorTemplate: https://continuous-efficiency-templates.s3.amazonaws.com/t
 
 gcpConfig:
   gcpProjectId: gcpProjectIdPlaceHolder
+  
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: ccm-play

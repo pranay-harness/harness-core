@@ -18,8 +18,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.IdentifierRef;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.DuplicateFieldException;
-import io.harness.exception.GeneralException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ReferencedEntityException;
 import io.harness.exception.UnexpectedException;
 import io.harness.ng.DuplicateKeyExceptionParser;
 import io.harness.ng.core.EntityDetail;
@@ -240,7 +240,7 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
           "Error while deleting the Service as was not able to check entity reference records.");
     }
     if (EmptyPredicate.isNotEmpty(referredByEntities)) {
-      throw new GeneralException(String.format(
+      throw new ReferencedEntityException(String.format(
           "The service %s cannot be deleted because it is being referenced in %d %s. To delete your service, please remove the reference service from these entities.",
           serviceEntity.getIdentifier(), referredByEntities.size(),
           referredByEntities.size() > 1 ? "entities" : "entity"));

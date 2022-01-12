@@ -461,7 +461,7 @@ public class CVServiceModule extends AbstractModule {
         .in(Scopes.SINGLETON);
 
     bind(MetricPackService.class).to(MetricPackServiceImpl.class);
-    bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class);
+    bind(AppDynamicsService.class).to(AppDynamicsServiceImpl.class).in(Singleton.class);
     bind(VerificationJobService.class).to(VerificationJobServiceImpl.class);
     bind(LogRecordService.class).to(LogRecordServiceImpl.class);
     bind(VerificationJobInstanceService.class).to(VerificationJobInstanceServiceImpl.class);
@@ -656,7 +656,7 @@ public class CVServiceModule extends AbstractModule {
 
     bind(ServiceLevelObjectiveService.class).to(ServiceLevelObjectiveServiceImpl.class);
     bind(UserJourneyService.class).to(UserJourneyServiceImpl.class);
-    bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class);
+    bind(ServiceLevelIndicatorService.class).to(ServiceLevelIndicatorServiceImpl.class).in(Singleton.class);
     bind(SLIDataProcessorService.class).to(SLIDataProcessorServiceImpl.class);
     bind(ServiceLevelIndicatorEntityAndDTOTransformer.class);
     MapBinder<SLIMetricType, ServiceLevelIndicatorTransformer> serviceLevelIndicatorTransformerMapBinder =

@@ -1,0 +1,3 @@
+serviceConfig:
+  useFromStage:
+    stage: stage1

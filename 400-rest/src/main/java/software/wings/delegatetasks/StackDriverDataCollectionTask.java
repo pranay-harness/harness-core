@@ -8,6 +8,7 @@
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -227,7 +228,9 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
         StackdriverDataFetchParameters dataFetchParameters) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
 
-      String projectId = stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
+      String projectId = isNotEmpty(dataCollectionInfo.getProjectId())
+          ? dataCollectionInfo.getProjectId()
+          : stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
       encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       Monitoring monitoring =
           gcpHelperService.getMonitoringService(dataCollectionInfo.getGcpConfig().getServiceAccountKeyFileContent(),
