@@ -7,12 +7,12 @@
 
 package io.harness.cvng.core.beans.params;
 
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.NonNull;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
@@ -22,7 +22,7 @@ import lombok.experimental.SuperBuilder;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProjectParams {
-  @QueryParam("accountId") @NonNull String accountIdentifier;
-  @QueryParam("orgIdentifier") @NonNull String orgIdentifier;
-  @QueryParam("projectIdentifier") @NonNull String projectIdentifier;
+  @QueryParam("accountId") @NotNull String accountIdentifier;
+  @QueryParam("orgIdentifier") @NotNull String orgIdentifier;
+  @QueryParam("projectIdentifier") @NotNull String projectIdentifier;
 }

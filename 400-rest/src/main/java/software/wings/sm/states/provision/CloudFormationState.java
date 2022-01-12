@@ -28,6 +28,7 @@ import io.harness.beans.TriggeredBy;
 import io.harness.context.ContextElementType;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
+import io.harness.ff.FeatureFlagService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.tasks.ResponseData;
@@ -111,6 +112,8 @@ public abstract class CloudFormationState extends State {
   @Inject protected transient TemplateExpressionProcessor templateExpressionProcessor;
   @Inject protected transient WingsPersistence wingsPersistence;
   @Inject protected SweepingOutputService sweepingOutputService;
+  @Inject protected FeatureFlagService featureFlagService;
+
   @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter protected String provisionerId;
   @Attributes(title = "Region")
   @DefaultValue(AWS_DEFAULT_REGION)

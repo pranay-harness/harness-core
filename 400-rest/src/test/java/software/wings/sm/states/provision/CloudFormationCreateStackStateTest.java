@@ -8,11 +8,13 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES;
 import static io.harness.beans.FeatureName.SKIP_BASED_ON_STACK_STATUSES;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ARVIND;
 import static io.harness.rule.OwnerRule.BOJANA;
+import static io.harness.rule.OwnerRule.JELENA;
 import static io.harness.rule.OwnerRule.PRAKHAR;
 import static io.harness.rule.OwnerRule.RAGHVENDRA;
 import static io.harness.rule.OwnerRule.TMACARI;
@@ -724,5 +726,45 @@ public class CloudFormationCreateStackStateTest extends WingsBaseTest {
     assertThat(request.getCustomStackName()).isEqualTo("customStackName");
     assertThat(request.getCapabilities()).isEqualTo(capabilities);
     assertThat(request.getTags()).isEqualTo(tags);
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void verifyDelegateIsNoTimeoutIsFalse() {
+    when(featureFlagService.isEnabled(CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES, mockContext.getAccountId()))
+        .thenReturn(false);
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(TEMPLATE_FILE_PATH)
+                                                              .build();
+
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    CloudFormationCreateStackRequest request =
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.isSkipWaitForResources()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = JELENA)
+  @Category(UnitTests.class)
+  public void verifyDelegateIsNoTimeoutIsTrue() {
+    when(featureFlagService.isEnabled(CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES, mockContext.getAccountId()))
+        .thenReturn(true);
+    CloudFormationInfrastructureProvisioner provisioner = CloudFormationInfrastructureProvisioner.builder()
+                                                              .sourceType(TEMPLATE_URL.name())
+                                                              .templateFilePath(TEMPLATE_FILE_PATH)
+                                                              .build();
+
+    state.buildAndQueueDelegateTask(mockContext, provisioner, awsConfig, ACTIVITY_ID);
+    ArgumentCaptor<DelegateTask> captor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService).queueTask(captor.capture());
+    DelegateTask delegateTask = captor.getValue();
+    CloudFormationCreateStackRequest request =
+        (CloudFormationCreateStackRequest) delegateTask.getData().getParameters()[0];
+    assertThat(request.isSkipWaitForResources()).isTrue();
   }
 }

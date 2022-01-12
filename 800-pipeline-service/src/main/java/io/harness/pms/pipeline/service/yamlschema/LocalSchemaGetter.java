@@ -48,8 +48,10 @@ public class LocalSchemaGetter implements SchemaGetter {
   @Override
   public List<PartialSchemaDTO> getSchema(List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     List<PartialSchemaDTO> partialSchemaDTOList = new ArrayList<>();
-    partialSchemaDTOList.add(approvalYamlSchemaService.getApprovalYamlSchema(null, null, null));
-    partialSchemaDTOList.add(featureFlagYamlService.getFeatureFlagYamlSchema(null, null, null));
+    partialSchemaDTOList.add(approvalYamlSchemaService.getApprovalYamlSchema(
+        accountIdentifier, null, null, null, yamlSchemaWithDetailsList));
+    partialSchemaDTOList.add(featureFlagYamlService.getFeatureFlagYamlSchema(
+        accountIdentifier, null, null, null, yamlSchemaWithDetailsList));
     return partialSchemaDTOList;
   }
 
@@ -66,9 +68,15 @@ public class LocalSchemaGetter implements SchemaGetter {
       EntityType entityType, String yamlGroup, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     if (yamlGroup.equals(StepCategory.STAGE.toString())) {
       if (entityType.getYamlName().equals(EntityTypeConstants.APPROVAL_STAGE)) {
-        return approvalYamlSchemaService.getApprovalYamlSchema(projectIdentifier, orgIdentifier, scope).getSchema();
+        return approvalYamlSchemaService
+            .getApprovalYamlSchema(
+                accountIdentifier, projectIdentifier, orgIdentifier, scope, yamlSchemaWithDetailsList)
+            .getSchema();
       } else if (entityType.getYamlName().equals(EntityTypeConstants.FEATURE_FLAG_STAGE)) {
-        return featureFlagYamlService.getFeatureFlagYamlSchema(projectIdentifier, orgIdentifier, scope).getSchema();
+        return featureFlagYamlService
+            .getFeatureFlagYamlSchema(
+                accountIdentifier, projectIdentifier, orgIdentifier, scope, yamlSchemaWithDetailsList)
+            .getSchema();
       }
       throw new InvalidRequestException(format("stage %s does not exist in module pms", entityType));
     }

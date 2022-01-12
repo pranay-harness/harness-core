@@ -10,6 +10,7 @@ package io.harness.gitsync.core.fullsync;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 
+import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
@@ -26,6 +27,8 @@ import io.harness.gitsync.core.fullsync.beans.GitFullSyncEntityProcessingRespons
 import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
 import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
+import io.harness.security.SecurityContextBuilder;
+import io.harness.security.dto.ServicePrincipal;
 
 import com.google.inject.Inject;
 import com.mongodb.client.result.UpdateResult;
@@ -109,32 +112,38 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   @Override
   public void performFullSync(GitFullSyncJob fullSyncJob) {
     log.info("Started full sync for the job {}", fullSyncJob.getMessageId());
-    UpdateResult updateResult =
-        fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
-    if (updateResult.getModifiedCount() == 0L) {
-      log.info("There is no job to run for the id {}, maybe the other thread is running it", fullSyncJob.getUuid());
-    }
-    List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
-        gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
-    sortTheFilesInTheProcessingOrder(allEntitiesToBeSynced);
-    log.info("Number of files is {}", emptyIfNull(allEntitiesToBeSynced).size());
-    boolean processingFailed = false;
-    for (GitFullSyncEntityInfo gitFullSyncEntityInfo : emptyIfNull(allEntitiesToBeSynced)) {
-      if (gitFullSyncEntityInfo.getSyncStatus().equals(GitFullSyncEntityInfo.SyncStatus.PUSHED.name())) {
-        continue;
+    try {
+      SecurityContextBuilder.setContext(
+          new ServicePrincipal(AuthorizationServiceHeader.GIT_SYNC_SERVICE.getServiceId()));
+      UpdateResult updateResult =
+          fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+      if (updateResult.getModifiedCount() == 0L) {
+        log.info("There is no job to run for the id {}, maybe the other thread is running it", fullSyncJob.getUuid());
       }
-      final GitFullSyncEntityProcessingResponse gitFullSyncEntityProcessingResponse =
-          processFile(gitFullSyncEntityInfo);
-      log.info("Processed the file with status {} {}", gitFullSyncEntityInfo.getFilePath(),
-          gitFullSyncEntityProcessingResponse.getSyncStatus());
-      if (gitFullSyncEntityProcessingResponse.getSyncStatus() != GitFullSyncEntityInfo.SyncStatus.PUSHED) {
-        processingFailed = true;
+      List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
+          gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
+      sortTheFilesInTheProcessingOrder(allEntitiesToBeSynced);
+      log.info("Number of files is {}", emptyIfNull(allEntitiesToBeSynced).size());
+      boolean processingFailed = false;
+      for (GitFullSyncEntityInfo gitFullSyncEntityInfo : emptyIfNull(allEntitiesToBeSynced)) {
+        if (gitFullSyncEntityInfo.getSyncStatus().equals(GitFullSyncEntityInfo.SyncStatus.PUSHED.name())) {
+          continue;
+        }
+        final GitFullSyncEntityProcessingResponse gitFullSyncEntityProcessingResponse =
+            processFile(gitFullSyncEntityInfo);
+        log.info("Processed the file with status {} {}", gitFullSyncEntityInfo.getFilePath(),
+            gitFullSyncEntityProcessingResponse.getSyncStatus());
+        if (gitFullSyncEntityProcessingResponse.getSyncStatus() != GitFullSyncEntityInfo.SyncStatus.PUSHED) {
+          processingFailed = true;
+        }
       }
-    }
 
-    updateTheStatusOfJob(processingFailed, fullSyncJob);
-    if (fullSyncJob.isCreatePullRequest()) {
-      createAPullRequest(fullSyncJob);
+      updateTheStatusOfJob(processingFailed, fullSyncJob);
+      if (fullSyncJob.isCreatePullRequest()) {
+        createAPullRequest(fullSyncJob);
+      }
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
     log.info("Completed full sync for the job {}", fullSyncJob.getMessageId());
   }

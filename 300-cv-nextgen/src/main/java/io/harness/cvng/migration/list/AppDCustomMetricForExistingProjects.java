@@ -39,7 +39,7 @@ public class AppDCustomMetricForExistingProjects implements CVNGMigration {
                                   .filter(MetricPackKeys.dataSourceType, DataSourceType.APP_DYNAMICS)
                                   .filter(MetricPackKeys.identifier, CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
                                   .filter(MetricPackKeys.accountId, pack.getAccountId())
-                                  .filter(MetricPackKeys.projectIdentifier, pack.getOrgIdentifier())
+                                  .filter(MetricPackKeys.projectIdentifier, pack.getProjectIdentifier())
                                   .filter(MetricPackKeys.orgIdentifier, pack.getOrgIdentifier())
                                   .get();
 
