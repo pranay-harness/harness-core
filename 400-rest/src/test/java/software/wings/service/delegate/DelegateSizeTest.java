@@ -42,7 +42,7 @@ public class DelegateSizeTest extends WingsBaseTest {
     PowerMockito.mockStatic(DeployVariant.class);
     PowerMockito.when(DeployVariant.isCommunity(anyString())).thenReturn(false);
 
-    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDelegateSize();
+    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDockerDelegateSize();
 
     assertThat(delegateSizeDetails.getCpu()).isEqualTo(0.5);
     assertThat(delegateSizeDetails.getLabel()).isEqualTo("Default");
@@ -58,7 +58,7 @@ public class DelegateSizeTest extends WingsBaseTest {
     PowerMockito.mockStatic(DeployVariant.class);
     PowerMockito.when(DeployVariant.isCommunity(anyString())).thenReturn(true);
 
-    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDelegateSize();
+    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDockerDelegateSize();
 
     assertThat(delegateSizeDetails.getCpu()).isEqualTo(0.5);
     assertThat(delegateSizeDetails.getLabel()).isEqualTo("Default Community Size");

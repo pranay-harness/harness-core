@@ -10,8 +10,10 @@ package io.harness.connector.services;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
+import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.stats.ConnectorStatistics;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 
 import java.util.List;
 import org.apache.commons.lang3.tuple.Pair;
@@ -34,4 +36,6 @@ public interface ConnectorService extends ConnectorCrudService, ConnectorValidat
   boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo);
 
   boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml);
+
+  ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO);
 }

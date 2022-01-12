@@ -10,6 +10,7 @@ package ci.pipeline.execution;
 import static io.harness.annotations.dev.HarnessTeam.CI;
 import static io.harness.delegate.beans.connector.ConnectorType.GITHUB;
 import static io.harness.delegate.beans.connector.scm.GitConnectionType.ACCOUNT;
+import static io.harness.delegate.beans.connector.scm.GitConnectionType.REPO;
 import static io.harness.rule.OwnerRule.JAMIE;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -55,18 +56,13 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(connectorDetails);
-    when(connectorDetails.getConnectorType()).thenReturn(GITHUB);
-    when(connectorDetails.getConnectorConfig()).thenReturn(gitConfigDTO);
-    when(gitConfigDTO.getUrl()).thenReturn(SOME_URL);
-    when(gitConfigDTO.getConnectionType()).thenReturn(ACCOUNT);
-    when(pipelineUtils.getBuildDetailsUrl(any(), any(), any(), any())).thenReturn(SOME_URL);
   }
 
   @Test
   @Owner(developers = JAMIE)
   @Category(UnitTests.class)
   public void testIdentifierGeneration() {
+    prepareRepoLevelConnector(SOME_URL);
     ExecutionMetadata executionMetadata = ExecutionMetadata.newBuilder()
                                               .setExecutionUuid("executionuuid")
                                               .setPipelineIdentifier("shortPipelineId")
@@ -87,7 +83,30 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
   @Test
   @Owner(developers = JAMIE)
   @Category(UnitTests.class)
+  public void testRepoNameGeneration() {
+    prepareAccountLevelConnector("https://github.com/");
+    ExecutionMetadata executionMetadata =
+        ExecutionMetadata.newBuilder().setExecutionUuid("executionuuid").setPipelineIdentifier("pipelineId").build();
+    BuildStatusUpdateParameter buildStatusUpdateParameter =
+        getBuildStatusUpdateParameter("shortIdentifier", "shortname", "wings-software/jhttp");
+
+    CIBuildStatusPushParameters pushParameters = gitBuildStatusUtility.getCIBuildStatusPushParams(
+        Ambiance.newBuilder(ambiance).setMetadata(executionMetadata).build(), buildStatusUpdateParameter,
+        Status.SUCCEEDED, "sha");
+
+    assertThat(pushParameters.getDesc())
+        .isEqualTo("Execution status of Pipeline - pipelineId (executionuuid) Stage - shortname was SUCCEEDED");
+
+    assertThat(pushParameters.getIdentifier()).isEqualTo("pipelineId-shortIdentifier");
+    assertThat(pushParameters.getOwner()).isEqualTo("wings-software");
+    assertThat(pushParameters.getRepo()).isEqualTo("jhttp");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
   public void testIdentifierGenerationLongName() {
+    prepareRepoLevelConnector(SOME_URL);
     ExecutionMetadata executionMetadata =
         ExecutionMetadata.newBuilder()
             .setExecutionUuid("executionuuid")
@@ -112,5 +131,34 @@ public class BuildStatusPushParametersTest extends CIExecutionTestBase {
 
   private BuildStatusUpdateParameter getBuildStatusUpdateParameter(String identifier, String name) {
     return BuildStatusUpdateParameter.builder().identifier(identifier).buildNumber("0").desc("desc").name(name).build();
+  }
+
+  private BuildStatusUpdateParameter getBuildStatusUpdateParameter(String identifier, String name, String repo) {
+    return BuildStatusUpdateParameter.builder()
+        .connectorIdentifier("testConnector")
+        .repoName(repo)
+        .identifier(identifier)
+        .buildNumber("0")
+        .desc("desc")
+        .name(name)
+        .build();
+  }
+
+  private void prepareAccountLevelConnector(String url) {
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(connectorDetails);
+    when(connectorDetails.getConnectorType()).thenReturn(GITHUB);
+    when(connectorDetails.getConnectorConfig()).thenReturn(gitConfigDTO);
+    when(gitConfigDTO.getUrl()).thenReturn(url);
+    when(gitConfigDTO.getConnectionType()).thenReturn(ACCOUNT);
+    when(pipelineUtils.getBuildDetailsUrl(any(), any(), any(), any())).thenReturn(SOME_URL);
+  }
+
+  private void prepareRepoLevelConnector(String url) {
+    when(connectorUtils.getConnectorDetails(any(), any())).thenReturn(connectorDetails);
+    when(connectorDetails.getConnectorType()).thenReturn(GITHUB);
+    when(connectorDetails.getConnectorConfig()).thenReturn(gitConfigDTO);
+    when(gitConfigDTO.getUrl()).thenReturn(url);
+    when(gitConfigDTO.getConnectionType()).thenReturn(REPO);
+    when(pipelineUtils.getBuildDetailsUrl(any(), any(), any(), any())).thenReturn(SOME_URL);
   }
 }

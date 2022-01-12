@@ -14,7 +14,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runUnitTests0-unittest0
+          context: TIbootstrap-tin0
           description: 'Mark ti0 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -23,7 +23,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runUnitTests1-unittest1
+          context: TIbootstrap-tin1
           description: 'Mark ti1 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -32,7 +32,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runUnitTests2-unittest2
+          context: TIbootstrap-tin2
           description: 'Mark ti2 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -41,7 +41,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runUnitTests3-unittest3
+          context: TIbootstrap-tin3
           description: 'Mark ti3 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -50,7 +50,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runUnitTests4-unittest4
+          context: TIbootstrap-tin4
           description: 'Mark ti4 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -59,7 +59,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runFunctionalTests1-Functional_tests
+          context: FunctionalTest1-Functional_tests
           description: 'Mark functionalTests1 as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -68,7 +68,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runFunctionalTests__2-Functional_tests
+          context: FunctionalTest2-Functional_tests
           description: 'Mark functionalTests2  as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -77,7 +77,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runPMDCheck-PMDCheck
+          context: PMD-PMDCheck
           description: 'Mark PMD checks as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -86,7 +86,7 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runMavenBuild-mavenbuild
+          context: Compile-mavenbuild
           description: 'Mark maven build as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
@@ -95,8 +95,17 @@ jobs:
         uses: Sibz/github-status-action@v1
         with:
           authToken: ${{secrets.GITHUB_TOKEN}}
-          context: runCheckstyleCheck-checkstylecheck
+          context: CheckStyle-checkstylecheck
           description: 'Mark check-style as success'
+          state: 'success'
+          sha: ${{github.event.pull_request.head.sha || github.sha}}
+
+      - name: Complete code base hash
+        uses: Sibz/github-status-action@v1
+        with:
+          authToken: ${{secrets.GITHUB_TOKEN}}
+          context: CodeBaseHash-codebasehashcheck
+          description: 'Mark codebase hash as success'
           state: 'success'
           sha: ${{github.event.pull_request.head.sha || github.sha}}
 

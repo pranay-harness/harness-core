@@ -65,7 +65,9 @@ import lombok.experimental.UtilityClass;
 public class TriggerHelper {
   public Map<String, Object> buildJsonObjectFromAmbiance(TriggerPayload triggerPayload) {
     Map<String, Object> jsonObject = new HashMap<>();
-
+    if (triggerPayload == null) {
+      return jsonObject;
+    }
     ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
     // branchesxv
     switch (parsedPayload.getPayloadCase()) {

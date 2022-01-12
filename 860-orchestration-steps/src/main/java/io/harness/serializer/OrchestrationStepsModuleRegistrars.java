@@ -25,8 +25,10 @@ import io.harness.serializer.kryo.YamlKryoRegistrar;
 import io.harness.serializer.morphia.NotificationClientRegistrars;
 import io.harness.serializer.morphia.OrchestrationStepsMorphiaRegistrar;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
+import io.harness.steps.approval.step.jira.JiraApprovalStepNode;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepNode;
 import io.harness.steps.jira.create.JiraCreateStepNode;
+import io.harness.steps.jira.update.JiraUpdateStepNode;
 import io.harness.steps.shellscript.ShellScriptStepNode;
 import io.harness.steps.template.TemplateStepNode;
 import io.harness.yaml.schema.beans.YamlGroup;
@@ -145,6 +147,17 @@ public class OrchestrationStepsModuleRegistrars {
                                            .build())
                    .build())
           .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.JIRA_UPDATE_STEP)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(JiraUpdateStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
+                   .build())
+          .add(YamlSchemaRootClass.builder()
                    .entityType(EntityType.TEMPLATE)
                    .availableAtProjectLevel(true)
                    .availableAtOrgLevel(false)
@@ -162,6 +175,17 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(ServiceNowApprovalStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.JIRA_APPROVAL_STEP)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(JiraApprovalStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
                                            .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())

@@ -25,6 +25,7 @@ import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
 import io.harness.yaml.schema.beans.PartialSchemaDTO;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
+import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
 
 import com.fasterxml.jackson.annotation.JsonTypeName;
@@ -35,6 +36,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Set;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -48,7 +50,8 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
   @Inject private List<YamlSchemaRootClass> yamlSchemaRootClasses;
 
   @Override
-  public PartialSchemaDTO getFeatureFlagYamlSchema(String projectIdentifier, String orgIdentifier, Scope scope) {
+  public PartialSchemaDTO getFeatureFlagYamlSchema(String accountIdentifier, String projectIdentifier,
+      String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
     JsonNode featureFlagStageSchema =
         yamlSchemaProvider.getYamlSchema(EntityType.FEATURE_FLAG_STAGE, orgIdentifier, projectIdentifier, scope);
 
@@ -66,8 +69,11 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
     yamlSchemaProvider.mergeAllV2StepsDefinitions(projectIdentifier, orgIdentifier, scope, (ObjectNode) definitions,
         YamlSchemaUtils.getNodeEntityTypesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()));
 
+    Set<String> enabledFeatureFlags =
+        pmsYamlSchemaHelper.getEnabledFeatureFlags(accountIdentifier, yamlSchemaWithDetailsList);
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(featureFlagStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name()), "");
+        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        "");
 
     yamlSchemaGenerator.modifyRefsNamespace(featureFlagStageSchema, FEATURE_FLAG_NAMESPACE);
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();

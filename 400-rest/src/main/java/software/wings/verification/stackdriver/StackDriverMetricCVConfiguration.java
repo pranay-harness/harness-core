@@ -33,6 +33,7 @@ import lombok.experimental.FieldNameConstants;
 @EqualsAndHashCode(callSuper = true)
 public class StackDriverMetricCVConfiguration extends CVConfiguration {
   private List<StackDriverMetricDefinition> metricDefinitions;
+  private String projectId;
 
   public void setMetricFilters() {
     this.metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
@@ -43,6 +44,7 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
     StackDriverMetricCVConfiguration clonedConfig = new StackDriverMetricCVConfiguration();
     super.copy(clonedConfig);
     clonedConfig.setMetricDefinitions(this.getMetricDefinitions());
+    clonedConfig.setProjectId(this.getProjectId());
     clonedConfig.setMetricFilters();
     return clonedConfig;
   }
@@ -57,6 +59,7 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
   @EqualsAndHashCode(callSuper = true)
   public static final class StackDriverMetricCVConfigurationYaml extends CVConfigurationYaml {
     private List<StackDriverMetricDefinition> metricDefinitions;
+    private String projectId;
   }
 
   public Map<String, TimeSeriesMetricDefinition> fetchMetricTemplate() {

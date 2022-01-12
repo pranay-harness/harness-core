@@ -29,12 +29,8 @@ public class CoreCriteriaUtils {
     Criteria criteria = new Criteria();
     if (isNotEmpty(accountId)) {
       criteria.and(ACCOUNT_ID).is(accountId);
-      if (isNotEmpty(orgIdentifier)) {
-        criteria.and(ORG_ID).is(orgIdentifier);
-        if (isNotEmpty(projectIdentifier)) {
-          criteria.and(PROJECT_ID).is(projectIdentifier);
-        }
-      }
+      criteria.and(ORG_ID).is(orgIdentifier);
+      criteria.and(PROJECT_ID).is(projectIdentifier);
     } else {
       throw new InvalidRequestException("Account identifier cannot be null");
     }

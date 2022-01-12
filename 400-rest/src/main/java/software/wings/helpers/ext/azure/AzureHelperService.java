@@ -563,24 +563,6 @@ public class AzureHelperService {
     }
   }
 
-  public List<AzureKubernetesCluster> listKubernetesClusters(
-      AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails, String subscriptionId) {
-    encryptionService.decrypt(azureConfig, encryptionDetails, false);
-
-    return getAzureClient(azureConfig, subscriptionId)
-        .kubernetesClusters()
-        .list()
-        .stream()
-        .map(cluster
-            -> AzureKubernetesCluster.builder()
-                   .name(cluster.name())
-                   .resourceGroup(cluster.resourceGroupName())
-                   .type(cluster.type())
-                   .id(cluster.id())
-                   .build())
-        .collect(toList());
-  }
-
   public boolean isValidKubernetesCluster(AzureConfig azureConfig, List<EncryptedDataDetail> encryptionDetails,
       String subscriptionId, String resourceGroup, String clusterName) {
     encryptionService.decrypt(azureConfig, encryptionDetails, false);

@@ -23,7 +23,6 @@ import io.harness.scm.SecretName;
 import software.wings.WingsBaseTest;
 import software.wings.beans.AzureAvailabilitySet;
 import software.wings.beans.AzureConfig;
-import software.wings.beans.AzureKubernetesCluster;
 import software.wings.beans.AzureVirtualMachineScaleSet;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.rules.Integration;
@@ -217,24 +216,6 @@ public class AzureIntegrationTest extends WingsBaseTest {
         }
       }
     }
-  }
-
-  @Test
-  @Owner(developers = PUNEET, intermittent = true)
-  @Category(DeprecatedIntegrationTests.class)
-  @Ignore("skipping the integration test")
-  public void getKubernetesClusters() {
-    AzureConfig config = getAzureConfig();
-    List<AzureKubernetesCluster> clusters =
-        azureHelperService.listKubernetesClusters(config, Collections.emptyList(), subscriptionId);
-
-    assertThat(clusters).isNotEmpty();
-
-    clusters.forEach(cluster -> {
-      log.info("Cluster Detail: " + cluster.getResourceGroup() + "/" + cluster.getName());
-      azureHelperService.getKubernetesClusterConfig(config, Collections.emptyList(), subscriptionId,
-          cluster.getResourceGroup(), cluster.getName(), "default", false);
-    });
   }
 
   private AzureConfig getAzureConfig() {

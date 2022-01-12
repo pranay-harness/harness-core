@@ -11,6 +11,14 @@
 
 pushd `dirname $0` > /dev/null && cd ../.. && BASEDIR=$(pwd -L) && popd > /dev/null
 
+if git rev-parse --verify HEAD >/dev/null 2>&1
+then
+    against=HEAD
+else
+    #Initial commit : diff against an empty tree object
+    against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
+fi
+
 CHECK_CONFLICTS=hook.pre-commit.check-conflicts
 if [ "`git config $CHECK_CONFLICTS`" == "false" ]
 then
@@ -31,6 +39,24 @@ else
     . $BASEDIR/toolset/git-hooks/check_analysis.sh
 fi
 
+LICENSE_PROPERTY=hook.pre-commit.license
+if [ "`git config $LICENSE_PROPERTY`" == "false" ]
+then
+    echo -e '\033[0;31m' checking license is disabled - to enable: '\033[0;37m'git config --unset $LICENSE_PROPERTY '\033[0m'
+else
+    echo -e '\033[0;34m' checking license  ... to disable: '\033[0;37m'git config --add $LICENSE_PROPERTY false '\033[0m'
+
+    for file in `git diff-index --cached --name-only $against`
+    do
+        $BASEDIR/scripts/license/add_license_header.sh -l "${BASEDIR}/.license-header-polyform-free-trial.txt" -f "${file}"
+        git diff --exit-code -- "${file}"
+        if [ "$?" -ne "0" ]
+        then
+            git add "${file}"
+        fi
+    done
+fi
+
 CHECKPROTO_PROPERTY=hook.pre-commit.protocheck
 if [ "`git config $CHECKPROTO_PROPERTY`" == "false" ]
 then
@@ -47,14 +73,6 @@ then
     echo -e '\033[0;31m' formatting is disabled - to enable: '\033[0;37m'git config --unset $FORMAT_PROPERTY '\033[0m'
 else
     echo -e '\033[0;34m' formatting  ... to disable: '\033[0;37m'git config --add $FORMAT_PROPERTY false '\033[0m'
-
-    if git rev-parse --verify HEAD >/dev/null 2>&1
-    then
-        against=HEAD
-    else
-        #Initial commit : diff against an empty tree object
-        against=4b825dc642cb6eb9a060e54bf8d69288fbee4904
-    fi
 
     #do the formatting
     for file in `git diff-index --cached --name-only $against | grep -E '\.(proto|java)$'`

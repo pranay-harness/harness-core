@@ -201,7 +201,11 @@ public class K8sStepHelperTest extends CategoryTest {
   @Spy @InjectMocks private K8sStepHelper k8sStepHelper;
 
   @Mock private LogCallback mockLogCallback;
-  private final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "test-account").build();
+  private final Ambiance ambiance = Ambiance.newBuilder()
+                                        .putSetupAbstractions(SetupAbstractionKeys.accountId, "test-account")
+                                        .putSetupAbstractions(SetupAbstractionKeys.orgIdentifier, "test-org")
+                                        .putSetupAbstractions(SetupAbstractionKeys.projectIdentifier, "test-project")
+                                        .build();
   private static final String SOME_URL = "https://url.com/owner/repo.git";
 
   @Before
@@ -1655,7 +1659,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(taskChainResponse.getTaskRequest().getDelegateTaskRequest().getTaskName())
         .isEqualTo("Git Fetch Files Task");
     assertThat(taskChainResponse.getTaskRequest().getDelegateTaskRequest().getLogKeys(0))
-        .isEqualTo("accountId:test-account/orgId:/projectId:/pipelineId:/runSequence:0-commandUnit:Fetch Files");
+        .isEqualTo(
+            "accountId:test-account/orgId:test-org/projectId:test-project/pipelineId:/runSequence:0-commandUnit:Fetch Files");
 
     // without OpenShift Params
     Map<String, ManifestOutcome> manifestOutcomeMapOnlyTemplate =
@@ -1732,7 +1737,8 @@ public class K8sStepHelperTest extends CategoryTest {
     assertThat(taskChainResponse.getTaskRequest().getDelegateTaskRequest().getTaskName())
         .isEqualTo("Git Fetch Files Task");
     assertThat(taskChainResponse.getTaskRequest().getDelegateTaskRequest().getLogKeys(0))
-        .isEqualTo("accountId:test-account/orgId:/projectId:/pipelineId:/runSequence:0-commandUnit:Fetch Files");
+        .isEqualTo(
+            "accountId:test-account/orgId:test-org/projectId:test-project/pipelineId:/runSequence:0-commandUnit:Fetch Files");
 
     // without Kustomize Patches
     Map<String, ManifestOutcome> manifestOutcomeMapOnlyTemplate =
