@@ -9,6 +9,7 @@ package io.harness.ngtriggers.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ADWAIT;
+import static io.harness.rule.OwnerRule.JAMIE;
 import static io.harness.rule.OwnerRule.MATT;
 
 import static java.util.Collections.emptyList;
@@ -226,5 +227,20 @@ public class JexlScenarioTest extends CategoryTest {
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("456");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.repoUrl>")).isEqualTo("https://github.com");
     assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.gitUser>")).isEqualTo("user");
+  }
+
+  @Test
+  @Owner(developers = JAMIE)
+  @Category(UnitTests.class)
+  public void testGetVariablesManualExecution() {
+    TriggerExpressionEvaluator triggerExpressionEvaluator = new TriggerExpressionEvaluator(null, emptyList(), json);
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.sourceBranch>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.targetBranch>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.event>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.commitSha>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prNumber>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.repoUrl>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.gitUser>")).isEqualTo("null");
+    assertThat(triggerExpressionEvaluator.evaluateExpression("<+trigger.prTitle>")).isEqualTo("null");
   }
 }

@@ -116,7 +116,7 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
         if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-          log.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
+          log.debug("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
               delegateTask.getVersion());
         }
 

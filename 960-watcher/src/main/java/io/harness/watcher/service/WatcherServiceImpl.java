@@ -190,13 +190,12 @@ public class WatcherServiceImpl implements WatcherService {
   private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
-  private static boolean accountVersion;
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
     multiVersion = isEmpty(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
   }
-
+  private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_SCRIPT = "delegate.sh";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
@@ -647,10 +646,6 @@ public class WatcherServiceImpl implements WatcherService {
                   drainingNeededList.add(delegateProcess);
                 }
               }
-              if (accountVersion) {
-                messageService.writeMessageToChannel(
-                    DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
-              }
 
               if (newDelegate) {
                 log.info("New delegate process {} is starting", delegateProcess);
@@ -973,9 +968,6 @@ public class WatcherServiceImpl implements WatcherService {
         if (config != null && config.getAction() == SELF_DESTRUCT) {
           selfDestruct();
         }
-        if (config != null && config.isAccountVersion()) {
-          accountVersion = true;
-        }
 
         return config != null ? config.getDelegateVersions() : null;
       } else {
@@ -1016,9 +1008,8 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = !accountVersion ? substringAfter(version, "-") : "";
-    final String updatedVersion =
-        !accountVersion ? (version.contains("-") ? substringBefore(version, "-") : version) : "";
+    final String patchVersion = substringAfter(version, "-");
+    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
     RestResponse<DelegateScripts> restResponse = null;
     if (!delegateNg) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
@@ -1031,7 +1022,7 @@ public class WatcherServiceImpl implements WatcherService {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion)));
+                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion, DELEGATE_TYPE)));
     }
 
     if (restResponse == null) {

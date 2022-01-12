@@ -183,6 +183,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("ciManagerClientConfig") ServiceHttpClientConfig ciManagerClientConfig;
   @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
+  @JsonProperty("ffServerClientConfig") ServiceHttpClientConfig ffServerClientConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

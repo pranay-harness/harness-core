@@ -92,6 +92,8 @@ public class InfrastructureStepTest extends CategoryTest {
   @Mock K8sStepHelper k8sStepHelper;
   @Mock K8sInfraDelegateConfig k8sInfraDelegateConfig;
 
+  private final String ACCOUNT_ID = "accountId";
+
   @Test
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
@@ -106,7 +108,7 @@ public class InfrastructureStepTest extends CategoryTest {
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
   public void testExecSyncAfterRbac() {
-    Ambiance ambiance = Ambiance.newBuilder().build();
+    Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions(SetupAbstractionKeys.accountId, ACCOUNT_ID).build();
 
     GcpConnectorDTO gcpConnectorServiceAccount =
         GcpConnectorDTO.builder()
@@ -285,12 +287,12 @@ public class InfrastructureStepTest extends CategoryTest {
         ()
             -> infrastructureStep.validateConnector(
                 K8sGcpInfrastructure.builder().connectorRef(ParameterField.createValueField("account.gcp-sa")).build(),
-                Ambiance.newBuilder().build()))
+                Ambiance.newBuilder().putSetupAbstractions(SetupAbstractionKeys.accountId, ACCOUNT_ID).build()))
         .doesNotThrowAnyException();
   }
 
   private void assertConnectorValidationMessage(Infrastructure infrastructure, String message) {
-    Ambiance ambiance = Ambiance.newBuilder().build();
+    Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions(SetupAbstractionKeys.accountId, ACCOUNT_ID).build();
     assertThatThrownBy(() -> infrastructureStep.validateConnector(infrastructure, ambiance))
         .hasMessageContaining(message);
   }
