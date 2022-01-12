@@ -53,6 +53,28 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
     }
   }
 
+  @Override
+  public Y updateFilePath(String accountIdentifier, String yaml, String prevFilePath, String newFilePath) {
+    final Optional<EntityGitDetails> entityGitDetailsOptional = getEntityDetailsIfExists(accountIdentifier, yaml);
+
+    if (entityGitDetailsOptional.isPresent()) {
+      final EntityGitDetails entityGitDetails = entityGitDetailsOptional.get();
+      final String completeFilePath =
+          ScmGitUtils.createFilePath(entityGitDetails.getRootFolder(), entityGitDetails.getFilePath());
+
+      if (!completeFilePath.equals(prevFilePath)) {
+        log.error("No git entity exists for given file path : {}", prevFilePath);
+        return null;
+      }
+
+      // call to updateFilePathMethod for each entity
+
+    } else {
+      log.error("Object not found for given yaml, skipping file path update ops");
+    }
+    return null;
+  }
+
   public abstract Optional<EntityGitDetails> getEntityDetailsIfExists(String accountIdentifier, String yaml);
 
   public abstract Y getYamlDTO(String yaml);
