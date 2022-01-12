@@ -58,8 +58,12 @@ public class LocalSchemaGetterTest {
     PartialSchemaDTO cfPartialSchemaDTO =
         PartialSchemaDTO.builder().namespace("cf").moduleType(ModuleType.PMS).nodeName("cf").build();
 
-    doReturn(approvalPartialSchemaDTO).when(approvalYamlSchemaService).getApprovalYamlSchema(any(), any(), any());
-    doReturn(cfPartialSchemaDTO).when(featureFlagYamlService).getFeatureFlagYamlSchema(any(), any(), any());
+    doReturn(approvalPartialSchemaDTO)
+        .when(approvalYamlSchemaService)
+        .getApprovalYamlSchema(any(), any(), any(), any(), any());
+    doReturn(cfPartialSchemaDTO)
+        .when(featureFlagYamlService)
+        .getFeatureFlagYamlSchema(any(), any(), any(), any(), any());
 
     List<PartialSchemaDTO> partialSchemaDTOList = localSchemaGetter.getSchema(Collections.emptyList());
     assertEquals(partialSchemaDTOList.size(), 2);
