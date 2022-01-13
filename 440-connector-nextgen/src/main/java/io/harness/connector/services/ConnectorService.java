@@ -12,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.EntityReference;
 import io.harness.connector.ConnectorDTO;
 import io.harness.connector.ConnectorInfoDTO;
+import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.stats.ConnectorStatistics;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 
@@ -38,4 +39,6 @@ public interface ConnectorService extends ConnectorCrudService, ConnectorValidat
   boolean markEntityInvalid(String accountIdentifier, EntityReference entityReference, String invalidYaml);
 
   ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO);
+
+  ConnectorResponseDTO updateGitFilePath(ConnectorDTO connectorDTO, String accountIdentifier, String newFilePath);
 }
