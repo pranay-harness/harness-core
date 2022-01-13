@@ -84,6 +84,7 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
+import io.harness.logging.LogCallback;
 import io.harness.pcf.model.CfCliVersion;
 import io.harness.rule.Owner;
 
@@ -167,6 +168,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
   private static String SECOND_INFRA_DEFINITION_ID = INFRA_DEFINITION_ID + "2";
   public static final String REPLACE_ME = "REPLACE_ME";
   public static final ServiceElement SERVICE_ELEMENT = ServiceElement.builder().uuid(SERVICE_ID).build();
+  private LogCallback logCallback = null;
   private String SERVICE_MANIFEST_YML = "applications:\n"
       + "- name: ((PCF_APP_NAME))\n"
       + "  memory: ((PCF_APP_MEMORY))\n"
@@ -271,6 +273,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
             ManifestFile.builder().fileName(MANIFEST_YML).fileContent(PcfSetupStateTest.MANIFEST_YAML_CONTENT).build());
 
     doReturn("").when(delegateService).queueTask(any());
+    logCallback = Mockito.mock(LogCallback.class);
   }
 
   @Test
@@ -308,7 +311,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     when(applicationManifestService.getManifestFilesByAppManifestId(APP_ID, SERVICE_ID))
         .thenReturn(Arrays.asList(ManifestFile.builder().fileContent(SERVICE_MANIFEST_YML).build()));
     PcfManifestsPackage pcfManifestsPackage =
-        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null);
+        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null, logCallback);
     assertThat(pcfManifestsPackage).isNotNull();
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(SERVICE_MANIFEST_YML);
 
@@ -320,7 +323,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
                                           .build();
     filesFromMultipleRepo.put(K8sValuesLocation.EnvironmentGlobal.name(), filesResult);
     fetchFilesResult.setFilesFromMultipleRepo(filesFromMultipleRepo);
-    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null);
+    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null, logCallback);
     assertThat(pcfManifestsPackage).isNotNull();
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(ENV_MANIFEST_YML);
 
@@ -330,7 +333,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
 
     when(applicationManifestService.getManifestFilesByAppManifestId(APP_ID, envServiceId))
         .thenReturn(Arrays.asList(ManifestFile.builder().fileContent(ENV_SERVICE_MANIFEST_YML).build()));
-    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null);
+    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null, logCallback);
     assertThat(pcfManifestsPackage).isNotNull();
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(ENV_SERVICE_MANIFEST_YML);
 
@@ -340,7 +343,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     appManifestMap.put(K8sValuesLocation.Service, customApplicationManifest);
     Map<K8sValuesLocation, Collection<String>> manifests = new HashMap<>();
     manifests.put(K8sValuesLocation.Service, Arrays.asList(SERVICE_MANIFEST_YML, TEST_VAR));
-    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, null, manifests);
+    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, null, manifests, logCallback);
     assertThat(pcfManifestsPackage).isNotNull();
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(SERVICE_MANIFEST_YML);
     assertThat(pcfManifestsPackage.getVariableYmls()).contains(TEST_VAR);
@@ -350,7 +353,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     appManifestMap.put(K8sValuesLocation.Service, customApplicationManifest);
     appManifestMap.put(K8sValuesLocation.Environment, customApplicationManifest);
     manifests.put(K8sValuesLocation.Environment, Arrays.asList(ENV_SERVICE_MANIFEST_YML, TEST_VAR));
-    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, null, manifests);
+    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, null, manifests, logCallback);
     assertThat(pcfManifestsPackage).isNotNull();
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(ENV_SERVICE_MANIFEST_YML);
     assertThat(pcfManifestsPackage.getVariableYmls()).contains(TEST_VAR);
@@ -368,13 +371,13 @@ public class PcfStateHelperTest extends WingsBaseTest {
     appManifestMap.put(K8sValuesLocation.Service, serviceApplicationManifest);
 
     PcfManifestsPackage pcfManifestsPackage =
-        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null);
+        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null, logCallback);
     assertThat(pcfManifestsPackage.getManifestYml()).isNull();
     assertThat(pcfManifestsPackage.getVariableYmls()).isNull();
 
     filesFromMultipleRepo.put(K8sValuesLocation.Service.name(), null);
     fetchFilesResult.setFilesFromMultipleRepo(filesFromMultipleRepo);
-    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null);
+    pcfManifestsPackage = pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null, logCallback);
     assertThat(pcfManifestsPackage.getManifestYml()).isNull();
     assertThat(pcfManifestsPackage.getVariableYmls()).isNull();
   }
@@ -393,7 +396,7 @@ public class PcfStateHelperTest extends WingsBaseTest {
     when(applicationManifestService.getManifestFilesByAppManifestId(APP_ID, SERVICE_ID))
         .thenReturn(Arrays.asList(ManifestFile.builder().fileContent("abc").build()));
     PcfManifestsPackage pcfManifestsPackage =
-        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null);
+        pcfStateHelper.getFinalManifestFilesMap(appManifestMap, fetchFilesResult, null, logCallback);
     assertThat(pcfManifestsPackage).isNotNull();
     assertThat(pcfManifestsPackage.getManifestYml()).isBlank();
   }
@@ -730,18 +733,18 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testAddToPcfManifestFilesMap() {
     PcfManifestsPackage pcfManifestsPackage = PcfManifestsPackage.builder().build();
-    pcfStateHelper.addToPcfManifestFilesMap(TEST_APP_MANIFEST, pcfManifestsPackage);
+    pcfStateHelper.addToPcfManifestFilesMap(TEST_APP_MANIFEST, pcfManifestsPackage, null, logCallback);
 
     // 1
     assertThat(pcfManifestsPackage.getManifestYml()).isEqualTo(TEST_APP_MANIFEST);
 
     // 2
-    pcfStateHelper.addToPcfManifestFilesMap(TEST_VAR, pcfManifestsPackage);
+    pcfStateHelper.addToPcfManifestFilesMap(TEST_VAR, pcfManifestsPackage, null, logCallback);
     assertThat(pcfManifestsPackage.getVariableYmls()).isNotEmpty();
     assertThat(pcfManifestsPackage.getVariableYmls().get(0)).isEqualTo(TEST_VAR);
 
     // 3
-    pcfStateHelper.addToPcfManifestFilesMap(TEST_VAR_1, pcfManifestsPackage);
+    pcfStateHelper.addToPcfManifestFilesMap(TEST_VAR_1, pcfManifestsPackage, null, logCallback);
     assertThat(pcfManifestsPackage.getVariableYmls()).isNotEmpty();
     assertThat(pcfManifestsPackage.getVariableYmls().get(0)).isEqualTo(TEST_VAR);
     assertThat(pcfManifestsPackage.getVariableYmls().get(1)).isEqualTo(TEST_VAR_1);
@@ -795,14 +798,14 @@ public class PcfStateHelperTest extends WingsBaseTest {
   @Owner(developers = ARVIND)
   @Category(UnitTests.class)
   public void testIsValidManifestFile() {
-    assertThat(pcfStateHelper.isValidManifest(SERVICE_MANIFEST_YML)).isTrue();
-    assertThat(pcfStateHelper.isValidManifest(TEST_APP_MANIFEST)).isTrue();
-    assertThat(pcfStateHelper.isValidManifest(TEST_VAR)).isTrue();
-    assertThat(pcfStateHelper.isValidManifest(TEST_VAR_1)).isTrue();
-    assertThat(pcfStateHelper.isValidManifest(ENV_MANIFEST_YML)).isTrue();
-    assertThat(pcfStateHelper.isValidManifest(ENV_SERVICE_MANIFEST_YML)).isTrue();
-    assertThat(pcfStateHelper.isValidManifest("")).isFalse();
-    assertThat(pcfStateHelper.isValidManifest(null)).isFalse();
+    assertThat(pcfStateHelper.isValidManifest(SERVICE_MANIFEST_YML, logCallback)).isTrue();
+    assertThat(pcfStateHelper.isValidManifest(TEST_APP_MANIFEST, logCallback)).isTrue();
+    assertThat(pcfStateHelper.isValidManifest(TEST_VAR, logCallback)).isTrue();
+    assertThat(pcfStateHelper.isValidManifest(TEST_VAR_1, logCallback)).isTrue();
+    assertThat(pcfStateHelper.isValidManifest(ENV_MANIFEST_YML, logCallback)).isTrue();
+    assertThat(pcfStateHelper.isValidManifest(ENV_SERVICE_MANIFEST_YML, logCallback)).isTrue();
+    assertThat(pcfStateHelper.isValidManifest("", logCallback)).isFalse();
+    assertThat(pcfStateHelper.isValidManifest(null, logCallback)).isFalse();
   }
 
   @Test
