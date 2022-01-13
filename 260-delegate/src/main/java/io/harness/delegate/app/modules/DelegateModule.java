@@ -610,32 +610,22 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("heartbeatExecutor")
-  public ScheduledExecutorService heartbeatExecutor() {
-    ScheduledExecutorService heartbeatExecutor = new ScheduledThreadPoolExecutor(
-        1, new ThreadFactoryBuilder().setNameFormat("heartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(heartbeatExecutor::shutdownNow));
-    return heartbeatExecutor;
+  @Named("healthMonitorExecutor")
+  public ScheduledExecutorService healthMonitorExecutor() {
+    ScheduledExecutorService healthMonitorExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("healthMonitor-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(healthMonitorExecutor::shutdownNow));
+    return healthMonitorExecutor;
   }
 
   @Provides
   @Singleton
-  @Named("localHeartbeatExecutor")
-  public ScheduledExecutorService localHeartbeatExecutor() {
-    ScheduledExecutorService localHeartbeatExecutor = new ScheduledThreadPoolExecutor(
-        1, new ThreadFactoryBuilder().setNameFormat("localHeartbeat-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(localHeartbeatExecutor::shutdownNow));
-    return localHeartbeatExecutor;
-  }
-
-  @Provides
-  @Singleton
-  @Named("watcherUpgradeExecutor")
-  public ScheduledExecutorService watcherUpgradeExecutor() {
-    ScheduledExecutorService watcherUpgradeExecutor = new ScheduledThreadPoolExecutor(
-        1, new ThreadFactoryBuilder().setNameFormat("watcherUpgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(watcherUpgradeExecutor::shutdownNow));
-    return watcherUpgradeExecutor;
+  @Named("watcherMonitorExecutor")
+  public ScheduledExecutorService watcherMonitorExecutor() {
+    ScheduledExecutorService watcherMonitorExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("watcherMonitor-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(watcherMonitorExecutor::shutdownNow));
+    return watcherMonitorExecutor;
   }
 
   @Provides
@@ -660,12 +650,12 @@ public class DelegateModule extends AbstractModule {
 
   @Provides
   @Singleton
-  @Named("installCheckExecutor")
+  @Named("profileExecutor")
   public ScheduledExecutorService installCheckExecutor() {
-    ScheduledExecutorService installCheckExecutor = new ScheduledThreadPoolExecutor(
-        1, new ThreadFactoryBuilder().setNameFormat("installCheck-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(installCheckExecutor::shutdownNow));
-    return installCheckExecutor;
+    ScheduledExecutorService profileExecutor = new ScheduledThreadPoolExecutor(
+        1, new ThreadFactoryBuilder().setNameFormat("profile-%d").setPriority(Thread.NORM_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(profileExecutor::shutdownNow));
+    return profileExecutor;
   }
 
   @Provides
@@ -686,6 +676,25 @@ public class DelegateModule extends AbstractModule {
         2, new ThreadFactoryBuilder().setNameFormat("verification-%d").setPriority(Thread.NORM_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(verificationExecutor::shutdownNow));
     return verificationExecutor;
+  }
+
+  @Provides
+  @Singleton
+  @Named("backgroundExecutor")
+  public ExecutorService backgroundExecutor() {
+    ExecutorService backgroundExecutor = ThreadPool.create(1, 1, 5, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("background-%d").setPriority(Thread.MIN_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(backgroundExecutor::shutdownNow));
+    return backgroundExecutor;
+  }
+  @Provides
+  @Singleton
+  @Named("watcherUpgradeExecutor")
+  public ExecutorService watcherUpgradeExecutor() {
+    ExecutorService watcherUpgradeExecutor = ThreadPool.create(1, 1, 5, TimeUnit.SECONDS,
+        new ThreadFactoryBuilder().setNameFormat("watcherUpgrade-%d").setPriority(Thread.MAX_PRIORITY).build());
+    Runtime.getRuntime().addShutdownHook(new Thread(watcherUpgradeExecutor::shutdownNow));
+    return watcherUpgradeExecutor;
   }
 
   @Provides
@@ -800,16 +809,6 @@ public class DelegateModule extends AbstractModule {
         new ThreadFactoryBuilder().setNameFormat("task-poll-%d").setPriority(Thread.MAX_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(taskPollExecutorService::shutdownNow));
     return taskPollExecutorService;
-  }
-
-  @Provides
-  @Singleton
-  @Named("asyncTaskDispatchExecutor")
-  public ExecutorService asyncTaskDispatchExecutor() {
-    ExecutorService asyncTaskDispatchExecutor = ThreadPool.create(10, 10, 3, TimeUnit.SECONDS,
-        new ThreadFactoryBuilder().setNameFormat("async-task-dispatch-%d").setPriority(Thread.MAX_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(asyncTaskDispatchExecutor::shutdownNow));
-    return asyncTaskDispatchExecutor;
   }
 
   @Provides
