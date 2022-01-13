@@ -74,4 +74,6 @@ public class PipelineInfoConfig {
   @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH)
   @Pattern(regexp = NGRegexValidatorConstants.TIMEOUT_PATTERN)
   ParameterField<Timeout> timeout;
+
+  boolean allowStageExecutions;
 }

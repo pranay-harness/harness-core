@@ -11,7 +11,6 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
-import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.pipeline.PipelineEntity;
 
 import java.util.Optional;
@@ -29,7 +28,7 @@ public interface PMSPipelineRepositoryCustom {
 
   Long countAllPipelines(Criteria criteria);
 
-  PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO);
+  PipelineEntity save(PipelineEntity pipelineToSave);
 
   Optional<PipelineEntity> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier, boolean notDeleted);
@@ -38,10 +37,10 @@ public interface PMSPipelineRepositoryCustom {
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineIdentifier);
 
   PipelineEntity updatePipelineYaml(
-      PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity, PipelineConfig yamlDTO, ChangeType changeType);
+      PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity, ChangeType changeType);
 
   PipelineEntity updatePipelineMetadata(
       String accountId, String orgIdentifier, String projectIdentifier, Criteria criteria, Update update);
 
-  PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO);
+  PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate);
 }
