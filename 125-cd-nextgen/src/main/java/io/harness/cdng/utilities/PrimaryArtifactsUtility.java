@@ -46,7 +46,7 @@ public class PrimaryArtifactsUtility {
       return primaryYamlField;
     }
 
-    primaryYamlField = fetchPrimaryYamlFieldUnderArtifacts(artifactField);
+    primaryYamlField = createPrimaryYamlFieldUnderArtifacts(artifactField);
     setYamlUpdate(primaryYamlField, yamlUpdates);
     return primaryYamlField;
   }
@@ -60,7 +60,7 @@ public class PrimaryArtifactsUtility {
     }
   }
 
-  private YamlField fetchPrimaryYamlFieldUnderArtifacts(YamlField stageOverride) {
+  private YamlField createPrimaryYamlFieldUnderArtifacts(YamlField stageOverride) {
     return new YamlField(YamlTypes.PRIMARY_ARTIFACT,
         new YamlNode(
             YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
