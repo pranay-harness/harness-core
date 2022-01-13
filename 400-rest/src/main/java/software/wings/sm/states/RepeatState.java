@@ -117,7 +117,7 @@ public class RepeatState extends State {
         }
       }
     } catch (Exception ex) {
-      throw new InvalidRequestException("Unable to find qualifying clusters for deployment");
+      throw new WingsException(ex);
     }
 
     if (repeatTransitionStateName == null) {

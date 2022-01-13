@@ -21,9 +21,8 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
-import software.wings.service.impl.workflow.creation.helpers.K8CanaryWorkflowPhaseHelper;
-import software.wings.service.impl.workflow.creation.helpers.K8RollingWorkflowPhaseHelper;
-import software.wings.service.impl.workflow.creation.helpers.WorkflowPhaseHelper;
+import software.wings.service.impl.workflow.creation.helpers.*;
+import software.wings.service.intfc.InfrastructureDefinitionService;
 
 import com.google.inject.Inject;
 import lombok.extern.slf4j.Slf4j;
@@ -33,16 +32,22 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
   private static final String PHASE_NAME = "CANARY";
+  public static final String RANCHER_INFRA_TYPE = "RANCHER_KUBERNETES";
   @Inject private K8CanaryWorkflowPhaseHelper k8CanaryWorkflowPhaseHelper;
+  @Inject private RancherK8CanaryWorkflowPhaseHelper rancherK8CanaryWorkflowPhaseHelper;
   @Inject private K8RollingWorkflowPhaseHelper k8RollingWorkflowPhaseHelper;
+  @Inject private RancherK8RollingWorkflowPhaseHelper rancherK8RollingWorkflowPhaseHelper;
   @Inject private WorkflowServiceHelper workflowServiceHelper;
   @Inject private WorkflowServiceTemplateHelper workflowServiceTemplateHelper;
   @Inject private WorkflowPhaseHelper workflowPhaseHelper;
   @Inject private FeatureFlagService featureFlagService;
+  @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
 
   @Override
   public Workflow createWorkflow(Workflow clientWorkflow) {
     Workflow workflow = aWorkflow().build();
+    updateCanaryWorkflowHelper(clientWorkflow.getAccountId(), clientWorkflow.getInfraDefinitionId());
+    updateRollingWorkflowHelper(clientWorkflow.getAccountId(), clientWorkflow.getInfraDefinitionId());
     MapperUtils.mapObject(clientWorkflow, workflow);
     OrchestrationWorkflow orchestrationWorkflow = workflow.getOrchestrationWorkflow();
     CanaryOrchestrationWorkflow canaryOrchestrationWorkflow = (CanaryOrchestrationWorkflow) orchestrationWorkflow;
@@ -70,6 +75,9 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
 
   @Override
   public void attachWorkflowPhase(Workflow workflow, WorkflowPhase workflowPhase) {
+    updateCanaryWorkflowHelper(workflow.getAccountId(), workflowPhase.getInfraDefinitionId());
+    updateRollingWorkflowHelper(workflow.getAccountId(), workflowPhase.getInfraDefinitionId());
+
     workflowPhaseHelper.setCloudProviderIfNeeded(workflow, workflowPhase);
     boolean stepsGenerated = workflowPhaseHelper.addPhaseIfStepsGenerated(workflow, workflowPhase);
     if (stepsGenerated) {
@@ -111,5 +119,25 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
 
     workflowServiceTemplateHelper.addLinkedWorkflowPhaseTemplate(rollbackWorkflowPhase);
     canaryOrchestrationWorkflow.getRollbackWorkflowPhaseIdMap().put(workflowPhase.getUuid(), rollbackWorkflowPhase);
+  }
+
+  private void updateRollingWorkflowHelper(String accountId, String infraDefinitionId) {
+    if (infrastructureDefinitionService
+            .getInfraDefById(accountId, infraDefinitionId)
+            .getInfrastructure()
+            .getInfrastructureType()
+            .equals(RANCHER_INFRA_TYPE)) {
+      this.k8RollingWorkflowPhaseHelper = this.rancherK8RollingWorkflowPhaseHelper;
+    }
+  }
+
+  private void updateCanaryWorkflowHelper(String accountId, String infraDefinitionId) {
+    if (infrastructureDefinitionService
+            .getInfraDefById(accountId, infraDefinitionId)
+            .getInfrastructure()
+            .getInfrastructureType()
+            .equals(RANCHER_INFRA_TYPE)) {
+      this.k8CanaryWorkflowPhaseHelper = this.rancherK8CanaryWorkflowPhaseHelper;
+    }
   }
 }

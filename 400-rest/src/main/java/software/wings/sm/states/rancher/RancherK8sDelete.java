@@ -8,8 +8,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
-import software.wings.sm.StateType;
-import software.wings.sm.states.k8s.K8sRollingDeployRollback;
+import software.wings.sm.states.k8s.K8sDelete;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
@@ -17,8 +16,8 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @TargetModule(_870_CG_ORCHESTRATION)
 @OwnedBy(CDP)
 @BreakDependencyOn("software.wings.service.intfc.DelegateService")
-public class RancherK8sRollingDeployRollback extends K8sRollingDeployRollback {
-  public RancherK8sRollingDeployRollback(String name) {
+public class RancherK8sDelete extends K8sDelete {
+  public RancherK8sDelete(String name) {
     super(name);
   }
 

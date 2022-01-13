@@ -1,6 +1,6 @@
 package software.wings.service.impl.workflow.creation.helpers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.k8s.model.K8sExpressions.canaryWorkloadExpression;
 
@@ -11,7 +11,6 @@ import static software.wings.sm.StateType.*;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.beans.ExecutionStatus;
 
 import software.wings.beans.GraphNode;
 import software.wings.beans.PhaseStep;
@@ -19,37 +18,24 @@ import software.wings.common.WorkflowConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
-@OwnedBy(CDC)
+@OwnedBy(CDP)
 @TargetModule(HarnessModule._870_CG_ORCHESTRATION)
-public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
+public class RancherK8CanaryWorkflowPhaseHelper extends K8CanaryWorkflowPhaseHelper {
   @Override
-  public List<PhaseStep> getWorkflowPhaseSteps() {
-    List<PhaseStep> phaseSteps = new ArrayList<>();
-    phaseSteps.add(getCanaryDeployPhaseStep());
-    phaseSteps.add(getCanaryVerifyPhaseStep());
-    phaseSteps.add(getCanaryWrapUpPhaseStep());
-    return phaseSteps;
-  }
-
-  @Override
-  public List<PhaseStep> getRollbackPhaseSteps() {
-    List<PhaseStep> rollbackPhaseSteps = new ArrayList<>();
-    rollbackPhaseSteps.add(getCanaryRollbackDeployPhaseStep());
-    rollbackPhaseSteps.add(getCanaryRollbackWrapUpPhaseStep());
-    return rollbackPhaseSteps;
-  }
-
-  // Steps for Canary
   protected PhaseStep getCanaryDeployPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
         .addStep(GraphNode.builder()
                      .id(generateUuid())
-                     .type(K8S_CANARY_DEPLOY.name())
-                     .name(WorkflowConstants.K8S_CANARY_DEPLOY)
+                     .type(RANCHER_RESOLVE.name())
+                     .name(WorkflowConstants.RANCHER_RESOLVE_CLUSTERS)
+                     .properties(new HashMap<>())
+                     .build())
+        .addStep(GraphNode.builder()
+                     .id(generateUuid())
+                     .type(RANCHER_K8S_CANARY_DEPLOY.name())
+                     .name(WorkflowConstants.RANCHER_K8S_CANARY_DEPLOY)
                      .properties(ImmutableMap.<String, Object>builder()
                                      .put("instances", "1")
                                      .put("instanceUnitType", "COUNT")
@@ -58,37 +44,18 @@ public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
         .build();
   }
 
-  private PhaseStep getCanaryVerifyPhaseStep() {
-    return aPhaseStep(K8S_PHASE_STEP, "Verify").build();
-  }
-
+  @Override
   protected PhaseStep getCanaryWrapUpPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
         .addStep(GraphNode.builder()
                      .id(generateUuid())
-                     .type(K8S_DELETE.name())
-                     .name("Canary Delete")
+                     .type(RANCHER_K8S_DELETE.name())
+                     .name(WorkflowConstants.RANCHER_K8S_DELETE)
                      .properties(ImmutableMap.<String, Object>builder()
                                      .put("resources", canaryWorkloadExpression)
                                      .put("instanceUnitType", "COUNT")
                                      .build())
                      .build())
-        .build();
-  }
-
-  // Steps for Canary Rollback
-  private PhaseStep getCanaryRollbackDeployPhaseStep() {
-    return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
-        .withPhaseStepNameForRollback(WorkflowServiceHelper.DEPLOY)
-        .withStatusForRollback(ExecutionStatus.SUCCESS)
-        .withRollback(true)
-        .build();
-  }
-
-  private PhaseStep getCanaryRollbackWrapUpPhaseStep() {
-    return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
-        .withPhaseStepNameForRollback(WorkflowServiceHelper.WRAP_UP)
-        .withRollback(true)
         .build();
   }
 }

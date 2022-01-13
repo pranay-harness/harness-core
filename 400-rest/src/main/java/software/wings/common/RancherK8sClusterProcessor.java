@@ -12,6 +12,7 @@ import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.google.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -63,7 +64,7 @@ public class RancherK8sClusterProcessor implements ExpressionProcessor {
                                                      .name(RancherClusterElementList.getSweepingOutputID(context))
                                                      .build());
 
-    return clusterElementList.getRancherClusterElements();
+    return Objects.isNull(clusterElementList) ? null : clusterElementList.getRancherClusterElements();
   }
 
   @AllArgsConstructor

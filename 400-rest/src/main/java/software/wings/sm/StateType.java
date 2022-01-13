@@ -1,15 +1,41 @@
 package software.wings.sm;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.base.Charsets;
-import com.google.common.collect.Lists;
-import com.google.common.io.Resources;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
+import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
+import static software.wings.beans.PhaseStepType.*;
+import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
+import static software.wings.beans.PhaseStepType.STOP_SERVICE;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.common.ProvisionerConstants.*;
+import static software.wings.common.ProvisionerConstants.PROVISION_SHELL_SCRIPT;
+import static software.wings.common.ProvisionerConstants.ROLLBACK_CLOUD_FORMATION;
+import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAFORM_NAME;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.*;
+import static software.wings.sm.StateTypeScope.*;
+import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
+import static software.wings.stencils.StencilCategory.*;
+
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+import static org.joor.Reflect.on;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.UnexpectedException;
 import io.harness.serializer.JsonUtils;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
@@ -32,6 +58,7 @@ import software.wings.sm.states.customdeployment.InstanceFetchState;
 import software.wings.sm.states.k8s.*;
 import software.wings.sm.states.pcf.*;
 import software.wings.sm.states.provision.*;
+import software.wings.sm.states.rancher.RancherK8sCanaryDeploy;
 import software.wings.sm.states.rancher.RancherK8sRollingDeploy;
 import software.wings.sm.states.rancher.RancherK8sRollingDeployRollback;
 import software.wings.sm.states.rancher.RancherResolveState;
@@ -39,39 +66,16 @@ import software.wings.sm.states.spotinst.*;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.base.Charsets;
+import com.google.common.collect.Lists;
+import com.google.common.io.Resources;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import static org.joor.Reflect.on;
-import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
-import static software.wings.beans.PhaseStepType.STOP_SERVICE;
-import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.beans.PhaseStepType.*;
-import static software.wings.common.ProvisionerConstants.PROVISION_SHELL_SCRIPT;
-import static software.wings.common.ProvisionerConstants.ROLLBACK_CLOUD_FORMATION;
-import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAFORM_NAME;
-import static software.wings.common.ProvisionerConstants.*;
-import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.*;
-import static software.wings.sm.StateTypeScope.*;
-import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
-import static software.wings.stencils.StencilCategory.*;
 
 /**
  * Represents type of state.
@@ -657,20 +661,22 @@ public enum StateType implements StateTypeDescriptor {
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  RANCHER_RESOLVE(RancherResolveState.class, KUBERNETES, 31,
-      WorkflowConstants.RANCHER_RESOLVE_CLUSTERS,
-      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES),
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+  RANCHER_RESOLVE(RancherResolveState.class, KUBERNETES, 30, WorkflowConstants.RANCHER_RESOLVE_CLUSTERS,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  RANCHER_K8S_DEPLOYMENT_ROLLING(RancherK8sRollingDeploy.class, KUBERNETES, 33,
+  RANCHER_K8S_DEPLOYMENT_ROLLING(RancherK8sRollingDeploy.class, KUBERNETES, 31,
       WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING,
-      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES),
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
-  RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class, KUBERNETES, 34,
+  RANCHER_K8S_CANARY_DEPLOY(RancherK8sCanaryDeploy.class, KUBERNETES, 32, WorkflowConstants.RANCHER_K8S_CANARY_DEPLOY,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_K8S_DELETE(K8sDelete.class, KUBERNETES, 38, WorkflowConstants.RANCHER_K8S_DELETE,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class, KUBERNETES, 39,
       WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK,
-      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES),
-      asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, COLLABORATION, 1, "Jira",
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,

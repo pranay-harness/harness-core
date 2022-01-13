@@ -1,10 +1,16 @@
 package software.wings.sm.states.rancher;
 
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
 import static software.wings.sm.StateType.RANCHER_RESOLVE;
 
+import io.harness.annotations.dev.BreakDependencyOn;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.ExecutionStatus;
@@ -20,10 +26,9 @@ import software.wings.api.RancherClusterElement;
 import software.wings.beans.*;
 import software.wings.beans.command.CommandUnitDetails;
 import software.wings.beans.command.RancherDummyCommandUnit;
-import software.wings.common.RancherK8sClusterProcessor;
-import software.wings.delegatetasks.rancher.RancherResolveClustersTaskParameters;
+import software.wings.common.RancherK8sClusterProcessor.RancherClusterElementList;
 import software.wings.delegatetasks.rancher.RancherResolveClustersResponse;
-import software.wings.delegatetasks.rancher.RancherStateExecutionData;
+import software.wings.delegatetasks.rancher.RancherResolveClustersTaskParameters;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.RancherKubernetesInfrastructure;
 import software.wings.service.intfc.ActivityService;
@@ -36,12 +41,10 @@ import software.wings.sm.*;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,6 +52,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.annotations.Transient;
 
 @Slf4j
+@JsonIgnoreProperties(ignoreUnknown = true)
+@TargetModule(_870_CG_ORCHESTRATION)
+@OwnedBy(CDP)
+@BreakDependencyOn("software.wings.service.intfc.DelegateService")
 public class RancherResolveState extends State {
   @Inject public RancherStateHelper rancherStateHelper;
   @Inject @Transient private SweepingOutputService sweepingOutputService;
@@ -61,6 +68,7 @@ public class RancherResolveState extends State {
 
   public static final String COMMAND_UNIT_NAME = "Execute";
   public static final String COMMAND_NAME = "Rancher Cluster Resolve";
+  private static final long MIN_TASK_TIMEOUT_IN_MINUTES = 1L;
 
   public RancherResolveState(String name) {
     super(name, RANCHER_RESOLVE.name());
@@ -70,6 +78,16 @@ public class RancherResolveState extends State {
   public ExecutionResponse execute(ExecutionContext context) {
     try {
       Activity activity = createRancherActivity(context);
+
+      RancherClusterElementList clusterElementList =
+          sweepingOutputService.findSweepingOutput(context.prepareSweepingOutputInquiryBuilder()
+                                                       .name(RancherClusterElementList.getSweepingOutputID(context))
+                                                       .build());
+      if (Objects.nonNull(clusterElementList)) {
+        log.warn("Possible duplicate execution of Rancher Resolve within a workflow. Skipping this.");
+        return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
+      }
+
       return executeInternal(context, activity.getUuid());
     } catch (WingsException e) {
       throw e;
@@ -110,7 +128,7 @@ public class RancherResolveState extends State {
                                               .async(true)
                                               .taskType(TaskType.RANCHER_RESOLVE_CLUSTERS.name())
                                               .parameters(new Object[] {rancherResolveClustersTaskParameters})
-                                              .timeout(stateTimeoutInMinutes * 60 * 1000L)
+                                              .timeout(getTimeoutValue() * 60 * 1000L)
                                               .build())
                                     .selectionLogsTrackingEnabled(true)
                                     .build();
@@ -125,12 +143,29 @@ public class RancherResolveState extends State {
         .build();
   }
 
+  private long getTimeoutValue() {
+    long timeoutMillis = DEFAULT_ASYNC_CALL_TIMEOUT;
+
+    if (this.stateTimeoutInMinutes != null) {
+      long taskTimeoutInMinutes;
+      if (stateTimeoutInMinutes < MIN_TASK_TIMEOUT_IN_MINUTES) {
+        taskTimeoutInMinutes = MIN_TASK_TIMEOUT_IN_MINUTES;
+      } else {
+        taskTimeoutInMinutes = stateTimeoutInMinutes;
+      }
+
+      timeoutMillis = taskTimeoutInMinutes * 60L * 1000L;
+    }
+
+    return timeoutMillis;
+  }
+
   @Override
   public ExecutionResponse handleAsyncResponse(ExecutionContext context, Map<String, ResponseData> response) {
     RancherResolveClustersResponse executionResponse =
         (RancherResolveClustersResponse) response.values().iterator().next();
 
-    activityService.updateStatus(((RancherStateExecutionData)context.getStateExecutionData()).getActivityId(),
+    activityService.updateStatus(((RancherStateExecutionData) context.getStateExecutionData()).getActivityId(),
         context.getAppId(), executionResponse.getExecutionStatus());
 
     if (ExecutionStatus.FAILED == executionResponse.getExecutionStatus()) {
@@ -145,11 +180,10 @@ public class RancherResolveState extends State {
             .map(name -> new RancherClusterElement(UUIDGenerator.generateUuid(), name))
             .collect(Collectors.toList());
 
-    sweepingOutputService.save(
-        context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
-            .name(RancherK8sClusterProcessor.RancherClusterElementList.getSweepingOutputID(context))
-            .value(new RancherK8sClusterProcessor.RancherClusterElementList(clusterElements))
-            .build());
+    sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.WORKFLOW)
+                                   .name(RancherClusterElementList.getSweepingOutputID(context))
+                                   .value(new RancherClusterElementList(clusterElements))
+                                   .build());
 
     return ExecutionResponse.builder().executionStatus(ExecutionStatus.SUCCESS).build();
   }

@@ -19,6 +19,8 @@ public interface WorkflowConstants {
   String RANCHER_K8S_DEPLOYMENT_ROLLING = "Rancher Rollout Deployment";
   String RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK = "Rancher Rollback Deployment";
   String RANCHER_RESOLVE_CLUSTERS = "Rancher Resolve Clusters";
+  String RANCHER_K8S_CANARY_DEPLOY = "Rancher Canary Deployment";
+  String RANCHER_K8S_DELETE = "Rancher Delete";
 
   String K8S_PRIMARY_PHASE_NAME = "Primary";
   String K8S_CANARY_PHASE_NAME = "Canary";

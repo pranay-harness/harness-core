@@ -261,4 +261,9 @@ public class K8sDelete extends AbstractK8sState {
         ImmutableList.of(new K8sDummyCommandUnit(K8sCommandUnitConstants.Init),
             new K8sDummyCommandUnit(K8sCommandUnitConstants.Delete)));
   }
+
+  @Override
+  public ContextElementType getRequiredContextElementType() {
+    return ContextElementType.RANCHER_K8S_CLUSTER_CRITERIA;
+  }
 }

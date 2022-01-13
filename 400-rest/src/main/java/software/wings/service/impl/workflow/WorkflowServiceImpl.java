@@ -52,33 +52,7 @@ import static software.wings.common.InfrastructureConstants.INFRA_ID_EXPRESSION;
 import static software.wings.common.ProvisionerConstants.GENERIC_ROLLBACK_NAME_FORMAT;
 import static software.wings.common.WorkflowConstants.WORKFLOW_INFRAMAPPING_VALIDATION_MESSAGE;
 import static software.wings.service.intfc.ServiceVariableService.EncryptedFieldMode.OBTAIN_VALUE;
-import static software.wings.sm.StateType.AWS_AMI_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.AWS_AMI_SERVICE_SETUP;
-import static software.wings.sm.StateType.AWS_CODEDEPLOY_STATE;
-import static software.wings.sm.StateType.AWS_LAMBDA_STATE;
-import static software.wings.sm.StateType.AZURE_VMSS_DEPLOY;
-import static software.wings.sm.StateType.AZURE_VMSS_SETUP;
-import static software.wings.sm.StateType.CLOUD_FORMATION_CREATE_STACK;
-import static software.wings.sm.StateType.COMMAND;
-import static software.wings.sm.StateType.ECS_DAEMON_SERVICE_SETUP;
-import static software.wings.sm.StateType.ECS_SERVICE_DEPLOY;
-import static software.wings.sm.StateType.ECS_SERVICE_SETUP;
-import static software.wings.sm.StateType.HELM_DEPLOY;
-import static software.wings.sm.StateType.HTTP;
-import static software.wings.sm.StateType.K8S_APPLY;
-import static software.wings.sm.StateType.K8S_BLUE_GREEN_DEPLOY;
-import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
-import static software.wings.sm.StateType.K8S_DELETE;
-import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
-import static software.wings.sm.StateType.KUBERNETES_DEPLOY;
-import static software.wings.sm.StateType.KUBERNETES_SETUP;
-import static software.wings.sm.StateType.PCF_RESIZE;
-import static software.wings.sm.StateType.PCF_SETUP;
-import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING;
-import static software.wings.sm.StateType.SHELL_SCRIPT;
-import static software.wings.sm.StateType.TERRAFORM_ROLLBACK;
-import static software.wings.sm.StateType.TERRAGRUNT_ROLLBACK;
-import static software.wings.sm.StateType.values;
+import static software.wings.sm.StateType.*;
 import static software.wings.sm.StepType.ASG_AMI_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_ROLLBACK_ALB_SHIFT_SWITCH_ROUTES;
 import static software.wings.sm.StepType.ASG_AMI_SERVICE_ALB_SHIFT_DEPLOY;
@@ -327,8 +301,9 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
   private static final List<String> kubernetesArtifactNeededStateTypes =
       Arrays.asList(KUBERNETES_SETUP.name(), KUBERNETES_DEPLOY.name());
 
-  private static final List<String> k8sV2ArtifactNeededStateTypes = Arrays.asList(K8S_DEPLOYMENT_ROLLING.name(),
-      K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(), K8S_APPLY.name(), RANCHER_K8S_DEPLOYMENT_ROLLING.name());
+  private static final List<String> k8sV2ArtifactNeededStateTypes =
+      Arrays.asList(K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(),
+          K8S_APPLY.name(), RANCHER_K8S_DEPLOYMENT_ROLLING.name(), RANCHER_K8S_CANARY_DEPLOY.name());
 
   private static final List<String> ecsArtifactNeededStateTypes =
       Arrays.asList(ECS_SERVICE_DEPLOY.name(), ECS_SERVICE_SETUP.name(), ECS_DAEMON_SERVICE_SETUP.name());
@@ -358,7 +333,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   private static final List<String> k8sManifestNeededStateTypes =
       Arrays.asList(K8S_DEPLOYMENT_ROLLING.name(), K8S_CANARY_DEPLOY.name(), K8S_BLUE_GREEN_DEPLOY.name(),
-          K8S_APPLY.name(), K8S_DELETE.name(), RANCHER_K8S_DEPLOYMENT_ROLLING.name());
+          K8S_APPLY.name(), K8S_DELETE.name(), RANCHER_K8S_DEPLOYMENT_ROLLING.name(), RANCHER_K8S_CANARY_DEPLOY.name());
 
   private static final Comparator<Stencil> stencilDefaultSorter =
       Comparator.comparingInt((Stencil o) -> o.getStencilCategory().getDisplayOrder())
@@ -598,6 +573,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
 
   /**
    * {@inheritDoc}
+   *
    * @param appId
    */
   @Override

@@ -1,9 +1,11 @@
 package io.harness.serializer.morphia;
 
+import static io.harness.annotations.dev.HarnessTeam.PL;
+
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ccm.cluster.entities.*;
 import io.harness.ccm.cluster.entities.AzureKubernetesCluster;
 import io.harness.ccm.cluster.entities.GcpKubernetesCluster;
-import io.harness.ccm.cluster.entities.*;
 import io.harness.ccm.communication.entities.CECommunications;
 import io.harness.ccm.communication.entities.CESlackWebhook;
 import io.harness.ccm.config.GcpBillingAccount;
@@ -18,6 +20,7 @@ import io.harness.marketplace.gcp.procurement.pubsub.ProcurementPubsubMessage;
 import io.harness.mongo.index.migrator.AggregateResult;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrarHelperPut;
+
 import software.wings.api.*;
 import software.wings.api.arm.ARMOutputVariables;
 import software.wings.api.artifact.ServiceArtifactElement;
@@ -176,9 +179,7 @@ import software.wings.sm.states.customdeployment.InstanceFetchState;
 import software.wings.sm.states.k8s.*;
 import software.wings.sm.states.pcf.*;
 import software.wings.sm.states.provision.*;
-import software.wings.sm.states.rancher.RancherK8sRollingDeploy;
-import software.wings.sm.states.rancher.RancherK8sRollingDeployRollback;
-import software.wings.sm.states.rancher.RancherResolveState;
+import software.wings.sm.states.rancher.*;
 import software.wings.sm.states.spotinst.*;
 import software.wings.timescale.framework.TimeScaleEntityIndexState;
 import software.wings.verification.CVConfiguration;
@@ -204,8 +205,6 @@ import software.wings.yaml.gitSync.*;
 
 import java.security.Principal;
 import java.util.Set;
-
-import static io.harness.annotations.dev.HarnessTeam.PL;
 
 @OwnedBy(PL)
 public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
@@ -910,6 +909,8 @@ public class ManagerMorphiaRegistrar implements MorphiaRegistrar {
     w.put("sm.states.RancherResolveState", RancherResolveState.class);
     w.put("sm.states.RancherK8sRollingDeploy", RancherK8sRollingDeploy.class);
     w.put("sm.states.RancherK8sRollingDeployRollback", RancherK8sRollingDeployRollback.class);
+    w.put("sm.states.RancherK8sCanaryDeploy", RancherK8sCanaryDeploy.class);
+    w.put("sm.states.RancherK8sDelete", RancherK8sDelete.class);
 
     w.put("sm.states.KubernetesDeploy", KubernetesDeploy.class);
     w.put("sm.states.KubernetesDeployRollback", KubernetesDeployRollback.class);

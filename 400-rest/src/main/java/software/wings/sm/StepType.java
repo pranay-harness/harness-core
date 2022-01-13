@@ -1,12 +1,38 @@
 package software.wings.sm;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.google.common.collect.Lists;
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.OrchestrationWorkflowType.*;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static software.wings.beans.InfrastructureMappingType.*;
+import static software.wings.beans.PhaseStepType.*;
+import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
+import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
+import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
+import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
+import static software.wings.beans.PhaseStepType.WRAP_UP;
+import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.*;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
+import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
+import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
+import static software.wings.stencils.WorkflowStepType.*;
+import static software.wings.stencils.WorkflowStepType.AWS_SSH;
+
+import static com.google.common.base.CaseFormat.UPPER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.stream.Collectors.toList;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.OrchestrationWorkflowType;
+
 import software.wings.api.DeploymentType;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.beans.PhaseStepType;
@@ -26,39 +52,14 @@ import software.wings.sm.states.customdeployment.InstanceFetchState;
 import software.wings.sm.states.k8s.*;
 import software.wings.sm.states.pcf.*;
 import software.wings.sm.states.provision.*;
-import software.wings.sm.states.rancher.RancherK8sRollingDeploy;
-import software.wings.sm.states.rancher.RancherK8sRollingDeployRollback;
-import software.wings.sm.states.rancher.RancherResolveState;
+import software.wings.sm.states.rancher.*;
 import software.wings.sm.states.spotinst.*;
 import software.wings.stencils.WorkflowStepType;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.google.common.collect.Lists;
 import java.util.*;
-
-import static com.google.common.base.CaseFormat.UPPER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.OrchestrationWorkflowType.*;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.toList;
-import static software.wings.beans.InfrastructureMappingType.*;
-import static software.wings.beans.PhaseStepType.AZURE_WEBAPP_SLOT_TRAFFIC_SHIFT;
-import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
-import static software.wings.beans.PhaseStepType.VERIFY_SERVICE;
-import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.beans.PhaseStepType.*;
-import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.*;
-import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
-import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
-import static software.wings.stencils.WorkflowStepType.AWS_SSH;
-import static software.wings.stencils.WorkflowStepType.*;
 
 @OwnedBy(CDC)
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
@@ -302,9 +303,15 @@ public enum StepType {
   RANCHER_K8S_DEPLOYMENT_ROLLING(RancherK8sRollingDeploy.class, WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING,
       asList(KUBERNETES), asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES),
       asList(PhaseType.NON_ROLLBACK), asList(ROLLING, CANARY)),
-  RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class, WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK,
-      asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
-      asList(PhaseType.ROLLBACK)),
+  RANCHER_K8S_CANARY_DEPLOY(RancherK8sCanaryDeploy.class, WorkflowConstants.RANCHER_K8S_CANARY_DEPLOY,
+      asList(KUBERNETES), asList(K8S_PHASE_STEP), Lists.newArrayList(DeploymentType.KUBERNETES),
+      asList(PhaseType.NON_ROLLBACK), asList(CANARY)),
+  RANCHER_K8S_DELETE(RancherK8sDelete.class, WorkflowConstants.RANCHER_K8S_DELETE, asList(KUBERNETES),
+      asList(K8S_PHASE_STEP, WRAP_UP), Lists.newArrayList(DeploymentType.KUBERNETES),
+      asList(PhaseType.NON_ROLLBACK, PhaseType.ROLLBACK), asList(ROLLING, CANARY, BLUE_GREEN)),
+  RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class,
+      WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK, asList(KUBERNETES), asList(K8S_PHASE_STEP, WRAP_UP),
+      Lists.newArrayList(DeploymentType.KUBERNETES), asList(PhaseType.ROLLBACK)),
 
   ROLLING_NODE_SELECT(RollingNodeSelectState.class, ROLLING_SELECT_NODES, asList(WorkflowStepType.KUBERNETES),
       asList(SELECT_NODE), asList(DeploymentType.values()), asList(PhaseType.NON_ROLLBACK)),
