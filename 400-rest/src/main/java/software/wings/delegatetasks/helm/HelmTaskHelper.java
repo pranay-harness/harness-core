@@ -50,10 +50,8 @@ import io.harness.helm.HelmCliCommandType;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.secret.SecretSanitizerThreadLocal;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.security.encryption.EncryptedRecordData;
 
 import software.wings.annotation.EncryptableSetting;
-import software.wings.beans.AwsConfig;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.container.HelmChartSpecification;

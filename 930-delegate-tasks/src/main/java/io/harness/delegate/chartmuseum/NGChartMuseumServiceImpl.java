@@ -27,10 +27,7 @@ import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 import software.wings.delegatetasks.ExceptionMessageSanitizer;
 
 import com.google.inject.Inject;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @OwnedBy(CDP)
