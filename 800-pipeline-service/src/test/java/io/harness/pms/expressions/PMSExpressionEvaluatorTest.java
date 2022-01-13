@@ -46,6 +46,7 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.expressions.functors.RemoteExpressionFunctor;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstanceService;
@@ -136,30 +137,46 @@ public class PMSExpressionEvaluatorTest extends PipelineServiceTestBase {
                    .setExpressionFunctorToken(1234)
                    .build();
 
-    when(nodeExecutionService.get(nodeExecution1.getUuid())).thenReturn(nodeExecution1);
-    when(nodeExecutionService.get(nodeExecution2.getUuid())).thenReturn(nodeExecution2);
-    when(nodeExecutionService.get(nodeExecution3.getUuid())).thenReturn(nodeExecution3);
-    when(nodeExecutionService.get(nodeExecution4.getUuid())).thenReturn(nodeExecution4);
-    when(nodeExecutionService.get(nodeExecution5.getUuid())).thenReturn(nodeExecution5);
+    when(nodeExecutionService.getWithFieldsIncluded(
+             nodeExecution1.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+        .thenReturn(nodeExecution1);
+    when(nodeExecutionService.getWithFieldsIncluded(
+             nodeExecution2.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+        .thenReturn(nodeExecution2);
+    when(nodeExecutionService.getWithFieldsIncluded(
+             nodeExecution3.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+        .thenReturn(nodeExecution3);
+    when(nodeExecutionService.getWithFieldsIncluded(
+             nodeExecution4.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+        .thenReturn(nodeExecution4);
+    when(nodeExecutionService.getWithFieldsIncluded(
+             nodeExecution5.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+        .thenReturn(nodeExecution5);
 
     String planExecutionId = ambiance.getPlanExecutionId();
-    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, null))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(
+             planExecutionId, null, NodeProjectionUtils.fieldsForExpressionEngine))
         .thenReturn(Collections.singletonList(nodeExecution1));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution1.getUuid()))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(
+             planExecutionId, nodeExecution1.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
         .thenReturn(Collections.singletonList(nodeExecution2));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution2.getUuid()))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(
+             planExecutionId, nodeExecution2.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
         .thenReturn(Collections.singletonList(nodeExecution3));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution3.getUuid()))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(
+             planExecutionId, nodeExecution3.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
         .thenReturn(asList(nodeExecution4, nodeExecution5));
 
     when(planExecutionService.get(planExecutionId)).thenReturn(PlanExecution.builder().build());
 
     // pipeline children
-    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution1.getUuid(), false))
+    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution1.getUuid(), false,
+             NodeProjectionUtils.fieldsForExpressionEngine))
         .thenReturn(Arrays.asList(nodeExecution2, nodeExecution3, nodeExecution4, nodeExecution5));
 
     // stage children
-    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution3.getUuid(), false))
+    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution3.getUuid(), false,
+             NodeProjectionUtils.fieldsForExpressionEngine))
         .thenReturn(Arrays.asList(nodeExecution4, nodeExecution5));
   }
 
