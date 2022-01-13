@@ -14,11 +14,13 @@ import io.harness.ng.core.account.AuthenticationMechanism;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(HarnessTeam.PL)
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME, property = "settingsType", include = JsonTypeInfo.As.EXISTING_PROPERTY, visible = true)
+@Schema(description = "This has the details of Authentication Settings supported in NG.")
 public abstract class NGAuthSettings {
   @JsonProperty("settingsType") protected AuthenticationMechanism settingsType;
 

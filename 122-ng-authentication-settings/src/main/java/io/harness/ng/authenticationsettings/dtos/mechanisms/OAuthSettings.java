@@ -15,6 +15,7 @@ import io.harness.ng.core.account.OauthProviderType;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.Builder;
 import lombok.Data;
@@ -26,8 +27,10 @@ import lombok.EqualsAndHashCode;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonTypeName("OAUTH")
 @OwnedBy(HarnessTeam.PL)
+@Schema(description = "This contains the information about OAuth settings defined in Harness.")
 public class OAuthSettings extends NGAuthSettings {
   private String filter;
+  @Schema(description = "This is the list of OAuth Providers that are supported.")
   private Set<OauthProviderType> allowedProviders;
 
   public OAuthSettings(@JsonProperty("filter") String filter,
