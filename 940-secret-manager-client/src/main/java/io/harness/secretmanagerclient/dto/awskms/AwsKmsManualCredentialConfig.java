@@ -9,8 +9,10 @@ package io.harness.secretmanagerclient.dto.awskms;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,7 +28,10 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "AwsKmsManualCredentialConfigKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig")
+@Schema(
+    description =
+        "This contains the specifications for the AWS KMS credential, which uses Access Key and Secret Key for authentication.")
 public class AwsKmsManualCredentialConfig implements AwsKmsCredentialSpecConfig {
-  String accessKey;
-  String secretKey;
+  @Schema(description = SecretManagerDescriptionConstants.ACCESS_KEY) String accessKey;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_KEY) String secretKey;
 }
