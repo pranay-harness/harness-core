@@ -10,6 +10,7 @@ package io.harness.pms.plan.execution;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
@@ -99,6 +100,10 @@ public class PipelineExecutor {
       List<String> stagesToRun, Map<String, String> expressionValues, boolean useV2) {
     PipelineEntity pipelineEntity =
         executionHelper.fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    if (EmptyPredicate.isNotEmpty(stagesToRun) && !pipelineEntity.shouldAllowStageExecutions()) {
+      throw new InvalidRequestException(
+          String.format("Stage executions are not allowed for pipeline [%s]", pipelineIdentifier));
+    }
     ExecutionTriggerInfo triggerInfo = executionHelper.buildTriggerInfo(originalExecutionId);
 
     // RetryExecutionParameters
