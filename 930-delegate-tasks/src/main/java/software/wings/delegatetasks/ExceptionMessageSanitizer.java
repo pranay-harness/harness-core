@@ -7,7 +7,6 @@
 
 package software.wings.delegatetasks;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
 import static java.util.Objects.isNull;
@@ -16,15 +15,12 @@ import static org.apache.commons.lang3.StringUtils.replaceEach;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.secret.SecretSanitizerThreadLocal;
-import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import lombok.SneakyThrows;
 
