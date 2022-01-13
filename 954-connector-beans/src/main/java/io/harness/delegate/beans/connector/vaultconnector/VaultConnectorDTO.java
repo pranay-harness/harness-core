@@ -16,6 +16,7 @@ import static io.harness.exception.WingsException.USER;
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
@@ -48,23 +49,30 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Schema(name = "VaultConnector", description = "This contains the Vault Connector configuration")
+@Schema(name = "VaultConnector", description = "This contains the Vault Connector configuration.")
 public class VaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
-  @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData authToken;
-  private String basePath;
-  private String vaultUrl;
-  private boolean isReadOnly;
-  private long renewalIntervalMinutes;
+  @SecretReference
+  @ApiModelProperty(dataType = "string")
+  @Schema(description = SecretManagerDescriptionConstants.AUTH_TOKEN)
+  private SecretRefData authToken;
+  @Schema(description = SecretManagerDescriptionConstants.BASE_PATH) private String basePath;
+  @Schema(description = SecretManagerDescriptionConstants.VAULT_URL) private String vaultUrl;
+  @Schema(description = SecretManagerDescriptionConstants.READ_ONLY) private boolean isReadOnly;
+  @Schema(description = SecretManagerDescriptionConstants.RENEWAL_INTERVAL_MINUTES) private long renewalIntervalMinutes;
+  @Schema(description = SecretManagerDescriptionConstants.ENGINE_ENTERED_MANUALLY)
   private boolean secretEngineManuallyConfigured;
-  private String secretEngineName;
-  private String appRoleId;
-  @SecretReference @ApiModelProperty(dataType = "string") private SecretRefData secretId;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_ENGINE_NAME) private String secretEngineName;
+  @Schema(description = SecretManagerDescriptionConstants.APP_ROLE_ID) private String appRoleId;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_ID)
+  @SecretReference
+  @ApiModelProperty(dataType = "string")
+  private SecretRefData secretId;
   private boolean isDefault;
-  private int secretEngineVersion;
-  private Set<String> delegateSelectors;
-  private String namespace;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_ENGINE_VERSION) private int secretEngineVersion;
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) private Set<String> delegateSelectors;
+  @Schema(description = SecretManagerDescriptionConstants.NAMESPACE) private String namespace;
   private String sinkPath;
-  private boolean useVaultAgent;
+  @Schema(description = SecretManagerDescriptionConstants.USE_VAULT_AGENT) private boolean useVaultAgent;
 
   public AccessType getAccessType() {
     if (useVaultAgent) {

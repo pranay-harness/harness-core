@@ -9,10 +9,12 @@ package io.harness.secretmanagerclient.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,19 +31,23 @@ import lombok.experimental.SuperBuilder;
 @ToString(exclude = {"authToken", "secretId", "sinkPath"})
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(name = "VaultConfig", description = "This contains the information for the Vault Secret Manager.")
 public class VaultConfigDTO extends SecretManagerConfigDTO {
-  private String authToken;
-  private String basePath;
-  private String namespace;
+  @Schema(description = SecretManagerDescriptionConstants.AUTH_TOKEN) private String authToken;
+  @Schema(description = SecretManagerDescriptionConstants.BASE_PATH) private String basePath;
+  @Schema(description = SecretManagerDescriptionConstants.NAMESPACE) private String namespace;
   private String sinkPath;
-  private boolean useVaultAgent;
-  private String vaultUrl;
-  @JsonProperty("readOnly") private boolean isReadOnly;
-  private long renewalIntervalMinutes;
-  private String secretEngineName;
-  private String appRoleId;
-  private String secretId;
-  private int secretEngineVersion;
+  @Schema(description = SecretManagerDescriptionConstants.USE_VAULT_AGENT) private boolean useVaultAgent;
+  @Schema(description = SecretManagerDescriptionConstants.VAULT_URL) private String vaultUrl;
+  @Schema(description = SecretManagerDescriptionConstants.READ_ONLY)
+  @JsonProperty("readOnly")
+  private boolean isReadOnly;
+  @Schema(description = SecretManagerDescriptionConstants.RENEWAL_INTERVAL_MINUTES) private long renewalIntervalMinutes;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_ENGINE_NAME) private String secretEngineName;
+  @Schema(description = SecretManagerDescriptionConstants.APP_ROLE_ID) private String appRoleId;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_ID) private String secretId;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_ENGINE_VERSION) private int secretEngineVersion;
+  @Schema(description = SecretManagerDescriptionConstants.ENGINE_ENTERED_MANUALLY)
   private boolean engineManuallyEntered;
-  private Set<String> delegateSelectors;
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) private Set<String> delegateSelectors;
 }
