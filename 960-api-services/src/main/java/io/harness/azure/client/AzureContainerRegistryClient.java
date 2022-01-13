@@ -12,9 +12,10 @@ import io.harness.azure.model.AzureConfig;
 
 import com.microsoft.azure.management.containerregistry.Registry;
 import com.microsoft.azure.management.containerregistry.RegistryCredentials;
+import java.util.List;
 import java.util.Optional;
 
-public interface AzureContainerRegistryClient {
+public interface AzureContainerRegistryClient extends AzureResourceClient {
   /**
    * Get container registry credentials.
    *
@@ -24,7 +25,7 @@ public interface AzureContainerRegistryClient {
   Optional<RegistryCredentials> getContainerRegistryCredentials(AzureContainerRegistryClientContext context);
 
   /**
-   * Find registry by name on entire subscription. This is cost operation, try to avoid usage if it possible.
+   * Find registry by name on entire subscription. This is cost operation, try to avoid usage if it's possible.
    *
    * @param azureConfig
    * @param subscriptionId
@@ -33,4 +34,23 @@ public interface AzureContainerRegistryClient {
    */
   Optional<Registry> findFirstContainerRegistryByNameOnSubscription(
       AzureConfig azureConfig, String subscriptionId, String registryName);
+
+  /**
+   * List container registries on subscription
+   *
+   * @param azureConfig Azure config
+   * @param subscriptionId subscription id
+   * @return list of container registries on subscription
+   */
+  List<Registry> listContainerRegistries(AzureConfig azureConfig, String subscriptionId);
+
+  /**
+   *  List repository tags
+   *
+   * @param azureConfig Azure config
+   * @param registryLoginServerUrl Registry login server URL
+   * @param repositoryName repository name
+   * @return list of repository tags
+   */
+  List<String> listRepositoryTags(AzureConfig azureConfig, String registryLoginServerUrl, String repositoryName);
 }

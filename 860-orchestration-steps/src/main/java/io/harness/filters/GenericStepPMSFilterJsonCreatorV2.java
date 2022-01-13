@@ -8,13 +8,13 @@
 package io.harness.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.data.structure.EmptyPredicate;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.plancreator.steps.AbstractStepNode;
@@ -44,7 +44,7 @@ public abstract class GenericStepPMSFilterJsonCreatorV2 implements FilterJsonCre
   @Override
   public Map<String, Set<String>> getSupportedTypes() {
     Set<String> stepTypes = getSupportedStepTypes();
-    if (EmptyPredicate.isEmpty(stepTypes)) {
+    if (isEmpty(stepTypes)) {
       return Collections.emptyMap();
     }
     return Collections.singletonMap(STEP, stepTypes);
@@ -60,9 +60,11 @@ public abstract class GenericStepPMSFilterJsonCreatorV2 implements FilterJsonCre
           ((WithConnectorRef) yamlField.getStepSpecType()).extractConnectorRefs();
       List<EntityDetailProtoDTO> result = new ArrayList<>();
       for (Map.Entry<String, ParameterField<String>> entry : connectorRefs.entrySet()) {
-        String fullQualifiedDomainName =
-            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode()) + PATH_CONNECTOR
-            + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + entry.getKey();
+        String fullQualifiedDomainNameFromNode =
+            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode());
+        String fullQualifiedDomainName = fullQualifiedDomainNameFromNode
+            + (isEmpty(fullQualifiedDomainNameFromNode) ? "" : PATH_CONNECTOR) + YAMLFieldNameConstants.SPEC
+            + PATH_CONNECTOR + entry.getKey();
         result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier,
             projectIdentifier, fullQualifiedDomainName, entry.getValue(), EntityTypeProtoEnum.CONNECTORS));
       }

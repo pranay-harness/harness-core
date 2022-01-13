@@ -163,11 +163,32 @@ public class ServiceEntityServiceImplTest extends NGCoreTestBase {
 
     list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
     assertThat(list.getContent()).isNotNull();
-    assertThat(list.getContent().size()).isEqualTo(2);
+    assertThat(list.getContent().size()).isEqualTo(0);
+
+    // Upsert operations for org level
+    ServiceEntity upsertServiceRequestOrgLevel = ServiceEntity.builder()
+                                                     .accountId("ACCOUNT_ID")
+                                                     .identifier("NEW_IDENTIFIER")
+                                                     .orgIdentifier("ORG_ID")
+                                                     .name("UPSERTED_SERVICE")
+                                                     .description("NEW_DESCRIPTION")
+                                                     .build();
+    upsertService = serviceEntityService.upsert(upsertServiceRequestOrgLevel);
+    assertThat(upsertService.getAccountId()).isEqualTo(upsertServiceRequest.getAccountId());
+    assertThat(upsertService.getOrgIdentifier()).isEqualTo(upsertServiceRequest.getOrgIdentifier());
+    assertThat(upsertService.getProjectIdentifier()).isNull();
+    assertThat(upsertService.getIdentifier()).isEqualTo(upsertServiceRequest.getIdentifier());
+    assertThat(upsertService.getName()).isEqualTo(upsertServiceRequest.getName());
+    assertThat(upsertService.getDescription()).isEqualTo(upsertServiceRequest.getDescription());
+
+    criteriaFromServiceFilter = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false);
+
+    list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
+    assertThat(list.getContent()).isNotNull();
+    assertThat(list.getContent().size()).isEqualTo(1);
     List<ServiceResponseDTO> dtoList =
         list.getContent().stream().map(ServiceElementMapper::writeDTO).collect(Collectors.toList());
-    assertThat(dtoList).containsOnly(
-        ServiceElementMapper.writeDTO(updatedServiceResponse), ServiceElementMapper.writeDTO(upsertService));
+    assertThat(dtoList).containsOnly(ServiceElementMapper.writeDTO(upsertService));
 
     // Delete operations
     when(entitySetupUsageService.listAllEntityUsage(anyInt(), anyInt(), anyString(), anyString(), any(), anyString()))

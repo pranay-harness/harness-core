@@ -8,6 +8,7 @@
 package io.harness.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
@@ -63,9 +64,11 @@ public abstract class GenericStepPMSFilterJsonCreator implements FilterJsonCreat
         if (ParameterField.isNull(entry.getValue())) {
           continue;
         }
-        String fullQualifiedDomainName =
-            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode()) + PATH_CONNECTOR
-            + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + entry.getKey();
+        String fullQualifiedDomainNameFromNode =
+            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode());
+        String fullQualifiedDomainName = fullQualifiedDomainNameFromNode
+            + (isEmpty(fullQualifiedDomainNameFromNode) ? "" : PATH_CONNECTOR) + YAMLFieldNameConstants.SPEC
+            + PATH_CONNECTOR + entry.getKey();
         result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier,
             projectIdentifier, fullQualifiedDomainName, entry.getValue(), EntityTypeProtoEnum.CONNECTORS));
       }

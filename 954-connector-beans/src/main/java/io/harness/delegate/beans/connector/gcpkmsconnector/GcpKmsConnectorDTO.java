@@ -9,6 +9,7 @@ package io.harness.delegate.beans.connector.gcpkmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
@@ -40,16 +41,21 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(name = "GcpKmsConnector", description = "This contains GCP KMS SecretManager configuration")
+@Schema(name = "GcpKmsConnector", description = "This contains GCP KMS SecretManager configuration.")
 public class GcpKmsConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
-  private String projectId;
-  private String region;
-  private String keyRing;
-  private String keyName;
-  @SecretReference @ApiModelProperty(dataType = "string") @NotNull SecretRefData credentials;
-  private boolean isDefault;
+  @Schema(description = "ID of the project on GCP.") private String projectId;
+  @Schema(description = "Region.") private String region;
+  @Schema(description = "Name of the Key Ring where Google Cloud Symmetric Key is created.") private String keyRing;
+  @Schema(description = "Name of the Google Cloud Symmetric Key.") private String keyName;
+
+  @Schema(description = "File Secret which is Service Account Key.")
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  @SecretReference
+  SecretRefData credentials;
+  @Schema(description = SecretManagerDescriptionConstants.DEFAULT) private boolean isDefault;
   @JsonIgnore private boolean harnessManaged;
-  private Set<String> delegateSelectors;
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) private Set<String> delegateSelectors;
 
   @Builder
   public GcpKmsConnectorDTO(String projectId, String region, String keyRing, String keyName, SecretRefData credentials,

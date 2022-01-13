@@ -90,16 +90,6 @@ public class ManagerGrpcClientModule extends ProviderModule {
     if (!isValidAuthority(config.authority)) {
       log.info("Authority in config {} is invalid. Using default value {}", config.authority, defaultAuthority);
       authorityToUse = defaultAuthority;
-    } else if (!("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
-      String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
-      String versionedAuthority = versionPrefix + config.authority;
-      if (isValidAuthority(versionedAuthority) && !config.isVersionCheckDisabled()) {
-        log.info("Using versioned authority: {}", versionedAuthority);
-        authorityToUse = versionedAuthority;
-      } else {
-        authorityToUse = config.authority;
-        log.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
-      }
     } else {
       log.info("Deploy Mode is {}. Using non-versioned authority", deployMode);
       authorityToUse = config.authority;
@@ -125,6 +115,5 @@ public class ManagerGrpcClientModule extends ProviderModule {
     String accountId;
     String accountSecret;
     String scheme;
-    boolean versionCheckDisabled;
   }
 }

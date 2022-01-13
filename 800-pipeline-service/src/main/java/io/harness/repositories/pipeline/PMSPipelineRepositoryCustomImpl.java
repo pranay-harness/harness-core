@@ -18,7 +18,6 @@ import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.persistance.GitSyncableHarnessRepo;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.OutboxService;
-import io.harness.plancreator.pipeline.PipelineConfig;
 import io.harness.pms.events.PipelineCreateEvent;
 import io.harness.pms.events.PipelineDeleteEvent;
 import io.harness.pms.events.PipelineUpdateEvent;
@@ -93,7 +92,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity save(PipelineEntity pipelineToSave, PipelineConfig yamlDTO) {
+  public PipelineEntity save(PipelineEntity pipelineToSave) {
     Supplier<OutboxEvent> supplier = ()
         -> outboxService.save(new PipelineCreateEvent(pipelineToSave.getAccountIdentifier(),
             pipelineToSave.getOrgIdentifier(), pipelineToSave.getProjectIdentifier(), pipelineToSave));
@@ -147,8 +146,8 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity updatePipelineYaml(PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity,
-      PipelineConfig yamlDTO, ChangeType changeType) {
+  public PipelineEntity updatePipelineYaml(
+      PipelineEntity pipelineToUpdate, PipelineEntity oldPipelineEntity, ChangeType changeType) {
     Supplier<OutboxEvent> supplier = null;
     if (!gitSyncSdkService.isGitSyncEnabled(pipelineToUpdate.getAccountId(), pipelineToUpdate.getOrgIdentifier(),
             pipelineToUpdate.getProjectIdentifier())) {
@@ -179,7 +178,7 @@ public class PMSPipelineRepositoryCustomImpl implements PMSPipelineRepositoryCus
   }
 
   @Override
-  public PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate, PipelineConfig yamlDTO) {
+  public PipelineEntity deletePipeline(PipelineEntity pipelineToUpdate) {
     Optional<PipelineEntity> pipelineEntityOptional =
         findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndDeletedNot(pipelineToUpdate.getAccountId(),
             pipelineToUpdate.getOrgIdentifier(), pipelineToUpdate.getProjectIdentifier(),

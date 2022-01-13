@@ -7,8 +7,8 @@ package converter
 
 import (
 	"github.com/drone/go-scm/scm"
-	"github.com/golang/protobuf/ptypes"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // convertAction converts scm.Action to protobuf object
@@ -43,14 +43,8 @@ func convertAction(a scm.Action) pb.Action {
 
 // convertUser converts scm.User to protobuf object
 func convertUser(u *scm.User) (*pb.User, error) {
-	createTS, err := ptypes.TimestampProto(u.Created)
-	if err != nil {
-		return nil, err
-	}
-	updateTS, err := ptypes.TimestampProto(u.Updated)
-	if err != nil {
-		return nil, err
-	}
+	createTS := timestamppb.New(u.Created)
+	updateTS := timestamppb.New(u.Updated)
 	return &pb.User{
 		Login:   u.Login,
 		Name:    u.Name,
@@ -92,14 +86,8 @@ func convertLabel(l scm.Label) *pb.Label {
 
 // ConvertRepo converts scm.Repository to protobuf object
 func ConvertRepo(r *scm.Repository) (*pb.Repository, error) {
-	createTS, err := ptypes.TimestampProto(r.Created)
-	if err != nil {
-		return nil, err
-	}
-	updateTS, err := ptypes.TimestampProto(r.Updated)
-	if err != nil {
-		return nil, err
-	}
+	createTS := timestamppb.New(r.Created)
+	updateTS := timestamppb.New(r.Updated)
 
 	return &pb.Repository{
 		Id:        r.ID,
@@ -118,11 +106,7 @@ func ConvertRepo(r *scm.Repository) (*pb.Repository, error) {
 
 // convertSignature converts scm.Signature to protobuf object
 func convertSignature(s *scm.Signature) (*pb.Signature, error) {
-	date, err := ptypes.TimestampProto(s.Date)
-	if err != nil {
-		return nil, err
-	}
-
+	date := timestamppb.New(s.Date)
 	return &pb.Signature{
 		Name:   s.Name,
 		Email:  s.Email,

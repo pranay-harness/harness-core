@@ -45,6 +45,7 @@ import io.harness.ng.core.exceptionmappers.JerseyViolationExceptionMapperV2;
 import io.harness.ng.core.exceptionmappers.WingsExceptionMapperV2;
 import io.harness.persistence.HPersistence;
 import io.harness.resource.VersionInfoResource;
+import io.harness.secret.ConfigSecretUtils;
 import io.harness.security.InternalApiAuthFilter;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.InternalApi;
@@ -143,6 +144,9 @@ public class CENextGenApplication extends Application<CENextGenConfiguration> {
         20, 100, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
     log.info("Starting CE NextGen Application ...");
     MaintenanceController.forceMaintenance(true);
+
+    ConfigSecretUtils.resolveSecrets(configuration.getSecretsConfiguration(), configuration);
+
     List<Module> modules = new ArrayList<>();
     modules.add(new CENextGenModule(configuration));
     modules.add(new MetricRegistryModule(metricRegistry));

@@ -13,7 +13,6 @@ import (
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/gogo/protobuf/jsonpb"
-	"github.com/golang/protobuf/ptypes"
 	"github.com/pkg/errors"
 	pb "github.com/wings-software/portal/910-delegate-task-grpc-service/src/main/proto/io/harness/task/service"
 	callbackpb "github.com/wings-software/portal/920-delegate-service-beans/src/main/proto/io/harness/callback"
@@ -26,6 +25,7 @@ import (
 	"go.uber.org/zap"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/durationpb"
 )
 
 const (
@@ -87,7 +87,7 @@ func getRequestArg(stepID, accountID, callbackToken, taskID string, numRetries i
 			StatusData: &pb.TaskStatusData_StepStatus{
 				StepStatus: &pb.StepStatus{
 					NumRetries:          numRetries,
-					TotalTimeTaken:      ptypes.DurationProto(timeTaken),
+					TotalTimeTaken:      durationpb.New(timeTaken),
 					StepExecutionStatus: status,
 					ErrorMessage:        errMsg,
 					Output: &pb.StepStatus_StepOutput{

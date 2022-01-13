@@ -32,6 +32,7 @@ import lombok.EqualsAndHashCode;
 public class StackDriverDataCollectionInfo
     extends DataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private GcpConfig gcpConfig;
+
   private long startTime;
   private long endTime;
 
@@ -46,6 +47,7 @@ public class StackDriverDataCollectionInfo
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
   private List<StackDriverMetric> podMetrics;
   List<StackDriverMetricDefinition> timeSeriesToCollect;
+  private String projectId;
 
   @Builder
   public StackDriverDataCollectionInfo(String accountId, String applicationId, String stateExecutionId,
@@ -54,7 +56,7 @@ public class StackDriverDataCollectionInfo
       TimeSeriesMlAnalysisType timeSeriesMlAnalysisType, List<EncryptedDataDetail> encryptedDataDetails,
       Map<String, String> hosts, Map<String, List<StackDriverMetric>> loadBalancerMetrics,
       List<StackDriverMetric> podMetrics, int initialDelayMinutes,
-      List<StackDriverMetricDefinition> timeSeriesToCollect) {
+      List<StackDriverMetricDefinition> timeSeriesToCollect, String projectId) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId);
     this.gcpConfig = gcpConfig;
     this.startTime = startTime;
@@ -69,6 +71,7 @@ public class StackDriverDataCollectionInfo
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
     this.timeSeriesToCollect = timeSeriesToCollect;
+    this.projectId = projectId;
   }
 
   @Override
