@@ -516,7 +516,7 @@ public class PlanExecutionResource {
       @NotNull @Parameter(description = PlanExecutionResourceConstants.NODE_EXECUTION_ID_PARAM_MESSAGE
               + " on which the Interrupt needs to be applied.",
           required = true) @PathParam("nodeExecutionId") String nodeExecutionId) {
-    validatePathParameters(planExecutionId,nodeExecutionId);
+    validatePathParameters(planExecutionId, nodeExecutionId);
     return ResponseDTO.newResponse(
         pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId));
   }
