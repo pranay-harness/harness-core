@@ -12,7 +12,6 @@ import static io.harness.AuthorizationServiceHeader.DEFAULT;
 import static io.harness.AuthorizationServiceHeader.IDENTITY_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.platform.PlatformConfiguration.RESOURCE_GROUP_RESOURCES;
 import static io.harness.platform.PlatformConfiguration.getPlatformServiceCombinedResourceClasses;
 import static io.harness.platform.audit.AuditServiceSetup.AUDIT_SERVICE;
 import static io.harness.platform.notification.NotificationServiceSetup.NOTIFICATION_SERVICE;
@@ -247,10 +246,12 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
       server.setUrl(baseurl.toString());
       oas.servers(Collections.singletonList(server));
     } catch (MalformedURLException e) {
-      log.error("failed to set baseurl for server, {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
+      log.error(
+          "The base URL of the server could not be set. {}/{}", appConfig.hostname, appConfig.getBasePathPrefix());
     }
+    Collection<Class<?>> allResourceClasses = getPlatformServiceCombinedResourceClasses(appConfig);
     final Set<String> resourceClasses =
-        getOAS3ResourceClassesOnly().stream().map(Class::getCanonicalName).collect(toSet());
+        getOAS3ResourceClassesOnly(allResourceClasses).stream().map(Class::getCanonicalName).collect(toSet());
     return new SwaggerConfiguration()
         .openAPI(oas)
         .prettyPrint(true)
@@ -339,7 +340,7 @@ public class PlatformApplication extends Application<PlatformConfiguration> {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 
-  public static Collection<Class<?>> getOAS3ResourceClassesOnly() {
-    return RESOURCE_GROUP_RESOURCES.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
+  public static Collection<Class<?>> getOAS3ResourceClassesOnly(Collection<Class<?>> allResourceClasses) {
+    return allResourceClasses.stream().filter(x -> x.isAnnotationPresent(Tag.class)).collect(Collectors.toList());
   }
 }

@@ -19,6 +19,7 @@ import io.harness.filter.dto.FilterPropertiesDTO;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import io.swagger.annotations.ApiModel;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -38,16 +39,23 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@Schema(name = "AuditFilterProperties",
+    description =
+        "This contains the Audit Event filter information. This is used to filter Audit Events depending on the information provided.")
 public class AuditFilterPropertiesDTO extends FilterPropertiesDTO {
-  List<ResourceScopeDTO> scopes;
-  List<ResourceDTO> resources;
+  @Schema(description = "List of Resource Scopes") List<ResourceScopeDTO> scopes;
+  @Schema(description = "List of Resources") List<ResourceDTO> resources;
 
-  List<ModuleType> modules;
-  List<Action> actions;
-  List<Environment> environments;
-  List<Principal> principals;
+  @Schema(description = "List of Module Types") List<ModuleType> modules;
+  @Schema(description = "List of Actions") List<Action> actions;
+  @Schema(description = "List of Environments") List<Environment> environments;
+  @Schema(description = "List of Principals") List<Principal> principals;
 
+  @Schema(description =
+              "Used to specify a start time for retrieving Audit events that occurred at or after the time indicated.")
   Long startTime;
+  @Schema(description =
+              "Used to specify the end time for retrieving Audit events that occurred at or before the time indicated.")
   Long endTime;
 
   @Override
