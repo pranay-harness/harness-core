@@ -1,5 +1,7 @@
 package io.harness.app.datafetcher.delegate;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_DELEGATES;
 
 import static java.util.stream.Collectors.toList;
@@ -20,7 +22,9 @@ import software.wings.service.intfc.DelegateService;
 import com.google.inject.Inject;
 import java.util.List;
 import java.util.Objects;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class AttachAllScopesToDelegateDataFetcher
     extends BaseMutatorDataFetcher<QLAttachAllScopesToDelegateInput, QLAttachScopeToDelegatePayload> {
   @Inject DelegateScopeService delegateScopeService;
@@ -35,23 +39,28 @@ public class AttachAllScopesToDelegateDataFetcher
     this.delegateCache = delegateCache;
   }
 
+  @SuppressWarnings("checkstyle:RepetitiveName")
   @Override
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public QLAttachScopeToDelegatePayload mutateAndFetch(
-          QLAttachAllScopesToDelegateInput parameter, MutationContext mutationContext) {
+      QLAttachAllScopesToDelegateInput parameter, MutationContext mutationContext) {
     String delegateId = parameter.getDelegateId();
     String accountId = parameter.getAccountId();
-
     Delegate delegate = delegateCache.get(accountId, delegateId, true);
     if (delegate == null) {
       return QLAttachScopeToDelegatePayload.builder()
           .message("Unable to fetch delegate with delegate id " + delegateId)
           .build();
     }
+
     List<DelegateScope> delegateScopes = persistence.createQuery(DelegateScope.class)
                                              .filter(DelegateScope.DelegateScopeKeys.accountId, accountId)
                                              .asList();
-
+    if (isEmpty(delegateScopes)) {
+      return QLAttachScopeToDelegatePayload.builder()
+          .message("No Scopes available in account to add to delegate.")
+          .build();
+    }
     delegate.setIncludeScopes(delegateScopes.stream().filter(Objects::nonNull).collect(toList()));
     delegateService.updateScopes(delegate);
     StringBuilder st = new StringBuilder();

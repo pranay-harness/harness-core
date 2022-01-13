@@ -3,6 +3,8 @@ package software.wings.graphql.datafetcher.delegate;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.JENNY;
 
+import static org.mockito.Mockito.when;
+
 import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
 import io.harness.app.datafetcher.delegate.AttachAllScopesToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
@@ -19,8 +21,8 @@ import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
+import io.harness.service.intfc.DelegateCache;
 
-import lombok.extern.slf4j.Slf4j;
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
 import software.wings.graphql.schema.type.QLEnvironmentType;
@@ -35,18 +37,20 @@ import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 @Slf4j
 public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetcherTestBase {
   @Inject private HPersistence persistence;
-  @Inject
-  AttachAllScopesToDelegateDataFetcher attachScopeToDelegateDataFetcher;
+  @Inject AttachAllScopesToDelegateDataFetcher attachScopeToDelegateDataFetcher;
   @Inject DelegateScopeService delegateScopeService;
   @Inject DelegateService delegateService;
+  @Mock private DelegateCache delegateCache;
 
   private static final String ACCOUNT_ID = "ACCOUNT-ID";
   private static final String DELEGATE_TYPE = "dockerType";
@@ -73,17 +77,39 @@ public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetche
     DelegateScope delegateScope = createDelegateScopeBuilder(accountId, delegateScopeName).build();
     persistence.save(delegateScope);
 
-      QLAttachAllScopesToDelegateInput.QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
-              QLAttachAllScopesToDelegateInput.builder();
-    attachScopeToDelegateInputBuilder.accountId(accountId)
-        .delegateId(delegateId)
-        .build();
+    QLAttachAllScopesToDelegateInput.QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
+        QLAttachAllScopesToDelegateInput.builder();
+    attachScopeToDelegateInputBuilder.accountId(accountId).delegateId(delegateId).build();
+
+    when(delegateCache.get(accountId, delegateId, true)).thenReturn(existingDelegate);
+    QLAttachScopeToDelegatePayload qlAttachScopeToDelegatePayload = attachScopeToDelegateDataFetcher.mutateAndFetch(
+        attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
+    Assert.notNull(qlAttachScopeToDelegatePayload);
+    Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
+    Assert.isTrue(
+        qlAttachScopeToDelegatePayload.getMessage().startsWith("Included scopes for delegate:  delegateScope22,"));
+  }
+
+  @Test
+  @Owner(developers = JENNY)
+  @Category(UnitTests.class)
+  public void testAttachAllScopesToDelegateWithNoAccountScope() {
+    String accountId = generateUuid();
+    String delegateId = generateUuid();
+
+    Delegate existingDelegate = createDelegateBuilder(accountId, delegateId).build();
+    persistence.save(existingDelegate);
+
+    QLAttachAllScopesToDelegateInput.QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
+        QLAttachAllScopesToDelegateInput.builder();
+    attachScopeToDelegateInputBuilder.accountId(accountId).delegateId(delegateId).build();
 
     QLAttachScopeToDelegatePayload qlAttachScopeToDelegatePayload = attachScopeToDelegateDataFetcher.mutateAndFetch(
         attachScopeToDelegateInputBuilder.build(), MutationContext.builder().build());
     Assert.notNull(qlAttachScopeToDelegatePayload);
     Assert.notNull(qlAttachScopeToDelegatePayload.getMessage());
-    Assert.isTrue(qlAttachScopeToDelegatePayload.getMessage().startsWith("Included scopes for delegate:  delegateScope22,"));
+    Assert.isTrue(
+        qlAttachScopeToDelegatePayload.getMessage().startsWith("No Scopes available in account to add to delegate"));
   }
 
   private Delegate.DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
