@@ -67,4 +67,6 @@ public interface AdminAccountService {
   boolean updateCompanyName(String accountId, String companyName);
 
   boolean enableOrDisableNextGen(String accountId, boolean enabled);
+
+  boolean updateRingName(String accountId, String ringName);
 }
