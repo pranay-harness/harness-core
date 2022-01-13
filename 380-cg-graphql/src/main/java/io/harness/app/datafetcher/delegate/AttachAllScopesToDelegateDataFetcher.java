@@ -10,6 +10,7 @@ import io.harness.app.schema.mutation.delegate.input.QLAttachAllScopesToDelegate
 import io.harness.app.schema.mutation.delegate.payload.QLAttachScopeToDelegatePayload;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeKeys;
 import io.harness.service.intfc.DelegateCache;
 
 import software.wings.dl.WingsPersistence;
@@ -39,7 +40,6 @@ public class AttachAllScopesToDelegateDataFetcher
     this.delegateCache = delegateCache;
   }
 
-  @SuppressWarnings("checkstyle:RepetitiveName")
   @Override
   @AuthRule(permissionType = MANAGE_DELEGATES)
   public QLAttachScopeToDelegatePayload mutateAndFetch(
@@ -53,9 +53,8 @@ public class AttachAllScopesToDelegateDataFetcher
           .build();
     }
 
-    List<DelegateScope> delegateScopes = persistence.createQuery(DelegateScope.class)
-                                             .filter(DelegateScope.DelegateScopeKeys.accountId, accountId)
-                                             .asList();
+    List<DelegateScope> delegateScopes =
+        persistence.createQuery(DelegateScope.class).filter(DelegateScopeKeys.accountId, accountId).asList();
     if (isEmpty(delegateScopes)) {
       return QLAttachScopeToDelegatePayload.builder()
           .message("No Scopes available in account to add to delegate.")
