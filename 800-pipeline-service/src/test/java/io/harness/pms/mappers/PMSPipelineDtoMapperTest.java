@@ -8,6 +8,7 @@
 package io.harness.pms.mappers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.rule.OwnerRule.NAMAN;
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
 
 import static java.time.LocalDate.now;
@@ -33,6 +34,47 @@ import org.junit.experimental.categories.Category;
 
 @OwnedBy(PIPELINE)
 public class PMSPipelineDtoMapperTest extends CategoryTest {
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testToEntity() {
+    String acc = "acc";
+    String org = "org1";
+    String proj = "proj1";
+    String yaml = "pipeline:\n"
+        + "  identifier: p1\n"
+        + "  name: p1\n"
+        + "  description: desc\n"
+        + "  orgIdentifier: org1\n"
+        + "  projectIdentifier: proj1\n";
+    PipelineEntity pipelineEntity = PMSPipelineDtoMapper.toPipelineEntity(acc, org, proj, yaml);
+    assertThat(pipelineEntity.getIdentifier()).isEqualTo("p1");
+    assertThat(pipelineEntity.getName()).isEqualTo("p1");
+    assertThat(pipelineEntity.getAccountId()).isEqualTo("acc");
+    assertThat(pipelineEntity.getOrgIdentifier()).isEqualTo("org1");
+    assertThat(pipelineEntity.getProjectIdentifier()).isEqualTo("proj1");
+    assertThat(pipelineEntity.getAllowStageExecutions()).isFalse();
+    String yamlWithAllowExecutions = yaml + "  allowStageExecutions: true\n";
+    assertThat(PMSPipelineDtoMapper.toPipelineEntity(acc, org, proj, yamlWithAllowExecutions).getAllowStageExecutions())
+        .isTrue();
+    String yamlWithDisallowExecutions = yaml + "  allowStageExecutions: false\n";
+    assertThat(
+        PMSPipelineDtoMapper.toPipelineEntity(acc, org, proj, yamlWithDisallowExecutions).getAllowStageExecutions())
+        .isFalse();
+
+    PipelineEntity pipelineEntity1 = PMSPipelineDtoMapper.toPipelineEntity(acc, yaml);
+    assertThat(pipelineEntity1.getIdentifier()).isEqualTo("p1");
+    assertThat(pipelineEntity1.getName()).isEqualTo("p1");
+    assertThat(pipelineEntity1.getAccountId()).isEqualTo("acc");
+    assertThat(pipelineEntity1.getOrgIdentifier()).isEqualTo("org1");
+    assertThat(pipelineEntity1.getProjectIdentifier()).isEqualTo("proj1");
+    assertThat(pipelineEntity1.getAllowStageExecutions()).isFalse();
+
+    assertThat(PMSPipelineDtoMapper.toPipelineEntity(acc, yamlWithAllowExecutions).getAllowStageExecutions()).isTrue();
+    assertThat(PMSPipelineDtoMapper.toPipelineEntity(acc, yamlWithDisallowExecutions).getAllowStageExecutions())
+        .isFalse();
+  }
+
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
