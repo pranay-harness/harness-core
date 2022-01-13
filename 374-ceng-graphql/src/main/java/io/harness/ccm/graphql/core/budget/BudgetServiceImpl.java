@@ -118,6 +118,13 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
+  public boolean deleteBudgetsForPerspective(String accountId, String perspectiveId) {
+    List<Budget> budgets = list(accountId, perspectiveId);
+    List<String> budgetIds = budgets.stream().map(Budget::getUuid).collect(Collectors.toList());
+    return budgetDao.delete(budgetIds, accountId);
+  }
+
+  @Override
   public BudgetData getBudgetTimeSeriesStats(Budget budget) {
     return budgetCostService.getBudgetTimeSeriesStats(budget);
   }

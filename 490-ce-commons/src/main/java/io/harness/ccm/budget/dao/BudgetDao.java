@@ -109,4 +109,13 @@ public class BudgetDao {
     }
     return false;
   }
+
+  public boolean delete(List<String> budgetIds, String accountId) {
+    Query query = persistence.createQuery(Budget.class)
+                      .field(BudgetKeys.accountId)
+                      .equal(accountId)
+                      .field(BudgetKeys.uuid)
+                      .in(budgetIds);
+    return persistence.delete(query);
+  }
 }
