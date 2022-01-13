@@ -294,6 +294,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private static final String DELEGATE_SEQUENCE_CONFIG_FILE = "./delegate_sequence_config";
   private static final int KEEP_ALIVE_INTERVAL = 23000;
   private static final int CLIENT_TOOL_RETRIES = 10;
+  private static final int LOCAL_HEARTBEAT_INTERVAL = 10;
   private static final String TOKEN = "[TOKEN]";
   private static final String SEQ = "[SEQ]";
 
@@ -330,14 +331,15 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   @Inject private DelegateAgentManagerClient delegateAgentManagerClient;
 
-  @Inject @Named("heartbeatExecutor") private ScheduledExecutorService heartbeatExecutor;
-  @Inject @Named("localHeartbeatExecutor") private ScheduledExecutorService localHeartbeatExecutor;
-  @Inject @Named("watcherUpgradeExecutor") private ScheduledExecutorService watcherUpgradeExecutor;
+  @Inject @Named("healthMonitorExecutor") private ScheduledExecutorService healthMonitorExecutor;
+  @Inject @Named("watcherMonitorExecutor") private ScheduledExecutorService watcherMonitorExecutor;
   @Inject @Named("upgradeExecutor") private ScheduledExecutorService upgradeExecutor;
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
   @Inject @Named("rescheduleExecutor") private ScheduledExecutorService rescheduleExecutor;
-  @Inject @Named("installCheckExecutor") private ScheduledExecutorService profileExecutor;
+  @Inject @Named("profileExecutor") private ScheduledExecutorService profileExecutor;
+  @Inject @Named("watcherUpgradeExecutor") private ExecutorService watcherUpgradeExecutor;
   @Inject @Named("systemExecutor") private ExecutorService systemExecutor;
+  @Inject @Named("backgroundExecutor") private ExecutorService backgroundExecutor;
   @Inject @Named("taskPollExecutor") private ExecutorService taskPollExecutor;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
@@ -389,7 +391,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private final AtomicBoolean executingProfile = new AtomicBoolean(false);
   private final AtomicBoolean selfDestruct = new AtomicBoolean(false);
   private final AtomicBoolean multiVersionWatcherStarted = new AtomicBoolean(false);
-  private final AtomicBoolean pollingForTasks = new AtomicBoolean(false);
   private final AtomicBoolean switchStorage = new AtomicBoolean(false);
   private final AtomicBoolean reconnectingSocket = new AtomicBoolean(false);
   private final AtomicBoolean closingSocket = new AtomicBoolean(false);
@@ -443,7 +444,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     try {
       accountId = delegateConfiguration.getAccountId();
       if (perpetualTaskWorker != null) {
+        log.info("Starting perpetual task workers");
         perpetualTaskWorker.setAccountId(accountId);
+        perpetualTaskWorker.start();
       }
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
       log.info("The deploy mode for delegate is [{}]", System.getenv().get("DEPLOY_MODE"));
@@ -471,7 +474,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
                                  : "[New] Timed out waiting for go-ahead. Proceeding anyway");
         messageService.removeData(DELEGATE_DASH + getProcessId(), DELEGATE_IS_NEW);
         startLocalHeartbeat();
-        watcherUpgradeExecutor.scheduleWithFixedDelay(() -> {
+        watcherMonitorExecutor.scheduleWithFixedDelay(() -> {
           try {
             watcherUpgrade(false);
           } catch (Exception e) {
@@ -578,7 +581,9 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
       if (isPollingForTasksEnabled()) {
         log.info("Polling is enabled for Delegate");
-        pollingForTasks.set(true);
+        startHeartbeat(builder);
+        startKeepAlivePacket(builder);
+        startTaskPolling();
       } else {
         client = org.atmosphere.wasync.ClientFactory.getDefault().newClient();
 
@@ -618,13 +623,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         socket.open(requestBuilder.build());
 
         startHeartbeat(builder, socket);
-        startKeepAlivePacket(builder, socket);
+        // TODO(Abhinav): Check if we can avoid separate call for ECS delegates.
+        if (isEcsDelegate()) {
+          startKeepAlivePacket(builder);
+        } else {
+          startKeepAlivePacket(builder, socket);
+        }
       }
 
       startChroniqleQueueMonitor();
-      startTaskPolling();
-      startHeartbeatWhenPollingEnabled(builder);
-      startKeepAliveRequestWhenPollingEnabled(builder);
+
+      startMonitoringWatcher();
 
       if (!multiVersion) {
         startUpgradeCheck(getVersion());
@@ -638,7 +647,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         startProfileCheck();
       }
       if (!isClientToolsInstallationFinished()) {
-        systemExecutor.submit(() -> {
+        backgroundExecutor.submit(() -> {
           int retries = CLIENT_TOOL_RETRIES;
           while (!isClientToolsInstallationFinished() && retries > 0) {
             sleep(ofSeconds(15L));
@@ -1295,7 +1304,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       shutdownData.put(DELEGATE_SHUTDOWN_STARTED, stoppedAcquiringAt);
       messageService.putAllData(DELEGATE_DASH + getProcessId(), shutdownData);
 
-      systemExecutor.submit(() -> {
+      backgroundExecutor.submit(() -> {
         long started = clock.millis();
         long now = started;
         while (!currentlyExecutingTasks.isEmpty() && now - started < UPGRADE_TIMEOUT) {
@@ -1369,9 +1378,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     rescheduleExecutor.scheduleAtFixedRate(
         new Schedulable("Failed to poll for task", () -> taskPollExecutor.submit(this::pollForTask)), 0,
         POLL_INTERVAL_SECONDS, TimeUnit.SECONDS);
-    if (perpetualTaskWorker != null) {
-      perpetualTaskWorker.start();
-    }
   }
 
   private void startChroniqleQueueMonitor() {
@@ -1382,7 +1388,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   private void pollForTask() {
-    if (pollingForTasks.get() && shouldContactManager()) {
+    if (shouldContactManager()) {
       try {
         DelegateTaskEventsResponse taskEventsResponse =
             HTimeLimiter.callInterruptible21(timeLimiter, Duration.ofSeconds(15),
@@ -1422,96 +1428,61 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void startHeartbeat(DelegateParamsBuilder builder, Socket socket) {
     log.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    heartbeatExecutor.scheduleAtFixedRate(() -> {
+    healthMonitorExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutor.submit(() -> {
-          try {
-            sendHeartbeat(builder, socket);
-          } catch (Exception ex) {
-            log.error("Exception while sending heartbeat", ex);
-          }
-        });
-      } catch (Exception e) {
-        log.error("Exception while scheduling heartbeat", e);
+        sendHeartbeat(builder, socket);
+      } catch (Exception ex) {
+        log.error("Exception while sending heartbeat", ex);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
   private void startKeepAlivePacket(DelegateParamsBuilder builder, Socket socket) {
-    if (!isEcsDelegate()) {
-      return;
-    }
-
-    // Only perform for ECS delegate.
     log.info("Starting KeepAlive Packet at interval {} ms", KEEP_ALIVE_INTERVAL);
-    heartbeatExecutor.scheduleAtFixedRate(() -> {
+    healthMonitorExecutor.scheduleAtFixedRate(() -> {
       try {
-        systemExecutor.submit(() -> {
-          try {
-            sendKeepAlivePacket(builder, socket);
-          } catch (Exception ex) {
-            log.error("Exception while sending KeepAlive Packet", ex);
-          }
-        });
-      } catch (Exception e) {
-        log.error("Exception while scheduling KeepAlive Packet", e);
+        sendKeepAlivePacket(builder, socket);
+      } catch (Exception ex) {
+        log.error("Exception while sending KeepAlive Packet", ex);
       }
     }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
   }
 
-  private void startHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void startHeartbeat(DelegateParamsBuilder builder) {
     log.info("Starting heartbeat at interval {} ms", delegateConfiguration.getHeartbeatIntervalMs());
-    heartbeatExecutor.scheduleAtFixedRate(() -> {
-      if (pollingForTasks.get()) {
-        try {
-          systemExecutor.submit(() -> {
-            try {
-              sendHeartbeatWhenPollingEnabled(builder);
-            } catch (Exception ex) {
-              log.error("Exception while sending heartbeat", ex);
-            }
-          });
-        } catch (Exception e) {
-          log.error("Exception while scheduling heartbeat", e);
-        }
+    healthMonitorExecutor.scheduleAtFixedRate(() -> {
+      try {
+        sendHeartbeat(builder);
+      } catch (Exception ex) {
+        log.error("Exception while sending heartbeat", ex);
       }
     }, 0, delegateConfiguration.getHeartbeatIntervalMs(), TimeUnit.MILLISECONDS);
   }
 
-  private void startKeepAliveRequestWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void startKeepAlivePacket(DelegateParamsBuilder builder) {
     log.info("Starting Keep Alive Request at interval {} ms", KEEP_ALIVE_INTERVAL);
-    heartbeatExecutor.scheduleAtFixedRate(() -> {
-      if (pollingForTasks.get() && isEcsDelegate()) {
-        try {
-          systemExecutor.submit(() -> {
-            try {
-              sendKeepAliveRequestWhenPollingEnabled(builder);
-            } catch (Exception ex) {
-              log.error("Exception while sending Keep Alive Request: ", ex);
-            }
-          });
-        } catch (Exception e) {
-          log.error("Exception while scheduling Keep Alive Request: ", e);
-        }
+    healthMonitorExecutor.scheduleAtFixedRate(() -> {
+      try {
+        sendKeepAlivePacket(builder);
+      } catch (Exception ex) {
+        log.error("Exception while sending Keep Alive Request: ", ex);
       }
     }, 0, KEEP_ALIVE_INTERVAL, TimeUnit.MILLISECONDS);
   }
 
   private void startLocalHeartbeat() {
-    localHeartbeatExecutor.scheduleAtFixedRate(this::submit, 0, 10, TimeUnit.SECONDS);
+    healthMonitorExecutor.scheduleAtFixedRate(() -> {
+      try {
+        log.info("Starting local heartbeat.");
+        sendLocalHeartBeat();
+      } catch (Exception e) {
+        log.error("Exception while scheduling local heartbeat", e);
+      }
+      logCurrentTasks();
+    }, 0, LOCAL_HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
   }
 
-  private void submit() {
-    try {
-      log.info("Starting local heartbeat.");
-      systemExecutor.submit(this::fillStatusData);
-    } catch (Exception e) {
-      log.error("Exception while scheduling local heartbeat", e);
-    }
-    logCurrentTasks();
-  }
-
-  private void fillStatusData() {
+  private void sendLocalHeartBeat() {
     log.info("Filling status data.");
     Map<String, Object> statusData = new HashMap<>();
     if (selfDestruct.get()) {
@@ -1546,17 +1517,22 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       }
     }
     messageService.putAllData(DELEGATE_DASH + getProcessId(), statusData);
-    watchWatcher();
   }
 
-  private void watchWatcher() {
-    long watcherHeartbeat =
-        Optional.ofNullable(messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class)).orElse(clock.millis());
-    boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
-    if (heartbeatTimedOut) {
-      log.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
-      watcherUpgrade(true);
-    }
+  private void startMonitoringWatcher() {
+    watcherMonitorExecutor.scheduleAtFixedRate(() -> {
+      try {
+        long watcherHeartbeat = Optional.ofNullable(messageService.getData(WATCHER_DATA, WATCHER_HEARTBEAT, Long.class))
+                                    .orElse(clock.millis());
+        boolean heartbeatTimedOut = clock.millis() - watcherHeartbeat > WATCHER_HEARTBEAT_TIMEOUT;
+        if (heartbeatTimedOut) {
+          log.warn("Watcher heartbeat not seen for {} seconds", WATCHER_HEARTBEAT_TIMEOUT / 1000L);
+          watcherUpgrade(true);
+        }
+      } catch (Exception e) {
+        log.error("Exception while scheduling local heartbeat", e);
+      }
+    }, 0, LOCAL_HEARTBEAT_INTERVAL, TimeUnit.SECONDS);
   }
 
   private void watcherUpgrade(boolean heartbeatTimedOut) {
@@ -1578,7 +1554,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         || (multiVersionRestartNeeded && multiVersionWatcherStarted.compareAndSet(false, true))) {
       String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       log.warn("Watcher process {} needs restart", watcherProcess);
-      systemExecutor.submit(() -> {
+      watcherUpgradeExecutor.submit(() -> {
         try {
           ProcessControl.ensureKilled(watcherProcess, Duration.ofSeconds(120));
           messageService.closeChannel(WATCHER, watcherProcess);
@@ -1696,13 +1672,12 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void sendHeartbeatWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void sendHeartbeat(DelegateParamsBuilder builder) {
     if (!shouldContactManager() || !acquireTasks.get() || frozen.get()) {
       return;
     }
 
     log.info("Sending heartbeat...");
-
     try {
       updateBuilderIfEcsDelegate(builder);
       DelegateParams delegateParams =
@@ -1763,7 +1738,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     }
   }
 
-  private void sendKeepAliveRequestWhenPollingEnabled(DelegateParamsBuilder builder) {
+  private void sendKeepAlivePacket(DelegateParamsBuilder builder) {
     if (!shouldContactManager()) {
       return;
     }
