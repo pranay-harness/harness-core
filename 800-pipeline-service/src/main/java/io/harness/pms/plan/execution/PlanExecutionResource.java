@@ -20,11 +20,15 @@ import io.harness.accesscontrol.clients.Resource;
 import io.harness.accesscontrol.clients.ResourceScope;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.executions.plan.PlanExecutionServiceImpl;
 import io.harness.engine.executions.retry.RetryHistoryResponseDto;
 import io.harness.engine.executions.retry.RetryInfo;
 import io.harness.engine.executions.retry.RetryLatestExecutionResponseDto;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.InvalidYamlException;
+import io.harness.execution.NodeExecution;
+import io.harness.execution.PlanExecution;
 import io.harness.gitsync.interceptor.GitEntityFindInfoDTO;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
@@ -114,6 +118,8 @@ public class PlanExecutionResource {
   @Inject private final PreflightService preflightService;
   @Inject private final PMSPipelineService pmsPipelineService;
   @Inject private final RetryExecutionHelper retryExecutionHelper;
+  @Inject private final NodeExecutionService nodeExecutionService;
+  @Inject private final PlanExecutionServiceImpl planExecutionService;
 
   @POST
   @Path("/{identifier}")
@@ -510,8 +516,20 @@ public class PlanExecutionResource {
       @NotNull @Parameter(description = PlanExecutionResourceConstants.NODE_EXECUTION_ID_PARAM_MESSAGE
               + " on which the Interrupt needs to be applied.",
           required = true) @PathParam("nodeExecutionId") String nodeExecutionId) {
+    validatePathParameters(planExecutionId,nodeExecutionId);
     return ResponseDTO.newResponse(
         pmsExecutionService.registerInterrupt(executionInterruptType, planExecutionId, nodeExecutionId));
+  }
+
+  private void validatePathParameters(String planExecutionId, String nodeExecutionId) {
+    PlanExecution planExecution = planExecutionService.get(planExecutionId);
+    if (planExecution == null) {
+      throw new InvalidRequestException(String.format("No execution available for execution id %s ", planExecutionId));
+    }
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    if (nodeExecution == null) {
+      throw new InvalidRequestException(String.format("Invalid node execution id %s ", nodeExecutionId));
+    }
   }
 
   @PUT
