@@ -19,6 +19,7 @@ import static io.harness.yaml.schema.beans.SchemaConstants.STEP_NODE;
 import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.CollectionUtils;
 import io.harness.jackson.JsonNodeUtils;
 import io.harness.packages.HarnessPackages;
 import io.harness.yaml.schema.YamlSchemaIgnoreSubtype;
@@ -309,7 +310,8 @@ public class YamlSchemaUtils {
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
   }
   public void addOneOfInExecutionWrapperConfig(JsonNode pipelineSchema,
-      List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType, List<String> enabledFeatureFlags) {
+      List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType,
+      Collection<String> enabledFeatureFlags) {
     JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
     ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
     JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
@@ -326,7 +328,7 @@ public class YamlSchemaUtils {
   }
 
   private boolean validateSchemaMetadata(
-      YamlSchemaWithDetails yamlSchemaWithDetails, ModuleType moduleType, List<String> enabledFeatureFlags) {
+      YamlSchemaWithDetails yamlSchemaWithDetails, ModuleType moduleType, Collection<String> enabledFeatureFlags) {
     YamlSchemaMetadata yamlSchemaMetadata = yamlSchemaWithDetails.getYamlSchemaMetadata();
     if (yamlSchemaMetadata == null) {
       return false;
@@ -341,6 +343,17 @@ public class YamlSchemaUtils {
       return true;
     }
     for (String featureFlag : requiredFeatureFlags) {
+      if (!enabledFeatureFlags.contains(featureFlag)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private boolean validateByFeatureFlags(
+      YamlSchemaMetadata yamlSchemaMetadata, Collection<String> enabledFeatureFlags) {
+    List<String> requiredFeatureFlags = yamlSchemaMetadata.getFeatureFlags();
+    for (String featureFlag : CollectionUtils.emptyIfNull(requiredFeatureFlags)) {
       if (!enabledFeatureFlags.contains(featureFlag)) {
         return false;
       }
@@ -375,11 +388,13 @@ public class YamlSchemaUtils {
     return oneOfList;
   }
 
-  public Set<Class<?>> getNodeClassesByYamlGroup(List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup) {
+  public Set<Class<?>> getNodeClassesByYamlGroup(
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup, Collection<String> enabledFeatureFlags) {
     return yamlSchemaRootClasses.stream()
         .filter(yamlSchemaRootClass
             -> yamlSchemaRootClass.getYamlSchemaMetadata() != null
                 && yamlSchemaRootClass.getYamlSchemaMetadata().getYamlGroup().getGroup().equals(yamlGroup))
+        .filter(o -> validateByFeatureFlags(o.getYamlSchemaMetadata(), enabledFeatureFlags))
         .map(YamlSchemaRootClass::getClazz)
         .collect(Collectors.toSet());
   }

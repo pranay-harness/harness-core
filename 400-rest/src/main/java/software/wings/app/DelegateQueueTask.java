@@ -241,16 +241,14 @@ public class DelegateQueueTask implements Runnable {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     long now = clock.millis();
 
-    Query<DelegateTask> unassignedTasksQuery =
-        persistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter(DelegateTaskKeys.status, QUEUED)
-            .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
-            .field(DelegateTaskKeys.nextBroadcast)
-            .lessThan(now)
-            .field(DelegateTaskKeys.expiry)
-            .greaterThan(now)
-            .field(DelegateTaskKeys.delegateId)
-            .doesNotExist();
+    Query<DelegateTask> unassignedTasksQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                   .filter(DelegateTaskKeys.status, QUEUED)
+                                                   .field(DelegateTaskKeys.nextBroadcast)
+                                                   .lessThan(now)
+                                                   .field(DelegateTaskKeys.expiry)
+                                                   .greaterThan(now)
+                                                   .field(DelegateTaskKeys.delegateId)
+                                                   .doesNotExist();
 
     try (HIterator<DelegateTask> iterator = new HIterator<>(unassignedTasksQuery.fetch())) {
       int count = 0;

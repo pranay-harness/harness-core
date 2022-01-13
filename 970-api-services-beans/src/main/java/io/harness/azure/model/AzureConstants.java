@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
 
 public interface AzureConstants {
   int DEFAULT_SYNC_AZURE_VMSS_TIMEOUT_MIN = 2;
+  int DEFAULT_SYNC_AZURE_RESOURCE_TIMEOUT_MIN = 2;
   String NEW_VIRTUAL_MACHINE_SCALE_SET = "New Virtual Machine Scale Set";
   String OLD_VIRTUAL_MACHINE_SCALE_SET = "Old Virtual Machine Scale Set";
   String STAGE_BACKEND_POOL = "Stage Backend Pool";
@@ -92,7 +93,7 @@ public interface AzureConstants {
       "Parameter virtualMachineScaleSet is required and cannot be null";
   String PRIMARY_INTERNET_FACING_LOAD_BALANCER_NULL_VALIDATION_MSG =
       "Parameter primaryInternetFacingLoadBalancer is required and cannot be null";
-  String SUBSCRIPTION_ID_NULL_VALIDATION_MSG = "Parameter subscriptionId is required and cannot be null";
+  String SUBSCRIPTION_ID_NULL_VALIDATION_MSG = "Parameter subscriptionId is required and cannot be empty or null";
   String VIRTUAL_MACHINE_SCALE_SET_ID_NULL_VALIDATION_MSG =
       "Parameter virtualMachineScaleSetId is required and cannot be null";
   String VIRTUAL_SCALE_SET_NAME_NULL_VALIDATION_MSG = "Parameter virtualScaleSetName is required and cannot be null";
@@ -147,6 +148,9 @@ public interface AzureConstants {
   String ASSIGNMENT_BLANK_VALIDATION_MSG = "Parameter assignment cannot be empty or null";
   String BLUEPRINT_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints blueprint json file cannot be empty or null";
   String ASSIGN_JSON_FILE_BLANK_VALIDATION_MSG = "Blueprints assign json file cannot be empty or null";
+  String REPOSITORY_NAME_BLANK_VALIDATION_MSG = "Parameter repositoryName cannot be null or empty";
+  String REGISTRY_HOST_BLANK_VALIDATION_MSG = "Parameter registryHost cannot be null or empty";
+  String REGISTRY_NAME_BLANK_VALIDATION_MSG = "Parameter registryName cannot be null or empty";
 
   // Patterns
   String GALLERY_IMAGE_ID_PATTERN =
