@@ -94,7 +94,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
         accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
-    assertThat(verificationTask.getValidUntil()).isEqualTo(Date.from(Instant.parse("2020-05-22T10:02:06Z")));
+    assertThat(verificationTask.getValidUntil()).isEqualTo(Date.from(Instant.parse("2020-10-19T10:02:06Z")));
     assertThat(verificationTaskService.getCVConfigId(verificationTaskId)).isEqualTo(cvConfigId);
     assertThat(verificationTaskService.getVerificationJobInstanceId(verificationTaskId))
         .isEqualTo(verificationJobInstanceId);
@@ -426,8 +426,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     VerificationTask verificationTask =
         VerificationTask.builder()
             .accountId(accountId)
-            .validUntil(Date.from(
-                builderFactory.getClock().instant().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION)))
+            .validUntil(Date.from(builderFactory.getClock().instant().plus(CVConstants.MAX_DATA_RETENTION_DURATION)))
             .tags(Maps.of(TAG_DATA_SOURCE, dataSourceType.name(), TAG_VERIFICATION_TYPE, DEPLOYMENT))
             .build();
     verificationTask.setVerificationJobInstanceId(verificationJobInstanceId);

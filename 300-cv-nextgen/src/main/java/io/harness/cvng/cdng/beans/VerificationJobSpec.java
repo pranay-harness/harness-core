@@ -42,6 +42,9 @@ public abstract class VerificationJobSpec {
   @ApiModelProperty(
       dataType = SwaggerConstants.STRING_CLASSPATH, value = "Format example: 5m, 30m, please put multiple of 5")
   ParameterField<String> duration;
+  @NotNull
+  @ApiModelProperty(dataType = SwaggerConstants.STRING_CLASSPATH, value = "Possible values: [Low, Medium, High]")
+  ParameterField<String> sensitivity;
 
   @ApiModelProperty(hidden = true)
   public VerificationJobBuilder getVerificationJobBuilder() {
