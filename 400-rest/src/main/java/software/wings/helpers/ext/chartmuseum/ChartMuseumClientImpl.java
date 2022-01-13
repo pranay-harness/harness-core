@@ -23,7 +23,10 @@ import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.StartedProcess;
 
@@ -55,10 +58,7 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
       return chartMuseumClientHelper.startGCSChartMuseumServer(gcsHelmRepoConfig.getBucketName(), basePath,
           config.getServiceAccountKeyFileContent(), resourceDirectory, useLatestChartMuseumVersion);
     } catch (Exception ex) {
-      List<String> secrets = new ArrayList<>();
-      secrets.add(String.valueOf(config.getServiceAccountKeyFileContent()));
-      ExceptionMessageSanitizer.sanitizeException(ex, secrets);
-      throw ex;
+      throw ExceptionMessageSanitizer.sanitizeException(ex);
     }
   }
 
@@ -66,19 +66,12 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
       String basePath, boolean useLatestChartMuseumVersion) throws Exception {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
     AwsConfig awsConfig = (AwsConfig) connectorConfig;
-
     try {
       return chartMuseumClientHelper.startS3ChartMuseumServer(amazonS3HelmRepoConfig.getBucketName(), basePath,
           amazonS3HelmRepoConfig.getRegion(), awsConfig.isUseEc2IamCredentials(), awsConfig.getAccessKey(),
           awsConfig.getSecretKey(), awsConfig.isUseIRSA(), useLatestChartMuseumVersion);
     } catch (Exception ex) {
-      List<String> secrets = new ArrayList<>();
-      secrets.add(String.valueOf(awsConfig.getSecretKey()));
-      if (awsConfig.isUseEncryptedAccessKey()) {
-        secrets.add(String.valueOf(awsConfig.getAccessKey()));
-      }
-      ExceptionMessageSanitizer.sanitizeException(ex, secrets);
-      throw ex;
+      throw ExceptionMessageSanitizer.sanitizeException(ex);
     }
   }
 
