@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._950_NG_AUTHENTICATION_SERVICE;
@@ -724,6 +731,10 @@ public class UserServiceImpl implements UserService {
       account.setCompanyName(account.getCompanyName().trim());
     }
 
+    if (isNotBlank(account.getRingName())) {
+      account.setRingName(account.getRingName().trim());
+    }
+
     if (licenseInfo != null && AccountType.TRIAL.equals(licenseInfo.getAccountType())
         && account.getTrialSignupOptions() == null) {
       account.setTrialSignupOptions(TrialSignupOptions.getDefaultTrialSignupOptions());
@@ -1352,6 +1363,8 @@ public class UserServiceImpl implements UserService {
 
     auditServiceHelper.reportForAuditingUsingAccountId(
         accountId, null, user, createNewUser ? Type.CREATE : Type.UPDATE);
+    userGroups.forEach(userGroupAdded
+        -> auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, userGroupAdded, Type.ADD));
     eventPublishHelper.publishUserInviteFromAccountEvent(accountId, userInvite.getEmail());
 
     return USER_INVITED_SUCCESSFULLY;
@@ -2967,7 +2980,7 @@ public class UserServiceImpl implements UserService {
     try {
       user = userCache.get(userId);
     } catch (Exception ex) {
-      log.error("Exception occurred while loading User from DB", ex);
+      log.error("Exception occurred while loading User from cache", ex);
     }
     if (user == null) {
       log.info("User [{}] not found in Cache. Load it from DB", userId);

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.authenticationsettings.remote;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -69,7 +76,8 @@ public interface AuthSettingsManagerClient {
       @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
       @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
       @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl,
-      @Part("entityIdentifier") RequestBody entityIdentifier);
+      @Part("entityIdentifier") RequestBody entityIdentifier, @Part("samlProviderType") RequestBody samlProviderType,
+      @Part("clientId") RequestBody clientId, @Part("clientSecret") RequestBody clientSecret);
 
   @Multipart
   @PUT(API_PREFIX + "sso/saml-idp-metadata-upload")
@@ -77,7 +85,8 @@ public interface AuthSettingsManagerClient {
       @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
       @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
       @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl,
-      @Part("entityIdentifier") RequestBody entityIdentifier);
+      @Part("entityIdentifier") RequestBody entityIdentifier, @Part("samlProviderType") RequestBody samlProviderType,
+      @Part("clientId") RequestBody clientId, @Part("clientSecret") RequestBody clientSecret);
 
   @DELETE(API_PREFIX + "sso/delete-saml-idp-metadata")
   Call<RestResponse<SSOConfig>> deleteSAMLMetadata(@Query("accountId") String accountIdentifier);

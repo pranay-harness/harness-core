@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.service;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -30,7 +37,6 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
@@ -138,7 +144,6 @@ import io.harness.logstreaming.LogStreamingSanitizer;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.logstreaming.LogStreamingTaskClient.LogStreamingTaskClientBuilder;
 import io.harness.managerclient.DelegateAgentManagerClient;
-import io.harness.managerclient.DelegateAgentManagerClientFactory;
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.perpetualtask.PerpetualTaskWorker;
@@ -439,14 +444,13 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         perpetualTaskWorker.setAccountId(accountId);
       }
       log.info("Delegate will start running on JRE {}", System.getProperty(JAVA_VERSION));
+      log.info("The deploy mode for delegate is [{}]", System.getenv().get("DEPLOY_MODE"));
       startTime = clock.millis();
       DelegateStackdriverLogAppender.setTimeLimiter(timeLimiter);
       DelegateStackdriverLogAppender.setManagerClient(delegateAgentManagerClient);
 
       logProxyConfiguration();
-      if (delegateConfiguration.isVersionCheckDisabled()) {
-        DelegateAgentManagerClientFactory.setSendVersionHeader(false);
-      }
+
       connectionHeartbeat = DelegateConnectionHeartbeat.builder()
                                 .delegateConnectionId(delegateConnectionId)
                                 .version(getVersion())
@@ -743,11 +747,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       URI uri = uriBuilder.build();
 
       // Stream the request body
-      RequestBuilder requestBuilder =
-          client.newRequestBuilder().method(METHOD.GET).uri(uri.toString()).header("Version", getVersion());
-      if (delegateConfiguration.isVersionCheckDisabled()) {
-        requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
-      }
+      RequestBuilder requestBuilder = client.newRequestBuilder().method(METHOD.GET).uri(uri.toString());
 
       requestBuilder
           .encoder(new Encoder<Delegate, Reader>() { // Do not change this, wasync doesn't like lambdas
@@ -1260,9 +1260,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             handleStopAcquiringMessage(message.getFromProcess());
           } else if (DELEGATE_RESUME.equals(message.getMessage())) {
             resume();
-          } else if (DELEGATE_SEND_VERSION_HEADER.equals(message.getMessage())) {
-            DelegateAgentManagerClientFactory.setSendVersionHeader(Boolean.parseBoolean(message.getParams().get(0)));
-            delegateAgentManagerClient = injector.getInstance(DelegateAgentManagerClient.class);
           } else if (DELEGATE_START_GRPC.equals(message.getMessage())) {
             startGrpcService();
           } else if (DELEGATE_STOP_GRPC.equals(message.getMessage())) {
@@ -2063,11 +2060,17 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     Pair<String, Set<String>> activitySecrets = obtainActivitySecrets(delegateTaskPackage);
     Optional<LogSanitizer> sanitizer = getLogSanitizer(activitySecrets);
     ILogStreamingTaskClient logStreamingTaskClient = getLogStreamingTaskClient(activitySecrets, delegateTaskPackage);
+    // At the moment used to download and render terraform json plan file and keep track of the download tf plans
+    // so we can clean up at the end of the task. Expected mainly to be used in Shell Script Task
+    // but not limited to usage in other tasks
+    DelegateExpressionEvaluator delegateExpressionEvaluator = new DelegateExpressionEvaluator(
+        injector, delegateTaskPackage.getAccountId(), delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
 
     DelegateRunnableTask delegateRunnableTask = delegateTaskFactory.getDelegateRunnableTask(
         TaskType.valueOf(taskData.getTaskType()), delegateTaskPackage, logStreamingTaskClient,
-        getPostExecutionFunction(
-            delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null), logStreamingTaskClient),
+        getPostExecutionFunction(delegateTaskPackage.getDelegateTaskId(), sanitizer.orElse(null),
+            logStreamingTaskClient, delegateExpressionEvaluator),
         getPreExecutionFunction(delegateTaskPackage, sanitizer.orElse(null), logStreamingTaskClient));
     if (delegateRunnableTask instanceof AbstractDelegateRunnableTask) {
       ((AbstractDelegateRunnableTask) delegateRunnableTask).setDelegateHostname(HOST_NAME);
@@ -2279,8 +2282,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     counter.updateAndGet(value -> Math.max(value, current));
   }
 
-  private Consumer<DelegateTaskResponse> getPostExecutionFunction(
-      String taskId, LogSanitizer sanitizer, ILogStreamingTaskClient logStreamingTaskClient) {
+  private Consumer<DelegateTaskResponse> getPostExecutionFunction(String taskId, LogSanitizer sanitizer,
+      ILogStreamingTaskClient logStreamingTaskClient, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     return taskResponse -> {
       if (logStreamingTaskClient != null) {
         try {
@@ -2316,6 +2319,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       } finally {
         if (sanitizer != null) {
           delegateLogService.unregisterLogSanitizer(sanitizer);
+        }
+
+        if (delegateExpressionEvaluator != null) {
+          delegateExpressionEvaluator.cleanup();
         }
         currentlyExecutingTasks.remove(taskId);
         if (currentlyExecutingFutures.remove(taskId) != null) {
@@ -2621,6 +2628,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
     DelegateExpressionEvaluator delegateExpressionEvaluator =
         new DelegateExpressionEvaluator(secretUuidToValues, delegateTaskPackage.getData().getExpressionFunctorToken());
+    applyDelegateExpressionEvaluator(delegateTaskPackage, delegateExpressionEvaluator);
+  }
+
+  private void applyDelegateExpressionEvaluator(
+      DelegateTaskPackage delegateTaskPackage, DelegateExpressionEvaluator delegateExpressionEvaluator) {
     TaskData taskData = delegateTaskPackage.getData();
     if (taskData.getParameters() != null && taskData.getParameters().length == 1
         && taskData.getParameters()[0] instanceof TaskParameters) {

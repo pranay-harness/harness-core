@@ -1,9 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
 
 import io.harness.delegate.beans.connector.newrelic.NewRelicConnectorDTO;
 import io.harness.delegate.beans.cvng.newrelic.NewRelicUtils;
 
 import com.google.common.base.Preconditions;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +39,13 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
   private String groupName;
   private List<NewRelicMetricInfoDTO> metricInfoList;
   private MetricPackDTO metricPack;
+
+  public List<NewRelicMetricInfoDTO> getMetricInfoList() {
+    if (metricInfoList == null) {
+      return new ArrayList<>();
+    }
+    return metricInfoList;
+  }
 
   boolean customQuery;
 
@@ -79,22 +94,25 @@ public class NewRelicDataCollectionInfo extends TimeSeriesDataCollectionInfo<New
     dslEnvVariables.put("collectHostData", Boolean.toString(this.isCollectHostData()));
     dslEnvVariables.put("groupName", groupName);
     List<String> listOfQueries =
-        metricInfoList.stream().map(NewRelicMetricInfoDTO::getNrql).collect(Collectors.toList());
+        getMetricInfoList().stream().map(NewRelicMetricInfoDTO::getNrql).collect(Collectors.toList());
     List<String> metricNames =
-        metricInfoList.stream().map(NewRelicMetricInfoDTO::getMetricName).collect(Collectors.toList());
-    List<String> metricValuePaths = metricInfoList.stream()
+        getMetricInfoList().stream().map(NewRelicMetricInfoDTO::getMetricName).collect(Collectors.toList());
+    List<String> metricValuePaths = getMetricInfoList()
+                                        .stream()
                                         .map(infoDto -> infoDto.getResponseMapping().getMetricValueJsonPath())
                                         .collect(Collectors.toList());
-    List<String> timestampPaths = metricInfoList.stream()
+    List<String> timestampPaths = getMetricInfoList()
+                                      .stream()
                                       .map(infoDto -> infoDto.getResponseMapping().getTimestampJsonPath())
                                       .collect(Collectors.toList());
 
-    List<String> hostJsonPaths = metricInfoList.stream()
+    List<String> hostJsonPaths = getMetricInfoList()
+                                     .stream()
                                      .map(infoDto -> infoDto.getResponseMapping().getServiceInstanceJsonPath())
                                      .collect(Collectors.toList());
 
     List<String> metricIdentifiers =
-        metricInfoList.stream().map(infoDto -> infoDto.getMetricIdentifier()).collect(Collectors.toList());
+        getMetricInfoList().stream().map(infoDto -> infoDto.getMetricIdentifier()).collect(Collectors.toList());
 
     dslEnvVariables.put(QUERIES_KEY, listOfQueries);
     dslEnvVariables.put(METRIC_IDENTIFIERS_KEY, metricIdentifiers);

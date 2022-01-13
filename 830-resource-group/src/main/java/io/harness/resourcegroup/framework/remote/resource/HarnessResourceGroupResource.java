@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.resourcegroup.framework.remote.resource;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -10,6 +17,7 @@ import static io.harness.NGCommonEntityConstants.INTERNAL_SERVER_ERROR_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.resourcegroup.ResourceGroupPermissions.DELETE_RESOURCEGROUP_PERMISSION;
 import static io.harness.resourcegroup.ResourceGroupPermissions.EDIT_RESOURCEGROUP_PERMISSION;
 import static io.harness.resourcegroup.ResourceGroupPermissions.VIEW_RESOURCEGROUP_PERMISSION;
@@ -29,13 +37,17 @@ import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
 import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.enforcement.constants.FeatureRestrictionName;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageRequest;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.resourcegroup.framework.service.ResourceGroupService;
+import io.harness.resourcegroup.model.DynamicResourceSelector;
+import io.harness.resourcegroup.model.ResourceSelectorByScope;
 import io.harness.resourcegroup.remote.dto.ManagedFilter;
+import io.harness.resourcegroup.remote.dto.ResourceGroupDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupFilterDTO;
 import io.harness.resourcegroup.remote.dto.ResourceGroupRequest;
 import io.harness.resourcegroupclient.ResourceGroupResponse;
@@ -218,6 +230,7 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, null), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
         Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
+    verifySupportedResourceSelectorsAreUsed(resourceGroupRequest);
     ResourceGroupResponse resourceGroupResponse =
         resourceGroupService.create(resourceGroupRequest.getResourceGroup(), false);
     return ResponseDTO.newResponse(resourceGroupResponse);
@@ -246,6 +259,7 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, identifier), EDIT_RESOURCEGROUP_PERMISSION);
     resourceGroupRequest.getResourceGroup().setAllowedScopeLevels(
         Sets.newHashSet(ScopeLevel.of(accountIdentifier, orgIdentifier, projectIdentifier).toString().toLowerCase()));
+    verifySupportedResourceSelectorsAreUsed(resourceGroupRequest);
     Optional<ResourceGroupResponse> resourceGroupResponseOpt =
         resourceGroupService.update(resourceGroupRequest.getResourceGroup(), true, false);
     return ResponseDTO.newResponse(resourceGroupResponseOpt.orElse(null));
@@ -273,5 +287,26 @@ public class HarnessResourceGroupResource {
         Resource.of(RESOURCE_GROUP, identifier), DELETE_RESOURCEGROUP_PERMISSION);
     return ResponseDTO.newResponse(
         resourceGroupService.delete(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier), identifier));
+  }
+
+  private void verifySupportedResourceSelectorsAreUsed(ResourceGroupRequest resourceGroupRequest) {
+    if (resourceGroupRequest == null || resourceGroupRequest.getResourceGroup() == null) {
+      return;
+    }
+    ResourceGroupDTO resourceGroupDTO = resourceGroupRequest.getResourceGroup();
+    if (resourceGroupDTO.isFullScopeSelected()) {
+      throw new InvalidRequestException("Full scope selected cannot be provided for custom resource groups.");
+    }
+    if (isNotEmpty(resourceGroupDTO.getResourceSelectors())) {
+      resourceGroupDTO.getResourceSelectors().forEach(resourceSelector -> {
+        if (resourceSelector instanceof ResourceSelectorByScope) {
+          throw new InvalidRequestException("Resource Selector by scope not supported yet.");
+        }
+        if ((resourceSelector instanceof DynamicResourceSelector)
+            && Boolean.TRUE.equals(((DynamicResourceSelector) resourceSelector).getIncludeChildScopes())) {
+          throw new InvalidRequestException("Including child scopes not supported yet.");
+        }
+      });
+    }
   }
 }

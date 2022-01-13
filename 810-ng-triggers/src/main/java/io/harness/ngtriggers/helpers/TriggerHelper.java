@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ngtriggers.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -58,7 +65,9 @@ import lombok.experimental.UtilityClass;
 public class TriggerHelper {
   public Map<String, Object> buildJsonObjectFromAmbiance(TriggerPayload triggerPayload) {
     Map<String, Object> jsonObject = new HashMap<>();
-
+    if (triggerPayload == null) {
+      return jsonObject;
+    }
     ParsedPayload parsedPayload = triggerPayload.getParsedPayload();
     // branchesxv
     switch (parsedPayload.getPayloadCase()) {

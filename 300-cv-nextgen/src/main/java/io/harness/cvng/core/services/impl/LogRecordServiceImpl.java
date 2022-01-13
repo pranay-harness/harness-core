@@ -1,13 +1,21 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.beans.LogRecordDTO;
-import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.LogRecord.LogRecordKeys;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.LogRecordService;
+import io.harness.cvng.core.services.api.VerificationTaskService;
 import io.harness.cvng.core.services.api.demo.CVNGDemoDataIndexService;
 import io.harness.persistence.HPersistence;
 import io.harness.serializer.JsonUtils;
@@ -25,8 +33,9 @@ import java.util.stream.Collectors;
 
 public class LogRecordServiceImpl implements LogRecordService {
   @Inject private HPersistence hPersistence;
-  @Inject private CVConfigService cvConfigService;
   @Inject private CVNGDemoDataIndexService cvngDemoDataIndexService;
+  @Inject private VerificationTaskService verificationTaskService;
+  @Inject private CVConfigService cvConfigService;
   @Override
   public void save(List<LogRecordDTO> logRecords) {
     saveRecords(logRecords.stream().map(this::toLogRecord).collect(Collectors.toList()));
@@ -58,11 +67,11 @@ public class LogRecordServiceImpl implements LogRecordService {
 
   @Override
   public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      Instant startTime, Instant endTime) throws IOException {
+      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException {
     List<LogRecordDTO> logRecordsToBeSaved = new ArrayList<>();
     Instant time = startTime;
-    CVConfig cvConfig = cvConfigService.get(verificationTaskId);
-    String demoTemplatePath = getDemoTemplate(cvConfig);
+
+    String demoTemplatePath = getDemoTemplate(verificationTaskId, endTime, demoTemplateIdentifier);
     List<List<LogRecordDTO>> logRecordsList =
         JsonUtils.asObject(demoTemplatePath, new TypeReference<List<List<LogRecordDTO>>>() {});
     int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
@@ -85,9 +94,18 @@ public class LogRecordServiceImpl implements LogRecordService {
     save(logRecordsToBeSaved);
   }
 
-  private String getDemoTemplate(CVConfig cvConfig) throws IOException {
-    String path = "/io/harness/cvng/analysis/liveMonitoring/logs/$provider_logs_live_monitoring_demo_template.json";
-    path = path.replace("$provider", cvConfig.getType().getDemoTemplatePrefix());
+  private String getDemoTemplate(String verificationTaskId, Instant endTime, String demoTemplateIdentifier)
+      throws IOException {
+    if (verificationTaskService.isServiceGuardId(verificationTaskId)) {
+      LogCVConfig cvConfig =
+          (LogCVConfig) cvConfigService.get(verificationTaskService.getCVConfigId(verificationTaskId));
+      if (cvConfig.getBaseline().getEndTime().isAfter(endTime)) {
+        // use default template if time range is before baseline.
+        demoTemplateIdentifier = "default";
+      }
+    }
+    String path = "/io/harness/cvng/analysis/liveMonitoring/logs/$template_demo_template.json";
+    path = path.replace("$template", demoTemplateIdentifier);
     return Resources.toString(this.getClass().getResource(path), Charsets.UTF_8);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.creation;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -23,6 +30,7 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class PlanCreatorUtils {
   public final String ANY_TYPE = "__any__";
+  public final String TEMPLATE_TYPE = "__template__";
 
   public boolean supportsField(Map<String, Set<String>> supportedTypes, YamlField field) {
     if (EmptyPredicate.isEmpty(supportedTypes)) {
@@ -37,7 +45,11 @@ public class PlanCreatorUtils {
 
     String fieldType = field.getNode().getType();
     if (EmptyPredicate.isEmpty(fieldType)) {
-      fieldType = ANY_TYPE;
+      if (field.getNode().getTemplate() == null) {
+        fieldType = ANY_TYPE;
+      } else {
+        fieldType = TEMPLATE_TYPE;
+      }
     }
     return types.contains(fieldType);
   }

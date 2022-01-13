@@ -19,3 +19,7 @@ events-mongo:
   maxConnectionIdleTime: 600000
   connectionsPerHost: 300
   indexManagerMode: AUTO
+
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: ccm-play

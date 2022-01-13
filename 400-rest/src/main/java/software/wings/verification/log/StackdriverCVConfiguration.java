@@ -1,3 +1,10 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.verification.log;
 
 import software.wings.stencils.DefaultValue;
@@ -30,6 +37,8 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
 
   @Attributes(required = true, title = "Log Message Field") @DefaultValue("textPayload") protected String messageField;
 
+  private String projectId;
+
   @Override
   public CVConfiguration deepCopy() {
     StackdriverCVConfiguration clonedConfig = new StackdriverCVConfiguration();
@@ -38,6 +47,7 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setLogsConfiguration(this.isLogsConfiguration);
     clonedConfig.setMessageField(this.getMessageField());
     clonedConfig.setQuery(this.getQuery());
+    clonedConfig.setProjectId(this.getProjectId());
     return clonedConfig;
   }
 
@@ -49,5 +59,6 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
     private String hostnameField;
     private String messageField;
     private boolean isLogsConfiguration;
+    private String projectId;
   }
 }

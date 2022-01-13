@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2022 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Shield 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
 
 CONFIG_FILE=/opt/harness/config.yml
 REDISSON_CACHE_FILE=/opt/harness/redisson-jcache.yaml
@@ -175,6 +179,18 @@ fi
 
 if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$CENG_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.baseUrl "$CENG_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$CENG_CLIENT_READ_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.readTimeOutSeconds "$CENG_CLIENT_READ_TIMEOUT"
+fi
+
+if [[ "" != "$CENG_CLIENT_CONNECT_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.connectTimeOutSeconds "$CENG_CLIENT_CONNECT_TIMEOUT"
 fi
 
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then

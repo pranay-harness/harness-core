@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng;
 
 import static io.harness.swagger.SwaggerBundleConfigurationFactory.buildSwaggerBundleConfiguration;
@@ -176,6 +183,7 @@ public class NextGenConfiguration extends Configuration {
   @JsonProperty("ciManagerClientConfig") ServiceHttpClientConfig ciManagerClientConfig;
   @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
+  @JsonProperty("ffServerClientConfig") ServiceHttpClientConfig ffServerClientConfig;
 
   // [secondary-db]: Uncomment this and the corresponding config in yaml file if you want to connect to another database
   //  @JsonProperty("secondary-mongo") MongoConfig secondaryMongoConfig;

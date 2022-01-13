@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -28,6 +35,7 @@ import io.harness.beans.PageResponse;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.context.GlobalContextData;
 import io.harness.delegate.beans.FileBucket;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.exception.WingsException.ExecutionContext;
 import io.harness.ff.FeatureFlagService;
@@ -38,6 +46,7 @@ import io.harness.persistence.HIterator;
 import io.harness.persistence.NameAccess;
 import io.harness.persistence.UuidAccess;
 import io.harness.stream.BoundedInputStream;
+import io.harness.yaml.YamlUtils;
 
 import software.wings.app.MainConfiguration;
 import software.wings.audit.AuditHeader;
@@ -61,6 +70,7 @@ import software.wings.beans.ServiceVariable;
 import software.wings.beans.SettingAttribute;
 import software.wings.beans.User;
 import software.wings.beans.appmanifest.ManifestFile;
+import software.wings.beans.security.UserGroup;
 import software.wings.common.AuditHelper;
 import software.wings.dl.WingsPersistence;
 import software.wings.features.AuditTrailFeature;
@@ -77,6 +87,8 @@ import software.wings.service.intfc.yaml.YamlResourceService;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.YamlPayload;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.TimeLimiter;
 import com.google.inject.Inject;
@@ -135,7 +147,7 @@ public class AuditServiceImpl implements AuditService {
   private WingsPersistence wingsPersistence;
 
   private static Set<String> nonYamlEntities =
-      newHashSet(EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(), EntityType.USER_GROUP.name(),
+      newHashSet(EntityType.TEMPLATE_FOLDER.name(), EntityType.ENCRYPTED_RECORDS.name(),
           ResourceType.CONNECTION_ATTRIBUTES.name(), ResourceType.CUSTOM_DASHBOARD.name(),
           ResourceType.SECRET_MANAGER.name(), EntityType.PIPELINE_GOVERNANCE_STANDARD.name(),
           ResourceType.SSO_SETTINGS.name(), ResourceType.USER.name(), ResourceType.USER_INVITE.name(),
@@ -536,9 +548,7 @@ public class AuditServiceImpl implements AuditService {
         case DISABLE_2FA:
         case LINK_SSO:
         case UNLINK_SSO:
-        case MODIFY_PERMISSIONS:
         case TEST:
-        case UPDATE_NOTIFICATION_SETTING:
         case UPDATE_SCOPE:
         case ADD:
         case REMOVE:
@@ -561,6 +571,8 @@ public class AuditServiceImpl implements AuditService {
         case ENABLE:
         case DISABLE:
         case UPDATE_TAG:
+        case UPDATE_NOTIFICATION_SETTING:
+        case MODIFY_PERMISSIONS:
         case UPDATE: {
           loadLatestYamlDetailsForEntity(record, accountId);
           if (!(newEntity instanceof ServiceVariable) || !((ServiceVariable) newEntity).isSyncFromGit()) {
@@ -740,6 +752,9 @@ public class AuditServiceImpl implements AuditService {
         yamlContent = resource.getYaml();
       } else if (entity instanceof HarnessTag) {
         yamlContent = yamlResourceService.getHarnessTags(accountId).getResource().getYaml();
+      } else if (entity instanceof UserGroup) {
+        UserGroup userGroupAudit = ((UserGroup) entity).buildUserGroupAudit();
+        yamlContent = toYamlString(userGroupAudit);
       } else {
         YamlPayload resource = yamlResourceService.obtainEntityYamlVersion(accountId, entity).getResource();
         yamlContent = resource.getYaml();
@@ -781,5 +796,16 @@ public class AuditServiceImpl implements AuditService {
                                       .build();
     String newYamlId = wingsPersistence.save(yamlRecord);
     record.setEntityNewYamlRecordId(newYamlId);
+  }
+
+  public static String toYamlString(Object theYaml) {
+    String connectorString;
+    ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+    try {
+      connectorString = YamlUtils.cleanupYaml(mapper.writeValueAsString(theYaml));
+    } catch (Exception ex) {
+      throw new InvalidRequestException("Encountered exception while serializing user group " + ex.getMessage());
+    }
+    return connectorString;
   }
 }

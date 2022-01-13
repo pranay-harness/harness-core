@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.DEL;
@@ -366,12 +373,12 @@ public class DelegateAgentResource {
   @ExceptionMetered
   public RestResponse<DelegateScripts> getDelegateScriptsNg(@Context HttpServletRequest request,
       @QueryParam("accountId") @NotEmpty String accountId,
-      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion)
-      throws IOException {
+      @QueryParam("delegateVersion") @NotEmpty String delegateVersion, @QueryParam("patchVersion") String patchVersion,
+      @QueryParam("delegateType") String delegateType) throws IOException {
     try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR)) {
       String fullVersion = isNotEmpty(patchVersion) ? delegateVersion + "-" + patchVersion : delegateVersion;
-      return new RestResponse<>(delegateService.getDelegateScriptsNg(
-          accountId, fullVersion, subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request)));
+      return new RestResponse<>(delegateService.getDelegateScriptsNg(accountId, fullVersion,
+          subdomainUrlHelper.getManagerUrl(request, accountId), getVerificationUrl(request), delegateType));
     }
   }
 

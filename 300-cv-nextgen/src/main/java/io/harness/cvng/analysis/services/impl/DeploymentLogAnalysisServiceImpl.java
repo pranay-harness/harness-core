@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -30,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -46,8 +52,6 @@ import javax.annotation.Nullable;
 import org.mongodb.morphia.query.Sort;
 
 public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisService {
-  private static final URL LOG_DEMO_TEMPLATE_PATH = DeploymentTimeSeriesAnalysisServiceImpl.class.getResource(
-      "/io/harness/cvng/analysis/service/impl/log_deployment_analysis_demo_template.json");
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;

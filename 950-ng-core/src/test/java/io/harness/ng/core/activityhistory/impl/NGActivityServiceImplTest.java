@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.activityhistory.impl;
 
 import static io.harness.rule.OwnerRule.DEEPAK;
@@ -29,10 +36,11 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
   public void listAllActivityOfAAccountLevelEntity() {
     String accountIdentifier = "accountIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    String referredEntityIdentifierAccountLevel = "account.referredEntityIdentifier";
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < 10; i++) {
       NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
-          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
+          referredEntityIdentifierAccountLevel, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
       activityHistoryService.save(activityHistory);
     }
     List<NGActivityDTO> activityHistories = activityHistoryService
@@ -48,22 +56,25 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
   public void listAllActivity() {
     String accountIdentifier = "accountIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    String referredEntityIdentifierAccountLevel = "account.referredEntityIdentifier";
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < 10; i++) {
       NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
-          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
+          referredEntityIdentifierAccountLevel, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
       activityHistoryService.save(activityHistory);
     }
 
     for (int i = 0; i < 6; i++) {
       NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
-          referredEntityIdentifier, NGActivityStatus.FAILED, startTime + i, NGActivityType.CONNECTIVITY_CHECK);
+          referredEntityIdentifierAccountLevel, NGActivityStatus.FAILED, startTime + i,
+          NGActivityType.CONNECTIVITY_CHECK);
       activityHistoryService.save(activityHistory);
     }
 
     for (int i = 0; i < 4; i++) {
       NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
-          referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.CONNECTIVITY_CHECK);
+          referredEntityIdentifierAccountLevel, NGActivityStatus.SUCCESS, startTime + i,
+          NGActivityType.CONNECTIVITY_CHECK);
       activityHistoryService.save(activityHistory);
     }
 
@@ -80,11 +91,13 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
   public void getConnectivityCheckSummary() {
     String accountIdentifier = "accountIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    String referredEntityIdentifierAccountLevel = "account.referredEntityIdentifier";
     long startTime = System.currentTimeMillis();
 
     for (int i = 0; i < 6; i++) {
       NGActivityDTO activityHistory = ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, null, null,
-          referredEntityIdentifier, NGActivityStatus.FAILED, startTime + i, NGActivityType.CONNECTIVITY_CHECK);
+          referredEntityIdentifierAccountLevel, NGActivityStatus.FAILED, startTime + i,
+          NGActivityType.CONNECTIVITY_CHECK);
       activityHistoryService.save(activityHistory);
     }
 
@@ -103,11 +116,12 @@ public class NGActivityServiceImplTest extends NGCoreTestBase {
     String accountIdentifier = "accountIdentifier";
     String orgIdentifier = "orgIdentifier";
     String referredEntityIdentifier = "referredEntityIdentifier";
+    String referredEntityIdentifierOrgLevel = "org.referredEntityIdentifier";
     long startTime = System.currentTimeMillis();
     for (int i = 0; i < 10; i++) {
       NGActivityDTO activityHistory =
           ActivityHistoryTestHelper.createActivityHistoryDTO(accountIdentifier, orgIdentifier, null,
-              referredEntityIdentifier, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
+              referredEntityIdentifierOrgLevel, NGActivityStatus.SUCCESS, startTime + i, NGActivityType.ENTITY_USAGE);
       activityHistoryService.save(activityHistory);
     }
     List<NGActivityDTO> activityHistories =

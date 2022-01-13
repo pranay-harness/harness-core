@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.threading.Morpheus.sleep;
 
 import static software.wings.common.VerificationConstants.DATA_COLLECTION_RETRY_SLEEP;
@@ -220,7 +228,9 @@ public class StackDriverDataCollectionTask extends AbstractDelegateDataCollectio
         StackdriverDataFetchParameters dataFetchParameters) {
       TreeBasedTable<String, Long, NewRelicMetricDataRecord> rv = TreeBasedTable.create();
 
-      String projectId = stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
+      String projectId = isNotEmpty(dataCollectionInfo.getProjectId())
+          ? dataCollectionInfo.getProjectId()
+          : stackDriverDelegateService.getProjectId(dataCollectionInfo.getGcpConfig());
       encryptionService.decrypt(dataCollectionInfo.getGcpConfig(), dataCollectionInfo.getEncryptedDataDetails(), false);
       Monitoring monitoring =
           gcpHelperService.getMonitoringService(dataCollectionInfo.getGcpConfig().getServiceAccountKeyFileContent(),

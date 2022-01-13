@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.resourcegroup.remote.dto;
 
 import static java.util.stream.Collectors.toList;
@@ -10,11 +17,13 @@ import io.harness.data.validator.EntityIdentifier;
 import io.harness.data.validator.NGEntityName;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceSelector;
+import io.harness.resourcegroup.model.ResourceSelectorByScope;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -54,12 +63,23 @@ public class ResourceGroupDTO {
     if (getResourceSelectors() == null) {
       return;
     }
-    List<ResourceSelector> sanitizedResourceSelectors = getResourceSelectors()
-                                                            .stream()
-                                                            .filter(DynamicResourceSelector.class ::isInstance)
-                                                            .map(DynamicResourceSelector.class ::cast)
-                                                            .distinct()
-                                                            .collect(toList());
+    List<ResourceSelector> sanitizedResourceSelectors = new ArrayList<>();
+    List<ResourceSelector> sanitizedDynamicResourceSelectors = getResourceSelectors()
+                                                                   .stream()
+                                                                   .filter(DynamicResourceSelector.class ::isInstance)
+                                                                   .map(DynamicResourceSelector.class ::cast)
+                                                                   .distinct()
+                                                                   .collect(toList());
+
+    List<ResourceSelector> sanitizedResourceSelectorsByScope = getResourceSelectors()
+                                                                   .stream()
+                                                                   .filter(ResourceSelectorByScope.class ::isInstance)
+                                                                   .map(ResourceSelectorByScope.class ::cast)
+                                                                   .distinct()
+                                                                   .collect(toList());
+
+    sanitizedResourceSelectors.addAll(sanitizedDynamicResourceSelectors);
+    sanitizedResourceSelectors.addAll(sanitizedResourceSelectorsByScope);
 
     Map<String, List<String>> staticResources =
         getResourceSelectors()

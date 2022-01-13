@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.fullsync.remote.mappers;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -22,6 +29,8 @@ public class GitFullSyncConfigMapper {
         .accountIdentifier(gitFullSyncConfig.getAccountIdentifier())
         .orgIdentifier(gitFullSyncConfig.getOrgIdentifier())
         .projectIdentifier(gitFullSyncConfig.getProjectIdentifier())
+        .targetBranch(gitFullSyncConfig.getTargetBranch())
+        .isNewBranch(gitFullSyncConfig.isNewBranch())
         .build();
   }
 
@@ -36,6 +45,8 @@ public class GitFullSyncConfigMapper {
         .branch(gitFullSyncConfigRequestDTO.getBranch())
         .yamlGitConfigIdentifier(gitFullSyncConfigRequestDTO.getRepoIdentifier())
         .createPullRequest(gitFullSyncConfigRequestDTO.isCreatePullRequest())
+        .targetBranch(gitFullSyncConfigRequestDTO.getTargetBranch())
+        .isNewBranch(gitFullSyncConfigRequestDTO.isNewBranch())
         .build();
   }
 }

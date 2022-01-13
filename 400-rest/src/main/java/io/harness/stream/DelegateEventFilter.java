@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.stream;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -29,14 +36,9 @@ public class DelegateEventFilter extends BroadcastFilterAdapter {
   public BroadcastAction filter(String broadcasterId, AtmosphereResource r, Object originalMessage, Object message) {
     AtmosphereRequest req = r.getRequest();
     String delegateId = req.getParameter("delegateId");
-    String version = req.getHeader("Version");
 
     if (message instanceof DelegateTaskBroadcast) {
       DelegateTaskBroadcast broadcast = (DelegateTaskBroadcast) message;
-
-      if (version != null && !StringUtils.equals(version, broadcast.getVersion())) {
-        return abort(message);
-      }
 
       if (isNotBlank(broadcast.getPreAssignedDelegateId())
           && !StringUtils.equals(broadcast.getPreAssignedDelegateId(), delegateId)) {

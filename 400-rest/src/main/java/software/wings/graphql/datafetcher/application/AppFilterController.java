@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.graphql.datafetcher.application;
 
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
@@ -17,16 +24,20 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.FeatureName;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
 import io.harness.beans.SearchFilter;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UnexpectedException;
+import io.harness.ff.FeatureFlagService;
 
 import software.wings.beans.Application;
 import software.wings.graphql.schema.type.QLAppFilter;
+import software.wings.graphql.schema.type.QLAppFilterType;
 import software.wings.graphql.schema.type.QLGenericFilterType;
 import software.wings.graphql.schema.type.secrets.QLAppScopeFilter;
+import software.wings.security.AppFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.service.intfc.AppService;
 
@@ -41,6 +52,7 @@ import java.util.stream.Collectors;
 @TargetModule(HarnessModule._380_CG_GRAPHQL)
 public class AppFilterController {
   @Inject private AppService appService;
+  @Inject private FeatureFlagService featureFlagService;
 
   public void validateAppFilter(QLAppFilter appFilter, String accountId) {
     if (appFilter == null) {
@@ -49,8 +61,12 @@ public class AppFilterController {
     if (isEmpty(appFilter.getAppIds()) && appFilter.getFilterType() == null) {
       throw new InvalidRequestException("No appIds or filterType provided in app filter");
     }
-    if (isNotEmpty(appFilter.getAppIds()) && appFilter.getFilterType() != null) {
-      throw new InvalidRequestException("Cannot set both appIds and filterType in app filter");
+    if (isNotEmpty(appFilter.getAppIds()) && appFilter.getFilterType() == QLAppFilterType.ALL) {
+      throw new InvalidRequestException("Cannot set both appIds and filterType ALL in app filter");
+    }
+    if (!featureFlagService.isEnabled(FeatureName.CG_RBAC_EXCLUSION, accountId)
+        && QLAppFilterType.EXCLUDE_SELECTED.equals(appFilter.getFilterType())) {
+      throw new InvalidRequestException("Invalid Request: Please provide a valid application filter");
     }
     checkApplicationsExists(appFilter.getAppIds(), accountId);
   }
@@ -89,6 +105,16 @@ public class AppFilterController {
     return GenericEntityFilter.builder().filterType(filterType).ids(appFilter.getAppIds()).build();
   }
 
+  public AppFilter createAppFilter(QLAppFilter appFilter) {
+    String filterType = ALL;
+    if (appFilter.getFilterType() != null) {
+      filterType = appFilter.getFilterType().toString();
+    } else if (isNotEmpty(appFilter.getAppIds())) {
+      filterType = SELECTED;
+    }
+    return AppFilter.builder().filterType(filterType).ids(appFilter.getAppIds()).build();
+  }
+
   // Creates Filter for Environment and Service Type filters
   public GenericEntityFilter createGenericEntityFilter(QLAppScopeFilter appFilter) {
     if (isNotEmpty(appFilter.getAppId())) {
@@ -115,14 +141,17 @@ public class AppFilterController {
     checkAppIdsAreValid(appIds, appIdsPresentSet);
   }
 
-  public QLAppFilter createAppFilterOutput(GenericEntityFilter appFilter) {
+  public QLAppFilter createAppFilterOutput(AppFilter appFilter) {
     if (appFilter == null) {
       return null;
     }
     if (isEmpty(appFilter.getIds())) {
-      return QLAppFilter.builder().filterType(QLGenericFilterType.ALL).build();
+      return QLAppFilter.builder().filterType(QLAppFilterType.ALL).build();
+    } else if (appFilter.getFilterType() != null
+        && AppFilter.FilterType.EXCLUDE_SELECTED.equals(appFilter.getFilterType())) {
+      return QLAppFilter.builder().filterType(QLAppFilterType.EXCLUDE_SELECTED).appIds(appFilter.getIds()).build();
     }
-    return QLAppFilter.builder().appIds(appFilter.getIds()).build();
+    return QLAppFilter.builder().filterType(QLAppFilterType.SELECTED).appIds(appFilter.getIds()).build();
   }
 
   public QLAppScopeFilter createAppScopeFilterOutput(GenericEntityFilter appFilter) {

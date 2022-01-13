@@ -1,7 +1,15 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.impl;
 
 import static io.harness.delegate.beans.DelegateTaskResponse.ResponseCode;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_RESPONSE;
 
 import static java.lang.System.currentTimeMillis;
 
@@ -14,6 +22,7 @@ import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.DelegateDriverLogContext;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
@@ -39,7 +48,6 @@ import java.util.List;
 import javax.validation.executable.ValidateOnExecution;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.mongodb.morphia.query.Query;
 
@@ -56,6 +64,8 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
   @Getter private Subject<DelegateTaskRetryObserver> retryObserverSubject = new Subject<>();
   @Inject @Getter private Subject<DelegateTaskStatusObserver> delegateTaskStatusObserverSubject;
   @Inject private RemoteObserverInformer remoteObserverInformer;
+
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   @Override
   public void touchExecutingTasks(String accountId, String delegateId, List<String> delegateTaskIds) {
@@ -104,11 +114,6 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
     if (delegateTask != null) {
       try (AutoLogContext ignore = new TaskLogContext(taskId, delegateTask.getData().getTaskType(),
                TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR)) {
-        if (!StringUtils.equals(delegateTask.getVersion(), getVersion())) {
-          log.warn("Version mismatch for task. [managerVersion {}, taskVersion {}]", getVersion(),
-              delegateTask.getVersion());
-        }
-
         if (response.getResponseCode() == ResponseCode.RETRY_ON_OTHER_DELEGATE) {
           RetryDelegate retryDelegate =
               RetryDelegate.builder().delegateId(delegateId).delegateTask(delegateTask).taskQuery(taskQuery).build();
@@ -149,6 +154,8 @@ public class DelegateTaskServiceImpl implements DelegateTaskService {
     if (taskQuery != null) {
       persistence.deleteOnServer(taskQuery);
     }
+
+    delegateMetricsService.recordDelegateTaskResponseMetrics(delegateTask, response, DELEGATE_TASK_RESPONSE);
   }
 
   @VisibleForTesting

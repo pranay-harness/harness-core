@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
@@ -10,16 +17,12 @@ import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.beans.alert.AlertType.ApprovalNeeded;
 import static software.wings.beans.alert.AlertType.CONTINUOUS_VERIFICATION_ALERT;
 import static software.wings.beans.alert.AlertType.DEPLOYMENT_RATE_APPROACHING_LIMIT;
-import static software.wings.beans.alert.AlertType.DelegateProfileError;
 import static software.wings.beans.alert.AlertType.DelegatesDown;
 import static software.wings.beans.alert.AlertType.GitConnectionError;
 import static software.wings.beans.alert.AlertType.GitSyncError;
 import static software.wings.beans.alert.AlertType.INSTANCE_USAGE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.InvalidKMS;
 import static software.wings.beans.alert.AlertType.ManualInterventionNeeded;
-import static software.wings.beans.alert.AlertType.NoActiveDelegates;
-import static software.wings.beans.alert.AlertType.NoEligibleDelegates;
-import static software.wings.beans.alert.AlertType.NoInstalledDelegates;
 import static software.wings.beans.alert.AlertType.RESOURCE_USAGE_APPROACHING_LIMIT;
 import static software.wings.beans.alert.AlertType.USAGE_LIMIT_EXCEEDED;
 import static software.wings.beans.alert.AlertType.USERGROUP_SYNC_FAILED;
@@ -52,9 +55,6 @@ import software.wings.beans.alert.AlertType;
 import software.wings.beans.alert.ApprovalNeededAlert;
 import software.wings.beans.alert.ArtifactCollectionFailedAlert;
 import software.wings.beans.alert.ManualInterventionNeededAlert;
-import software.wings.beans.alert.NoActiveDelegatesAlert;
-import software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation.NoEligibleDelegatesAlertReconciliationKeys;
-import software.wings.beans.alert.NoInstalledDelegatesAlert;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.dl.WingsPersistence;
 import software.wings.logcontext.AlertLogContext;
@@ -90,10 +90,9 @@ import org.mongodb.morphia.query.UpdateResults;
 @TargetModule(HarnessModule._955_ALERT_BEANS)
 public class AlertServiceImpl implements AlertService {
   // TODO: check if ARTIFACT_COLLECTION_FAILED alert type needs to be added here
-  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = ImmutableList.of(NoActiveDelegates, DelegatesDown,
-      NoEligibleDelegates, DelegateProfileError, DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT,
-      USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED, RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError,
-      InvalidKMS, CONTINUOUS_VERIFICATION_ALERT);
+  private static final List<AlertType> ALERT_TYPES_TO_NOTIFY_ON = ImmutableList.of(DelegatesDown,
+      DEPLOYMENT_RATE_APPROACHING_LIMIT, INSTANCE_USAGE_APPROACHING_LIMIT, USAGE_LIMIT_EXCEEDED, USERGROUP_SYNC_FAILED,
+      RESOURCE_USAGE_APPROACHING_LIMIT, GitSyncError, GitConnectionError, InvalidKMS, CONTINUOUS_VERIFICATION_ALERT);
   private static final List<AlertType> CLOSED_ALERT_TYPES_TO_NOTIFY_ON =
       ImmutableList.of(CONTINUOUS_VERIFICATION_ALERT, InvalidKMS);
   private static final Iterable<AlertStatus> STATUS_ACTIVE = ImmutableSet.of(Open, Pending);
@@ -157,34 +156,6 @@ public class AlertServiceImpl implements AlertService {
         iterator.forEach(this::close);
       }
     });
-  }
-
-  @Override
-  public void delegateAvailabilityUpdated(String accountId) {
-    findExistingAlert(
-        accountId, GLOBAL_APP_ID, NoActiveDelegates, NoActiveDelegatesAlert.builder().accountId(accountId).build())
-        .ifPresent(this::close);
-    findExistingAlert(accountId, GLOBAL_APP_ID, NoInstalledDelegates,
-        NoInstalledDelegatesAlert.builder().accountId(accountId).build())
-        .ifPresent(this::close);
-  }
-
-  @Override
-  public void delegateEligibilityUpdated(String accountId, String delegateId) {
-    Query<Alert> query = wingsPersistence.createQuery(Alert.class)
-                             .filter(AlertKeys.accountId, accountId)
-                             .filter(AlertKeys.type, NoEligibleDelegates)
-                             .field(AlertKeys.status)
-                             .in(STATUS_ACTIVE);
-
-    UpdateOperations<Alert> updateOperations =
-        wingsPersistence.createUpdateOperations(Alert.class)
-            .disableValidation()
-            .set(AlertKeys.alertReconciliation_needed, Boolean.TRUE)
-            .addToSet(
-                AlertKeys.alertReconciliation + "." + NoEligibleDelegatesAlertReconciliationKeys.delegates, delegateId);
-
-    wingsPersistence.update(query, updateOperations);
   }
 
   @Override

@@ -1,5 +1,13 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.resourcegroup.framework.service.impl;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.resourcegroup.beans.ValidatorType.DYNAMIC;
 import static io.harness.resourcegroup.beans.ValidatorType.STATIC;
 
@@ -10,6 +18,7 @@ import io.harness.resourcegroup.framework.service.ResourceGroupValidatorService;
 import io.harness.resourcegroup.model.DynamicResourceSelector;
 import io.harness.resourcegroup.model.ResourceGroup;
 import io.harness.resourcegroup.model.ResourceSelector;
+import io.harness.resourcegroup.model.ResourceSelectorByScope;
 import io.harness.resourcegroup.model.StaticResourceSelector;
 
 import com.google.inject.Inject;
@@ -52,10 +61,23 @@ public class ResourceGroupValidatorServiceImpl implements ResourceGroupValidator
           iterator.remove();
           updated = true;
         }
+      } else if (resourceSelector instanceof ResourceSelectorByScope) {
+        ResourceSelectorByScope resourceSelectorByScope = (ResourceSelectorByScope) resourceSelector;
+        if (!isValidResourceSelectorByScope(scope, resourceSelectorByScope)) {
+          iterator.remove();
+          updated = true;
+        }
       }
     }
     resourceGroup.setResourceSelectors(newResourceSelectors);
     return updated;
+  }
+
+  private boolean isValidResourceSelectorByScope(Scope scope, ResourceSelectorByScope resourceSelector) {
+    if (scope == null || isEmpty(scope.getAccountIdentifier())) {
+      return resourceSelector.getScope() == null || isEmpty(resourceSelector.getScope().getAccountIdentifier());
+    }
+    return scope.equals(resourceSelector.getScope());
   }
 
   private boolean isValidDynamicResourceSelector(Scope scope, DynamicResourceSelector resourceSelector) {

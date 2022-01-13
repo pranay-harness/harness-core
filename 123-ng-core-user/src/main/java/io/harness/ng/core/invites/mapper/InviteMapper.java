@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.invites.mapper;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -43,7 +50,7 @@ public class InviteMapper {
         .id(inviteDTO.getId())
         .name(inviteDTO.getName())
         .email(inviteDTO.getEmail())
-        .roleBindings(inviteDTO.getRoleBindings())
+        .roleBindings(inviteDTO.getRoleBindings() == null ? new ArrayList<>() : inviteDTO.getRoleBindings())
         .userGroups(inviteDTO.getUserGroups())
         .inviteType(inviteDTO.getInviteType())
         .accountIdentifier(ngAccess.getAccountIdentifier())

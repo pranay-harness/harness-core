@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -8,6 +15,10 @@ import io.harness.ff.FeatureFlagModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
 import io.harness.filter.mapper.FilterPropertiesMapper;
+import io.harness.metrics.impl.DelegateMetricsServiceImpl;
+import io.harness.metrics.intfc.DelegateMetricsService;
+import io.harness.metrics.service.api.MetricService;
+import io.harness.metrics.service.impl.MetricServiceImpl;
 import io.harness.service.impl.DelegateCacheImpl;
 import io.harness.service.impl.DelegateCallbackRegistryImpl;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
@@ -34,6 +45,8 @@ public class DelegateServiceModule extends AbstractModule {
     install(FiltersModule.getInstance());
 
     bind(DelegateTaskService.class).to(DelegateTaskServiceImpl.class);
+    bind(DelegateMetricsService.class).to(DelegateMetricsServiceImpl.class);
+    bind(MetricService.class).to(MetricServiceImpl.class);
     bind(DelegateCallbackRegistry.class).to(DelegateCallbackRegistryImpl.class);
     bind(DelegateTaskSelectorMapService.class).to(DelegateTaskSelectorMapServiceImpl.class);
     bind(DelegateInsightsService.class).to(DelegateInsightsServiceImpl.class);

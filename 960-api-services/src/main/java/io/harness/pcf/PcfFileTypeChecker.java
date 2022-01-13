@@ -1,6 +1,14 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pcf;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.pcf.model.ManifestType.APPLICATION_MANIFEST;
 import static io.harness.pcf.model.ManifestType.AUTOSCALAR_MANIFEST;
 import static io.harness.pcf.model.ManifestType.VARIABLE_MANIFEST;
@@ -9,6 +17,8 @@ import static io.harness.pcf.model.PcfConstants.NAME_MANIFEST_YML_ELEMENT;
 import static io.harness.pcf.model.PcfConstants.PCF_AUTOSCALAR_MANIFEST_INSTANCE_LIMITS_ELE;
 import static io.harness.pcf.model.PcfConstants.PCF_AUTOSCALAR_MANIFEST_RULES_ELE;
 
+import io.harness.logging.LogCallback;
+import io.harness.logging.LogLevel;
 import io.harness.pcf.model.ManifestType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
+import javax.annotation.Nullable;
 import lombok.extern.slf4j.Slf4j;
 
 @Singleton
@@ -31,12 +42,15 @@ public class PcfFileTypeChecker {
     yaml = new Yaml(new SafeConstructor());
   }
 
-  public ManifestType getManifestType(String content) {
-    Map<String, Object> map = null;
+  public ManifestType getManifestType(String content, @Nullable String fileName, LogCallback logCallback) {
+    Map<String, Object> map;
     ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
     try {
       map = mapper.readValue(content, Map.class);
     } catch (Exception e) {
+      log.warn(getParseErrorMessage(fileName), e);
+      logCallback.saveExecutionLog(getParseErrorMessage(fileName), LogLevel.WARN);
+      logCallback.saveExecutionLog("Error: " + e.getMessage(), LogLevel.WARN);
       return null;
     }
 
@@ -52,7 +66,13 @@ public class PcfFileTypeChecker {
       return AUTOSCALAR_MANIFEST;
     }
 
+    log.warn(getParseErrorMessage(fileName));
+    logCallback.saveExecutionLog(getParseErrorMessage(fileName), LogLevel.WARN);
     return null;
+  }
+
+  private String getParseErrorMessage(String fileName) {
+    return "Failed to parse file" + (isNotEmpty(fileName) ? " " + fileName : "") + ".";
   }
 
   private boolean isAutoscalarManifest(Map<String, Object> map) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.beans.alert;
 
 import static software.wings.alerts.AlertCategory.Approval;
@@ -7,7 +14,6 @@ import static software.wings.alerts.AlertCategory.Setup;
 import static software.wings.alerts.AlertSeverity.Error;
 import static software.wings.alerts.AlertSeverity.Warning;
 
-import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
@@ -17,17 +23,10 @@ import software.wings.alerts.AlertSeverity;
 import lombok.Getter;
 
 @TargetModule(HarnessModule._955_ALERT_BEANS)
-@BreakDependencyOn("software.wings.beans.alert.NoEligibleDelegatesAlertReconciliation")
 public enum AlertType {
   ApprovalNeeded(Approval, Warning),
   ManualInterventionNeeded(ManualIntervention, Warning),
-  NoActiveDelegates(Setup, Error, 2),
-  NoInstalledDelegates(Setup, Error, 2),
   DelegatesDown(Setup, Error, 2),
-  DelegatesScalingGroupDownAlert(Setup, Error),
-  DelegateProfileError(Setup, Error),
-  NoEligibleDelegates(Setup, Error, 0, NoEligibleDelegatesAlertReconciliation.builder().build()),
-  PerpetualTaskAlert(Setup, Error),
   InvalidKMS(Setup, Error),
   GitSyncError(Setup, Error),
   GitConnectionError(Setup, Error),

@@ -52,6 +52,7 @@ nextGen:
   jwtIdentityServiceSecret: HVSKUYqD4e5Rxu12hFDdCJKGM64sxgEynvdDhaOHaTHhwwn0K4Ttr0uoOxSsEVYNrUU=
   ciManagerSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
   ceNextGenServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
+  ffServiceSecret: IC04LYMBf1lDP5oeY4hupxd4HJhLmN6azUku3xEbeE3SUx5G3ZYzhbiwVtK4i7AmqyU9OZkwB4v8E9qM
 
 enableAudit: false
 
@@ -147,11 +148,16 @@ auditClientConfig:
 
 ceNextGenClientConfig:
   baseUrl: http://localhost:7340/api/
-  connectTimeOutSeconds: 15
-  readTimeOutSeconds: 15
+  connectTimeOutSeconds: 30
+  readTimeOutSeconds: 200
 
 lightwingClientConfig:
   baseUrl: http://localhost:9595/
+  connectTimeOutSeconds: 15
+  readTimeOutSeconds: 15
+
+ffServerClientConfig:
+  baseUrl: http://localhost:3000/api/1.0/
   connectTimeOutSeconds: 15
   readTimeOutSeconds: 15
 

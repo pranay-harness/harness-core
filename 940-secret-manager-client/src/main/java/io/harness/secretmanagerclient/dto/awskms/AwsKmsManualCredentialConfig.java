@@ -1,9 +1,18 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.secretmanagerclient.dto.awskms;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,7 +28,10 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "AwsKmsManualCredentialConfigKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.secretmanagerclient.dto.awskms.AwsKmsManualCredentialConfig")
+@Schema(
+    description =
+        "This contains the specifications for the AWS KMS credential, which uses Access Key and Secret Key for authentication.")
 public class AwsKmsManualCredentialConfig implements AwsKmsCredentialSpecConfig {
-  String accessKey;
-  String secretKey;
+  @Schema(description = SecretManagerDescriptionConstants.ACCESS_KEY) String accessKey;
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_KEY) String secretKey;
 }

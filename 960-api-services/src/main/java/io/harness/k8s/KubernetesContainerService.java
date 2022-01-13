@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -149,6 +156,10 @@ public interface KubernetesContainerService {
   String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String infraMappingId) throws IOException;
 
   String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId) throws IOException;
+
+  String fetchReleaseHistoryValue(V1ConfigMap configMap) throws IOException;
+
+  String fetchReleaseHistoryValue(V1Secret secret) throws IOException;
 
   V1ObjectMeta saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
       boolean storeInSecrets) throws IOException;

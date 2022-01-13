@@ -1,3 +1,10 @@
+/*
+ * Copyright 2017 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 // start mongo client and run following command -> 'load("scripts/mongo-sharding.js");'
 const conn = new Mongo('cluster0-shard-00-00-w7uwj.mongodb.net:37017');
 const db = conn.getDB('admin');
@@ -80,6 +87,3 @@ if (db.auth('dbadmin', 'W!ngs@tl@s')) {
 } else {
   print('Could not authenticate');
 }
-
-
-

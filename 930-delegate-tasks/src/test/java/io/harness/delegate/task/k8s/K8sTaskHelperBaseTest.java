@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -343,6 +350,9 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         asList(Release.builder().status(Release.Status.Succeeded).resources(kubernetesResourceIdList).build()));
 
     String releaseHistoryString = releaseHistory.getAsYaml();
+    doReturn(releaseHistoryString)
+        .when(mockKubernetesContainerService)
+        .fetchReleaseHistoryValue(any(V1ConfigMap.class));
     data.put(ReleaseHistoryKeyName, releaseHistoryString);
     kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
         releaseName, KubernetesConfig.builder().namespace("default").build(), executionLogCallback);
@@ -413,6 +423,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
                                                 .build()));
 
     String releaseHistoryString = releaseHistorySecret.getAsYaml();
+    doReturn(releaseHistoryString).when(mockKubernetesContainerService).fetchReleaseHistoryValue(any(V1Secret.class));
     secret.getData().put(ReleaseHistoryKeyName, releaseHistoryString.getBytes());
 
     ReleaseHistory releaseHistoryConfigMap = ReleaseHistory.createNew();
@@ -477,6 +488,7 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
         asList(Release.builder().status(Release.Status.Succeeded).resources(kubernetesResourceIdList).build()));
 
     String releaseHistoryString = releaseHistory.getAsYaml();
+    doReturn(releaseHistoryString).when(mockKubernetesContainerService).fetchReleaseHistoryValue(any(V1Secret.class));
     secret.getData().put(ReleaseHistoryKeyName, releaseHistoryString.getBytes());
     kubernetesResourceIds = k8sTaskHelperBase.fetchAllResourcesForRelease(
         releaseName, KubernetesConfig.builder().namespace("default").build(), executionLogCallback);

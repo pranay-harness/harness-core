@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -25,6 +32,8 @@ public interface PMSExecutionService {
       String planExecutionId, boolean pipelineDeleted, boolean resolveExpressions);
 
   Page<PipelineExecutionSummaryEntity> getPipelineExecutionSummaryEntity(Criteria criteria, Pageable pageable);
+
+  PipelineExecutionSummaryEntity findFirst(Criteria criteria);
 
   PipelineExecutionSummaryEntity getPipelineExecutionSummaryEntity(
       String accountId, String orgId, String projectId, String planExecutionId, boolean pipelineDeleted);

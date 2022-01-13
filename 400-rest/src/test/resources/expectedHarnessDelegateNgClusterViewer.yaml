@@ -123,8 +123,6 @@ spec:
           value: "false"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
-        - name: VERSION_CHECK_DISABLED
-          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
@@ -133,8 +131,6 @@ spec:
           value: "desc"
         - name: DELEGATE_TAGS
           value: ""
-        - name: DELEGATE_TASK_LIMIT
-          value: "50"
         - name: DELEGATE_ORG_IDENTIFIER
           value: "9S5HMP0xROugl3_QgO62rQO"
         - name: DELEGATE_PROJECT_IDENTIFIER

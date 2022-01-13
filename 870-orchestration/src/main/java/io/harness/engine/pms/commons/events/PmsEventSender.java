@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.pms.commons.events;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
@@ -16,7 +23,7 @@ import io.harness.beans.FeatureName;
 import io.harness.events.PmsRedissonClientFactory;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisProducerFactory;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.PmsFeatureFlagService;
@@ -60,6 +67,7 @@ public class PmsEventSender {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationModuleConfig moduleConfig;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
+  @Inject private RedisProducerFactory redisProducerFactory;
 
   private final LoadingCache<ProducerCacheKey, Producer> producerCache =
       CacheBuilder.newBuilder()
@@ -163,8 +171,8 @@ public class PmsEventSender {
   private Producer buildRedisProducer(String topicName, RedisConfig redisConfig, String serviceId, int topicSize) {
     return redisConfig.getRedisUrl().equals(DUMMY_REDIS_URL)
         ? NoOpProducer.of(topicName)
-        : RedisProducer.of(topicName, PmsRedissonClientFactory.getRedisClient(redisConfig), topicSize, serviceId,
-            redisConfig.getEnvNamespace());
+        : redisProducerFactory.createRedisProducer(topicName, PmsRedissonClientFactory.getRedisClient(redisConfig),
+            topicSize, serviceId, redisConfig.getEnvNamespace());
   }
 
   PmsSdkInstance getPmsSdkInstance(String serviceName) {

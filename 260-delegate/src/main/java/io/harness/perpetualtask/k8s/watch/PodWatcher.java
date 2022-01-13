@@ -1,9 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.k8s.watch;
 
 import static io.harness.ccm.commons.constants.Constants.CLUSTER_ID_IDENTIFIER;
 import static io.harness.ccm.commons.constants.Constants.UID;
 import static io.harness.perpetualtask.k8s.utils.DebugConstants.RELATIVITY_CLUSTER_IDS;
-import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.NOT_OLDER_THAN;
 import static io.harness.perpetualtask.k8s.watch.PodEvent.EventType.EVENT_TYPE_TERMINATED;
 import static io.harness.perpetualtask.k8s.watch.Volume.VolumeType.VOLUME_TYPE_PVC;
 
@@ -107,7 +114,7 @@ public class PodWatcher implements ResourceEventHandler<V1Pod> {
                 -> {
               try {
                 return coreV1Api.listPodForAllNamespacesCall(null, null, null, null, null, null,
-                    callGeneratorParams.resourceVersion, MOST_RECENT, callGeneratorParams.timeoutSeconds,
+                    callGeneratorParams.resourceVersion, NOT_OLDER_THAN, callGeneratorParams.timeoutSeconds,
                     callGeneratorParams.watch, null);
               } catch (ApiException e) {
                 log.error("Unknown exception occurred", e);

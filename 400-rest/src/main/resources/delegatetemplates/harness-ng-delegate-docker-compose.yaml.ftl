@@ -27,9 +27,7 @@ services:
       - DELEGATE_DESCRIPTION=${delegateDescription}
       - DELEGATE_TYPE=DOCKER
       - DELEGATE_TAGS=${delegateTags}
-      - DELEGATE_TASK_LIMIT=${delegateTaskLimit}
       - DELEGATE_ORG_IDENTIFIER=${delegateOrgIdentifier}
       - DELEGATE_PROJECT_IDENTIFIER=${delegateProjectIdentifier}
       - PROXY_MANAGER=true
-      - VERSION_CHECK_DISABLED=${versionCheckDisabled}
       - INIT_SCRIPT=echo "Docker delegate init script executed."

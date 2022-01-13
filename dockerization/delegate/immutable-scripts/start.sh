@@ -1,4 +1,8 @@
 #!/bin/bash -e
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 function append_config() {
   CONFIG_KEY=$1
@@ -43,7 +47,6 @@ echo "doUpgrade: false" >> config-delegate.yml
 
 append_config "grpcServiceEnabled" $GRPC_SERVICE_ENABLED
 append_config "grpcServiceConnectorPort" $GRPC_SERVICE_CONNECTOR_PORT
-append_config "versionCheckDisabled" $VERSION_CHECK_DISABLED
 append_config "clientToolsDownloadDisabled" $CLIENT_TOOLS_DOWNLOAD_DISABLED
 
 # 3. Start the delegate

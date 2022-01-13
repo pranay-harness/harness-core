@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.authenticationsettings.resources;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -253,7 +260,11 @@ public class AuthenticationSettingsResource {
           "groupMembershipAttr") String groupMembershipAttr,
       @Parameter(description = "Specify whether or not to enable authorization") @FormDataParam("authorizationEnabled")
       Boolean authorizationEnabled, @Parameter(description = "Logout URL") @FormDataParam("logoutUrl") String logoutUrl,
-      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier) {
+      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier,
+      @Parameter(description = "SAML provider type") @FormDataParam("samlProviderType") String samlProviderType,
+      @Parameter(description = "Optional SAML clientId for Azure SSO") @FormDataParam("clientId") String clientId,
+      @Parameter(description = "Optional SAML clientSecret reference string for Azure SSO") @FormDataParam(
+          "clientSecret") String clientSecret) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
     try {
@@ -261,8 +272,9 @@ public class AuthenticationSettingsResource {
           new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
       final MultipartBody.Part formData =
           MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
-      SSOConfig response = authenticationSettingsService.uploadSAMLMetadata(
-          accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier);
+      SSOConfig response =
+          authenticationSettingsService.uploadSAMLMetadata(accountId, formData, displayName, groupMembershipAttr,
+              authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId, clientSecret);
       return new RestResponse<>(response);
     } catch (Exception e) {
       throw new GeneralException("Error while creating new SAML Config", e);
@@ -290,7 +302,11 @@ public class AuthenticationSettingsResource {
           "groupMembershipAttr") String groupMembershipAttr,
       @Parameter(description = "Specify whether or not to enable authorization") @FormDataParam("authorizationEnabled")
       Boolean authorizationEnabled, @Parameter(description = "Logout URL") @FormDataParam("logoutUrl") String logoutUrl,
-      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier) {
+      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier,
+      @Parameter(description = "SAML provider type") @FormDataParam("samlProviderType") String samlProviderType,
+      @Parameter(description = "Optional SAML clientId for Azure SSO") @FormDataParam("clientId") String clientId,
+      @Parameter(description = "Optional SAML clientSecret reference string for Azure SSO") @FormDataParam(
+          "clientSecret") String clientSecret) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
     try {
@@ -300,8 +316,9 @@ public class AuthenticationSettingsResource {
             uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
         formData = MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
       }
-      SSOConfig response = authenticationSettingsService.updateSAMLMetadata(
-          accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier);
+      SSOConfig response =
+          authenticationSettingsService.updateSAMLMetadata(accountId, formData, displayName, groupMembershipAttr,
+              authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId, clientSecret);
       return new RestResponse<>(response);
     } catch (Exception e) {
       throw new GeneralException("Error while editing saml-config", e);

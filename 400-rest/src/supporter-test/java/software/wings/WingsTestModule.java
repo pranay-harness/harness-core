@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -22,6 +29,7 @@ import io.harness.azure.impl.AzureNetworkClientImpl;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.delegate.DelegateConfigurationServiceProvider;
 import io.harness.delegate.DelegatePropertiesServiceProvider;
+import io.harness.delegate.beans.DelegateFileManagerBase;
 import io.harness.exception.WingsException;
 import io.harness.git.GitClientV2;
 import io.harness.git.GitClientV2Impl;
@@ -230,6 +238,7 @@ public class WingsTestModule extends AbstractModule {
     bind(AzureMonitorClient.class).to(AzureMonitorClientImpl.class);
     bind(CustomManifestService.class).to(CustomManifestServiceImpl.class);
     bind(EncryptDecryptHelper.class).to(EncryptDecryptHelperImpl.class);
+    bind(DelegateFileManagerBase.class).toInstance(mock(DelegateFileManagerBase.class));
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("systemExecutor"))

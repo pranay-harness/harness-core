@@ -68,17 +68,17 @@ spec:
             cpu: "${delegateCpu}"
             memory: "${delegateRam}Gi"
         readinessProbe:
-          httpGet:
-            path: /api/health
-            port: 3460
-            scheme: HTTP
+          exec:
+            command:
+              - echo
+              - 'Its ready'
           initialDelaySeconds: 20
           periodSeconds: 10
         livenessProbe:
-          httpGet:
-            path: /api/health
-            port: 3460
-            scheme: HTTP
+          exec:
+            command:
+              - echo
+              - 'Its alive'
           initialDelaySeconds: 240
           periodSeconds: 10
           failureThreshold: 2

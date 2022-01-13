@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
@@ -114,6 +121,7 @@ import java.util.stream.Stream;
 import lombok.Builder;
 import lombok.Value;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.assertj.core.util.Lists;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -1667,6 +1675,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     String delegateId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
                                     .data(TaskData.builder().taskType(TaskType.HTTP.name()).build())
                                     .executionCapabilities(emptyList())
                                     .build();
@@ -1716,8 +1725,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     TaskData taskData = TaskData.builder().taskType(TaskType.SCRIPT.name()).build();
     String accountId = generateUuid();
     String delegateId = generateUuid();
-    DelegateTask delegateTask =
-        DelegateTask.builder().accountId(accountId).data(taskData).executionCapabilities(emptyList()).build();
+    DelegateTask delegateTask = DelegateTask.builder()
+                                    .accountId(accountId)
+                                    .status(DelegateTask.Status.QUEUED)
+                                    .data(taskData)
+                                    .executionCapabilities(emptyList())
+                                    .build();
     Delegate delegate = Delegate.builder()
                             .accountId(accountId)
                             .uuid(delegateId)
@@ -1858,17 +1871,20 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     when(delegateCache.get("accountId", delegateId2, false)).thenReturn(delegate2);
     DelegateTask asyncTask = DelegateTask.builder()
                                  .uuid(generateUuid())
+                                 .status(DelegateTask.Status.QUEUED)
                                  .accountId("accountId")
                                  .data(TaskData.builder().async(true).taskType(TaskType.SCRIPT.name()).build())
                                  .build();
     DelegateTask syncTask = DelegateTask.builder()
                                 .uuid(generateUuid())
                                 .accountId("accountId")
+                                .status(DelegateTask.Status.QUEUED)
                                 .data(TaskData.builder().async(false).taskType(TaskType.HTTP.name()).build())
                                 .build();
     DelegateTask wrongAsyncTask =
         DelegateTask.builder()
             .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
             .accountId("accountId")
             .data(TaskData.builder().async(true).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
             .build();
@@ -1876,6 +1892,7 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
     DelegateTask wrongSyncTask =
         DelegateTask.builder()
             .uuid(generateUuid())
+            .status(DelegateTask.Status.QUEUED)
             .accountId("accountId")
             .data(TaskData.builder().async(false).taskType(TaskType.SPOTINST_COMMAND_TASK.name()).build())
             .build();
@@ -1957,7 +1974,12 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = JENNY)
   @Category(UnitTests.class)
-  public void testEligibleDelegatesForTask() {}
+  public void testGetActiveEligibleDelegatesForTask() throws ExecutionException {
+    List<Delegate> delegates = createAccountDelegates();
+    when(accountDelegatesCache.get("ACCOUNT_ID")).thenReturn(delegates);
+    List<String> delegateIds = delegates.stream().map(delegate -> delegate.getUuid()).collect(toList());
+    assertThat(assignDelegateService.fetchActiveDelegates("ACCOUNT_ID").size() == 2);
+  }
 
   private DelegateTask constructDelegateTask(boolean async, Set<String> validatingTaskIds, DelegateTask.Status status) {
     DelegateTask delegateTask =
@@ -1991,5 +2013,54 @@ public class AssignDelegateServiceImplTest extends WingsBaseTest {
                             .build();
     persistence.save(delegate);
     return delegate;
+  }
+
+  private List<Delegate> createAccountDelegates() {
+    Delegate delegate1 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate1);
+    Delegate delegate2 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate2);
+    Delegate delegate3 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.WAITING_FOR_APPROVAL)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis())
+                             .build();
+    persistence.save(delegate3);
+    // non connected delegate
+    Delegate delegate4 = Delegate.builder()
+                             .accountId(ACCOUNT_ID)
+                             .ip("127.0.0.1")
+                             .hostName("localhost")
+                             .delegateName("testDelegateName")
+                             .version(VERSION)
+                             .status(DelegateInstanceStatus.ENABLED)
+                             .supportedTaskTypes(supportedTasks)
+                             .lastHeartBeat(System.currentTimeMillis() - TimeUnit.MINUTES.toMillis(26))
+                             .build();
+    persistence.save(delegate4);
+    return Lists.newArrayList(delegate1, delegate2, delegate3, delegate4);
   }
 }

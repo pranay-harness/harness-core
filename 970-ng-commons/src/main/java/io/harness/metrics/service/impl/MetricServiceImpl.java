@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.metrics.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -37,7 +44,6 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -149,7 +155,6 @@ public class MetricServiceImpl implements MetricService {
           StackdriverStatsConfiguration.builder()
               .setExportInterval(Duration.fromMillis(TimeUnit.MINUTES.toMillis(1)))
               .setDeadline(Duration.fromMillis(TimeUnit.MINUTES.toMillis(5)))
-              .setConstantLabels(Collections.emptyMap())
               .build();
       StackdriverStatsExporter.createAndRegister(configuration);
       log.info("StackdriverStatsExporter created");
@@ -266,11 +271,8 @@ public class MetricServiceImpl implements MetricService {
 
     labelValues.put(ENV_LABEL, env);
 
-    if (labelNames.size() != labelValues.size()) {
-      log.error("Some labels were not found from the object while trying to record metric. Label Names: " + labelNames
-          + " and labels: " + labelValues);
-      // TODO: send a metric for this and add alert on it.
-    }
+    // TODO: send a metric for this and add alert on it. If labelNames.size() != labelValues.size()
+
     return labelValues;
   }
 }

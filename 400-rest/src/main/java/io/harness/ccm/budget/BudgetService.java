@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.budget;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -25,6 +32,7 @@ public interface BudgetService {
   void incAlertCount(Budget budget, int thresholdIndex);
 
   List<Budget> list(String accountId);
+  List<Budget> listCgBudgets(String accountId);
   List<Budget> list(String accountId, Integer count, Integer startIndex);
   List<Budget> list(String accountId, String viewId);
   int getBudgetCount(String accountId);

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ccm.budget.dao;
 
 import io.harness.ccm.commons.entities.billing.Budget;
@@ -51,6 +58,16 @@ public class BudgetDao {
                               .field(BudgetKeys.name)
                               .equal(budgetName);
     return query.asList();
+  }
+
+  // Lists Current Gen budgets
+  public List<Budget> listCgBudgets(String accountId, Integer count, Integer startIndex) {
+    Query<Budget> query = persistence.createQuery(Budget.class)
+                              .field(BudgetKeys.accountId)
+                              .equal(accountId)
+                              .field(BudgetKeys.isNgBudget)
+                              .equal(false);
+    return query.asList(new FindOptions().skip(startIndex).limit(count));
   }
 
   public void update(String budgetId, Budget budget) {

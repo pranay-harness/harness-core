@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.resources;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -411,19 +418,19 @@ public class DelegateAgentResourceTest extends CategoryTest {
                                           .stopScript("stopScript")
                                           .build();
     when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, "KUBERNETES"))
         .thenReturn(delegateScripts);
 
     RestResponse<DelegateScripts> restResponse =
         RESOURCES.client()
             .target("/agent/delegates/delegateScriptsNg?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
-                + "&delegateSize=LAPTOP")
+                + "&delegateType=KUBERNETES")
             .request()
             .get(new GenericType<RestResponse<DelegateScripts>>() {});
 
     verify(delegateService, atLeastOnce())
         .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl);
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, "KUBERNETES");
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
   }
 

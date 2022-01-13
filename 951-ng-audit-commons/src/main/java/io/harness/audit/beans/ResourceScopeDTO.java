@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.audit.beans;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -15,6 +22,7 @@ import io.harness.ng.core.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -29,11 +37,13 @@ import lombok.experimental.FieldNameConstants;
 @JsonInclude(NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ResourceScopeKeys")
+@Schema(name = "ResourceScope", description = "This has scope details for the resource defined in Harness.")
 public class ResourceScopeDTO {
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  @Size(max = 2) Map<String, String> labels;
+  @Schema(description = "Identifier of Account") String accountIdentifier;
+  @Schema(description = "Identifier of Organization") String orgIdentifier;
+  @Schema(description = "Identifier of Project") String projectIdentifier;
+
+  @Schema(description = "Additional information about the Resource Scope") @Size(max = 2) Map<String, String> labels;
 
   @JsonIgnore
   public boolean isOrgScoped() {

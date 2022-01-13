@@ -1,4 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.provision.terraform;
+
+import static io.harness.cdng.provision.terraform.TerraformPlanCommand.DESTROY;
 
 import io.harness.EntityType;
 import io.harness.annotations.dev.HarnessTeam;
@@ -167,7 +176,8 @@ public class TerraformDestroyStep extends TaskExecutableWithRollbackAndRbac<Terr
     String entityId = helper.generateFullIdentifier(provisionerIdentifier, ambiance);
     builder.entityId(entityId);
     builder.currentStateFileId(helper.getLatestFileId(entityId));
-    TerraformInheritOutput inheritOutput = helper.getSavedInheritOutput(provisionerIdentifier, ambiance);
+    TerraformInheritOutput inheritOutput =
+        helper.getSavedInheritOutput(provisionerIdentifier, DESTROY.name(), ambiance);
     builder.workspace(inheritOutput.getWorkspace())
         .configFile(helper.getGitFetchFilesConfig(
             inheritOutput.getConfigFiles(), ambiance, TerraformStepHelper.TF_CONFIG_FILES))

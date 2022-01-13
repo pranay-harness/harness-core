@@ -1,7 +1,15 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.beans.connector.awssecretmanager;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -22,8 +30,16 @@ import lombok.Data;
 @JsonTypeName(AwsSecretManagerConstants.MANUAL_CONFIG)
 @ApiModel("AwsSMCredentialSpecManualConfig")
 @Schema(name = "AwsSMCredentialSpecManualConfig",
-    description = "Returns secret reference accessKey and secretKey of AWS Secret Manager")
+    description = "Returns secret reference access key and secret key of AWS Secret Manager.")
 public class AwsSMCredentialSpecManualConfigDTO implements AwsSecretManagerCredentialSpecDTO {
-  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData accessKey;
-  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
+  @SecretReference
+  @ApiModelProperty(dataType = "string")
+  @Schema(description = SecretManagerDescriptionConstants.ACCESS_KEY)
+  @NotNull
+  private SecretRefData accessKey;
+  @SecretReference
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  @Schema(description = SecretManagerDescriptionConstants.SECRET_KEY)
+  private SecretRefData secretKey;
 }

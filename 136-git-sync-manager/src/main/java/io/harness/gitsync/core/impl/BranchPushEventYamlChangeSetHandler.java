@@ -1,11 +1,16 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.core.impl;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.FeatureName;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
@@ -62,7 +67,6 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private final GitToHarnessProgressHelper gitToHarnessProgressHelper;
   private final GitBranchSyncService gitBranchSyncService;
   private final GitSyncErrorService gitSyncErrorService;
-  private final FeatureFlagService featureFlagService;
 
   @Override
   public YamlChangeSetStatus process(YamlChangeSetDTO yamlChangeSetDTO) {
@@ -142,7 +146,7 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
       log.error("Error while processing branch push event {}", yamlChangeSetDTO, ex);
       String gitConnectivityErrorMessage = GitConnectivityExceptionHelper.getErrorMessage(ex);
       if (!gitConnectivityErrorMessage.isEmpty()) {
-        recordErrors(yamlChangeSetDTO, gitConnectivityErrorMessage);
+        recordConnectivityErrors(yamlChangeSetDTO, gitConnectivityErrorMessage);
       }
       // Update the g2h status to ERROR
       gitToHarnessProgressService.updateProgressStatus(
@@ -198,11 +202,9 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
         .build();
   }
 
-  private void recordErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
-    if (featureFlagService.isEnabled(FeatureName.NG_GIT_ERROR_EXPERIENCE, yamlChangeSetDTO.getAccountId())) {
-      gitSyncErrorService.recordConnectivityError(
-          yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);
-    }
+  private void recordConnectivityErrors(YamlChangeSetDTO yamlChangeSetDTO, String errorMessage) {
+    gitSyncErrorService.recordConnectivityError(
+        yamlChangeSetDTO.getAccountId(), yamlChangeSetDTO.getRepoUrl(), errorMessage);
   }
 
   private GitToHarnessProcessMsvcStepResponse performBranchSync(GitToHarnessGetFilesStepRequest request) {

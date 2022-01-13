@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -5,7 +12,6 @@ import static io.harness.data.encoding.EncodingUtils.compressString;
 import static io.harness.data.encoding.EncodingUtils.deCompressString;
 import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
-import static io.harness.data.encoding.EncodingUtils.encodeBase64ToByteArray;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.ACCESS_DENIED;
@@ -1865,14 +1871,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       throws IOException {
     V1ConfigMap configMap = getConfigMap(kubernetesConfig, releaseName);
     if (configMap != null && configMap.getData() != null && configMap.getData().containsKey(ReleaseHistoryKeyName)) {
-      Map<String, String> configMapData = configMap.getData();
-      String releaseHistory = configMapData.get(ReleaseHistoryKeyName);
-
-      if (configMapData.containsKey(CompressedReleaseHistoryFlag)
-          && Boolean.parseBoolean(configMapData.get(CompressedReleaseHistoryFlag))) {
-        return deCompressString(decodeBase64(releaseHistory));
-      }
-      return releaseHistory;
+      return fetchReleaseHistoryValue(configMap);
     }
 
     return EMPTY;
@@ -1883,17 +1882,33 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
       throws IOException {
     V1Secret secret = getSecret(kubernetesConfig, releaseName);
     if (secret != null && secret.getData() != null && secret.getData().containsKey(ReleaseHistoryKeyName)) {
-      Map<String, byte[]> secretData = secret.getData();
-      byte[] releaseHistory = secretData.get(ReleaseHistoryKeyName);
-
-      if (secretData.containsKey(CompressedReleaseHistoryFlag)
-          && secretData.get(CompressedReleaseHistoryFlag)[0] == 1) {
-        return deCompressString(decodeBase64(releaseHistory));
-      }
-      return new String(releaseHistory, Charsets.UTF_8);
+      return fetchReleaseHistoryValue(secret);
     }
 
     return EMPTY;
+  }
+
+  @Override
+  public String fetchReleaseHistoryValue(V1ConfigMap configMap) throws IOException {
+    Map<String, String> configMapData = configMap.getData();
+    String releaseHistory = configMapData.get(ReleaseHistoryKeyName);
+
+    if (configMapData.containsKey(CompressedReleaseHistoryFlag)
+        && Boolean.parseBoolean(configMapData.get(CompressedReleaseHistoryFlag))) {
+      return deCompressString(decodeBase64(releaseHistory));
+    }
+    return releaseHistory;
+  }
+
+  @Override
+  public String fetchReleaseHistoryValue(V1Secret secret) throws IOException {
+    Map<String, byte[]> secretData = secret.getData();
+    byte[] releaseHistory = secretData.get(ReleaseHistoryKeyName);
+
+    if (secretData.containsKey(CompressedReleaseHistoryFlag) && secretData.get(CompressedReleaseHistoryFlag)[0] == 1) {
+      return deCompressString(releaseHistory);
+    }
+    return new String(releaseHistory, Charsets.UTF_8);
   }
 
   @Override
@@ -1933,8 +1948,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   private V1Secret saveReleaseHistoryInSecrets(
       KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory) throws IOException {
     V1Secret secret = getSecret(kubernetesConfig, releaseName);
-    byte[] compressedReleaseHistory =
-        encodeBase64ToByteArray(compressString(releaseHistory, Deflater.BEST_COMPRESSION));
+    byte[] compressedReleaseHistory = compressString(releaseHistory, Deflater.BEST_COMPRESSION);
 
     if (secret == null) {
       secret = new V1SecretBuilder()

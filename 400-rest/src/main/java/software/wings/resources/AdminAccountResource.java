@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -225,15 +232,20 @@ public class AdminAccountResource {
   @PUT
   @Path("{accountId}/details")
   public RestResponse<Boolean> updateAccountDetails(@PathParam("accountId") String accountId,
-      @QueryParam("account-name") String accountName, @QueryParam("company-name") String companyName) {
+      @QueryParam("account-name") String accountName, @QueryParam("company-name") String companyName,
+      @QueryParam("ring-name") String ringName) {
     boolean accountNameUpdateSuccess = true;
     boolean companyNameUpdateStatus = true;
+    boolean ringNameUpdateStatus = true;
     if (!StringUtils.isEmpty(accountName)) {
       accountNameUpdateSuccess = adminAccountService.updateAccountName(accountId, accountName);
     }
     if (!StringUtils.isEmpty(companyName)) {
       companyNameUpdateStatus = adminAccountService.updateCompanyName(accountId, companyName);
     }
-    return new RestResponse<>(accountNameUpdateSuccess && companyNameUpdateStatus);
+    if (!StringUtils.isEmpty(ringName)) {
+      ringNameUpdateStatus = adminAccountService.updateRingName(accountId, companyName);
+    }
+    return new RestResponse<>(accountNameUpdateSuccess && companyNameUpdateStatus && ringNameUpdateStatus);
   }
 }

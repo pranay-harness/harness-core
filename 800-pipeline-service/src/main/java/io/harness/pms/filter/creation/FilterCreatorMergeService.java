@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.filter.creation;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -19,7 +26,6 @@ import io.harness.pms.filter.creation.FilterCreationResponseWrapper.FilterCreati
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
-import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.utils.CompletableFutures;
@@ -49,37 +55,25 @@ public class FilterCreatorMergeService {
   private final PmsSdkHelper pmsSdkHelper;
   private final PipelineSetupUsageHelper pipelineSetupUsageHelper;
   private final PmsGitSyncHelper pmsGitSyncHelper;
-  private final PMSPipelineTemplateHelper pipelineTemplateHelper;
 
   public static final int MAX_DEPTH = 10;
   private final Executor executor = Executors.newFixedThreadPool(5);
 
   @Inject
-  public FilterCreatorMergeService(PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper,
-      PmsGitSyncHelper pmsGitSyncHelper, PMSPipelineTemplateHelper pipelineTemplateHelper) {
+  public FilterCreatorMergeService(
+      PmsSdkHelper pmsSdkHelper, PipelineSetupUsageHelper pipelineSetupUsageHelper, PmsGitSyncHelper pmsGitSyncHelper) {
     this.pmsSdkHelper = pmsSdkHelper;
     this.pipelineSetupUsageHelper = pipelineSetupUsageHelper;
     this.pmsGitSyncHelper = pmsGitSyncHelper;
-    this.pipelineTemplateHelper = pipelineTemplateHelper;
   }
 
   public FilterCreatorMergeServiceResponse getPipelineInfo(PipelineEntity pipelineEntity) throws IOException {
-    Map<String, PlanCreatorServiceInfo> services = pmsSdkHelper.getServices();
-    String yaml = pipelineTemplateHelper.resolveTemplateRefsInPipeline(pipelineEntity).getMergedPipelineYaml();
-    String processedYaml = YamlUtils.injectUuid(yaml);
-    YamlField pipelineField = YamlUtils.extractPipelineField(processedYaml);
-
-    Dependencies dependencies =
-        Dependencies.newBuilder()
-            .setYaml(processedYaml)
-            .putDependencies(pipelineField.getNode().getUuid(), pipelineField.getNode().getYamlPath())
-            .build();
+    Map<String, PlanCreatorServiceInfo> services = getServices();
+    Dependencies dependencies = getDependencies(pipelineEntity.getYaml());
 
     Map<String, String> filters = new HashMap<>();
-    SetupMetadata.Builder setupMetadataBuilder = SetupMetadata.newBuilder()
-                                                     .setAccountId(pipelineEntity.getAccountId())
-                                                     .setProjectId(pipelineEntity.getProjectIdentifier())
-                                                     .setOrgId(pipelineEntity.getOrgIdentifier());
+    SetupMetadata.Builder setupMetadataBuilder = getSetupMetadataBuilder(
+        pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier());
     ByteString gitSyncBranchContext = pmsGitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
     if (gitSyncBranchContext != null) {
       setupMetadataBuilder.setGitSyncBranchContext(gitSyncBranchContext);
@@ -95,6 +89,24 @@ public class FilterCreatorMergeService {
         .build();
   }
 
+  public SetupMetadata.Builder getSetupMetadataBuilder(String accountId, String orgId, String projectId) {
+    return SetupMetadata.newBuilder().setAccountId(accountId).setProjectId(projectId).setOrgId(orgId);
+  }
+
+  public Map<String, PlanCreatorServiceInfo> getServices() {
+    return pmsSdkHelper.getServices();
+  }
+
+  public Dependencies getDependencies(String yaml) throws IOException {
+    String processedYaml = YamlUtils.injectUuid(yaml);
+    YamlField topRootFieldInYaml = YamlUtils.getTopRootFieldInYaml(processedYaml);
+
+    return Dependencies.newBuilder()
+        .setYaml(processedYaml)
+        .putDependencies(topRootFieldInYaml.getNode().getUuid(), topRootFieldInYaml.getNode().getYamlPath())
+        .build();
+  }
+
   @VisibleForTesting
   public void validateFilterCreationBlobResponse(FilterCreationBlobResponse response) throws IOException {
     if (isNotEmpty(response.getDeps().getDependenciesMap())) {
@@ -105,10 +117,12 @@ public class FilterCreatorMergeService {
   @VisibleForTesting
   public FilterCreationBlobResponse obtainFiltersRecursively(Map<String, PlanCreatorServiceInfo> services,
       Dependencies initialDependencies, Map<String, String> filters, SetupMetadata setupMetadata) throws IOException {
+    Dependencies initialDependenciesWithoutTemplates =
+        FilterCreationBlobResponseUtils.removeTemplateDependencies(initialDependencies);
     FilterCreationBlobResponse.Builder finalResponseBuilder =
-        FilterCreationBlobResponse.newBuilder().setDeps(initialDependencies);
+        FilterCreationBlobResponse.newBuilder().setDeps(initialDependenciesWithoutTemplates);
 
-    if (isEmpty(services) || isEmpty(initialDependencies.getDependenciesMap())) {
+    if (isEmpty(services) || isEmpty(initialDependenciesWithoutTemplates.getDependenciesMap())) {
       return finalResponseBuilder.build();
     }
 

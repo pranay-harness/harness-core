@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -37,6 +44,7 @@ import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import org.apache.commons.lang3.StringUtils;
 import retrofit2.http.Body;
 
 @Api("appdynamics")
@@ -102,11 +110,15 @@ public class AppDynamicsResource {
   @Timed
   @ExceptionMetered
   @ApiOperation(value = "get all appdynamics base folders for an application", nickname = "getAppdynamicsBaseFolders")
-  public ResponseDTO<List<String>> getBaseFolders(@BeanParam ProjectParams projectParams,
+  public ResponseDTO<List<String>> getBaseFolders(@BeanParam @Valid ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
-      @NotNull @QueryParam("appName") String appName, @QueryParam("path") @DefaultValue("") String path) {
+      @NotNull @QueryParam("appName") String appName, @QueryParam("path") @DefaultValue("") String path,
+      @QueryParam("routingId") String routingId) {
+    if (StringUtils.isEmpty(routingId)) {
+      routingId = generateUuid();
+    }
     return ResponseDTO.newResponse(
-        appDynamicsService.getBaseFolders(projectParams, connectorIdentifier, appName, path, generateUuid()));
+        appDynamicsService.getBaseFolders(projectParams, connectorIdentifier, appName, path, routingId));
   }
 
   @GET
@@ -116,13 +128,16 @@ public class AppDynamicsResource {
   @ApiOperation(
       value = "get all appdynamics metric structure for an application", nickname = "getAppdynamicsMetricStructure")
   public ResponseDTO<List<AppDynamicsFileDefinition>>
-  getMetricStructure(@BeanParam ProjectParams projectParams,
+  getMetricStructure(@BeanParam @Valid ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @NotNull @QueryParam("appName") String appName, @NotNull @QueryParam("baseFolder") String baseFolder,
-      @NotNull @QueryParam("tier") String tier,
-      @NotNull @QueryParam("metricPath") @DefaultValue("") String metricPath) {
+      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") @DefaultValue("") String metricPath,
+      @QueryParam("routingId") String routingId) {
+    if (StringUtils.isEmpty(routingId)) {
+      routingId = generateUuid();
+    }
     return ResponseDTO.newResponse(appDynamicsService.getMetricStructure(
-        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
+        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, routingId));
   }
 
   @GET
@@ -132,12 +147,16 @@ public class AppDynamicsResource {
   @ApiOperation(value = "get all appdynamics metric data for an application and a metric path",
       nickname = "getAppdynamicsMetricDataByPath")
   public ResponseDTO<AppdynamicsMetricDataResponse>
-  getMetricData(@BeanParam ProjectParams projectParams,
-      @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
+  getMetricData(@BeanParam @Valid ProjectParams projectParams,
+      @NotNull @QueryParam("connectorIdentifier") String connectorIdentifier,
       @NotNull @QueryParam("appName") String appName, @NotNull @QueryParam("baseFolder") String baseFolder,
-      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") String metricPath) {
+      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") String metricPath,
+      @QueryParam("routingId") String routingId) {
+    if (StringUtils.isEmpty(routingId)) {
+      routingId = generateUuid();
+    }
     return ResponseDTO.newResponse(appDynamicsService.getMetricData(
-        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
+        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, routingId));
   }
 
   @GET
@@ -150,8 +169,12 @@ public class AppDynamicsResource {
   getServiceInstanceMetricPath(@BeanParam ProjectParams projectParams,
       @NotNull @QueryParam("connectorIdentifier") final String connectorIdentifier,
       @NotNull @QueryParam("appName") String appName, @NotNull @QueryParam("baseFolder") String baseFolder,
-      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") String metricPath) {
+      @NotNull @QueryParam("tier") String tier, @NotNull @QueryParam("metricPath") String metricPath,
+      @QueryParam("routingId") String routingId) {
+    if (StringUtils.isEmpty(routingId)) {
+      routingId = generateUuid();
+    }
     return ResponseDTO.newResponse(appDynamicsService.getServiceInstanceMetricPath(
-        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, generateUuid()));
+        projectParams, connectorIdentifier, appName, baseFolder, tier, metricPath, routingId));
   }
 }

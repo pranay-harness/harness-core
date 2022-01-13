@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.cloudformation.request;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -51,9 +58,10 @@ public class CloudFormationCreateStackRequest extends CloudFormationCommandReque
       String stackNameSuffix, String cloudFormationRoleArn, Map<String, String> variables, String region,
       String customStackName, GitFileConfig gitFileConfig, GitConfig gitConfig,
       List<StackStatus> stackStatusesToMarkAsSuccess, List<EncryptedDataDetail> encryptedDataDetails,
-      Map<String, EncryptedDataDetail> encryptedVariables, List<String> capabilities, String tags) {
-    super(
-        commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region, cloudFormationRoleArn);
+      Map<String, EncryptedDataDetail> encryptedVariables, List<String> capabilities, String tags,
+      boolean skipWaitForResources) {
+    super(commandType, accountId, appId, activityId, commandName, awsConfig, timeoutInMs, region, cloudFormationRoleArn,
+        skipWaitForResources);
     this.createType = createType;
     this.data = data;
     this.stackNameSuffix = stackNameSuffix;

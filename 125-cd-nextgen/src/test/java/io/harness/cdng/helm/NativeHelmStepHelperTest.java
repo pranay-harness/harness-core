@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.helm;
 
 import static io.harness.beans.EnvironmentType.NON_PROD;
@@ -156,7 +163,11 @@ public class NativeHelmStepHelperTest extends CategoryTest {
   @Spy @InjectMocks private NativeHelmStepHelper nativeHelmStepHelper;
 
   @Mock private LogCallback mockLogCallback;
-  private final Ambiance ambiance = Ambiance.newBuilder().putSetupAbstractions("accountId", "test-account").build();
+  private final Ambiance ambiance = Ambiance.newBuilder()
+                                        .putSetupAbstractions(SetupAbstractionKeys.accountId, "test-account")
+                                        .putSetupAbstractions(SetupAbstractionKeys.orgIdentifier, "test-org")
+                                        .putSetupAbstractions(SetupAbstractionKeys.projectIdentifier, "test-project")
+                                        .build();
   private static final String SOME_URL = "https://url.com/owner/repo.git";
 
   @Before

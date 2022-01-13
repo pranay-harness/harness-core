@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.creator.plan.service;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -25,6 +32,7 @@ import io.harness.cdng.service.steps.ServiceSpecStep;
 import io.harness.cdng.service.steps.ServiceSpecStepParameters;
 import io.harness.cdng.service.steps.ServiceStep;
 import io.harness.cdng.service.steps.ServiceStepParameters;
+import io.harness.cdng.utilities.ArtifactsUtility;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -35,8 +43,8 @@ import io.harness.pms.contracts.advisers.AdviserObtainment;
 import io.harness.pms.contracts.advisers.AdviserType;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
-import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.Dependency;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.contracts.steps.SkipType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -45,7 +53,8 @@ import io.harness.pms.sdk.core.adviser.success.OnSuccessAdviserParameters;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
-import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
+import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
@@ -59,13 +68,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.CDC)
-public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
+public class ServicePlanCreator extends ChildrenPlanCreator<ServiceConfig> {
   @Inject EnforcementValidator enforcementValidator;
   @Inject KryoSerializer kryoSerializer;
 
@@ -79,8 +89,36 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
     return Collections.singletonMap(YamlTypes.SERVICE_CONFIG, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
+  public String addDependenciesForArtifacts(PlanCreationContext ctx,
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, ServiceConfig actualServiceConfig) {
+    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
+    boolean isUseFromStage = actualServiceConfig.getUseFromStage() != null;
+    YamlField artifactYamlField =
+        ArtifactsUtility.fetchArtifactYamlField(ctx.getCurrentField(), isUseFromStage, yamlUpdates);
+    String artifactsPlanNodeId = UUIDGenerator.generateUuid();
+
+    Map<String, ByteString> metadataDependency =
+        prepareMetadataForArtifactsPlanCreator(artifactsPlanNodeId, actualServiceConfig);
+
+    Map<String, YamlField> dependenciesMap = new HashMap<>();
+    dependenciesMap.put(artifactsPlanNodeId, artifactYamlField);
+    PlanCreationResponseBuilder artifactPlanCreationResponse = PlanCreationResponse.builder().dependencies(
+        DependenciesUtils.toDependenciesProto(dependenciesMap)
+            .toBuilder()
+            .putDependencyMetadata(
+                artifactsPlanNodeId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
+            .build());
+    if (yamlUpdates.getFqnToYamlCount() > 0) {
+      artifactPlanCreationResponse.yamlUpdates(yamlUpdates.build());
+    }
+    planCreationResponseMap.put(artifactsPlanNodeId, artifactPlanCreationResponse.build());
+    return artifactsPlanNodeId;
+  }
   @Override
-  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, ServiceConfig serviceConfig) {
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, ServiceConfig serviceConfig) {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
     // enforcement validator
     enforcementValidator.validate(ctx.getMetadata().getAccountIdentifier(), ctx.getMetadata().getOrgIdentifier(),
         ctx.getMetadata().getProjectIdentifier(), ctx.getMetadata().getMetadata().getPipelineIdentifier(),
@@ -97,97 +135,69 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
     ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
     actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
 
-    Map<String, PlanNode> planNodes = new HashMap<>();
     List<String> serviceSpecChildrenIds = new ArrayList<>();
     PlanCreationResponse response;
 
-    Dependencies.Builder dependencies = Dependencies.newBuilder();
-    Map<String, YamlField> dependenciesMap = new HashMap<>();
-    Map<String, ByteString> metadataDependency = new HashMap<>();
-
     boolean createPlanForArtifacts = validateCreatePlanNodeForArtifacts(actualServiceConfig);
     if (createPlanForArtifacts) {
-      YamlField artifactYamlField = fetchArtifactYamlField(ctx.getCurrentField(), actualServiceConfig);
-      String artifactsPlanNodeId = UUIDGenerator.generateUuid();
-
-      prepareMetadataForArtifactsPlanCreator(artifactsPlanNodeId, actualServiceConfig, metadataDependency);
-
-      dependenciesMap.put(artifactsPlanNodeId, artifactYamlField);
-      dependencies.putAllDependencies(DependenciesUtils.toDependenciesProto(dependenciesMap).getDependenciesMap())
-          .putDependencyMetadata(
-              artifactsPlanNodeId, Dependency.newBuilder().putAllMetadata(metadataDependency).build());
-      serviceSpecChildrenIds.add(artifactsPlanNodeId);
+      String artifactNodeId = addDependenciesForArtifacts(ctx, planCreationResponseMap, actualServiceConfig);
+      serviceSpecChildrenIds.add(artifactNodeId);
     }
 
-    response = ManifestsPlanCreator.createPlanForManifestsNode(actualServiceConfig);
+    final String finalManifestId = "manifests-" + UUIDGenerator.generateUuid();
+    response = ManifestsPlanCreator.createPlanForManifestsNode(actualServiceConfig, finalManifestId);
     if (response != null && isNotEmpty(response.getNodes())) {
-      planNodes.putAll(response.getNodes());
-      if (isNotEmpty(response.getStartingNodeId())) {
-        serviceSpecChildrenIds.add(response.getStartingNodeId());
-      }
+      serviceSpecChildrenIds.add(finalManifestId);
+      planCreationResponseMap.put(finalManifestId, response);
     }
 
-    String serviceYamlNodeId = serviceNode.getUuid();
-    String serviceDefinitionNodeId = addServiceDefinitionNode(
-        actualServiceConfig, planNodes, serviceYamlNodeId, serviceSpecChildrenIds, infraSectionStepParameters);
-    String serviceNodeId = addServiceNode(actualServiceConfig, planNodes, serviceYamlNodeId, serviceDefinitionNodeId);
+    String serviceConfigNodeId = serviceNode.getUuid();
+    String serviceDefinitionNodeId = addServiceDefinitionNode(actualServiceConfig, planCreationResponseMap,
+        serviceConfigNodeId, serviceSpecChildrenIds, infraSectionStepParameters);
+    addServiceNode(actualServiceConfig, planCreationResponseMap, serviceConfigNodeId, serviceDefinitionNodeId);
 
+    return planCreationResponseMap;
+  }
+
+  @Override
+  public PlanNode createPlanForParentNode(
+      PlanCreationContext ctx, ServiceConfig serviceConfig, List<String> childrenNodeIds) {
+    YamlField serviceField = ctx.getCurrentField();
+    YamlNode serviceNode = serviceField.getNode();
+
+    ServiceConfig actualServiceConfig = getActualServiceConfig(serviceConfig, serviceField);
+    actualServiceConfig = applyUseFromStageOverrides(actualServiceConfig);
+
+    String serviceConfigNodeId = serviceField.getNode().getUuid();
+    String serviceNodeUuId = "service-" + serviceConfigNodeId;
     ServiceConfigStepParameters serviceConfigStepParameters = ServiceConfigStepParameters.builder()
                                                                   .useFromStage(actualServiceConfig.getUseFromStage())
                                                                   .serviceRef(actualServiceConfig.getServiceRef())
-                                                                  .childNodeId(serviceNodeId)
+                                                                  .childNodeId(serviceNodeUuId)
                                                                   .build();
-    PlanNode serviceConfigPlanNode =
-        PlanNode.builder()
-            .uuid(serviceNode.getUuid())
-            .stepType(ServiceConfigStep.STEP_TYPE)
-            .name(PlanCreatorConstants.SERVICE_NODE_NAME)
-            .identifier(YamlTypes.SERVICE_CONFIG)
-            .stepParameters(serviceConfigStepParameters)
-            .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder()
-                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
-                    .build())
-            .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode))
-            .skipExpressionChain(false)
-            .build();
-    planNodes.put(serviceConfigPlanNode.getUuid(), serviceConfigPlanNode);
-
-    return PlanCreationResponse.builder().nodes(planNodes).dependencies(dependencies.build()).build();
+    return PlanNode.builder()
+        .uuid(serviceConfigNodeId)
+        .stepType(ServiceConfigStep.STEP_TYPE)
+        .name(PlanCreatorConstants.SERVICE_NODE_NAME)
+        .identifier(YamlTypes.SERVICE_CONFIG)
+        .stepParameters(serviceConfigStepParameters)
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILD).build())
+                .build())
+        .adviserObtainments(getAdviserObtainmentFromMetaData(serviceNode))
+        .skipExpressionChain(false)
+        .build();
   }
 
-  public void prepareMetadataForArtifactsPlanCreator(
-      String artifactsPlanNodeId, ServiceConfig actualServiceConfig, Map<String, ByteString> metadataDependency) {
+  public Map<String, ByteString> prepareMetadataForArtifactsPlanCreator(
+      String artifactsPlanNodeId, ServiceConfig actualServiceConfig) {
+    Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(artifactsPlanNodeId)));
     // TODO: Find an efficient way to not pass whole service config
     metadataDependency.put(
         YamlTypes.SERVICE_CONFIG, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(actualServiceConfig)));
-  }
-
-  public YamlField fetchArtifactYamlField(YamlField serviceField, ServiceConfig actualServiceConfig) {
-    if (actualServiceConfig.getUseFromStage() == null) {
-      return serviceField.getNode()
-          .getField(YamlTypes.SERVICE_DEFINITION)
-          .getNode()
-          .getField(YamlTypes.SPEC)
-          .getNode()
-          .getField(YamlTypes.ARTIFACT_LIST_CONFIG);
-    } else {
-      // pass the original stage artifacts yaml field
-      String stage = actualServiceConfig.getUseFromStage().getStage();
-      YamlField stageYamlField = PlanCreatorUtils.getStageConfig(serviceField, stage);
-
-      return stageYamlField.getNode()
-          .getField(YamlTypes.SPEC)
-          .getNode()
-          .getField(YamlTypes.SERVICE_CONFIG)
-          .getNode()
-          .getField(YamlTypes.SERVICE_DEFINITION)
-          .getNode()
-          .getField(YamlTypes.SPEC)
-          .getNode()
-          .getField(YamlTypes.ARTIFACT_LIST_CONFIG);
-    }
+    return metadataDependency;
   }
 
   public boolean validateCreatePlanNodeForArtifacts(ServiceConfig actualServiceConfig) {
@@ -211,12 +221,13 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
     return false;
   }
 
-  private String addServiceNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
-      String serviceNodeId, String serviceDefinitionNodeId) {
+  private String addServiceNode(ServiceConfig actualServiceConfig,
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, String serviceConfigNodeId,
+      String serviceDefinitionNodeId) {
     ServiceStepParameters stepParameters = ServiceStepParameters.fromServiceConfig(actualServiceConfig);
     PlanNode node =
         PlanNode.builder()
-            .uuid("service-" + serviceNodeId)
+            .uuid("service-" + serviceConfigNodeId)
             .stepType(ServiceStep.STEP_TYPE)
             .name(PlanCreatorConstants.SERVICE_NODE_NAME)
             .identifier(YamlTypes.SERVICE_ENTITY)
@@ -234,17 +245,17 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
             .skipExpressionChain(false)
             .skipGraphType(SkipType.SKIP_TREE)
             .build();
-    planNodes.put(node.getUuid(), node);
+    planCreationResponseMap.put(node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).build());
     return node.getUuid();
   }
 
-  private String addServiceDefinitionNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
-      String serviceNodeId, List<String> serviceSpecChildrenIds,
-      InfraSectionStepParameters infraSectionStepParameters) {
+  private String addServiceDefinitionNode(ServiceConfig actualServiceConfig,
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, String serviceConfigNodeId,
+      List<String> serviceSpecChildrenIds, InfraSectionStepParameters infraSectionStepParameters) {
     String serviceSpecNodeId =
-        addServiceSpecNode(actualServiceConfig, planNodes, serviceNodeId, serviceSpecChildrenIds);
+        addServiceSpecNode(actualServiceConfig, planCreationResponseMap, serviceConfigNodeId, serviceSpecChildrenIds);
     String environmentStepNodeId =
-        addEnvironmentStepNode(infraSectionStepParameters, planNodes, kryoSerializer, serviceSpecNodeId);
+        addEnvironmentStepNode(infraSectionStepParameters, planCreationResponseMap, kryoSerializer, serviceSpecNodeId);
     ServiceDefinitionStepParameters stepParameters =
         ServiceDefinitionStepParameters.builder()
             .type(actualServiceConfig.getServiceDefinition().getType().getYamlName())
@@ -252,7 +263,7 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
             .build();
     PlanNode node =
         PlanNode.builder()
-            .uuid("service-definition-" + serviceNodeId)
+            .uuid("service-definition-" + serviceConfigNodeId)
             .stepType(ServiceDefinitionStep.STEP_TYPE)
             .name(PlanCreatorConstants.SERVICE_DEFINITION_NODE_NAME)
             .identifier(YamlTypes.SERVICE_DEFINITION)
@@ -264,12 +275,13 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
             .skipExpressionChain(false)
             .skipGraphType(SkipType.SKIP_TREE)
             .build();
-    planNodes.put(node.getUuid(), node);
+    planCreationResponseMap.put(node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).build());
     return node.getUuid();
   }
 
   private String addEnvironmentStepNode(InfraSectionStepParameters infraSectionStepParameters,
-      Map<String, PlanNode> planNodes, KryoSerializer kryoSerializer, String serviceSpecNodeUuid) {
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, KryoSerializer kryoSerializer,
+      String serviceSpecNodeUuid) {
     PlanNode node =
         PlanNode.builder()
             .uuid(UUIDGenerator.generateUuid())
@@ -289,12 +301,13 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
                     .build())
             .skipExpressionChain(false)
             .build();
-    planNodes.put(node.getUuid(), node);
+    planCreationResponseMap.put(node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).build());
     return node.getUuid();
   }
 
-  private String addServiceSpecNode(ServiceConfig actualServiceConfig, Map<String, PlanNode> planNodes,
-      String serviceNodeId, List<String> serviceSpecChildrenIds) {
+  private String addServiceSpecNode(ServiceConfig actualServiceConfig,
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap, String serviceNodeId,
+      List<String> serviceSpecChildrenIds) {
     ServiceSpec serviceSpec = actualServiceConfig.getServiceDefinition().getServiceSpec();
     ServiceSpecStepParameters stepParameters =
         ServiceSpecStepParameters.builder()
@@ -337,7 +350,7 @@ public class ServicePlanCreator implements PartialPlanCreator<ServiceConfig> {
                     .build())
             .skipExpressionChain(false)
             .build();
-    planNodes.put(node.getUuid(), node);
+    planCreationResponseMap.put(node.getUuid(), PlanCreationResponse.builder().node(node.getUuid(), node).build());
     return node.getUuid();
   }
 

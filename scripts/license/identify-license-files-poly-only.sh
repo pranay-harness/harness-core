@@ -1,4 +1,8 @@
 #!/bin/bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 #
 # Produces source files intended for use with add_license_header.sh
 # This is the "Polyform only" variation.
@@ -24,7 +28,7 @@ function print_possible_alternates {
 }
 
 function validate_missing {
-  MISSING_FILES=$(sort -f "$1" | uniq | xargs ls 2>&1 | grep 'No such file')
+  MISSING_FILES=$(sort -f "$1" | uniq -i | xargs ls 2>&1 | grep 'No such file')
   if [ ! -z "$MISSING_FILES" ]; then
     while read -r LINE; do
       FILE=$(echo "$LINE" | awk 'BEGIN{FS=": "}{print $2}')
@@ -46,7 +50,7 @@ validate_missing "$POLYFORM_FREE_TRIAL_FILE"
 ###############################
 
 function query_source_files {
-  bazel query "deps($1)" 2>/dev/null | grep -v '^@' | tr ':' '/' | cut -c 3- | grep -E "\.(${FILE_EXTENSIONS})$" | xargs ls 2>/dev/null | sort -f | uniq
+  bazel query "deps($1)" 2>/dev/null | grep -v '^@' | tr ':' '/' | cut -c 3- | grep -E "\.(${FILE_EXTENSIONS})$" | xargs ls 2>/dev/null | sort -f | uniq -i
 }
 
 # identify source files required to build CD
@@ -59,14 +63,14 @@ query_source_files '//820-platform-service/container:platform_service' > 820.txt
 query_source_files '//960-watcher:module_deploy.jar'                   > 960.txt
 
 # remove files identified for more restrictive license
-cat 120.txt 260.txt 360.txt 800.txt 820.txt 960.txt "$POLYFORM_SHIELD_FILE" | sort -f | uniq | grep -v '/src/test/' | comm -23i - "$POLYFORM_FREE_TRIAL_FILE" > sources-shield-before-tests-are-added.txt
+cat 120.txt 260.txt 360.txt 800.txt 820.txt 960.txt "$POLYFORM_SHIELD_FILE" | sort -f | uniq -i | comm -23i - "$POLYFORM_FREE_TRIAL_FILE" > sources-shield-before-tests-are-added.txt
 rm 120.txt 260.txt 360.txt 800.txt 820.txt 960.txt
 
 # identify matching Java unit tests
 grep -E '\.java$' sources-shield-before-tests-are-added.txt | sed -e 's#/src/main/#/src/test/#' -e 's/\.java$/Test.java/' | xargs ls 2>/dev/null > sources-shield-found-tests.txt
 
 # combine build and test files as final Apache license files
-cat sources-shield-before-tests-are-added.txt sources-shield-found-tests.txt | grep -v '/src/test/' | sort -f | uniq | comm -23i - "$POLYFORM_FREE_TRIAL_FILE" > sources-shield.txt
+cat sources-shield-before-tests-are-added.txt sources-shield-found-tests.txt | sort -f | uniq -i | comm -23i - "$POLYFORM_FREE_TRIAL_FILE" > sources-shield.txt
 rm sources-shield-before-tests-are-added.txt sources-shield-found-tests.txt
 
 ###############################
@@ -74,7 +78,7 @@ rm sources-shield-before-tests-are-added.txt sources-shield-found-tests.txt
 ###############################
 
 # find all files which should receive header
-find . -type f | grep -v '/src/test/' | grep -E "\.($(awk 'NR>1 {print $1}' "$SUPPORTED_EXTENSIONS_FILE" | paste -s -d '|' -))$" | cut -c 3- | sort -f | uniq > sources-all.txt
+find . -type f | grep -E "\.($(awk 'NR>1 {print $1}' "$SUPPORTED_EXTENSIONS_FILE" | paste -s -d '|' -))$" | cut -c 3- | sort -f | uniq -i > sources-all.txt
 
 # remove Polyform Shield files
 comm -23i sources-all.txt sources-shield.txt > sources-free-trial.txt
@@ -84,7 +88,7 @@ comm -23i sources-all.txt sources-shield.txt > sources-free-trial.txt
 ###############################
 
 function find_within_dir {
-  DIRECTORIES=$(awk '{gsub(/\/[^\/]*$/, ""); print}' "$1" | sort -f | uniq)
+  DIRECTORIES=$(awk '{gsub(/\/[^\/]*$/, ""); print}' "$1" | sort -f | uniq -i)
   LAST_DIR=""
   test -e sources-all-within-dir.txt && rm sources-all-within-dir.txt
   while read -e DIR; do
@@ -94,12 +98,12 @@ function find_within_dir {
     fi
   done <<< "$DIRECTORIES"
 
-  sort -f sources-all-within-dir.txt | uniq
+  sort -f sources-all-within-dir.txt | uniq -i
 }
 
-find_within_dir sources-free-trial.txt | grep -v '/src/test/' | sort -f | uniq > sources-free-trial-final.txt
+find_within_dir sources-free-trial.txt | sort -f | uniq -i > sources-free-trial-final.txt
 
-sort -f sources-free-trial-final.txt | uniq | comm -23i sources-shield.txt - > sources-shield-final.txt
+sort -f sources-free-trial-final.txt | uniq -i | comm -23i sources-shield.txt - > sources-shield-final.txt
 
 rm sources-all-within-dir.txt
 mv sources-shield-final.txt sources-shield.txt

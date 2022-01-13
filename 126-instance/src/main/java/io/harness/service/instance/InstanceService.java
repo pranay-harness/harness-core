@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.instance;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -10,6 +17,7 @@ import io.harness.models.InstancesByBuildId;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(HarnessTeam.DX)
 public interface InstanceService {
@@ -30,6 +38,9 @@ public interface InstanceService {
   List<InstanceDTO> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
   List<InstanceDTO> getInstancesDeployedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
+
+  List<InstanceDTO> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp);
 
   List<InstanceDTO> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
@@ -55,4 +66,6 @@ public interface InstanceService {
 
   AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
+
+  InstanceDTO findFirstInstance(Criteria criteria);
 }

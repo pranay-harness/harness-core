@@ -1,4 +1,8 @@
 #!/bin/bash -e
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 sudo docker pull harness/delegate:latest
 
@@ -28,5 +32,4 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e USE_CDN=false \
 -e CDN_URL=http://localhost:9500 \
 -e JRE_VERSION=1.8.0_242 \
--e VERSION_CHECK_DISABLED=false \
 harness/delegate:latest

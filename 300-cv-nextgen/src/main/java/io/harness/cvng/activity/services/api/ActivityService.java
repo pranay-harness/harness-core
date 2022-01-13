@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.activity.services.api;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -5,6 +12,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.entities.Activity;
+import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -29,9 +37,8 @@ import java.util.Set;
 public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
-
-  String register(String accountId, ActivityDTO activityDTO);
-  String register(Activity activity);
+  @Deprecated String register(String accountId, ActivityDTO activityDTO);
+  @Deprecated String register(Activity activity);
 
   void updateActivityStatus(Activity activity);
 
@@ -77,6 +84,5 @@ public interface ActivityService {
 
   Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers, List<String> environmentIdentifiers,
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);
-
-  String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
+  @Deprecated String createActivityForDemo(DeploymentActivity activity, ActivityVerificationStatus verificationStatus);
 }

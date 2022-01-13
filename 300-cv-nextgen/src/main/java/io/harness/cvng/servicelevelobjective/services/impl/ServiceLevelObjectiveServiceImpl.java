@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import io.harness.cvng.core.beans.params.PageParams;
@@ -24,6 +31,7 @@ import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorServ
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelObjectiveService;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.SLOTargetTransformer;
+import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
 import io.harness.ng.core.mapper.TagMapper;
@@ -62,7 +70,7 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
   @Override
   public ServiceLevelObjectiveResponse create(
       ProjectParams projectParams, ServiceLevelObjectiveDTO serviceLevelObjectiveDTO) {
-    validate(serviceLevelObjectiveDTO, projectParams);
+    validateCreate(serviceLevelObjectiveDTO, projectParams);
     ServiceLevelObjective serviceLevelObjective =
         saveServiceLevelObjectiveEntity(projectParams, serviceLevelObjectiveDTO);
     sloHealthIndicatorService.upsert(serviceLevelObjective);
@@ -359,6 +367,15 @@ public class ServiceLevelObjectiveServiceImpl implements ServiceLevelObjectiveSe
     }
   }
 
+  public void validateCreate(ServiceLevelObjectiveDTO sloCreateDTO, ProjectParams projectParams) {
+    ServiceLevelObjective serviceLevelObjective = getEntity(projectParams, sloCreateDTO.getIdentifier());
+    if (serviceLevelObjective != null) {
+      throw new DuplicateFieldException(String.format(
+          "serviceLevelObjective with identifier %s and orgIdentifier %s and projectIdentifier %s is already present",
+          sloCreateDTO.getIdentifier(), projectParams.getOrgIdentifier(), projectParams.getProjectIdentifier()));
+    }
+    validate(sloCreateDTO, projectParams);
+  }
   private void validate(ServiceLevelObjectiveDTO sloCreateDTO, ProjectParams projectParams) {
     monitoredServiceService.get(projectParams, sloCreateDTO.getMonitoredServiceRef());
   }

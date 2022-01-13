@@ -1,23 +1,35 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.delegate.exceptionhandler.handler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.CONFIG_FILE_PATH_NOT_EXIST;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_CONFIGURING_S3_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_INSPECTING_STATE_IN_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.ERROR_VALIDATING_PROVIDER_CRED;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAILED_TO_READ_MODULE_DIRECTORY;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.FAIL_TO_INSTALL_PROVIDER;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.INVALID_CREDENTIALS_AWS;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.NO_VALID_CRED_FOUND_FOR_AWS;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.CliErrorMessages.NO_VALID_CRED_FOUND_FOR_S3_BACKEND;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Explanation.EXPLANATION_FAIL_TO_INSTALL_PROVIDER;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Explanation.EXPLANATION_INVALID_CREDENTIALS_AWS;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_FIE;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CONFIG_FILE_PATH_NOT_EXIST;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_ERROR_INSPECTING_STATE_IN_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAILED_TO_GET_EXISTING_WORKSPACES;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAIL_TO_INSTALL_PROVIDER;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_INVALID_CREDENTIALS_AWS;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_INVALID_CRED_FOR_S3_BACKEND;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_ERROR_INSPECTING_STATE_IN_BACKEND;
@@ -69,6 +81,8 @@ public class TerraformRuntimeExceptionHandler implements ExceptionHandler {
     Set<String> hints = new HashSet<>();
     Set<String> structuredErrors = new HashSet<>();
 
+    handleConfigDirectoryNotExistError(cliRuntimeException, structuredErrors, hints);
+
     for (String error : allErrors) {
       if (error.contains(FAILED_TO_READ_MODULE_DIRECTORY)) {
         continue;
@@ -111,14 +125,28 @@ public class TerraformRuntimeExceptionHandler implements ExceptionHandler {
         continue;
       }
 
+      if (error.toLowerCase().contains(FAIL_TO_INSTALL_PROVIDER.toLowerCase())) {
+        explanations.add(EXPLANATION_FAIL_TO_INSTALL_PROVIDER);
+        hints.add(HINT_FAIL_TO_INSTALL_PROVIDER);
+      }
+
       handleUnknownError(error, hints, explanations, structuredErrors);
     }
 
     if (hints.isEmpty() && explanations.isEmpty()) {
-      return new TerraformCommandExecutionException(cliRuntimeException.getCliError(), WingsException.USER_SRE);
+      return new TerraformCommandExecutionException(
+          cleanError(cliRuntimeException.getCliError()), WingsException.USER_SRE);
     }
 
     return getFinalException(explanations, hints, structuredErrors, cliRuntimeException);
+  }
+
+  private void handleConfigDirectoryNotExistError(
+      TerraformCliRuntimeException cliRuntimeException, Set<String> structuredErrors, Set<String> hints) {
+    if (cliRuntimeException.getCliError().contains(CONFIG_FILE_PATH_NOT_EXIST)) {
+      hints.add(HINT_CONFIG_FILE_PATH_NOT_EXIST);
+      structuredErrors.add(cliRuntimeException.getCliError());
+    }
   }
 
   private void handleUnknownError(String err, Set<String> hints, Set<String> explanations, Set<String> errorMessages) {

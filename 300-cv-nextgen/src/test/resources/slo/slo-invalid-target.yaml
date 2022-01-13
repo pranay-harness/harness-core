@@ -1,0 +1,28 @@
+---
+name: slo
+identifier: slo
+description: ''
+tags: {}
+userJourneyRef: login
+monitoredServiceRef: $monitoredServiceRef
+healthSourceRef: $healthSourceRef
+serviceLevelIndicators:
+  - type: Availability
+    sliMissingDataType: Good
+    spec:
+      type: Ratio
+      spec:
+        eventType: Good
+        metric1: metric1
+        metric2: metric2
+        thresholdValue: 4
+        thresholdType: <
+target:
+  sloTargetPercentage: 100
+  type: Calender
+  spec:
+    type: Weekly
+    spec:
+      dayOfWeek: Sun
+orgIdentifier: $orgIdentifier
+projectIdentifier: $projectIdentifier

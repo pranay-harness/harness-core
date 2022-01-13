@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.yaml.schema;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
@@ -69,11 +76,11 @@ public class AbstractSchemaChecker {
       log.info("Running schema check for {}", schemaRoot.getEntityType());
       final String schemaPathForEntityType = getSchemaPathForRootCLass(schemaRoot);
       final JsonNode jsonNode = entityTypeJsonNodeMap.get(schemaRoot.getEntityType());
-      final String s = objectWriter.writeValueAsString(jsonNode);
-      final String schemaInUT =
+      final String currentVersionSchema = objectWriter.writeValueAsString(jsonNode);
+      final String previousVersionSchema =
           IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, this.getClass().getClassLoader());
-      if (!schemaInUT.replaceAll("\\s+", "").equals(s.replaceAll("\\s+", ""))) {
-        log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
+      if (!previousVersionSchema.replaceAll("\\s+", "").equals(currentVersionSchema.replaceAll("\\s+", ""))) {
+        log.info("Difference in schema :\n" + StringUtils.difference(currentVersionSchema, previousVersionSchema));
         throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
       }
       log.info("schema check success for {}", schemaRoot.getEntityType());

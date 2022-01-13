@@ -1,6 +1,11 @@
-package io.harness.managerclient;
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
+package io.harness.managerclient;
 
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
@@ -67,11 +72,7 @@ public class WatcherManagerClientV2Factory implements Provider<ManagerClientV2> 
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");
             if (chain.request().url().uri().getPath().contains("delegateScripts")) {
-              String versionHeaderParam = chain.request().url().queryParameter("delegateVersion");
-              log.info("Delegate version on call for delegateScripts " + versionHeaderParam);
-              if (isNotBlank(versionHeaderParam)) {
-                request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
-              }
+              request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
             }
             return chain.proceed(request.build());
           })

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -63,6 +70,7 @@ import io.harness.secretmanagerclient.EncryptDecryptHelper;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.terraform.TerraformHelperUtils;
+import io.harness.terraform.expression.TerraformPlanExpressionInterface;
 import io.harness.terraform.request.TerraformExecuteStepRequest;
 
 import software.wings.api.TerraformExecutionData;
@@ -238,10 +246,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         format("Script Directory: [%s]", scriptDirectory), CommandExecutionStatus.RUNNING, INFO, logCallback);
 
     File tfVariablesFile = null, tfBackendConfigsFile = null;
+    String tfPlanJsonFilePath = null;
 
     try (ActivityLogOutputStream activityLogOutputStream = new ActivityLogOutputStream(parameters, logCallback);
          LogCallbackOutputStream logCallbackOutputStream = new LogCallbackOutputStream(logCallback);
-         PlanJsonLogOutputStream planJsonLogOutputStream = new PlanJsonLogOutputStream()) {
+         PlanJsonLogOutputStream planJsonLogOutputStream =
+             new PlanJsonLogOutputStream(parameters.isUseOptimizedTfPlanJson())) {
       ensureLocalCleanup(scriptDirectory);
       String sourceRepoReference = parameters.getCommitId() != null
           ? parameters.getCommitId()
@@ -444,6 +454,25 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         }
       }
 
+      String tfPlanJsonFileId = null;
+      if (code == 0 && parameters.isSaveTerraformJson() && parameters.isUseOptimizedTfPlanJson()) {
+        String planName = getPlanName(parameters);
+        saveExecutionLog(format("Uploading terraform %s json representation", planName), CommandExecutionStatus.RUNNING,
+            INFO, logCallback);
+        // We're going to read content from json plan file and ideally no one should write anything into output
+        // stream at this stage. Just in case let's flush everything from buffer and close output stream
+        // We have enough guards at different layers to prevent repeat close as result of autocloseable
+        planJsonLogOutputStream.flush();
+        planJsonLogOutputStream.close();
+        tfPlanJsonFilePath = planJsonLogOutputStream.getTfPlanJsonLocalPath();
+        tfPlanJsonFileId = terraformBaseHelper.uploadTfPlanJson(parameters.getAccountId(), getDelegateId(), getTaskId(),
+            parameters.getEntityId(), planName, tfPlanJsonFilePath);
+        saveExecutionLog(format("Path to '%s' json representation is available via expression %s %n", planName,
+                             parameters.getCommand() == APPLY ? TerraformPlanExpressionInterface.EXAMPLE_USAGE
+                                                              : TerraformPlanExpressionInterface.DESTROY_EXAMPLE_USAGE),
+            CommandExecutionStatus.RUNNING, INFO, logCallback);
+      }
+
       if (code == 0 && !parameters.isRunPlanOnly()) {
         saveExecutionLog(
             format("Waiting: [%s] seconds for resources to be ready", String.valueOf(RESOURCE_READY_WAIT_TIME_SECONDS)),
@@ -486,8 +515,24 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
         byte[] terraformPlanFile = getTerraformPlanFile(scriptDirectory, parameters);
         saveExecutionLog(color("\nEncrypting terraform plan \n", LogColor.Yellow, LogWeight.Bold),
             CommandExecutionStatus.RUNNING, INFO, logCallback);
-        encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
-            terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+
+        if (parameters.isUseOptimizedTfPlanJson()) {
+          DelegateFile planDelegateFile =
+              aDelegateFile()
+                  .withAccountId(parameters.getAccountId())
+                  .withDelegateId(getDelegateId())
+                  .withTaskId(getTaskId())
+                  .withEntityId(parameters.getEntityId())
+                  .withBucket(FileBucket.TERRAFORM_PLAN)
+                  .withFileName(format(TERRAFORM_PLAN_FILE_OUTPUT_NAME, getPlanName(parameters)))
+                  .build();
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptFile(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig(), planDelegateFile);
+
+        } else {
+          encryptedTfPlan = (EncryptedRecordData) planEncryptDecryptHelper.encryptContent(
+              terraformPlanFile, parameters.getPlanName(), parameters.getSecretManagerConfig());
+        }
       }
 
       final TerraformExecutionDataBuilder terraformExecutionDataBuilder =
@@ -495,6 +540,7 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
               .entityId(delegateFile.getEntityId())
               .stateFileId(delegateFile.getFileId())
               .tfPlanJson(planJsonLogOutputStream.getPlanJson())
+              .tfPlanJsonFiledId(tfPlanJsonFileId)
               .commandExecuted(parameters.getCommand())
               .sourceRepoReference(sourceRepoReference)
               .variables(parameters.getRawVariables())
@@ -533,6 +579,10 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     } finally {
       FileUtils.deleteQuietly(new File(workingDir));
       FileUtils.deleteQuietly(new File(baseDir));
+      if (tfPlanJsonFilePath != null) {
+        FileUtils.deleteQuietly(new File(tfPlanJsonFilePath));
+      }
+
       if (parameters.getEncryptedTfPlan() != null) {
         try {
           boolean isSafelyDeleted = planEncryptDecryptHelper.deleteEncryptedRecord(
@@ -605,9 +655,11 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
             .encryptionConfig(parameters.getSecretManagerConfig())
             .isSkipRefreshBeforeApplyingPlan(parameters.isSkipRefreshBeforeApplyingPlan())
             .isSaveTerraformJson(parameters.isSaveTerraformJson())
+            .useOptimizedTfPlan(parameters.isUseOptimizedTfPlanJson())
             .logCallback(logCallback)
             .planJsonLogOutputStream(planJsonLogOutputStream)
             .timeoutInMillis(parameters.getTimeoutInMillis())
+            .accountId(parameters.getAccountId())
             .build();
     switch (parameters.getCommand()) {
       case APPLY: {
@@ -695,10 +747,12 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
     saveExecutionLog(command, CommandExecutionStatus.RUNNING, INFO, logCallback);
     int code = executeShellCommand(command, scriptDirectory, parameters, envVars, planJsonLogOutputStream);
     if (code == 0) {
-      saveExecutionLog(
-          format("%nJson representation of %s is exported as a variable %s %n", planName,
-              terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
-          CommandExecutionStatus.RUNNING, INFO, logCallback);
+      if (!parameters.isUseOptimizedTfPlanJson()) {
+        saveExecutionLog(
+            format("%nJson representation of %s is exported as a variable %s %n", planName,
+                terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
+            CommandExecutionStatus.RUNNING, INFO, logCallback);
+      }
     }
     return code;
   }
@@ -842,10 +896,9 @@ public class TerraformProvisionTask extends AbstractDelegateRunnableTask {
   public void saveTerraformPlanContentToFile(TerraformProvisionParameters parameters, String scriptDirectory)
       throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, getPlanName(parameters)).toFile();
-
+    EncryptedRecordData encryptedRecordData = parameters.getEncryptedTfPlan();
     byte[] decryptedTerraformPlan = planEncryptDecryptHelper.getDecryptedContent(
-        parameters.getSecretManagerConfig(), parameters.getEncryptedTfPlan());
-
+        parameters.getSecretManagerConfig(), encryptedRecordData, parameters.getAccountId());
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 

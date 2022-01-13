@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.verification.stackdriver;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -26,6 +33,7 @@ import lombok.experimental.FieldNameConstants;
 @EqualsAndHashCode(callSuper = true)
 public class StackDriverMetricCVConfiguration extends CVConfiguration {
   private List<StackDriverMetricDefinition> metricDefinitions;
+  private String projectId;
 
   public void setMetricFilters() {
     this.metricDefinitions.forEach(StackDriverMetricDefinition::extractJson);
@@ -36,6 +44,7 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
     StackDriverMetricCVConfiguration clonedConfig = new StackDriverMetricCVConfiguration();
     super.copy(clonedConfig);
     clonedConfig.setMetricDefinitions(this.getMetricDefinitions());
+    clonedConfig.setProjectId(this.getProjectId());
     clonedConfig.setMetricFilters();
     return clonedConfig;
   }
@@ -50,6 +59,7 @@ public class StackDriverMetricCVConfiguration extends CVConfiguration {
   @EqualsAndHashCode(callSuper = true)
   public static final class StackDriverMetricCVConfigurationYaml extends CVConfigurationYaml {
     private List<StackDriverMetricDefinition> metricDefinitions;
+    private String projectId;
   }
 
   public Map<String, TimeSeriesMetricDefinition> fetchMetricTemplate() {

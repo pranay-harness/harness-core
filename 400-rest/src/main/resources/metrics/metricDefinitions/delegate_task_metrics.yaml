@@ -1,0 +1,28 @@
+name: Delegate Task Metrics
+identifier: delegate_task_metrics
+metricGroup: delegate_task
+metrics:
+  - metricName: delegate_task_creation
+    metricDefinition: Delegate task creation count
+    type: Count
+    unit: "1"
+  - metricName: delegate_task_no_eligible_delegates
+    metricDefinition: Delegate task - no eligible delegates
+    type: Count
+    unit: "1"
+  - metricName: delegate_task_expired
+    metricDefinition: Delegate task expired
+    type: Count
+    unit: "1"
+  - metricName: delegate_task_acquire
+    metricDefinition: Delegate task acquiring count
+    type: Count
+    unit: "1"
+  - metricName: delegate_task_acquire_failed
+    metricDefinition: Delegate task acquiring failure count
+    type: Count
+    unit: "1"
+  - metricName: delegate_task_acquire_limit_exceeded
+    metricDefinition: Delegate task acquiring limit exceeded count
+    type: Count
+    unit: "1"

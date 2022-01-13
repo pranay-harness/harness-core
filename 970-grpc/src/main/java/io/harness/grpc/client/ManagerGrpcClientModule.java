@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.grpc.client;
 
 import io.harness.govern.ProviderModule;
@@ -83,16 +90,6 @@ public class ManagerGrpcClientModule extends ProviderModule {
     if (!isValidAuthority(config.authority)) {
       log.info("Authority in config {} is invalid. Using default value {}", config.authority, defaultAuthority);
       authorityToUse = defaultAuthority;
-    } else if (!("ONPREM".equals(deployMode) || "KUBERNETES_ONPREM".equals(deployMode))) {
-      String versionPrefix = "v-" + versionInfo.getVersion().replace('.', '-') + "-";
-      String versionedAuthority = versionPrefix + config.authority;
-      if (isValidAuthority(versionedAuthority) && !config.isVersionCheckDisabled()) {
-        log.info("Using versioned authority: {}", versionedAuthority);
-        authorityToUse = versionedAuthority;
-      } else {
-        authorityToUse = config.authority;
-        log.info("Versioned authority {} is invalid. Using non-versioned", versionedAuthority);
-      }
     } else {
       log.info("Deploy Mode is {}. Using non-versioned authority", deployMode);
       authorityToUse = config.authority;
@@ -118,6 +115,5 @@ public class ManagerGrpcClientModule extends ProviderModule {
     String accountId;
     String accountSecret;
     String scheme;
-    boolean versionCheckDisabled;
   }
 }

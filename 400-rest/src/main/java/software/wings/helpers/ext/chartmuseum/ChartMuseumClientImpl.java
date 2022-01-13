@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.chartmuseum;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -11,9 +18,12 @@ import software.wings.beans.GcpConfig;
 import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
+import software.wings.delegatetasks.ExceptionMessageSanitizer;
 import software.wings.settings.SettingValue;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.StartedProcess;
 
@@ -51,9 +61,19 @@ public class ChartMuseumClientImpl implements ChartMuseumClient {
     AmazonS3HelmRepoConfig amazonS3HelmRepoConfig = (AmazonS3HelmRepoConfig) helmRepoConfig;
     AwsConfig awsConfig = (AwsConfig) connectorConfig;
 
-    return chartMuseumClientHelper.startS3ChartMuseumServer(amazonS3HelmRepoConfig.getBucketName(), basePath,
-        amazonS3HelmRepoConfig.getRegion(), awsConfig.isUseEc2IamCredentials(), awsConfig.getAccessKey(),
-        awsConfig.getSecretKey(), awsConfig.isUseIRSA(), useLatestChartMuseumVersion);
+    try {
+      return chartMuseumClientHelper.startS3ChartMuseumServer(amazonS3HelmRepoConfig.getBucketName(), basePath,
+          amazonS3HelmRepoConfig.getRegion(), awsConfig.isUseEc2IamCredentials(), awsConfig.getAccessKey(),
+          awsConfig.getSecretKey(), awsConfig.isUseIRSA(), useLatestChartMuseumVersion);
+    } catch (Exception ex) {
+      List<String> secrets = new ArrayList<>();
+      secrets.add(String.valueOf(awsConfig.getSecretKey()));
+      if (awsConfig.isUseEncryptedAccessKey()) {
+        secrets.add(String.valueOf(awsConfig.getAccessKey()));
+      }
+      ExceptionMessageSanitizer.sanitizeException(ex, secrets);
+      throw ex;
+    }
   }
 
   @Override

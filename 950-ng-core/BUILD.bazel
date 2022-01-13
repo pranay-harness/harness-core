@@ -34,6 +34,7 @@ java_library(
         "@maven//:net_jodah_failsafe",
         "@maven//:org_apache_commons_commons_lang3",
         "@maven//:org_hibernate_hibernate_validator",
+        "@maven//:org_jooq_joor",
         "@maven//:org_json_json",
         "@maven//:org_mongodb_mongo_java_driver",
         "@maven//:org_mongodb_morphia_morphia",

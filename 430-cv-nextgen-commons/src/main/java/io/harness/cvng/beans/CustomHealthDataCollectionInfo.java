@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.beans;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -64,7 +71,8 @@ public class CustomHealthDataCollectionInfo extends TimeSeriesDataCollectionInfo
       MetricResponseMappingDTO responseMapping = metricInfo.getResponseMapping();
       timestampJSONPaths.add(responseMapping.getTimestampJsonPath());
       metricValueJSONPaths.add(responseMapping.getMetricValueJsonPath());
-      serviceInstanceJSONPaths.add(responseMapping.getServiceInstanceJsonPath());
+      serviceInstanceJSONPaths.add(
+          isEmpty(responseMapping.getServiceInstanceJsonPath()) ? null : responseMapping.getServiceInstanceJsonPath());
     });
 
     Map<String, Object> envVars = new HashMap<>();

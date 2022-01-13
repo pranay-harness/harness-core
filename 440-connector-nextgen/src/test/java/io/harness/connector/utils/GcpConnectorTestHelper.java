@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.connector.utils;
 
 import static io.harness.annotations.dev.HarnessTeam.CE;
@@ -23,6 +30,7 @@ import lombok.experimental.UtilityClass;
 public class GcpConnectorTestHelper {
   String projectId = "projectId";
   String datasetId = "datasetId";
+  String tableId = "tableId";
   String serviceAccountEmail = "serviceAccountEmail";
 
   List<CEFeatures> featuresEnabled =
@@ -33,7 +41,7 @@ public class GcpConnectorTestHelper {
         .featuresEnabled(featuresEnabled)
         .projectId(projectId)
         .serviceAccountEmail(serviceAccountEmail)
-        .billingExportSpec(GcpBillingExportSpecDTO.builder().datasetId(datasetId).build())
+        .billingExportSpec(GcpBillingExportSpecDTO.builder().datasetId(datasetId).tableId(tableId).build())
         .build();
   }
 
@@ -46,7 +54,7 @@ public class GcpConnectorTestHelper {
         .featuresEnabled(featuresEnabled)
         .projectId(projectId)
         .serviceAccountEmail(serviceAccountEmail)
-        .billingExportDetails(GcpBillingExportDetails.builder().datasetId(datasetId).build())
+        .billingExportDetails(GcpBillingExportDetails.builder().datasetId(datasetId).tableId(tableId).build())
         .build();
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -6,10 +13,10 @@ import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SweepingOutputInstance;
+import io.harness.beans.terraform.TerraformPlanParam;
 import io.harness.encryptors.clients.AwsKmsEncryptor;
 import io.harness.security.encryption.EncryptedRecordData;
 
-import software.wings.api.TerraformPlanParam;
 import software.wings.dl.WingsPersistence;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.sweepingoutput.SweepingOutputService;
@@ -39,8 +46,7 @@ public class TerraformPlanHelper {
                                    .build());
   }
 
-  @VisibleForTesting
-  EncryptedRecordData getEncryptedTfPlanFromSweepingOutput(ExecutionContext context, String planName) {
+  public EncryptedRecordData getEncryptedTfPlanFromSweepingOutput(ExecutionContext context, String planName) {
     SweepingOutputInstance sweepingOutputInstance =
         sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(planName).build());
 

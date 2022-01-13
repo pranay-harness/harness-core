@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.timescale.migrations;
 
 import static io.harness.persistence.HQuery.excludeAuthority;
@@ -35,9 +42,10 @@ public class MigrateTagLinksToTImeScaleDB {
   private static final String insert_statement =
       "INSERT INTO CG_TAGS (ID,ACCOUNT_ID,APP_ID,TAG_KEY,TAG_VALUE,ENTITY_TYPE,ENTITY_ID,CREATED_AT,LAST_UPDATED_AT,CREATED_BY,LAST_UPDATED_BY) VALUES (?,?,?,?,?,?,?,?,?,?,?)";
 
-  private static final String update_statement = "UPDATE CG_TAGS SET NAME=? WHERE APP_ID=?";
+  private static final String update_statement =
+      "UPDATE CG_TAGS SET NAME=?, ACCOUNT_ID=?, APP_ID=?, TAG_KEY=?, TAG_VALUE=?, ENTITY_TYPE=?, ENTITY_ID=?, CREATED_AT=?, LAST_UPDATED_AT=?, CREATED_BY=?, LAST_UPDATED_BY=? WHERE ID=?";
 
-  private static final String query_statement = "SELECT * FROM CG_TAGS WHERE APP_ID=?";
+  private static final String query_statement = "SELECT * FROM CG_TAGS WHERE ID=?";
 
   public boolean runTimeScaleMigration(String accountId) {
     if (!timeScaleDBService.isValid()) {
@@ -128,8 +136,22 @@ public class MigrateTagLinksToTImeScaleDB {
   }
 
   private void updateDataInTimeScaleDB(
-      HarnessTagLink HarnessTagLink, Connection connection, PreparedStatement updateStatement) throws SQLException {
-    log.info("Update operation is not supported");
+      HarnessTagLink harnessTagLink, Connection connection, PreparedStatement updateStatement) throws SQLException {
+    updateStatement.setString(1, harnessTagLink.getAccountId());
+    updateStatement.setString(2, harnessTagLink.getAppId());
+    updateStatement.setString(3, harnessTagLink.getKey());
+    updateStatement.setString(4, harnessTagLink.getValue());
+    updateStatement.setString(5, harnessTagLink.getEntityType().name());
+    updateStatement.setString(6, harnessTagLink.getEntityId());
+    updateStatement.setLong(7, harnessTagLink.getCreatedAt());
+    updateStatement.setLong(8, harnessTagLink.getLastUpdatedAt());
+    updateStatement.setString(
+        9, harnessTagLink.getCreatedBy() != null ? harnessTagLink.getCreatedBy().getName() : null);
+    updateStatement.setString(
+        10, harnessTagLink.getLastUpdatedBy() != null ? harnessTagLink.getLastUpdatedBy().getName() : null);
+
+    updateStatement.setString(11, harnessTagLink.getUuid());
+    updateStatement.execute();
   }
 
   private void insertArrayData(

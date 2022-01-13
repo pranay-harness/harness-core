@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.budgets.service.impl;
 
 import static io.harness.ccm.budget.AlertThresholdBase.ACTUAL_COST;
@@ -69,7 +76,9 @@ public class BudgetAlertsServiceImpl {
   @Autowired private CloudBillingHelper cloudBillingHelper;
 
   private static final String BUDGET_MAIL_ERROR = "Budget alert email couldn't be sent";
+  private static final String NG_PATH_CONST = "ng/";
   private static final String BUDGET_DETAILS_URL_FORMAT = "/account/%s/continuous-efficiency/budget/%s";
+  private static final String BUDGET_DETAILS_URL_FORMAT_NG = "/account/%s/ce/budget/%s/%s";
   private static final String ACTUAL_COST_BUDGET = "cost";
   private static final String FORECASTED_COST_BUDGET = "forecasted cost";
 
@@ -159,8 +168,8 @@ public class BudgetAlertsServiceImpl {
         } catch (Exception e) {
           log.error("Notification via slack not send : ", e);
         }
-        sendBudgetAlertMail(
-            budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(), alertThreshold, cost, costType);
+        sendBudgetAlertMail(budget.getAccountId(), emailAddresses, budget.getUuid(), budget.getName(), alertThreshold,
+            cost, costType, budget.isNgBudget());
         // insert in timescale table
         budgetTimescaleQueryHelper.insertAlertEntryInTable(data, budget.getAccountId());
         break;
@@ -210,11 +219,11 @@ public class BudgetAlertsServiceImpl {
   }
 
   private void sendBudgetAlertMail(String accountId, List<String> emailAddresses, String budgetId, String budgetName,
-      AlertThreshold alertThreshold, double currentCost, String costType) {
+      AlertThreshold alertThreshold, double currentCost, String costType, boolean isNgBudget) {
     List<String> uniqueEmailAddresses = new ArrayList<>(new HashSet<>(emailAddresses));
 
     try {
-      String budgetUrl = buildAbsoluteUrl(format(BUDGET_DETAILS_URL_FORMAT, accountId, budgetId));
+      String budgetUrl = buildAbsoluteUrl(accountId, budgetId, budgetName, isNgBudget);
 
       Map<String, String> templateModel = new HashMap<>();
       templateModel.put("url", budgetUrl);
@@ -240,10 +249,16 @@ public class BudgetAlertsServiceImpl {
     }
   }
 
-  private String buildAbsoluteUrl(String fragment) throws URISyntaxException {
+  private String buildAbsoluteUrl(String accountId, String budgetId, String budgetName, boolean isNgBudget)
+      throws URISyntaxException {
     String baseUrl = mainConfiguration.getBaseUrl();
     URIBuilder uriBuilder = new URIBuilder(baseUrl);
-    uriBuilder.setFragment(fragment);
+    if (isNgBudget) {
+      uriBuilder.setPath(NG_PATH_CONST);
+      uriBuilder.setFragment(format(BUDGET_DETAILS_URL_FORMAT_NG, accountId, budgetId, budgetName));
+    } else {
+      uriBuilder.setFragment(format(BUDGET_DETAILS_URL_FORMAT, accountId, budgetId));
+    }
     return uriBuilder.toString();
   }
 
@@ -263,11 +278,13 @@ public class BudgetAlertsServiceImpl {
 
   private void updateCGBudget(Budget budget) {
     try {
+      log.info("Updating CG budget {}", budget.toString());
       if (budget.getPeriod() == null) {
         budget.setPeriod(BudgetPeriod.MONTHLY);
         budget.setStartTime(BudgetUtils.getStartOfMonth(false));
         budget.setEndTime(BudgetUtils.getEndTimeForBudget(budget.getStartTime(), budget.getPeriod()));
         budget.setGrowthRate(0D);
+        budget.setNgBudget(false);
         budgetDao.update(budget.getUuid(), budget);
       }
     } catch (Exception e) {

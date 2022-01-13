@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.helpers;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -226,7 +233,8 @@ public class TemplateMergeHelper {
     for (YamlField childYamlField : yamlNode.fields()) {
       String fieldName = childYamlField.getName();
       JsonNode value = childYamlField.getNode().getCurrJsonNode();
-      if (TEMPLATE.equals(fieldName)) {
+      boolean isTemplatePresent = isTemplatePresent(fieldName, value);
+      if (isTemplatePresent) {
         value = replaceTemplateOccurrenceWithTemplateSpecYaml(accountId, orgId, projectId, value);
       }
       if (value.isValueNode() || YamlUtils.checkIfNodeIsArrayWithPrimitiveTypes(value)) {
@@ -236,7 +244,7 @@ public class TemplateMergeHelper {
       } else {
         // If it was template key in yaml, we have replace it with the fields in template.spec in template yaml.
         // Hence, we directly put all the keys returned in map, after iterating over them.
-        if (TEMPLATE.equals(fieldName)) {
+        if (isTemplatePresent) {
           Map<String, Object> temp = mergeTemplateInputsInObject(
               accountId, orgId, projectId, new YamlNode(fieldName, value, childYamlField.getNode().getParentNode()));
           resMap.putAll(temp);
@@ -365,7 +373,7 @@ public class TemplateMergeHelper {
     for (YamlField childYamlField : yamlNode.fields()) {
       String fieldName = childYamlField.getName();
       JsonNode value = childYamlField.getNode().getCurrJsonNode();
-      if (TEMPLATE.equals(fieldName)) {
+      if (isTemplatePresent(fieldName, value)) {
         resMap.put(fieldName, validateTemplateInputs(accountId, orgId, projectId, value, templateInputsErrorMap));
         continue;
       }
@@ -554,5 +562,9 @@ public class TemplateMergeHelper {
           templateIdentifierRef.getIdentifier(), versionLabel));
     }
     return templateEntity.get();
+  }
+
+  private boolean isTemplatePresent(String fieldName, JsonNode templateValue) {
+    return TEMPLATE.equals(fieldName) && templateValue.isObject() && templateValue.get(TEMPLATE_REF) != null;
   }
 }

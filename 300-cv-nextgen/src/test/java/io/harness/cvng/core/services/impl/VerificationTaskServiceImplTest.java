@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.CVConstants.DEPLOYMENT;
@@ -87,7 +94,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
         accountId, cvConfigId, verificationJobInstanceId, APP_DYNAMICS);
     VerificationTask verificationTask = verificationTaskService.get(verificationTaskId);
-    assertThat(verificationTask.getValidUntil()).isEqualTo(Date.from(Instant.parse("2020-05-22T10:02:06Z")));
+    assertThat(verificationTask.getValidUntil()).isEqualTo(Date.from(Instant.parse("2020-10-19T10:02:06Z")));
     assertThat(verificationTaskService.getCVConfigId(verificationTaskId)).isEqualTo(cvConfigId);
     assertThat(verificationTaskService.getVerificationJobInstanceId(verificationTaskId))
         .isEqualTo(verificationJobInstanceId);
@@ -419,8 +426,7 @@ public class VerificationTaskServiceImplTest extends CvNextGenTestBase {
     VerificationTask verificationTask =
         VerificationTask.builder()
             .accountId(accountId)
-            .validUntil(Date.from(
-                builderFactory.getClock().instant().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION)))
+            .validUntil(Date.from(builderFactory.getClock().instant().plus(CVConstants.MAX_DATA_RETENTION_DURATION)))
             .tags(Maps.of(TAG_DATA_SOURCE, dataSourceType.name(), TAG_VERIFICATION_TYPE, DEPLOYMENT))
             .build();
     verificationTask.setVerificationJobInstanceId(verificationJobInstanceId);

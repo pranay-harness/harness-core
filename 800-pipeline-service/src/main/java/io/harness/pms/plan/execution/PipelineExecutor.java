@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.retry.RetryExecutionParameters;
 import io.harness.exception.InvalidRequestException;
@@ -92,6 +100,10 @@ public class PipelineExecutor {
       List<String> stagesToRun, Map<String, String> expressionValues, boolean useV2) {
     PipelineEntity pipelineEntity =
         executionHelper.fetchPipelineEntity(accountId, orgIdentifier, projectIdentifier, pipelineIdentifier);
+    if (EmptyPredicate.isNotEmpty(stagesToRun) && !pipelineEntity.shouldAllowStageExecutions()) {
+      throw new InvalidRequestException(
+          String.format("Stage executions are not allowed for pipeline [%s]", pipelineIdentifier));
+    }
     ExecutionTriggerInfo triggerInfo = executionHelper.buildTriggerInfo(originalExecutionId);
 
     // RetryExecutionParameters

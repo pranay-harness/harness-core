@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
@@ -119,7 +126,7 @@ public class AccountServiceImplTest extends WingsBaseTest {
     List<String> delegateVersions = new ArrayList<>();
     delegateVersions.add(version);
     DelegateConfiguration individualConfiguration =
-        DelegateConfiguration.builder().delegateVersions(delegateVersions).accountVersion(true).build();
+        DelegateConfiguration.builder().delegateVersions(delegateVersions).build();
     account.setDelegateConfiguration(individualConfiguration);
 
     Account globalAccount = new Account();

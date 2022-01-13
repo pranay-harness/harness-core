@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -14,6 +21,7 @@ import static io.harness.pcf.CfCommandUnitConstants.CheckExistingApps;
 import static io.harness.pcf.CfCommandUnitConstants.FetchCustomFiles;
 import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
+import static io.harness.pcf.CfCommandUnitConstants.VerifyManifests;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
@@ -972,6 +980,7 @@ public class PcfSetupState extends State {
     if (valuesInCustomSource) {
       canaryCommandUnits.add(new PcfDummyCommandUnit(FetchCustomFiles));
     }
+    canaryCommandUnits.add(new PcfDummyCommandUnit(VerifyManifests));
     canaryCommandUnits.add(new PcfDummyCommandUnit(CheckExistingApps));
     canaryCommandUnits.add(new PcfDummyCommandUnit(PcfSetup));
     canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));

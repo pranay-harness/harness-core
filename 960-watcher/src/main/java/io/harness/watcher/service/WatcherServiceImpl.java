@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.watcher.service;
 
 import static io.harness.concurrent.HTimeLimiter.callInterruptible21;
@@ -13,7 +20,6 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
-import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
@@ -183,13 +189,12 @@ public class WatcherServiceImpl implements WatcherService {
   private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
-  private static boolean accountVersion;
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
     multiVersion = isEmpty(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
   }
-
+  private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_SCRIPT = "delegate.sh";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
@@ -633,16 +638,10 @@ public class WatcherServiceImpl implements WatcherService {
 
               if (multiVersion) {
                 if (!expectedVersions.contains(delegateVersion) && !shutdownPending) {
-                  messageService.writeMessageToChannel(
-                      DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
                   log.info("Delegate version {} ({}) is not a published version. Future requests will go to primary.",
                       delegateVersion, delegateProcess);
                   drainingNeededList.add(delegateProcess);
                 }
-              }
-              if (accountVersion) {
-                messageService.writeMessageToChannel(
-                    DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
               }
 
               if (newDelegate) {
@@ -966,9 +965,6 @@ public class WatcherServiceImpl implements WatcherService {
         if (config != null && config.getAction() == SELF_DESTRUCT) {
           selfDestruct();
         }
-        if (config != null && config.isAccountVersion()) {
-          accountVersion = true;
-        }
 
         return config != null ? config.getDelegateVersions() : null;
       } else {
@@ -1009,9 +1005,8 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = !accountVersion ? substringAfter(version, "-") : "";
-    final String updatedVersion =
-        !accountVersion ? (version.contains("-") ? substringBefore(version, "-") : version) : "";
+    final String patchVersion = substringAfter(version, "-");
+    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
     RestResponse<DelegateScripts> restResponse = null;
     if (!delegateNg) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));
@@ -1024,7 +1019,7 @@ public class WatcherServiceImpl implements WatcherService {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion)));
+                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion, DELEGATE_TYPE)));
     }
 
     if (restResponse == null) {

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.AuthorizationServiceHeader.TEMPLATE_SERVICE;
@@ -30,11 +37,13 @@ import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.MongoConfig;
 import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
+import io.harness.organization.OrganizationClientModule;
 import io.harness.outbox.TransactionOutboxModule;
 import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.project.ProjectClientModule;
 import io.harness.redis.RedisConfig;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
@@ -98,7 +107,7 @@ public class TemplateServiceModule extends AbstractModule {
       }
     });
     install(ExceptionModule.getInstance());
-    install(TemplateServiceGrpcClientModule.getInstance());
+    install(TemplateServiceGrpcClientModule.getInstance(templateServiceConfiguration));
     install(new AbstractWaiterModule() {
       @Override
       public WaiterConfiguration waiterConfiguration() {
@@ -111,6 +120,10 @@ public class TemplateServiceModule extends AbstractModule {
     install(PrimaryVersionManagerModule.getInstance());
     install(TimeModule.getInstance());
     install(FiltersModule.getInstance());
+    install(new ProjectClientModule(this.templateServiceConfiguration.getNgManagerServiceHttpClientConfig(),
+        this.templateServiceConfiguration.getNgManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId()));
+    install(new OrganizationClientModule(this.templateServiceConfiguration.getNgManagerServiceHttpClientConfig(),
+        this.templateServiceConfiguration.getNgManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId()));
 
     install(new DelegateServiceDriverGrpcClientModule(templateServiceConfiguration.getManagerServiceSecret(),
         templateServiceConfiguration.getManagerTarget(), templateServiceConfiguration.getManagerAuthority(), true));

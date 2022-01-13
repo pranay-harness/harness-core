@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package ci.pipeline.execution;
 
 import static io.harness.beans.sweepingoutputs.CISweepingOutputNames.CODEBASE;
@@ -162,8 +169,19 @@ public class GitBuildStatusUtility {
     boolean isAccountLevelConnector = isAccountLevelConnector(gitConnector, buildStatusUpdateParameter.getRepoName());
 
     String repoName = buildStatusUpdateParameter.getRepoName();
+    String url = retrieveURL(gitConnector);
+    if (!url.endsWith("/")) {
+      url = url + "/";
+    }
+    String ownerName;
+    String finalRepo;
     if (!isAccountLevelConnector) {
-      repoName = gitClientHelper.getGitRepo(retrieveURL(gitConnector));
+      finalRepo = gitClientHelper.getGitRepo(url);
+      ownerName = gitClientHelper.getGitOwner(url, false);
+    } else {
+      finalRepo = gitClientHelper.getGitRepo(url + repoName);
+      // Append the url and use the repo level connector owner parsing logic
+      ownerName = gitClientHelper.getGitOwner(url + repoName, false);
     }
 
     GitSCMType gitSCMType = retrieveSCMType(gitConnector);
@@ -176,8 +194,8 @@ public class GitBuildStatusUtility {
         .gitSCMType(gitSCMType)
         .connectorDetails(gitConnector)
         .userName(connectorUtils.fetchUserName(gitConnector))
-        .owner(gitClientHelper.getGitOwner(retrieveURL(gitConnector), isAccountLevelConnector))
-        .repo(repoName)
+        .owner(ownerName)
+        .repo(finalRepo)
         .identifier(generateIdentifier(
             ambiance.getMetadata().getPipelineIdentifier(), buildStatusUpdateParameter.getIdentifier()))
         .state(retrieveBuildStatusState(gitSCMType, status))

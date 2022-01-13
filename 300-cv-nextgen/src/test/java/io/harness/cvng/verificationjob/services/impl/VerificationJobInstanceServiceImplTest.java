@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
@@ -22,13 +29,11 @@ import io.harness.CvNextGenTestBase;
 import io.harness.category.element.UnitTests;
 import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO;
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.CanaryAdditionalInfo;
 import io.harness.cvng.analysis.beans.DeploymentLogAnalysisDTO;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
-import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.AppDynamicsDataCollectionInfo;
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -109,9 +114,7 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
   @Inject private DataCollectionTaskService dataCollectionTaskService;
   @Inject private HPersistence hPersistence;
   @Mock private NextGenService nextGenService;
-  @Mock private AlertRuleService alertRuleService;
   @Inject private VerificationTaskService verificationTaskService;
-  @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
@@ -163,7 +166,6 @@ public class VerificationJobInstanceServiceImplTest extends CvNextGenTestBase {
     cvConfig = newCVConfig();
     FieldUtils.writeField(verificationJobInstanceService, "clock", clock, true);
     FieldUtils.writeField(verificationJobInstanceService, "nextGenService", nextGenService, true);
-    FieldUtils.writeField(verificationJobInstanceService, "alertRuleService", alertRuleService, true);
     when(verificationManagerService.createDataCollectionTask(any(), any(), any(), any())).thenReturn(perpetualTaskId);
 
     when(nextGenService.getEnvironment(accountId, orgIdentifier, projectIdentifier, "dev"))

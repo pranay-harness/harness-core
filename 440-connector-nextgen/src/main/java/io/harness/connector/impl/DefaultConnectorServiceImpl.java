@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.connector.impl;
 
 import static io.harness.NGConstants.CONNECTOR_HEARTBEAT_LOG_PREFIX;
@@ -14,6 +21,7 @@ import static io.harness.utils.RestCallToNGManagerClientUtils.execute;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -62,6 +70,8 @@ import io.harness.delegate.beans.connector.scm.gitlab.GitlabConnectorDTO;
 import io.harness.encryption.SecretRefData;
 import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.exception.ConnectorNotFoundException;
 import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.DuplicateFieldException;
@@ -70,6 +80,8 @@ import io.harness.exception.UnexpectedException;
 import io.harness.exception.WingsException;
 import io.harness.exception.ngexception.ConnectorValidationException;
 import io.harness.git.model.ChangeType;
+import io.harness.gitsync.clients.YamlGitConfigClient;
+import io.harness.gitsync.common.dtos.GitSyncConfigDTO;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.gitsync.interceptor.GitSyncBranchContext;
@@ -93,17 +105,22 @@ import io.harness.utils.FullyQualifiedIdentifierHelper;
 import io.harness.utils.PageUtils;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
@@ -133,13 +150,14 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
   private final ConnectorEntityReferenceHelper connectorEntityReferenceHelper;
   GitSyncSdkService gitSyncSdkService;
   OutboxService outboxService;
+  YamlGitConfigClient yamlGitConfigClient;
 
   @Override
   public Optional<ConnectorResponseDTO> get(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String connectorIdentifier) {
     Optional<Connector> connector =
         getInternal(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
-    return connector.map(connectorMapper::writeDTO);
+    return connector.map(x -> getResponse(accountIdentifier, orgIdentifier, projectIdentifier, x));
   }
 
   @Override
@@ -156,7 +174,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       return Optional.empty();
     }
     Optional<Connector> connectorEntity = connectorsWithGivenName.get().findFirst();
-    return connectorEntity.map(connectorMapper::writeDTO);
+    return connectorEntity.map(x -> getResponse(accountIdentifier, orgIdentifier, projectIdentifier, x));
   }
 
   @Override
@@ -165,7 +183,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     Criteria criteria =
         createCriteriaToFetchConnector(accountIdentifier, orgIdentifier, projectIdentifier, connectorIdentifier);
     final Optional<Connector> connectorOptional = connectorRepository.findOne(criteria, repo, branch);
-    return connectorOptional.map(connectorMapper::writeDTO);
+    return connectorOptional.map(x -> getResponse(accountIdentifier, orgIdentifier, projectIdentifier, x));
   }
 
   @Override
@@ -189,7 +207,64 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } else {
       connectors = connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
     }
-    return connectors.map(connectorMapper::writeDTO);
+    return getResponseList(accountIdentifier, orgIdentifier, projectIdentifier, connectors);
+  }
+
+  private ConnectorResponseDTO getResponse(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Connector connector) {
+    ConnectorResponseDTO connectorResponseDTO = connectorMapper.writeDTO(connector);
+    populateGitMetadata(accountIdentifier, orgIdentifier, projectIdentifier, connectorResponseDTO);
+    return connectorResponseDTO;
+  }
+
+  private Page<ConnectorResponseDTO> getResponseList(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, Page<Connector> connectors) {
+    Page<ConnectorResponseDTO> connectorResponseDTOPage = connectors.map(connectorMapper::writeDTO);
+    populateGitMetadata(accountIdentifier, orgIdentifier, projectIdentifier, connectorResponseDTOPage.getContent());
+    return connectorResponseDTOPage;
+  }
+
+  private void populateGitMetadata(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      ConnectorResponseDTO connectorResponseDTO) {
+    populateGitMetadata(accountIdentifier, orgIdentifier, projectIdentifier, singletonList(connectorResponseDTO));
+  }
+
+  private Map<String, GitSyncConfigDTO> listByRepoIdentifiers(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> repoIdentifiers) {
+    Map<String, GitSyncConfigDTO> mapToBeReturned = new HashMap<>();
+    try {
+      List<GitSyncConfigDTO> yamlGitConfigs =
+          yamlGitConfigClient.getConfigs(accountIdentifier, orgIdentifier, projectIdentifier).execute().body();
+      Map<String, GitSyncConfigDTO> identifierToYamlGitConfigMap =
+          yamlGitConfigs.stream().collect(Collectors.toMap(GitSyncConfigDTO::getIdentifier, Function.identity()));
+      repoIdentifiers.forEach(
+          repoIdentifier -> mapToBeReturned.put(repoIdentifier, identifierToYamlGitConfigMap.get(repoIdentifier)));
+    } catch (Exception exception) {
+      log.error("Exception while trying to get repo details", exception);
+    }
+
+    return mapToBeReturned;
+  }
+
+  private void populateGitMetadata(String accountIdentifier, String orgIdentifier, String projectIdentifier,
+      List<ConnectorResponseDTO> connectorResponseList) {
+    List<String> repoIdentifiers =
+        connectorResponseList.stream()
+            .filter(x -> x.getGitDetails() != null && !StringUtils.isEmpty(x.getGitDetails().getRepoIdentifier()))
+            .map(x -> x.getGitDetails().getRepoIdentifier())
+            .collect(toList());
+    Map<String, GitSyncConfigDTO> identifierToYamlGitConfigMap =
+        listByRepoIdentifiers(accountIdentifier, orgIdentifier, projectIdentifier, repoIdentifiers);
+    connectorResponseList.forEach(connectorResponseDTO -> {
+      if (connectorResponseDTO.getGitDetails() != null
+          && !StringUtils.isEmpty(connectorResponseDTO.getGitDetails().getRepoIdentifier())) {
+        String repoIdentifier = connectorResponseDTO.getGitDetails().getRepoIdentifier();
+        GitSyncConfigDTO yamlGitConfigDTO = identifierToYamlGitConfigMap.get(repoIdentifier);
+        if (yamlGitConfigDTO != null) {
+          connectorResponseDTO.getGitDetails().setRepoName(yamlGitConfigDTO.getName());
+        }
+      }
+    });
   }
 
   public Page<ConnectorResponseDTO> list(int page, int size, String accountIdentifier, String orgIdentifier,
@@ -206,7 +281,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .build());
     Page<Connector> connectors =
         connectorRepository.findAll(criteria, pageable, projectIdentifier, orgIdentifier, accountIdentifier);
-    return connectors.map(connector -> connectorMapper.writeDTO(connector));
+    return getResponseList(accountIdentifier, orgIdentifier, projectIdentifier, connectors);
   }
 
   @VisibleForTesting
@@ -322,7 +397,8 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", connectorEntity.getIdentifier()));
     }
-    return connectorMapper.writeDTO(savedConnectorEntity);
+    return getResponse(
+        accountIdentifier, connectorEntity.getOrgIdentifier(), connectorEntity.getProjectIdentifier(), connectorEntity);
   }
 
   private void validateThatAConnectorWithThisNameDoesNotExists(
@@ -365,13 +441,9 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     ConnectorInfoDTO connector = connectorRequest.getConnectorInfo();
     Objects.requireNonNull(connector.getIdentifier());
     Optional<Connector> existingConnectorOptional;
-    if (GitContextHelper.isFullSyncFlow()) {
-      existingConnectorOptional = getUnSyncedConnector(
-          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    } else {
-      existingConnectorOptional = getInternal(
-          accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
-    }
+
+    existingConnectorOptional = getInternal(
+        accountIdentifier, connector.getOrgIdentifier(), connector.getProjectIdentifier(), connector.getIdentifier());
     if (!existingConnectorOptional.isPresent()) {
       throw new InvalidRequestException(
           format("No connector exists with the  Identifier %s", connector.getIdentifier()));
@@ -418,15 +490,54 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             -> outboxService.save(new ConnectorUpdateEvent(
                 accountIdentifier, oldConnectorDTO.getConnector(), connectorRequest.getConnectorInfo()));
       }
-      if (GitContextHelper.isFullSyncFlow()) {
-        gitChangeType = ADD;
-      }
       Connector updatedConnector = connectorRepository.save(newConnector, connectorRequest, gitChangeType, supplier);
       connectorEntityReferenceHelper.createSetupUsageForSecret(connector, accountIdentifier, true);
-      return connectorMapper.writeDTO(updatedConnector);
+      return getResponse(accountIdentifier, updatedConnector.getOrgIdentifier(),
+          updatedConnector.getProjectIdentifier(), updatedConnector);
 
     } catch (DuplicateKeyException ex) {
       throw new DuplicateFieldException(format("Connector [%s] already exists", existingConnector.getIdentifier()));
+    }
+  }
+
+  @Override
+  public ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO) {
+    IdentifierRefProtoDTO identifierRef = entityDetailProtoDTO.getIdentifierRef();
+    String accountIdentifier = identifierRef.getAccountIdentifier().getValue();
+    String orgIdentifier = identifierRef.getOrgIdentifier().getValue();
+    String projectIdentifier = identifierRef.getProjectIdentifier().getValue();
+    String identifier = identifierRef.getIdentifier().getValue();
+
+    Preconditions.checkNotNull(accountIdentifier, "The account identifier input cannot be null for the full sync");
+    Preconditions.checkNotNull(orgIdentifier, "The org identifier input cannot be null for the full sync");
+    Preconditions.checkNotNull(projectIdentifier, "The project identifier input cannot be null for the full sync");
+    Preconditions.checkNotNull(identifier, "The connector identifier input cannot be null for the full sync");
+
+    Optional<Connector> existingConnectorOptional =
+        getUnSyncedConnector(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    if (!existingConnectorOptional.isPresent()) {
+      throw new InvalidRequestException(format("No connector exists with the  Identifier %s", identifier));
+    }
+    Connector updatedConnector = connectorRepository.save(existingConnectorOptional.get(), ADD);
+    ConnectorInfoDTO connectorInfoDTO = getResponse(accountIdentifier, updatedConnector.getOrgIdentifier(),
+        updatedConnector.getProjectIdentifier(), updatedConnector)
+                                            .getConnector();
+    deleteTheExistingReferences(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    connectorEntityReferenceHelper.createSetupUsageForSecret(connectorInfoDTO, accountIdentifier, true);
+    return ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build();
+  }
+
+  private void deleteTheExistingReferences(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    GitEntityInfo oldGitEntityInfo = GitContextHelper.getGitEntityInfo();
+    try (GlobalContextManager.GlobalContextGuard guard = GlobalContextManager.ensureGlobalContextGuard()) {
+      final GitEntityInfo emptyInfo = GitEntityInfo.builder().build();
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(emptyInfo).build());
+      connectorEntityReferenceHelper.deleteExistingSetupUsages(
+          accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    } finally {
+      GlobalContextManager.upsertGlobalContextRecord(
+          GitSyncBranchContext.builder().gitBranchInfo(oldGitEntityInfo).build());
     }
   }
 
@@ -794,7 +905,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
             .build());
     Page<Connector> connectors = connectorRepository.findAll(
         Criteria.where(ConnectorKeys.fullyQualifiedIdentifier).in(connectorFQN), pageable, false);
-    return connectors.getContent().stream().map(connector -> connectorMapper.writeDTO(connector)).collect(toList());
+    return connectors.getContent().stream().map(connectorMapper::writeDTO).collect(toList());
   }
 
   @Override
