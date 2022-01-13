@@ -441,8 +441,9 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus) {
+  public String createActivityForDemo(DeploymentActivity activity, ActivityVerificationStatus verificationStatus) {
     activity.validate();
+    activity.setDemoActivity(true);
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
     activity.getVerificationJobs().forEach(verificationJob -> {
       VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
