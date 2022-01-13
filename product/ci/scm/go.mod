@@ -2,14 +2,13 @@ module github.com/wings-software/portal/product/ci/scm
 
 go 1.14
 
-replace github.com/wings-software/portal/commons/go/lib => ../../../commons/go/lib
 
 require (
 	github.com/alexflint/go-arg v1.3.0
 	github.com/drone/go-scm v1.15.1
 	github.com/drone/go-scm-codecommit v0.0.0-20210315104920-2d8b9dc5ed8a
 	github.com/golang/mock v1.4.4
-	github.com/golang/protobuf v1.4.3
+	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.1
 	github.com/nbio/st v0.0.0-20140626010706-e9e8d9816f32 // indirect
 	github.com/stretchr/testify v1.6.1

@@ -30,6 +30,11 @@ public class AzureTaskParameters implements TaskParameters, ExecutionCapabilityD
   private String commandName;
   private Integer timeoutIntervalInMin;
 
+  public AzureTaskParameters(String appId, String accountId) {
+    this.appId = appId;
+    this.accountId = accountId;
+  }
+
   @Override
   public List<ExecutionCapability> fetchRequiredExecutionCapabilities(ExpressionEvaluator maskingEvaluator) {
     return Collections.emptyList();

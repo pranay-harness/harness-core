@@ -85,8 +85,8 @@ public interface DelegateService extends OwnedByAccount {
 
   Delegate updateScopes(@Valid Delegate delegate);
 
-  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost)
-      throws IOException;
+  DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost, String verificationHost,
+      String delegateType) throws IOException;
 
   DelegateScripts getDelegateScripts(String accountId, String version, String managerHost, String verificationHost,
       String delegateName) throws IOException;
@@ -184,7 +184,7 @@ public interface DelegateService extends OwnedByAccount {
 
   String expireTask(String accountId, String delegateTaskId);
 
-  DelegateSizeDetails fetchDefaultDelegateSize();
+  DelegateSizeDetails fetchDefaultDockerDelegateSize();
 
   void validateDelegateSetupDetails(String accountId, DelegateSetupDetails delegateSetupDetails, String delegateType);
 

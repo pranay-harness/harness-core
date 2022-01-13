@@ -1061,15 +1061,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @Override
-  public DelegateScripts getDelegateScriptsNg(
-      String accountId, String version, String managerHost, String verificationHost) throws IOException {
-    String delegateXmx;
-    if (DeployVariant.isCommunity(deployVersion)) {
-      delegateXmx = "-Xmx500m";
-    } else {
-      delegateXmx = "-Xmx" + (DELEGATE_RAM_PER_REPLICA - WATCHER_RAM_IN_MB - POD_BASE_RAM_IN_MB) + "m";
-    }
-
+  public DelegateScripts getDelegateScriptsNg(String accountId, String version, String managerHost,
+      String verificationHost, String delegateType) throws IOException {
     ImmutableMap<String, String> scriptParams = getJarAndScriptRunTimeParamMap(
         TemplateParameters.builder()
             .accountId(accountId)
@@ -1077,7 +1070,7 @@ public class DelegateServiceImpl implements DelegateService {
             .managerHost(managerHost)
             .verificationHost(verificationHost)
             .logStreamingServiceBaseUrl(mainConfiguration.getLogStreamingServiceConfig().getBaseUrl())
-            .delegateXmx(delegateXmx)
+            .delegateXmx(getDelegateXmx(delegateType))
             .build(),
         true);
 
@@ -1360,9 +1353,6 @@ public class DelegateServiceImpl implements DelegateService {
       if (templateParameters.getK8sPermissionsType() != null) {
         params.put("k8sPermissionsType", templateParameters.getK8sPermissionsType().name());
       }
-
-      boolean versionCheckEnabled = hasVersionCheckDisabled(templateParameters.getAccountId());
-      params.put("versionCheckDisabled", String.valueOf(versionCheckEnabled));
 
       if (isNotBlank(templateParameters.getDelegateTokenName())) {
         params.put("delegateTokenName", templateParameters.getDelegateTokenName());
@@ -2990,11 +2980,6 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateGroup;
   }
 
-  private boolean hasVersionCheckDisabled(String accountId) {
-    return accountService.getAccountPrimaryDelegateVersion(accountId) != null
-        || featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId);
-  }
-
   @Override
   public void updateLastExpiredEventHeartbeatTime(
       long lastExpiredEventHeartbeatTime, String delegateId, String accountId) {
@@ -3752,7 +3737,7 @@ public class DelegateServiceImpl implements DelegateService {
     return delegateTaskServiceClassic.expireTask(accountId, delegateTaskId);
   }
 
-  public DelegateSizeDetails fetchDefaultDelegateSize() {
+  public DelegateSizeDetails fetchDefaultDockerDelegateSize() {
     String fileName;
     if (DeployVariant.isCommunity(deployVersion)) {
       fileName = "delegatesizes/default_community_size.json";
@@ -3968,7 +3953,7 @@ public class DelegateServiceImpl implements DelegateService {
         .stream()
         .filter(size -> delegateSetupDetails != null && (size.getSize() == delegateSetupDetails.getSize()))
         .findFirst()
-        .orElse(fetchDefaultDelegateSize());
+        .orElse(fetchDefaultDockerDelegateSize());
   }
 
   private void checkUniquenessOfDelegateName(String accountId, String delegateName) {
@@ -3979,5 +3964,9 @@ public class DelegateServiceImpl implements DelegateService {
       throw new InvalidRequestException(
           "Delegate with same name exists either in CG or NG. Delegate name must be unique across CG and NG.", USER);
     }
+  }
+  private String getDelegateXmx(String delegateType) {
+    // TODO: ARPIT remove this community and null check once new delegate and watcher goes in prod.
+    return (delegateType.equals(DOCKER) || DeployVariant.isCommunity(deployVersion)) ? "-Xmx512m" : "-Xmx1536m";
   }
 }

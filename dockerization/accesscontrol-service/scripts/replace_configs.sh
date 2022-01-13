@@ -6,15 +6,15 @@
 
 CONFIG_FILE=/opt/harness/config.yml
 
-yq delete -i $CONFIG_FILE server.applicationConnectors[0]
+yq delete -i $CONFIG_FILE 'server.applicationConnectors.(type==https)'
 
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then

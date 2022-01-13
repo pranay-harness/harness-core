@@ -18,6 +18,7 @@ import io.harness.cvng.migration.list.CleanUpMonitoringSourcePerpetualTask;
 import io.harness.cvng.migration.list.CleanUpOldDocuments;
 import io.harness.cvng.migration.list.CleanupDeprecatedDocuments;
 import io.harness.cvng.migration.list.CreateDefaultVerificationJobsMigration;
+import io.harness.cvng.migration.list.CustomHealthCustomPackForExistingProjects;
 import io.harness.cvng.migration.list.DeleteInvalidOrchestratorsMigration;
 import io.harness.cvng.migration.list.DeleteOrchestratorWithInvalidVerificationTaskId;
 import io.harness.cvng.migration.list.DeleteSLISLOMigration;
@@ -79,6 +80,7 @@ public class CVNGBackgroundMigrationList {
         .add(Pair.of(27, AppDCustomMetricForExistingProjects.class))
         .add(Pair.of(28, DeleteSLISLOMigration.class))
         .add(Pair.of(29, NewRelicCustomPackForExistingProjects.class))
+        .add(Pair.of(30, CustomHealthCustomPackForExistingProjects.class))
         .build();
   }
 }

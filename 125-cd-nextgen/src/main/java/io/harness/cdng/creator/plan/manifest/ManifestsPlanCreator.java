@@ -48,8 +48,7 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.CDC)
 @UtilityClass
 public class ManifestsPlanCreator {
-  public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig) {
-    String manifestsId = UUIDGenerator.generateUuid();
+  public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig, String finalManifestsId) {
     List<ManifestConfigWrapper> manifestListConfig =
         serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
     ManifestListBuilder manifestListBuilder = new ManifestListBuilder(manifestListConfig);
@@ -71,7 +70,7 @@ public class ManifestsPlanCreator {
             .build();
     PlanNode manifestsNode =
         PlanNode.builder()
-            .uuid("manifests-" + manifestsId)
+            .uuid(finalManifestsId)
             .stepType(ManifestsStep.STEP_TYPE)
             .name(PlanCreatorConstants.MANIFESTS_NODE_NAME)
             .identifier(YamlTypes.MANIFEST_LIST_CONFIG)
@@ -85,7 +84,6 @@ public class ManifestsPlanCreator {
     planNodes.add(manifestsNode);
     return PlanCreationResponse.builder()
         .nodes(planNodes.stream().collect(Collectors.toMap(PlanNode::getUuid, Function.identity())))
-        .startingNodeId(manifestsNode.getUuid())
         .build();
   }
 

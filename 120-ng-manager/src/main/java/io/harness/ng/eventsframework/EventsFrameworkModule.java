@@ -28,6 +28,7 @@ import io.harness.eventsframework.api.Consumer;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpConsumer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
+import io.harness.eventsframework.impl.redis.GitAwareRedisProducer;
 import io.harness.eventsframework.impl.redis.RedisConsumer;
 import io.harness.eventsframework.impl.redis.RedisProducer;
 import io.harness.eventsframework.impl.redis.RedisUtils;
@@ -143,7 +144,7 @@ public class EventsFrameworkModule extends AbstractModule {
               EventsFrameworkConstants.USERMEMBERSHIP_READ_BATCH_SIZE, redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(EventsFrameworkConstants.SETUP_USAGE))
-          .toInstance(RedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redissonClient,
+          .toInstance(GitAwareRedisProducer.of(EventsFrameworkConstants.SETUP_USAGE, redissonClient,
               EventsFrameworkConstants.ENTITY_CRUD_MAX_TOPIC_SIZE, NG_MANAGER.getServiceId(),
               redisConfig.getEnvNamespace()));
       bind(Consumer.class)

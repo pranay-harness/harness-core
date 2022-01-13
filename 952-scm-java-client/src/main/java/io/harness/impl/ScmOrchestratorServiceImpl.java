@@ -19,6 +19,7 @@ import io.harness.delegate.beans.connector.scm.ScmConnector;
 import io.harness.impl.jgit.JgitGitServiceImpl;
 import io.harness.impl.scm.SCMServiceGitClientImpl;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.CreateFileResponse;
 import io.harness.product.ci.scm.proto.CreatePRResponse;
 import io.harness.product.ci.scm.proto.CreateWebhookResponse;
@@ -138,8 +139,8 @@ public class ScmOrchestratorServiceImpl implements ScmOrchestratorService {
   }
 
   @Override
-  public void createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
-    scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
+  public CreateBranchResponse createNewBranch(ScmConnector scmConnector, String branch, String defaultBranchName) {
+    return scmServiceGitClient.createNewBranch(scmConnector, branch, defaultBranchName);
   }
 
   @Override

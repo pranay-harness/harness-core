@@ -1,0 +1,35 @@
+moduleType: CF
+clients:
+  - name: ffserver
+    clientConfig: ffServerClientConfig
+    secretConfig: nextGenConfig.ffServiceSecret
+features:
+  - name: DEVELOPERS
+    description: The developers logging into the UI to manage feature flags
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 2
+        clientName: ffserver
+      TEAM:
+        restrictionType: LICENSE_STATIC_LIMIT
+        fieldName: totalFeatureFlagUnits
+        clientName: ffserver
+      ENTERPRISE:
+        restrictionType: LICENSE_STATIC_LIMIT
+        fieldName: totalFeatureFlagUnits
+        clientName: ffserver
+  - name: MONTHLY_ACTIVE_USERS
+    description: The monthly active users is calculated by looking at the number of unique client SDK evaluations
+    restrictions:
+      FREE:
+        restrictionType: STATIC_LIMIT
+        limit: 25000
+        clientName: ffserver
+      TEAM:
+        restrictionType: LICENSE_STATIC_LIMIT
+        fieldName: totalClientMAUs
+        clientName: ffserver
+      ENTERPRISE:
+        restrictionType: AVAILABILITY
+        enabled: true

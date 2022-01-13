@@ -37,7 +37,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.net.URL;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -53,8 +52,6 @@ import javax.annotation.Nullable;
 import org.mongodb.morphia.query.Sort;
 
 public class DeploymentLogAnalysisServiceImpl implements DeploymentLogAnalysisService {
-  private static final URL LOG_DEMO_TEMPLATE_PATH = DeploymentTimeSeriesAnalysisServiceImpl.class.getResource(
-      "/io/harness/cvng/analysis/service/impl/log_deployment_analysis_demo_template.json");
   public static final int DEFAULT_PAGE_SIZE = 10;
   @Inject private HPersistence hPersistence;
   @Inject private VerificationTaskService verificationTaskService;

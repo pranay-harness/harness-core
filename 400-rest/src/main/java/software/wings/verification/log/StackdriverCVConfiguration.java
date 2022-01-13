@@ -37,6 +37,8 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
 
   @Attributes(required = true, title = "Log Message Field") @DefaultValue("textPayload") protected String messageField;
 
+  private String projectId;
+
   @Override
   public CVConfiguration deepCopy() {
     StackdriverCVConfiguration clonedConfig = new StackdriverCVConfiguration();
@@ -45,6 +47,7 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
     clonedConfig.setLogsConfiguration(this.isLogsConfiguration);
     clonedConfig.setMessageField(this.getMessageField());
     clonedConfig.setQuery(this.getQuery());
+    clonedConfig.setProjectId(this.getProjectId());
     return clonedConfig;
   }
 
@@ -56,5 +59,6 @@ public class StackdriverCVConfiguration extends LogsCVConfiguration {
     private String hostnameField;
     private String messageField;
     private boolean isLogsConfiguration;
+    private String projectId;
   }
 }

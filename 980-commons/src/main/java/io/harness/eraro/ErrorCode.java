@@ -583,7 +583,8 @@ public enum ErrorCode {
   APPROVAL_STEP_NG_ERROR,
   BUCKET_SERVER_ERROR,
   GIT_SYNC_ERROR,
-  TEMPLATE_EXCEPTION;
+  TEMPLATE_EXCEPTION,
+  ENTITY_REFERENCE_EXCEPTION;
 
   private Status status = BAD_REQUEST;
   private String description;

@@ -47,7 +47,6 @@ echo "doUpgrade: false" >> config-delegate.yml
 
 append_config "grpcServiceEnabled" $GRPC_SERVICE_ENABLED
 append_config "grpcServiceConnectorPort" $GRPC_SERVICE_CONNECTOR_PORT
-append_config "versionCheckDisabled" $VERSION_CHECK_DISABLED
 append_config "clientToolsDownloadDisabled" $CLIENT_TOOLS_DOWNLOAD_DISABLED
 
 # 3. Start the delegate

@@ -731,6 +731,10 @@ public class UserServiceImpl implements UserService {
       account.setCompanyName(account.getCompanyName().trim());
     }
 
+    if (isNotBlank(account.getRingName())) {
+      account.setRingName(account.getRingName().trim());
+    }
+
     if (licenseInfo != null && AccountType.TRIAL.equals(licenseInfo.getAccountType())
         && account.getTrialSignupOptions() == null) {
       account.setTrialSignupOptions(TrialSignupOptions.getDefaultTrialSignupOptions());

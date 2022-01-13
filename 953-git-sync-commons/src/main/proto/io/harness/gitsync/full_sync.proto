@@ -52,4 +52,6 @@ message FullSyncEventRequest {
   bool createPr = 2;
   string branch = 3;
   string target_branch = 4;
+  bool isNewBranch = 5;
+  string baseBranch = 6;
 }

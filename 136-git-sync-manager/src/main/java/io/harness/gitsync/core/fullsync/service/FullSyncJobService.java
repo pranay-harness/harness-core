@@ -12,6 +12,7 @@ import static io.harness.annotations.dev.HarnessTeam.DX;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
 
+import com.mongodb.client.result.UpdateResult;
 import java.util.Optional;
 
 @OwnedBy(DX)
@@ -22,5 +23,8 @@ public interface FullSyncJobService {
 
   void markFullSyncJobAsSuccess(String accountIdentifier, String uuid);
 
-  Optional<GitFullSyncJob> getRunningJobs(String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  UpdateResult markJobAsRunning(String accountIdentifier, String uuid);
+
+  Optional<GitFullSyncJob> getRunningOrQueuedJob(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

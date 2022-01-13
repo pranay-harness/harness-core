@@ -43,6 +43,7 @@ public enum TaskGroup {
   AZURE_VMSS,
   AZURE_APP_SERVICE,
   AZURE_ARM,
+  AZURE_RESOURCE,
   ELK,
   LOGZ,
   SUMO,

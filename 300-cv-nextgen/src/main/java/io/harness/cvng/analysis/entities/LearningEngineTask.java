@@ -7,12 +7,15 @@
 
 package io.harness.cvng.analysis.entities;
 
+import static io.harness.cvng.analysis.entities.LearningEngineTask.TaskPriority.P1;
+
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotation.StoreIn;
 import io.harness.mongo.index.CompoundMongoIndex;
 import io.harness.mongo.index.FdIndex;
 import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
+import io.harness.mongo.index.SortCompoundMongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.AccountAccess;
 import io.harness.persistence.CreatedAtAware;
@@ -60,6 +63,12 @@ public abstract class LearningEngineTask
                  .field(LearningEngineTaskKeys.taskStatus)
                  .field(LearningEngineTaskKeys.taskPriority)
                  .build())
+        .add(SortCompoundMongoIndex.builder()
+                 .name("taskFetchNextTaskPriorityIdx")
+                 .field(LearningEngineTaskKeys.taskPriority)
+                 .field(LearningEngineTaskKeys.taskStatus)
+                 .ascSortField(LearningEngineTaskKeys.createdAt)
+                 .build())
         .add(CompoundMongoIndex.builder()
                  .name("trend_idx")
                  .unique(false)
@@ -77,7 +86,7 @@ public abstract class LearningEngineTask
   private Instant pickedAt;
   @FdIndex private String accountId;
   private LearningEngineTaskType analysisType;
-  private int taskPriority = 1;
+  private int taskPriority = P1.getValue();
   private String analysisSaveUrl;
   private String failureUrl;
   private Instant analysisStartTime;
@@ -124,5 +133,18 @@ public abstract class LearningEngineTask
 
   public Duration waitTime() {
     return Duration.between(Instant.ofEpochMilli(getCreatedAt()), pickedAt);
+  }
+
+  public enum TaskPriority {
+    P0(0),
+    P1(1),
+    P2(2);
+    int value;
+    TaskPriority(int value) {
+      this.value = value;
+    }
+    public int getValue() {
+      return value;
+    }
   }
 }

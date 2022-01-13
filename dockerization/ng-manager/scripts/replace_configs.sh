@@ -37,12 +37,12 @@ write_mongo_params() {
   done
 }
 
-yq delete -i $CONFIG_FILE server.applicationConnectors[0]
+yq delete -i $CONFIG_FILE 'server.applicationConnectors.(type==https)'
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
-yq delete -i $CONFIG_FILE grpcServer.connectors[0]
-yq delete -i $CONFIG_FILE pmsSdkGrpcServerConfig.connectors[0]
-yq delete -i $CONFIG_FILE gitSyncServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE 'grpcServer.connectors.(secure==true)'
+yq delete -i $CONFIG_FILE 'pmsSdkGrpcServerConfig.connectors.(secure==true)'
+yq delete -i $CONFIG_FILE 'gitSyncServerConfig.connectors.(secure==true)'
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -169,6 +169,10 @@ if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.ceNextGenServiceSecret "$NEXT_GEN_MANAGER_SECRET"
 fi
 
+if [[ "" != "$NEXT_GEN_MANAGER_SECRET" ]]; then
+  yq write -i $CONFIG_FILE nextGen.ffServiceSecret "$NEXT_GEN_MANAGER_SECRET"
+fi
+
 if [[ "" != "$AUTH_ENABLED" ]]; then
   yq write -i $CONFIG_FILE enableAuth "$AUTH_ENABLED"
 fi
@@ -248,6 +252,10 @@ if [[ "" != "$LW_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE lightwingClientConfig.baseUrl "$LW_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$CF_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ffServerClientConfig.baseUrl "$CF_CLIENT_BASEURL"
+fi
+
 if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
 fi
@@ -265,10 +273,10 @@ if [[ "" != "$LOG_STREAMING_SERVICE_TOKEN" ]]; then
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$TIMESCALE_PASSWORD" ]]; then
@@ -329,7 +337,7 @@ if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
   INDEX=0
   for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
     yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
-    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
 fi

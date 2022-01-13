@@ -19,6 +19,7 @@ import io.harness.cvng.core.beans.HealthSourceMetricDefinition.SLIDTO;
 import io.harness.cvng.core.beans.HealthSourceQueryType;
 import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.MetricResponseMapping;
+import io.harness.cvng.core.services.CVNextGenConstants;
 import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthMethod;
 import io.harness.exception.InvalidRequestException;
 
@@ -130,7 +131,7 @@ public class CustomHealthCVConfig extends MetricCVConfig {
                                 .accountId(getAccountId())
                                 .dataSourceType(DataSourceType.CUSTOM_HEALTH)
                                 .projectIdentifier(getProjectIdentifier())
-                                .identifier(riskProfile.getCategory().getDisplayName())
+                                .identifier(CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
                                 .build();
 
     metricPack.addToMetrics(MetricPack.MetricDefinition.builder()

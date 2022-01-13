@@ -8,6 +8,7 @@
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.FeatureName.CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES;
 import static io.harness.beans.FeatureName.GIT_HOST_CONNECTIVITY;
 import static io.harness.beans.FeatureName.SKIP_BASED_ON_STACK_STATUSES;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -37,7 +38,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.git.model.GitFile;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -116,7 +116,6 @@ public class CloudFormationCreateStackState extends CloudFormationState {
   @Inject private GitConfigHelperService gitConfigHelperService;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
   @Inject private InfrastructureMappingService infrastructureMappingService;
-  @Inject private FeatureFlagService featureFlagService;
 
   @Attributes(title = "Parameters file path") @Getter @Setter protected List<String> parametersFilePaths;
   @Attributes(title = "Use parameters file") @Getter @Setter protected boolean useParametersFile;
@@ -298,7 +297,9 @@ public class CloudFormationCreateStackState extends CloudFormationState {
         .commandName(mainCommandUnit())
         .variables(renderedInfrastructureVariables)
         .encryptedVariables(renderedEncryptedInfrastructureVariables)
-        .awsConfig(awsConfig);
+        .awsConfig(awsConfig)
+        .skipWaitForResources(
+            featureFlagService.isEnabled(CLOUDFORMATION_SKIP_WAIT_FOR_RESOURCES, executionContext.getAccountId()));
     CloudFormationCreateStackRequest request = builder.build();
     setTimeOutOnRequest(request);
     DelegateTask delegateTask = getCreateStackDelegateTask(executionContext, awsConfig, activityId, request);
