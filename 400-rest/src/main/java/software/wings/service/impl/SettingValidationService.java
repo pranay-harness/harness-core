@@ -213,8 +213,9 @@ public class SettingValidationService {
                         .build())
               .build();
       if (settingValue instanceof SmtpConfig
-          && (settingAttribute.getName().length() >= 13
-              && (NG_SMTP_SETTINGS_PREFIX.equalsIgnoreCase(settingAttribute.getName().substring(0, 13))))) {
+          && (settingAttribute.getName().length() >= NG_SMTP_SETTINGS_PREFIX.length()
+              && (NG_SMTP_SETTINGS_PREFIX.equalsIgnoreCase(
+                  settingAttribute.getName().substring(0, NG_SMTP_SETTINGS_PREFIX.length()))))) {
         final Map<String, String> ngTaskSetupAbstractionsWithOwner =
             getNGTaskSetupAbstractionsWithOwner(settingAttribute.getAccountId(), null, null);
         delegateTask.setSetupAbstractions(ngTaskSetupAbstractionsWithOwner);
