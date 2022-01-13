@@ -16,6 +16,7 @@ public interface CfCommandUnitConstants {
   String FetchFiles = "Download Manifest Files";
   String FetchGitFiles = "Download Git Manifest Files";
   String FetchCustomFiles = "Download Custom Manifest Files";
+  String VerifyManifests = "Verifying Manifests";
   String CheckExistingApps = "Check Existing Applications";
   String PcfSetup = "Setup Application";
   String Wrapup = "Wrap up";
