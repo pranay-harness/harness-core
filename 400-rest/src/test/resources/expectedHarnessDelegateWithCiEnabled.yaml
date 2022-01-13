@@ -128,6 +128,8 @@ spec:
           value: "true"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "8080"
+        - name: VERSION_CHECK_DISABLED
+          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
