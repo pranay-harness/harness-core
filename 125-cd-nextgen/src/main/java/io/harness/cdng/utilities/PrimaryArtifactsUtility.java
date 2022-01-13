@@ -38,7 +38,7 @@ public class PrimaryArtifactsUtility {
     return primaryYamlField.getNode().getCurrJsonNode();
   }
 
-  public YamlField fetchPrimaryArtifactYamlFieldAndSetYamlUpdate(
+  public YamlField createPrimaryArtifactYamlFieldAndSetYamlUpdate(
       YamlField artifactField, YamlUpdates.Builder yamlUpdates) {
     YamlField primaryYamlField = artifactField.getNode().getField(YamlTypes.PRIMARY_ARTIFACT);
 

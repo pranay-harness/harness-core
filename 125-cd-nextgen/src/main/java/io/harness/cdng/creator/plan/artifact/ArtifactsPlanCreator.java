@@ -122,7 +122,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(primaryId)));
     metadataDependency.put(
-        YamlTypes.PRIMARY_STEP_PARAMETERS, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(params)));
+        PlanCreatorConstants.PRIMARY_STEP_PARAMETERS, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(params)));
     return metadataDependency;
   }
 
@@ -161,7 +161,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
       LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
     YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder(); //.build()
     YamlField primaryYamlField =
-        PrimaryArtifactsUtility.fetchPrimaryArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
+        PrimaryArtifactsUtility.createPrimaryArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
 
     String primaryId = primaryYamlField.getNode().getUuid();
     Map<String, ByteString> metadataDependency =

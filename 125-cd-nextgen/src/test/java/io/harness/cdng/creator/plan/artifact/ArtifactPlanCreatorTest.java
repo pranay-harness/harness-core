@@ -17,6 +17,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGTestBase;
 import io.harness.cdng.artifact.bean.yaml.ArtifactListConfig;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
+import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
@@ -52,7 +53,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
         artifactsPlanCreator.prepareMetadataForPrimaryArtifactPlanCreator(uuid, artifactStepParameters);
     assertThat(metadataDependency.size()).isEqualTo(2);
     assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
-    assertThat(metadataDependency.containsKey(YamlTypes.PRIMARY_STEP_PARAMETERS)).isEqualTo(true);
+    assertThat(metadataDependency.containsKey(PlanCreatorConstants.PRIMARY_STEP_PARAMETERS)).isEqualTo(true);
   }
 
   @Test
@@ -82,7 +83,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
         .isEqualTo(true);
     assertThat(
         planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-            YamlTypes.PRIMARY_STEP_PARAMETERS))
+            PlanCreatorConstants.PRIMARY_STEP_PARAMETERS))
         .isEqualTo(true);
   }
   @Test

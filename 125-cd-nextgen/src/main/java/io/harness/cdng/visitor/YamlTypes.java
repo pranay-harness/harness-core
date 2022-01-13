@@ -81,5 +81,4 @@ public interface YamlTypes {
   String DELEGATE_SELECTORS = "delegateSelectors";
 
   String COMMAND_FLAGS_WRAPPER = "commandFlags";
-  String PRIMARY_STEP_PARAMETERS = "primaryStepParameters";
 }

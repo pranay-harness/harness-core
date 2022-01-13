@@ -51,7 +51,7 @@ public class PrimaryArtifactPlanCreator implements PartialPlanCreator<PrimaryArt
     String primaryId = (String) kryoSerializer.asInflatedObject(
         ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
     StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
-        ctx.getDependency().getMetadataMap().get(YamlTypes.PRIMARY_STEP_PARAMETERS).toByteArray());
+        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.PRIMARY_STEP_PARAMETERS).toByteArray());
 
     PlanNode artifactNode =
         PlanNode.builder()
