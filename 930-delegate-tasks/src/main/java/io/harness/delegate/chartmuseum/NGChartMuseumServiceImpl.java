@@ -28,7 +28,10 @@ import software.wings.delegatetasks.ExceptionMessageSanitizer;
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @OwnedBy(CDP)
 public class NGChartMuseumServiceImpl implements NGChartMuseumService {
@@ -73,7 +76,7 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
               s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
               secretKey, irsa, s3StoreDelegateConfig.isUseLatestChartMuseumVersion());
         } catch (Exception ex) {
-          List<String> secrets = new ArrayList<>();
+          Set<String> secrets = new HashSet<>();
           if (secretKey != null) {
             secrets.add(String.valueOf(secretKey));
           }
@@ -99,11 +102,11 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
               gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory,
               gcsHelmStoreDelegateConfig.isUseLatestChartMuseumVersion());
         } catch (Exception ex) {
-          List<String> secrets = new ArrayList<>();
+          Set<String> secrets = new HashSet<>();
+          secrets.add(String.valueOf(serviceAccountKey));
           if (serviceAccountKey != null) {
-            secrets.add(String.valueOf(serviceAccountKey));
+            ExceptionMessageSanitizer.sanitizeException(ex, secrets);
           }
-          ExceptionMessageSanitizer.sanitizeException(ex, secrets);
           throw ex;
         }
 

@@ -18,10 +18,13 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
+import io.harness.secret.SecretSanitizerThreadLocal;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,10 +34,10 @@ public class ExceptionMessageSanitizerTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.NAMAN_TALAYCHA)
   @Category(UnitTests.class)
-  public void testExceptionMessageSanitizer() throws Exception {
+  public void testExceptionMessageSanitizer() {
     IOException ex1 = new IOException("hello there is an error");
     Exception ex = new Exception("hello error", ex1);
-    List<String> secrets = new ArrayList<>();
+    Set<String> secrets = new HashSet<>();
     secrets.add("error");
     secrets.add("hello");
     ExceptionMessageSanitizer.sanitizeException(ex, secrets);
