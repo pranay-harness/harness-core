@@ -7,6 +7,7 @@
 
 package software.wings.security.authentication;
 
+import static io.harness.rule.OwnerRule.PRATEEK;
 import static io.harness.rule.OwnerRule.RUSHABH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -29,6 +30,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rule.Owner;
+import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
@@ -37,22 +39,40 @@ import software.wings.beans.sso.SamlSettings;
 import software.wings.security.saml.SamlClientService;
 import software.wings.security.saml.SamlUserGroupSync;
 import software.wings.service.intfc.SSOSettingService;
+import software.wings.service.intfc.security.EncryptionService;
+import software.wings.service.intfc.security.SecretManager;
 
+import com.amazonaws.util.StringInputStream;
 import com.coveo.saml.SamlClient;
 import com.coveo.saml.SamlException;
 import com.coveo.saml.SamlResponse;
 import com.google.inject.Inject;
+import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
+import com.sun.org.apache.xml.internal.security.utils.Base64;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import net.shibboleth.utilities.java.support.xml.XMLParserException;
 import org.apache.commons.io.IOUtils;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+import org.opensaml.core.config.InitializationException;
+import org.opensaml.core.config.InitializationService;
+import org.opensaml.core.xml.config.GlobalParserPoolInitializer;
+import org.opensaml.core.xml.config.XMLObjectProviderInitializer;
+import org.opensaml.core.xml.config.XMLObjectProviderRegistrySupport;
+import org.opensaml.core.xml.io.UnmarshallingException;
+import org.opensaml.core.xml.util.XMLObjectSupport;
+import org.opensaml.saml.config.impl.SAMLConfigurationInitializer;
+import org.opensaml.saml.saml2.core.Assertion;
+import org.opensaml.saml.saml2.core.Response;
 
 @OwnedBy(HarnessTeam.PL)
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
@@ -60,6 +80,8 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
   @Mock AuthenticationUtils authenticationUtils;
   @Mock SSOSettingService ssoSettingService;
   @Mock SamlUserGroupSync samlUserGroupSync;
+  @Mock SecretManager secretManager;
+  @Mock EncryptionService encryptionService;
   @Inject @InjectMocks @Spy SamlClientService samlClientService;
   @Inject @InjectMocks private SamlBasedAuthHandler authHandler;
 
@@ -346,5 +368,73 @@ public class SamlBasedAuthHandlerTest extends WingsBaseTest {
     } catch (Exception e) {
       fail(e.getMessage());
     }
+  }
+
+  @Test
+  @Owner(developers = PRATEEK)
+  @Category(UnitTests.class)
+  @Ignore(
+      "The test fails when the azure app settings are updated to point to any other environment apart from localdev")
+  public void
+  testUserGroupsExtractionForAzureShouldSucceed()
+      throws IOException, SamlException, XMLParserException, UnmarshallingException, InitializationException,
+             Base64DecodingException {
+    String samlResponseString =
+        IOUtils.toString(getClass().getResourceAsStream("/SamlResponse-2.txt"), Charset.defaultCharset());
+    final String accountId = "kmpySmUISimoRrJL6NL73w";
+    final String groupMembershipAttribute = "harness/harness-group";
+    SamlResponse samlResponse = mock(SamlResponse.class);
+    when(samlResponse.getNameID()).thenReturn("prateek.barapatre@harness.io");
+    when(samlResponse.getAssertion()).thenReturn(this.getSamlAssertion(samlResponseString));
+    SamlClient samlClient = mock(SamlClient.class);
+    SamlSettings samlSettings =
+        SamlSettings.builder()
+            .metaDataFile(
+                IOUtils.toString(getClass().getResourceAsStream("/Azure-2-metadata.xml"), Charset.defaultCharset()))
+            .url("https://login.microsoftonline.com")
+            .accountId(accountId)
+            .displayName("AzureSamlTest")
+            .origin("https://login.microsoftonline.com")
+            .groupMembershipAttr(groupMembershipAttribute)
+            .entityIdentifier("localdev.harness.io")
+            .build();
+
+    samlSettings.setClientId("7a3cffef-e03e-4689-8418-6ecb96cfdf73");
+    samlSettings.setEncryptedClientSecret("rlY3tfZWSGefvnxQUouTpQ");
+
+    EncryptedDataDetail encryptedDataDetail = mock(EncryptedDataDetail.class);
+    List<EncryptedDataDetail> encryptedDataDetails = Arrays.asList(encryptedDataDetail);
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(encryptedDataDetails);
+    samlSettings.setClientSecret("gk~7Q~VVCMRs_yZNZY~1xIRBgXFuf8Gt8QuhX".toCharArray());
+    when(encryptionService.decrypt(samlSettings, encryptedDataDetails, false)).thenReturn(samlSettings);
+
+    when(ssoSettingService.getSamlSettingsByAccountId(anyString())).thenReturn(samlSettings);
+    doReturn(samlClient).when(samlClientService).getSamlClient(samlSettings);
+    when(samlClient.decodeAndValidateSamlResponse(anyString())).thenReturn(samlResponse);
+    Assertion samlAssertionValue = this.getSamlAssertion(samlResponseString);
+
+    doNothing().when(samlUserGroupSync).syncUserGroup(any(SamlUserAuthorization.class), anyString(), anyString());
+    List<String> groups = authHandler.getUserGroupsForAzure(samlAssertionValue.getAttributeStatements(), samlSettings,
+        groupMembershipAttribute, samlAssertionValue.getIssuer().getValue(), accountId);
+    assertThat(groups.size()).isGreaterThan(150);
+  }
+
+  private Assertion getSamlAssertion(String samlResponse)
+      throws IOException, XMLParserException, UnmarshallingException, InitializationException, Base64DecodingException {
+    InitializationService.initialize();
+    SAMLConfigurationInitializer samlInitializer = new SAMLConfigurationInitializer();
+    samlInitializer.init();
+
+    XMLObjectProviderInitializer xmlProviderInitializer = new XMLObjectProviderInitializer();
+    xmlProviderInitializer.init();
+
+    GlobalParserPoolInitializer parserPoolInitializer = new GlobalParserPoolInitializer();
+    parserPoolInitializer.init();
+
+    byte[] decode = Base64.decode(samlResponse);
+    String decodedSAMLStr = new String(decode, StandardCharsets.UTF_8);
+    Response response = (Response) XMLObjectSupport.unmarshallFromInputStream(
+        XMLObjectProviderRegistrySupport.getParserPool(), new StringInputStream(decodedSAMLStr));
+    return response.getAssertions().get(0);
   }
 }
