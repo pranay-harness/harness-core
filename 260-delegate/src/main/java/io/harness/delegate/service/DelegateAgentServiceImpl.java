@@ -1110,6 +1110,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     final DelegateUnregisterRequest request =
         new DelegateUnregisterRequest(delegateId, HOST_NAME, delegateNg, DELEGATE_TYPE, getLocalHostAddress());
     try {
+      log.info("Unregistering delegate {}", delegateId);
       executeRestCall(delegateAgentManagerClient.unregisterDelegate(accountId, request));
     } catch (final IOException e) {
       log.error("Failed unregistering delegate {}", delegateId, e);
