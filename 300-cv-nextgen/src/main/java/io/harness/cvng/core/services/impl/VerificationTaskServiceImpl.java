@@ -96,7 +96,7 @@ public class VerificationTaskServiceImpl implements VerificationTaskService {
                           .cvConfigId(cvConfigId)
                           .verificationJobInstanceId(verificationJobInstanceId)
                           .build())
-            .validUntil(Date.from(clock.instant().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION)))
+            .validUntil(Date.from(clock.instant().plus(CVConstants.MAX_DATA_RETENTION_DURATION)))
             .tags(Maps.of(TAG_DATA_SOURCE, provider.name(), TAG_VERIFICATION_TYPE, DEPLOYMENT))
             .build();
     hPersistence.save(verificationTask);

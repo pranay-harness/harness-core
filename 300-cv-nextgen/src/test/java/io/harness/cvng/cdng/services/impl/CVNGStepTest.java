@@ -308,6 +308,63 @@ public class CVNGStepTest extends CvNextGenTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
+  public void testExecuteAsync_createDemoActivityFFOnAndSensitivityHigh() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_DEMO"))).thenReturn(true);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_TO_SINGLE_ACTIVITY")))
+        .thenReturn(true);
+    FieldUtils.writeField(cvngStep, "featureFlagService", featureFlagService, true);
+    Ambiance ambiance = getAmbiance("verify_demo");
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String callbackId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(cvngStepTask.getVerificationJobInstanceId());
+    assertThat(verificationJobInstance.getName()).isEqualTo("verify_demo");
+    assertThat(verificationJobInstance.getVerificationStatus())
+        .isEqualTo(ActivityVerificationStatus.VERIFICATION_FAILED);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testExecuteAsync_createDemoActivityFFOnAndSensitivityMedium() throws IllegalAccessException {
+    FeatureFlagService featureFlagService = mock(FeatureFlagService.class);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_DEMO"))).thenReturn(true);
+    when(featureFlagService.isFeatureFlagEnabled(eq(accountId), eq("CVNG_VERIFY_STEP_TO_SINGLE_ACTIVITY")))
+        .thenReturn(true);
+    FieldUtils.writeField(cvngStep, "featureFlagService", featureFlagService, true);
+    Ambiance ambiance = getAmbiance("verify_demo");
+    metricPackService.createDefaultMetricPackAndThresholds(accountId, orgIdentifier, projectIdentifier);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    StepInputPackage stepInputPackage = StepInputPackage.builder().build();
+    CVNGStepParameter cvngStepParameter = getCvngStepParameter();
+    cvngStepParameter.setSensitivity(ParameterField.createValueField("Medium"));
+    AsyncExecutableResponse asyncExecutableResponse =
+        cvngStep.executeAsync(ambiance, cvngStepParameter, stepInputPackage, null);
+    assertThat(asyncExecutableResponse.getCallbackIdsList()).hasSize(1);
+    String callbackId = asyncExecutableResponse.getCallbackIds(0);
+    CVNGStepTask cvngStepTask =
+        hPersistence.createQuery(CVNGStepTask.class).filter(CVNGStepTaskKeys.callbackId, callbackId).get();
+    assertThat(cvngStepTask.getStatus()).isEqualTo(CVNGStepTask.Status.IN_PROGRESS);
+    VerificationJobInstance verificationJobInstance =
+        verificationJobInstanceService.getVerificationJobInstance(cvngStepTask.getVerificationJobInstanceId());
+    assertThat(verificationJobInstance.getName()).isEqualTo("verify_demo");
+    assertThat(verificationJobInstance.getVerificationStatus())
+        .isEqualTo(ActivityVerificationStatus.VERIFICATION_PASSED);
+  }
+
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
   public void testExecuteAsync_createDemoActivityFFOff() {
     setSingleActivityFeatureflag(false);
     Ambiance ambiance = getAmbiance("verify_dev");
@@ -529,6 +586,7 @@ public class CVNGStepTest extends CvNextGenTestBase {
         .envIdentifier(ParameterField.createValueField(envIdentifier))
         .verificationJobBuilder(getVerificationJobBuilder())
         .deploymentTag(spec.getDeploymentTag())
+        .sensitivity(spec.getSensitivity())
         .build();
   }
   private Ambiance getAmbiance() {

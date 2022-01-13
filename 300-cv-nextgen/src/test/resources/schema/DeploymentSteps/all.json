@@ -456,14 +456,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "sensitivity"
-          ],
           "properties": {
-            "sensitivity": {
-              "type": "string",
-              "description": "Possible values: [Low, Medium, High]"
-            },
             "trafficSplitPercentage": {
               "type": "string",
               "description": "Example: 50, You can put max upto 50."
@@ -563,14 +556,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "sensitivity"
-          ],
           "properties": {
-            "sensitivity": {
-              "type": "string",
-              "description": "Possible values: [Low, Medium, High]"
-            },
             "trafficSplitPercentage": {
               "type": "string",
               "description": "Example: 50, You can put max upto 50."
@@ -1009,14 +995,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "sensitivity"
-          ],
           "properties": {
-            "sensitivity": {
-              "type": "string",
-              "description": "Possible values: [Low, Medium, High]"
-            },
             "trafficSplitPercentage": {
               "type": "string",
               "description": "Example: 50, You can put max upto 50."
@@ -2413,15 +2392,7 @@
         },
         {
           "type": "object",
-          "required": [
-            "sensitivity"
-          ],
-          "properties": {
-            "sensitivity": {
-              "type": "string",
-              "description": "Possible values: [Low, Medium, High]"
-            }
-          }
+          "properties": { }
         }
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2517,7 +2488,8 @@
       "type": "object",
       "required": [
         "deploymentTag",
-        "duration"
+        "duration",
+        "sensitivity"
       ],
       "discriminator": "type",
       "properties": {
@@ -2528,6 +2500,10 @@
         "duration": {
           "type": "string",
           "description": "Format example: 5m, 30m, please put multiple of 5"
+        },
+        "sensitivity": {
+          "type": "string",
+          "description": "Possible values: [Low, Medium, High]"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
