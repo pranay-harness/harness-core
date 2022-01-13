@@ -17,10 +17,12 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
+import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
+import static software.wings.utils.EmailHelperUtils.NG_SMTP_SETTINGS_PREFIX;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -133,6 +135,7 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -209,6 +212,13 @@ public class SettingValidationService {
                         .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build();
+      if (settingValue instanceof SmtpConfig
+          && (settingAttribute.getName().length() >= 13
+              && (NG_SMTP_SETTINGS_PREFIX.equalsIgnoreCase(settingAttribute.getName().substring(0, 13))))) {
+        final Map<String, String> ngTaskSetupAbstractionsWithOwner =
+            getNGTaskSetupAbstractionsWithOwner(settingAttribute.getAccountId(), null, null);
+        delegateTask.setSetupAbstractions(ngTaskSetupAbstractionsWithOwner);
+      }
       try {
         DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
         if (notifyResponseData instanceof ErrorNotifyResponseData) {
