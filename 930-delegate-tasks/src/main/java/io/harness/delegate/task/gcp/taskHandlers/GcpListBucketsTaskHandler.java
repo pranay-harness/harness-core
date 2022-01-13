@@ -24,11 +24,16 @@ import io.harness.errorhandling.NGErrorHelper;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import software.wings.delegatetasks.ExceptionMessageSanitizer;
+
 import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Buckets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -45,11 +50,12 @@ public class GcpListBucketsTaskHandler implements TaskHandler {
           request.getClass().getSimpleName(), GcpListBucketsRequest.class.getSimpleName()));
     }
 
+    char[] serviceAccountKeyFileContent = new char[0];
     try {
       GcpListBucketsRequest gcpRequest = (GcpListBucketsRequest) request;
       boolean useDelegate = gcpRequest.getGcpManualDetailsDTO() == null;
       decryptDTO(gcpRequest);
-      char[] serviceAccountKeyFileContent = getGcpServiceAccountKeyFileContent(gcpRequest);
+      serviceAccountKeyFileContent = getGcpServiceAccountKeyFileContent(gcpRequest);
       Storage storageService = gcpHelperService.getGcsStorageService(serviceAccountKeyFileContent, useDelegate);
       String projectId = gcpHelperService.getProjectId(serviceAccountKeyFileContent, useDelegate);
       Storage.Buckets buckets = storageService.buckets();
@@ -59,6 +65,11 @@ public class GcpListBucketsTaskHandler implements TaskHandler {
           .buckets(listBuckets(buckets, projectId))
           .build();
     } catch (Exception e) {
+      if (isNotEmpty(serviceAccountKeyFileContent)) {
+        Set<String> secrets = new HashSet<>();
+        secrets.add(String.valueOf(serviceAccountKeyFileContent));
+        ExceptionMessageSanitizer.sanitizeException(e, secrets);
+      }
       return GcpListBucketsResponse.builder()
           .errorMessage(ngErrorHelper.getErrorSummary(e.getMessage()))
           .errorDetail(ngErrorHelper.createErrorDetail(e.getMessage()))
