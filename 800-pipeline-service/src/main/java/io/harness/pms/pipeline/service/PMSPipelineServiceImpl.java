@@ -32,9 +32,12 @@ import io.harness.exception.InvalidYamlException;
 import io.harness.exception.ScmException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
+import io.harness.gitsync.interceptor.GitEntityInfo;
+import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.gitsync.persistance.GitSyncSdkService;
 import io.harness.gitsync.scm.EntityObjectIdUtils;
 import io.harness.grpc.utils.StringValueUtils;
+import io.harness.manage.GlobalContextManager;
 import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
@@ -51,6 +54,7 @@ import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.PipelineMetadata;
+import io.harness.pms.pipeline.PipelineSetupUsageHelper;
 import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
@@ -99,6 +103,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
   @Inject private PmsGitSyncHelper gitSyncHelper;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
   @Inject private PipelineMetadataService pipelineMetadataService;
+  @Inject private PipelineSetupUsageHelper pipelineSetupUsageHelper;
   public static String PIPELINE_SAVE = "pipeline_save";
   public static String PIPELINE_SAVE_ACTION_TYPE = "action";
   public static String CREATING_PIPELINE = "creating new pipeline";
@@ -216,7 +221,22 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       throw new InvalidRequestException(
           PipelineCRUDErrorResponse.errorMessageForPipelineNotFound(orgId, projectId, pipelineId));
     }
-    return makePipelineUpdateCall(optionalPipelineEntity.get(), optionalPipelineEntity.get(), ChangeType.ADD);
+    PipelineEntity syncedEntity =
+        makePipelineUpdateCall(optionalPipelineEntity.get(), optionalPipelineEntity.get(), ChangeType.ADD);
+    deleteExistingSetupUsages(accountId, orgId, projectId, pipelineId);
+    return syncedEntity;
+  }
+
+  private void deleteExistingSetupUsages(String accountId, String orgId, String projectId, String pipelineId) {
+    GitEntityInfo oldGitEntityInfo = GitContextHelper.getGitEntityInfo();
+    try (GlobalContextManager.GlobalContextGuard ignore = GlobalContextManager.ensureGlobalContextGuard()) {
+      GitEntityInfo emptyInfo = GitEntityInfo.builder().build();
+      GlobalContextManager.upsertGlobalContextRecord(GitSyncBranchContext.builder().gitBranchInfo(emptyInfo).build());
+      pipelineSetupUsageHelper.deleteExistingSetupUsages(accountId, orgId, projectId, pipelineId);
+    } finally {
+      GlobalContextManager.upsertGlobalContextRecord(
+          GitSyncBranchContext.builder().gitBranchInfo(oldGitEntityInfo).build());
+    }
   }
 
   private PipelineEntity makePipelineUpdateCall(

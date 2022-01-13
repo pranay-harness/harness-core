@@ -23,6 +23,7 @@ import io.harness.eventsframework.producer.Message;
 import io.harness.eventsframework.protohelper.IdentifierRefProtoDTOHelper;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
+import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.EntityReferredByPipelineDetailProtoDTO;
 import io.harness.eventsframework.schemas.entitysetupusage.EntityDetailWithSetupUsageDetailProtoDTO.PipelineDetailType;
@@ -86,6 +87,32 @@ public class PipelineSetupUsageHelper implements PipelineActionObserver {
         accountIdentifier, orgIdentifier, projectIdentifier, pipelineYaml, allReferredUsages);
     entityDetails.addAll(internalReferredEntityExtractor.extractInternalEntities(accountIdentifier, entityDetails));
     return entityDetails;
+  }
+
+  public void deleteExistingSetupUsages(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
+    IdentifierRefProtoDTO pipelineReference = identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+        accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    EntityDetailProtoDTO pipelineDetails = EntityDetailProtoDTO.newBuilder()
+                                               .setIdentifierRef(pipelineReference)
+                                               .setType(EntityTypeProtoEnum.PIPELINES)
+                                               .build();
+    EntitySetupUsageCreateV2DTO entityReferenceDTO = EntitySetupUsageCreateV2DTO.newBuilder()
+                                                         .setAccountIdentifier(accountIdentifier)
+                                                         .setReferredByEntity(pipelineDetails)
+                                                         .setDeleteOldReferredByRecords(true)
+                                                         .build();
+    try {
+      eventProducer.send(
+          Message.newBuilder()
+              .putAllMetadata(ImmutableMap.of("accountId", accountIdentifier, EventsFrameworkMetadataConstants.ACTION,
+                  EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
+              .setData(entityReferenceDTO.toByteString())
+              .build());
+    } catch (Exception ex) {
+      log.error("Error deleting the setup usages for the connector with the identifier {} in project {} in org {}",
+          identifier, projectIdentifier, orgIdentifier);
+    }
   }
 
   public void publishSetupUsageEvent(PipelineEntity pipelineEntity, List<EntityDetailProtoDTO> referredEntities) {
