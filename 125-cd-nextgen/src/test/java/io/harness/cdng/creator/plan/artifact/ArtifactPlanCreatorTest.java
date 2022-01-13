@@ -5,7 +5,6 @@
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
-
 package io.harness.cdng.creator.plan.artifact;
 
 import static io.harness.rule.OwnerRule.PRASHANTSHARMA;
