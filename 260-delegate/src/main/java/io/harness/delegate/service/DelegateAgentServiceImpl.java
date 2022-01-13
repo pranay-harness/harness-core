@@ -746,7 +746,8 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
               .addParameter("delegateConnectionId", delegateConnectionId)
               .addParameter("token", tokenGenerator.getToken("https", "localhost", 9090, HOST_NAME))
               .addParameter("sequenceNum", getSequenceNumForEcsDelegate())
-              .addParameter("delegateToken", getRandomTokenForEcsDelegate());
+              .addParameter("delegateToken", getRandomTokenForEcsDelegate())
+              .addParameter("version", getVersion());
 
       URI uri = uriBuilder.build();
 
