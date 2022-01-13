@@ -45,7 +45,8 @@ public class MigrateWorkflowsToTimeScaleDB {
   private static final String insert_statement =
       "INSERT INTO CG_WORKFLOWS (ID,NAME,ACCOUNT_ID,ORCHESTRATION_WORKFLOW_TYPE,ENV_ID,APP_ID,SERVICE_IDS,DEPLOYMENT_TYPE,CREATED_AT,LAST_UPDATED_AT,CREATED_BY,LAST_UPDATED_BY) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
 
-  private static final String update_statement = "UPDATE CG_WORKFLOWS SET NAME=? WHERE ID=?";
+  private static final String update_statement =
+      "UPDATE CG_WORKFLOWS SET NAME=?, ACCOUNT_ID=?, ORCHESTRATION_WORKFLOW_TYPE=?, ENV_ID=?, APP_ID=?, SERVICE_IDS=?, DEPLOYMENT_TYPE=?, CREATED_AT=?, LAST_UPDATED_AT=?, CREATED_BY=?, LAST_UPDATED_BY=? WHERE ID=?";
 
   private static final String query_statement = "SELECT * FROM CG_WORKFLOWS WHERE ID=?";
 
@@ -158,7 +159,41 @@ public class MigrateWorkflowsToTimeScaleDB {
 
   private void updateDataInTimeScaleDB(Workflow workflow, Connection connection, PreparedStatement updateStatement)
       throws SQLException {
-    log.info("Update operation is not supported");
+    updateStatement.setString(1, workflow.getName());
+    updateStatement.setString(2, workflow.getAccountId());
+    updateStatement.setString(3, workflow.getOrchestration().getOrchestrationWorkflowType().toString());
+    updateStatement.setString(4, workflow.getEnvId());
+    updateStatement.setString(5, workflow.getAppId());
+
+    insertArrayData(6, connection, updateStatement, workflow.getOrchestration().getServiceIds());
+
+    List<String> deploymentTypes = new LinkedList<>();
+    CanaryOrchestrationWorkflow coWorkflow = (CanaryOrchestrationWorkflow) workflow.getOrchestration();
+    if (coWorkflow != null && coWorkflow.getWorkflowPhaseIdMap() != null) {
+      coWorkflow.getWorkflowPhaseIdMap().values().forEach(workflowPhase -> {
+        if (workflowPhase.getDeploymentType() != null) {
+          deploymentTypes.add(workflowPhase.getDeploymentType().getDisplayName());
+        }
+      });
+    }
+    insertArrayData(7, connection, updateStatement, deploymentTypes);
+
+    updateStatement.setLong(8, workflow.getCreatedAt());
+    updateStatement.setLong(9, workflow.getLastUpdatedAt());
+
+    String created_by = null;
+    if (workflow.getCreatedBy() != null) {
+      created_by = workflow.getCreatedBy().getName();
+    }
+    updateStatement.setString(10, created_by);
+
+    String last_updated_by = null;
+    if (workflow.getLastUpdatedBy() != null) {
+      last_updated_by = workflow.getLastUpdatedBy().getName();
+    }
+    updateStatement.setString(11, last_updated_by);
+    updateStatement.setString(12, workflow.getUuid());
+    updateStatement.execute();
   }
 
   private void insertArrayData(
