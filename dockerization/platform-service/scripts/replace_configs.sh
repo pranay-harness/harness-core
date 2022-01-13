@@ -14,6 +14,28 @@ replace_key_value () {
   fi
 }
 
+write_mongo_params() {
+  IFS='&' read -ra PARAMS <<< "$2"
+  for PARAM_PAIR in "${PARAMS[@]}"; do
+    NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
+    VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
+    yq write -i $CONFIG_FILE $1.params.$NAME "$VALUE"
+  done
+}
+
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 -s <<< "${HOST_AND_PORT[$INDEX]}")
+
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    if [[ "" != "$PORT" ]]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
+  done
+}
+
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
@@ -218,44 +240,38 @@ fi
 
 if [[ "" != "$NOTIFICATION_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE notificationServiceConfig.mongo.uri
-  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.hosts[0].host ${NOTIFICATION_MONGO_HOSTS_AND_PORTS%%:*}
-  yq write -i $CONFIG_FILE notificationServiceConfig.mongo.hosts[0].port ${NOTIFICATION_MONGO_HOSTS_AND_PORTS##*:}
+  write_mongo_hosts_and_ports notificationServiceConfig.mongo "$NOTIFICATION_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params notificationServiceConfig.mongo "$NOTIFICATION_MONGO_PARAMS"
 fi
 
 if [[ "" != "$AUDIT_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE auditServiceConfig.mongo.uri
-  yq write -i $CONFIG_FILE auditServiceConfig.mongo.hosts[0].host ${AUDIT_MONGO_HOSTS_AND_PORTS%%:*}
-  yq write -i $CONFIG_FILE auditServiceConfig.mongo.hosts[0].port ${AUDIT_MONGO_HOSTS_AND_PORTS##*:}
+  write_mongo_hosts_and_ports auditServiceConfig.mongo "$AUDIT_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params auditServiceConfig.mongo "$AUDIT_MONGO_PARAMS"
 fi
 
 if [[ "" != "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS" ]]; then
   yq delete -i $CONFIG_FILE resourceGroupServiceConfig.mongo.uri
-  yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].host ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS%%:*}
-  yq write -i $CONFIG_FILE resourceGroupServiceConfig.mongo.hosts[0].port ${RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS##*:}
+  write_mongo_hosts_and_ports resourceGroupServiceConfig.mongo "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params resourceGroupServiceConfig.mongo "$RESOURCE_GROUP_MONGO_PARAMS"
 fi
 
 replace_key_value ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.mongo.username "$RESOURCE_GROUP_MONGO_USERNAME"
 replace_key_value resourceGroupServiceConfig.mongo.password "$RESOURCE_GROUP_MONGO_PASSWORD"
+replace_key_value resourceGroupServiceConfig.mongo.schema "$RESOURCE_GROUP_MONGO_SCHEMA"
+replace_key_value resourceGroupServiceConfig.mongo.database "$RESOURCE_GROUP_MONGO_DATABASE"
 
 replace_key_value auditServiceConfig.mongo.username "$AUDIT_MONGO_USERNAME"
 replace_key_value auditServiceConfig.mongo.password "$AUDIT_MONGO_PASSWORD"
+replace_key_value auditServiceConfig.mongo.schema "$AUDIT_MONGO_SCHEMA"
+replace_key_value auditServiceConfig.mongo.database "$AUDIT_MONGO_DATABASE"
 
 replace_key_value notificationServiceConfig.mongo.username "$NOTIFICATION_MONGO_USERNAME"
 replace_key_value notificationServiceConfig.mongo.password "$NOTIFICATION_MONGO_PASSWORD"
-
-replace_key_value resourceGroupServiceConfig.mongo.params.replicaSet "$RESOURCE_GROUP_MONGO_REPLICA_SET"
-
-replace_key_value resourceGroupServiceConfig.mongo.params.authSource "$RESOURCE_GROUP_MONGO_AUTH_SOURCE"
-
-replace_key_value auditServiceConfig.mongo.params.replicaSet "$AUDIT_MONGO_REPLICA_SET"
-
-replace_key_value auditServiceConfig.mongo.params.authSource "$AUDIT_MONGO_AUTH_SOURCE"
-
-replace_key_value notificationServiceConfig.mongo.params.replicaSet "$NOTIFICATION_MONGO_REPLICA_SET"
-
-replace_key_value notificationServiceConfig.mongo.params.authSource "$NOTIFICATION_MONGO_AUTH_SOURCE"
+replace_key_value notificationServiceConfig.mongo.schema "$NOTIFICATION_MONGO_SCHEMA"
+replace_key_value notificationServiceConfig.mongo.database "$NOTIFICATION_MONGO_DATABASE"
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
 
