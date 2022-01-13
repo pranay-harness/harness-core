@@ -18,6 +18,7 @@ import io.harness.ccm.bigQuery.BigQueryService;
 import io.harness.ccm.budget.BudgetPeriod;
 import io.harness.ccm.commons.utils.BigQueryHelper;
 import io.harness.ccm.graphql.core.budget.BudgetCostService;
+import io.harness.ccm.graphql.core.budget.BudgetService;
 import io.harness.ccm.utils.LogAccountIdentifier;
 import io.harness.ccm.views.entities.CEView;
 import io.harness.ccm.views.entities.ViewType;
@@ -79,17 +80,19 @@ public class PerspectiveResource {
   private final BigQueryService bigQueryService;
   private final BigQueryHelper bigQueryHelper;
   private final BudgetCostService budgetCostService;
+  private final BudgetService budgetService;
 
   @Inject
   public PerspectiveResource(CEViewService ceViewService, CEReportScheduleService ceReportScheduleService,
       ViewCustomFieldService viewCustomFieldService, BigQueryService bigQueryService, BigQueryHelper bigQueryHelper,
-      BudgetCostService budgetCostService) {
+      BudgetCostService budgetCostService, BudgetService budgetService) {
     this.ceViewService = ceViewService;
     this.ceReportScheduleService = ceReportScheduleService;
     this.viewCustomFieldService = viewCustomFieldService;
     this.bigQueryService = bigQueryService;
     this.bigQueryHelper = bigQueryHelper;
     this.budgetCostService = budgetCostService;
+    this.budgetService = budgetService;
   }
 
   @GET
@@ -302,8 +305,8 @@ public class PerspectiveResource {
     ceViewService.delete(perspectiveId, accountId);
 
     ceReportScheduleService.deleteAllByView(perspectiveId, accountId);
-
     viewCustomFieldService.deleteByViewId(perspectiveId, accountId);
+    budgetService.deleteBudgetsForPerspective(accountId, perspectiveId);
 
     return ResponseDTO.newResponse("Successfully deleted the view");
   }

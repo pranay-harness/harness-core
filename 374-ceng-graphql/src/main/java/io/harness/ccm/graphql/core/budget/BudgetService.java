@@ -24,6 +24,7 @@ public interface BudgetService {
   List<Budget> list(String accountId, String viewId);
 
   boolean delete(String budgetId, String accountId);
+  boolean deleteBudgetsForPerspective(String accountId, String perspectiveId);
 
   BudgetData getBudgetTimeSeriesStats(Budget budget);
   void updateBudgetCosts(Budget budget);
