@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -19,6 +26,7 @@ import io.harness.perpetualtask.manifest.ManifestRepositoryService;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.delegatetasks.DelegateLogService;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
+import software.wings.helpers.ext.helm.request.HelmChartCollectionParams.HelmChartCollectionType;
 import software.wings.helpers.ext.helm.response.HelmCollectChartResponse;
 
 import com.google.inject.Inject;
@@ -50,12 +58,16 @@ public class HelmCollectChartTask extends AbstractDelegateRunnableTask {
     try {
       List<HelmChart> helmCharts = manifestRepositoryService.collectManifests(taskParams);
 
-      // that specific version is found
-      if (helmCharts.size() == 1
-          && helmCharts.get(0).getVersion().equals(taskParams.getHelmChartConfigParams().getChartVersion())) {
-        return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmChart(helmCharts.get(0)).build();
+      if (taskParams.getCollectionType() == HelmChartCollectionType.SPECIFIC_VERSION) {
+        // that specific version is found
+        if (helmCharts.size() == 1
+            && helmCharts.get(0).getVersion().equals(taskParams.getHelmChartConfigParams().getChartVersion())) {
+          return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmCharts(helmCharts).build();
+        } else {
+          return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmCharts(null).build();
+        }
       } else {
-        return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmChart(null).build();
+        return HelmCollectChartResponse.builder().commandExecutionStatus(SUCCESS).helmCharts(helmCharts).build();
       }
 
     } catch (Exception e) {

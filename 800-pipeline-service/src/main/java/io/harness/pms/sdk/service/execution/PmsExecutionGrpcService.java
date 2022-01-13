@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.service.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -5,11 +12,9 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
-import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.service.ExecutionSummaryResponse;
 import io.harness.pms.contracts.service.ExecutionSummaryUpdateRequest;
 import io.harness.pms.contracts.service.PmsExecutionServiceGrpc.PmsExecutionServiceImplBase;
-import io.harness.pms.execution.ExecutionStatus;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
@@ -37,14 +42,13 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
   @Override
   public void updateExecutionSummary(
       ExecutionSummaryUpdateRequest request, StreamObserver<ExecutionSummaryResponse> responseObserver) {
-    NodeExecution nodeExecution = nodeExecutionService.get(request.getNodeExecutionId());
-    updatePipelineInfoJson(request, nodeExecution);
-    updateStageModuleInfo(request, nodeExecution);
+    updatePipelineInfoJson(request);
+    updateStageModuleInfo(request);
     responseObserver.onNext(ExecutionSummaryResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
 
-  private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
+  private void updatePipelineInfoJson(ExecutionSummaryUpdateRequest request) {
     String moduleName = request.getModuleName();
     String planExecutionId = request.getPlanExecutionId();
     Map<String, Object> pipelineInfoDoc = RecastOrchestrationUtils.fromJson(request.getPipelineModuleInfoJson());
@@ -70,11 +74,10 @@ public class PmsExecutionGrpcService extends PmsExecutionServiceImplBase {
     pmsExecutionSummaryRepository.update(query, update);
   }
 
-  private void updateStageModuleInfo(ExecutionSummaryUpdateRequest request, NodeExecution nodeExecution) {
+  private void updateStageModuleInfo(ExecutionSummaryUpdateRequest request) {
     String stageUuid = request.getNodeUuid();
     String moduleName = request.getModuleName();
     String stageInfo = request.getNodeModuleInfoJson();
-    ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
     String planExecutionId = request.getPlanExecutionId();
     if (EmptyPredicate.isEmpty(stageUuid)) {
       return;

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.apm;
 
 import static io.harness.rule.OwnerRule.KAMAL;
@@ -254,7 +261,7 @@ public class APMParserTest extends WingsBaseTest {
                                                          .metricInfos(metricInfos)
                                                          .build()));
     // TODO: this test is for testing timestamp parsing logic. The metrics names are not parsed correctly
-    assertThat(records).hasSize(15);
+    assertThat(records).hasSize(126);
   }
 
   @Test
@@ -300,6 +307,41 @@ public class APMParserTest extends WingsBaseTest {
         Resources.toString(APMParserTest.class.getResource("/apm/insights_sample_collected.json"), Charsets.UTF_8);
 
     assertThat(JsonUtils.asJson(records)).isEqualTo(output);
+  }
+
+  @Test
+  @Owner(developers = PRAVEEN)
+  @Category(UnitTests.class)
+  public void testJsonParserAzureAnalyticsResponse() throws IOException {
+    String text500 =
+        Resources.toString(APMParserTest.class.getResource("/apm/azure-analytics-response.json"), Charsets.UTF_8);
+    Map<String, APMMetricInfo.ResponseMapper> responseMapperMap = new HashMap<>();
+
+    responseMapperMap.put("timestamp",
+        APMMetricInfo.ResponseMapper.builder()
+            .fieldName("timestamp")
+            .jsonPath("tables[*].rows[*].[1]")
+            .timestampFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+            .build());
+    responseMapperMap.put(
+        "value", APMMetricInfo.ResponseMapper.builder().fieldName("value").jsonPath("tables[*].rows[*].[2]").build());
+    responseMapperMap.put("txnName",
+        APMMetricInfo.ResponseMapper.builder().fieldName("txnName").jsonPath("tables[*].rows[*].[0]").build());
+
+    List<APMMetricInfo> metricInfos = Lists.newArrayList(APMMetricInfo.builder()
+                                                             .metricName("HttpErrors")
+                                                             .metricType(MetricType.ERROR)
+                                                             .tag("NRHTTP")
+                                                             .responseMappers(responseMapperMap)
+                                                             .build());
+
+    Collection<NewRelicMetricDataRecord> records =
+        APMResponseParser.extract(Lists.newArrayList(APMResponseParser.APMResponseData.builder()
+                                                         .text(text500)
+                                                         .metricInfos(metricInfos)
+                                                         .groupName(DEFAULT_GROUP_NAME)
+                                                         .build()));
+    assertThat(records).hasSize(126);
   }
 
   @Test

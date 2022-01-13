@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.Dashboard;
 
 import static io.harness.NGDateUtils.DAY_IN_MS;
@@ -48,7 +55,7 @@ import lombok.extern.slf4j.Slf4j;
       @ApiResponse(code = 400, response = FailureDTO.class, message = "Bad Request")
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
-@Tag(name = "pipelines-dashboard", description = "This contains APIs related to Pipeline Dashboard")
+@Tag(name = "Pipelines Dashboard", description = "This contains APIs related to Pipeline Dashboard")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {

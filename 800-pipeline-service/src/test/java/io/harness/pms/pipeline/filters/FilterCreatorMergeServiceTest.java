@@ -1,11 +1,20 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.filters;
 
+import static io.harness.rule.OwnerRule.INDER;
 import static io.harness.rule.OwnerRule.SAHIL;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -15,7 +24,6 @@ import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.pms.contracts.plan.Dependencies;
 import io.harness.pms.contracts.plan.FilterCreationBlobResponse;
 import io.harness.pms.contracts.plan.PlanCreationServiceGrpc;
@@ -25,7 +33,6 @@ import io.harness.pms.filter.creation.FilterCreatorMergeServiceResponse;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineSetupUsageHelper;
-import io.harness.pms.pipeline.service.PMSPipelineTemplateHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
 import io.harness.pms.yaml.DependenciesUtils;
@@ -104,13 +111,12 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   @Mock PmsSdkHelper pmsSdkHelper;
   @Mock PipelineSetupUsageHelper pipelineSetupUsageHelper;
   @Mock PmsGitSyncHelper pmsGitSyncHelper;
-  @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
   FilterCreatorMergeService filterCreatorMergeService;
 
   @Before
   public void init() {
-    filterCreatorMergeService = spy(new FilterCreatorMergeService(
-        pmsSdkHelper, pipelineSetupUsageHelper, pmsGitSyncHelper, pipelineTemplateHelper));
+    filterCreatorMergeService =
+        spy(new FilterCreatorMergeService(pmsSdkHelper, pipelineSetupUsageHelper, pmsGitSyncHelper));
   }
 
   @After
@@ -137,9 +143,6 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
                                         .projectIdentifier(PROJECT_ID)
                                         .orgIdentifier(ORG_ID)
                                         .build();
-    TemplateMergeResponseDTO templateMergeResponseDTO =
-        TemplateMergeResponseDTO.builder().mergedPipelineYaml(pipelineYaml).build();
-    doReturn(templateMergeResponseDTO).when(pipelineTemplateHelper).resolveTemplateRefsInPipeline(pipelineEntity);
     FilterCreatorMergeServiceResponse filterCreatorMergeServiceResponse =
         filterCreatorMergeService.getPipelineInfo(pipelineEntity);
 
@@ -192,10 +195,13 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   public void testObtainFiltersRecursively() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
+    String uuidYaml = YamlUtils.injectUuid(pipelineYaml);
     Map<String, YamlField> dependencies = new HashMap<>();
-    dependencies.put("pipeline", YamlUtils.readTree(pipelineYaml));
+    dependencies.put("pipeline", YamlUtils.readTree(uuidYaml));
 
-    Dependencies initialDependencies = DependenciesUtils.toDependenciesProto(dependencies);
+    Dependencies resDependencies = DependenciesUtils.toDependenciesProto(dependencies);
+    Dependencies initialDependencies =
+        Dependencies.newBuilder().putAllDependencies(resDependencies.getDependenciesMap()).setYaml(uuidYaml).build();
     doReturn(FilterCreationBlobResponse.newBuilder().setResolvedDeps(initialDependencies).build())
         .when(filterCreatorMergeService)
         .obtainFiltersPerIteration(any(), any(), any(), any());
@@ -203,7 +209,7 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
     FilterCreationBlobResponse response = filterCreatorMergeService.obtainFiltersRecursively(
         services, initialDependencies, new HashMap<>(), SetupMetadata.newBuilder().build());
 
-    assertThat(response.getResolvedDeps()).isEqualTo(initialDependencies);
+    assertThat(response.getResolvedDeps()).isEqualTo(resDependencies);
 
     verify(filterCreatorMergeService).obtainFiltersPerIteration(any(), any(), any(), any());
   }
@@ -214,10 +220,13 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
   public void testObtainFiltersRecursivelyWithUnresolvedDependencies() throws IOException {
     Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
     services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
+    String uuidYaml = YamlUtils.injectUuid(pipelineYaml);
     Map<String, YamlField> dependencies = new HashMap<>();
-    dependencies.put("pipeline", YamlUtils.readTree(pipelineYaml));
+    dependencies.put("pipeline", YamlUtils.extractPipelineField(uuidYaml));
 
-    Dependencies initialDependencies = DependenciesUtils.toDependenciesProto(dependencies);
+    Dependencies resDependencies = DependenciesUtils.toDependenciesProto(dependencies);
+    Dependencies initialDependencies =
+        Dependencies.newBuilder().putAllDependencies(resDependencies.getDependenciesMap()).setYaml(uuidYaml).build();
     doReturn(FilterCreationBlobResponse.newBuilder().build())
         .when(filterCreatorMergeService)
         .obtainFiltersPerIteration(any(), any(), any(), any());
@@ -228,5 +237,32 @@ public class FilterCreatorMergeServiceTest extends PipelineServiceTestBase {
         .isInstanceOf(RuntimeException.class);
 
     verify(filterCreatorMergeService).obtainFiltersPerIteration(any(), any(), any(), any());
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testObtainFiltersWithTemplatePipelineYaml() throws IOException {
+    String pipelineTemplateYaml = "pipeline:\n"
+        + "  identifier: p2\n"
+        + "  name: pipeline2\n"
+        + "  template:\n"
+        + "    templateRef: template1\n"
+        + "    versionLabel: v1\n";
+    String uuidYaml = YamlUtils.injectUuid(pipelineTemplateYaml);
+    YamlField uuidYamlField = YamlUtils.extractPipelineField(uuidYaml);
+    Map<String, PlanCreatorServiceInfo> services = new HashMap<>();
+    services.put("cd", new PlanCreatorServiceInfo(new HashMap<>(), null));
+    Map<String, String> dependencies = new HashMap<>();
+    dependencies.put(uuidYamlField.getNode().getUuid(), uuidYamlField.getNode().getYamlPath());
+
+    Dependencies initialDependencies =
+        Dependencies.newBuilder().putAllDependencies(dependencies).setYaml(uuidYaml).build();
+
+    FilterCreationBlobResponse response = filterCreatorMergeService.obtainFiltersRecursively(
+        services, initialDependencies, new HashMap<>(), SetupMetadata.newBuilder().build());
+    assertThat(response.getDeps()).isNotNull();
+    assertThat(response.getDeps().getDependenciesMap()).isEmpty();
+    verify(filterCreatorMergeService, never()).obtainFiltersPerIteration(any(), any(), any(), any());
   }
 }

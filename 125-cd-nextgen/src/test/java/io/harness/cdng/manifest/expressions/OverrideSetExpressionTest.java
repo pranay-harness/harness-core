@@ -1,10 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cdng.manifest.expressions;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.cdng.manifest.yaml.ManifestConfig.ManifestConfigStepParameters;
 import static io.harness.cdng.manifest.yaml.ManifestOverrideSets.ManifestOverrideSetsStepParameters;
 import static io.harness.cdng.manifest.yaml.kinds.K8sManifest.K8sManifestStepParameters;
-import static io.harness.common.ParameterFieldHelper.getParameterFieldValue;
 import static io.harness.rule.OwnerRule.SAMARTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -43,9 +49,7 @@ public class OverrideSetExpressionTest extends CategoryTest {
     ServiceConfig serviceConfig = YamlPipelineUtils.read(testFile, ServiceConfig.class);
 
     ManifestOverrideSets manifestOverrideSet =
-        getParameterFieldValue(serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets())
-            .get(0)
-            .getOverrideSet();
+        serviceConfig.getServiceDefinition().getServiceSpec().getManifestOverrideSets().get(0).getOverrideSet();
     assertThat(manifestOverrideSet.getIdentifier()).isEqualTo("overrideset1");
     assertThat(manifestOverrideSet.getManifests().size()).isEqualTo(1);
 

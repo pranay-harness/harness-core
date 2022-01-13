@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ngmigration;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
@@ -6,12 +13,8 @@ import static io.harness.beans.FeatureName.GLOBAL_DISABLE_HEALTH_CHECK;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.lock.mongo.MongoPersistentLocker.LOCKS_STORE;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
-import static io.harness.microservice.NotifyEngineTarget.GENERAL;
-import static io.harness.time.DurationUtils.durationTillDayTime;
-import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
 
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
@@ -21,23 +24,21 @@ import static software.wings.common.VerificationConstants.VERIFICATION_METRIC_LA
 import static com.google.common.collect.ImmutableMap.of;
 import static com.google.inject.matcher.Matchers.not;
 import static com.google.inject.name.Names.named;
-import static java.time.Duration.ofHours;
-import static java.time.Duration.ofSeconds;
-import static java.util.Arrays.asList;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.GraphQLModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
+import io.harness.capability.CapabilitySubjectPermissionCrudObserver;
 import io.harness.capability.service.CapabilityService;
 import io.harness.capability.service.CapabilityServiceImpl;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.KubernetesClusterHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
+import io.harness.ccm.cluster.ClusterRecordObserver;
 import io.harness.ccm.cluster.ClusterRecordService;
 import io.harness.ccm.cluster.ClusterRecordServiceImpl;
-import io.harness.ccm.license.CeLicenseExpiryHandler;
 import io.harness.cf.AbstractCfModule;
 import io.harness.cf.CfClientConfig;
 import io.harness.cf.CfMigrationConfig;
@@ -47,25 +48,18 @@ import io.harness.config.PublisherConfiguration;
 import io.harness.config.WorkersConfiguration;
 import io.harness.configuration.DeployMode;
 import io.harness.cvng.core.services.api.VerificationServiceSecretManager;
-import io.harness.dataretention.AccountDataRetentionEntity;
-import io.harness.delay.DelayEventListener;
 import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
-import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
-import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
 import io.harness.event.EventsModule;
-import io.harness.event.listener.EventListener;
-import io.harness.event.reconciliation.service.DeploymentReconExecutorService;
-import io.harness.event.reconciliation.service.DeploymentReconTask;
 import io.harness.event.usagemetrics.EventsModuleHelper;
+import io.harness.eventframework.dms.DmsObserverEventProducer;
+import io.harness.eventframework.manager.ManagerObserverEventProducer;
 import io.harness.exception.ConstraintViolationExceptionMapper;
 import io.harness.exception.WingsException;
-import io.harness.execution.export.background.ExportExecutionsRequestCleanupHandler;
-import io.harness.execution.export.background.ExportExecutionsRequestHandler;
 import io.harness.ff.FeatureFlagConfig;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
@@ -73,8 +67,6 @@ import io.harness.grpc.GrpcServiceConfigurationModule;
 import io.harness.grpc.server.GrpcServerConfig;
 import io.harness.health.HealthMonitor;
 import io.harness.health.HealthService;
-import io.harness.insights.DelegateInsightsSummaryJob;
-import io.harness.lock.AcquiredLock;
 import io.harness.lock.DistributedLockImplementation;
 import io.harness.lock.PersistentLocker;
 import io.harness.maintenance.MaintenanceController;
@@ -84,12 +76,16 @@ import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
-import io.harness.mongo.QuartzCleaner;
 import io.harness.mongo.QueryFactory;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
 import io.harness.ngmigration.api.NgMigrationResource;
+import io.harness.ngmigration.serializer.CurrentGenRegistrars;
+import io.harness.observer.NoOpRemoteObserverInformerImpl;
+import io.harness.observer.RemoteObserver;
+import io.harness.observer.RemoteObserverInformer;
+import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.perpetualtask.AwsAmiInstanceSyncPerpetualTaskClient;
 import io.harness.perpetualtask.AwsCodeDeployInstanceSyncPerpetualTaskClient;
@@ -113,52 +109,35 @@ import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.Store;
 import io.harness.persistence.UserProvider;
-import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
-import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
-import io.harness.scheduler.PersistentScheduler;
-import io.harness.secrets.SecretMigrationEventListener;
 import io.harness.serializer.AnnotationAwareJsonSubtypeResolver;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.service.DelegateServiceModule;
 import io.harness.service.impl.DelegateInsightsServiceImpl;
-import io.harness.service.impl.DelegateSyncServiceImpl;
 import io.harness.service.impl.DelegateTaskServiceImpl;
 import io.harness.service.impl.DelegateTokenServiceImpl;
+import io.harness.service.intfc.DelegateProfileObserver;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.service.intfc.DelegateTokenService;
+import io.harness.service.intfc.PerpetualTaskStateObserver;
 import io.harness.springdata.SpringPersistenceModule;
+import io.harness.state.inspection.StateInspectionListener;
+import io.harness.state.inspection.StateInspectionServiceImpl;
 import io.harness.stream.AtmosphereBroadcaster;
 import io.harness.stream.GuiceObjectFactory;
 import io.harness.stream.StreamModule;
 import io.harness.threading.ExecutorModule;
-import io.harness.threading.Schedulable;
 import io.harness.threading.ThreadPool;
-import io.harness.timeout.TimeoutEngine;
 import io.harness.timescaledb.TimeScaleDBService;
 import io.harness.tracing.AbstractPersistenceTracerModule;
 import io.harness.tracing.MongoRedisTracer;
 import io.harness.waiter.NotifierScheduledExecutorService;
-import io.harness.waiter.NotifyEvent;
-import io.harness.waiter.NotifyQueuePublisherRegister;
-import io.harness.waiter.NotifyResponseCleaner;
-import io.harness.waiter.OrchestrationNotifyEventListener;
-import io.harness.waiter.ProgressUpdateService;
-import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
-import io.harness.workers.background.critical.iterator.EventDeliveryHandler;
-import io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler;
-import io.harness.workers.background.critical.iterator.WorkflowExecutionMonitorHandler;
-import io.harness.workers.background.iterator.ArtifactCleanupHandler;
-import io.harness.workers.background.iterator.InstanceSyncHandler;
-import io.harness.workers.background.iterator.SettingAttributeValidateConnectivityHandler;
 
 import software.wings.app.AuthModule;
 import software.wings.app.CharsetResponseFilter;
-import software.wings.app.DelegateQueueTask;
 import software.wings.app.GcpMarketplaceIntegrationModule;
-import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.InspectCommand;
 import software.wings.app.MainConfiguration;
@@ -172,12 +151,7 @@ import software.wings.app.SignupModule;
 import software.wings.app.TemplateModule;
 import software.wings.app.WingsModule;
 import software.wings.app.YamlModule;
-import software.wings.beans.Activity;
-import software.wings.beans.Log;
 import software.wings.beans.User;
-import software.wings.beans.WorkflowExecution;
-import software.wings.beans.alert.AlertReconciliationHandler;
-import software.wings.collect.ArtifactCollectEventListener;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.GenericExceptionMapper;
@@ -188,25 +162,6 @@ import software.wings.filter.AuditResponseFilter;
 import software.wings.jersey.JsonViews;
 import software.wings.jersey.KryoFeature;
 import software.wings.licensing.LicenseService;
-import software.wings.notification.EmailNotificationListener;
-import software.wings.prune.PruneEntityListener;
-import software.wings.scheduler.AccessRequestHandler;
-import software.wings.scheduler.AccountPasswordExpirationJob;
-import software.wings.scheduler.DeletedEntityHandler;
-import software.wings.scheduler.InstancesPurgeJob;
-import software.wings.scheduler.LdapGroupScheduledHandler;
-import software.wings.scheduler.ManagerVersionsCleanUpJob;
-import software.wings.scheduler.ResourceLookupSyncHandler;
-import software.wings.scheduler.UsageMetricsHandler;
-import software.wings.scheduler.VaultSecretManagerRenewalHandler;
-import software.wings.scheduler.YamlChangeSetPruneJob;
-import software.wings.scheduler.account.DeleteAccountHandler;
-import software.wings.scheduler.account.LicenseCheckHandler;
-import software.wings.scheduler.approval.ApprovalPollingHandler;
-import software.wings.scheduler.audit.EntityAuditRecordHandler;
-import software.wings.scheduler.events.segment.SegmentGroupEventJob;
-import software.wings.scheduler.marketplace.gcp.GCPBillingHandler;
-import software.wings.scheduler.persistance.PersistentLockCleanup;
 import software.wings.search.framework.ElasticsearchSyncService;
 import software.wings.security.AuthResponseFilter;
 import software.wings.security.AuthRuleFilter;
@@ -214,47 +169,49 @@ import software.wings.security.AuthenticationFilter;
 import software.wings.security.LoginRateLimitFilter;
 import software.wings.security.ThreadLocalUserProvider;
 import software.wings.security.authentication.totp.TotpModule;
-import software.wings.security.encryption.migration.SettingAttributesSecretsMigrationHandler;
 import software.wings.service.impl.AccountServiceImpl;
 import software.wings.service.impl.ApplicationManifestServiceImpl;
 import software.wings.service.impl.ArtifactStreamServiceImpl;
 import software.wings.service.impl.AuditServiceHelper;
 import software.wings.service.impl.AuditServiceImpl;
-import software.wings.service.impl.BarrierServiceImpl;
-import software.wings.service.impl.DelegateDisconnectedDetector;
+import software.wings.service.impl.CloudProviderObserver;
+import software.wings.service.impl.DelegateObserver;
 import software.wings.service.impl.DelegateProfileServiceImpl;
 import software.wings.service.impl.DelegateServiceImpl;
-import software.wings.service.impl.ExecutionEventListener;
+import software.wings.service.impl.DelegateTaskStatusObserver;
 import software.wings.service.impl.InfrastructureMappingServiceImpl;
+import software.wings.service.impl.SettingAttributeObserver;
 import software.wings.service.impl.SettingsServiceImpl;
+import software.wings.service.impl.WorkflowExecutionServiceImpl;
 import software.wings.service.impl.applicationmanifest.ManifestPerpetualTaskManger;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskManager;
 import software.wings.service.impl.artifact.ArtifactStreamPTaskMigrationJob;
 import software.wings.service.impl.artifact.ArtifactStreamSettingAttributePTaskManager;
-import software.wings.service.impl.compliance.DeploymentFreezeActivationHandler;
-import software.wings.service.impl.compliance.DeploymentFreezeDeactivationHandler;
-import software.wings.service.impl.event.DeploymentTimeSeriesEventListener;
 import software.wings.service.impl.infrastructuredefinition.InfrastructureDefinitionServiceImpl;
-import software.wings.service.impl.instance.DeploymentEventListener;
-import software.wings.service.impl.instance.InstanceEventListener;
 import software.wings.service.impl.instance.InstanceSyncPerpetualTaskMigrationJob;
-import software.wings.service.impl.trigger.ScheduledTriggerHandler;
+import software.wings.service.impl.workflow.WorkflowServiceImpl;
 import software.wings.service.impl.yaml.YamlPushServiceImpl;
 import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.ApplicationManifestService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.AuditService;
-import software.wings.service.intfc.DataStoreService;
 import software.wings.service.intfc.DelegateProfileService;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
+import software.wings.service.intfc.InfrastructureDefinitionServiceObserver;
 import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.InfrastructureMappingServiceObserver;
 import software.wings.service.intfc.MigrationService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.account.AccountCrudObserver;
+import software.wings.service.intfc.applicationmanifest.ApplicationManifestServiceObserver;
+import software.wings.service.intfc.artifact.ArtifactStreamServiceObserver;
+import software.wings.service.intfc.entitycrud.EntityCrudOperationObserver;
+import software.wings.service.intfc.manipulation.SettingsServiceManipulationObserver;
+import software.wings.service.intfc.perpetualtask.PerpetualTaskCrudObserver;
 import software.wings.service.intfc.yaml.YamlPushService;
-import software.wings.sm.StateExecutionInstance;
-import software.wings.yaml.gitSync.GitChangeSetRunnable;
-import software.wings.yaml.gitSync.GitSyncEntitiesExpiryHandler;
+import software.wings.sm.StateMachineExecutor;
+import software.wings.sm.StateStatusUpdate;
 
 import com.codahale.metrics.MetricRegistry;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -276,12 +233,10 @@ import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
 import com.palominolabs.metrics.guice.MetricsInstrumentationModule;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.bundles.assets.AssetsConfiguration;
-import io.dropwizard.bundles.assets.ConfiguredAssetsBundle;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.jersey.errors.EarlyEofExceptionMapper;
@@ -290,16 +245,14 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
-import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import javax.cache.Cache;
 import javax.servlet.DispatcherType;
@@ -331,9 +284,7 @@ import ru.vyarus.guice.validator.ValidationModule;
  */
 @Slf4j
 @OwnedBy(CDC)
-public class NGMigrationApplication extends Application<MainConfiguration> {
-  private static final SecureRandom random = new SecureRandom();
-
+public class NGMigrationApplication extends Application<MigratorConfig> {
   private final MetricRegistry metricRegistry = new MetricRegistry();
   private HarnessMetricRegistry harnessMetricRegistry;
   private StartupMode startupMode;
@@ -363,7 +314,7 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
   }
 
   @Override
-  public void initialize(Bootstrap<MainConfiguration> bootstrap) {
+  public void initialize(Bootstrap<MigratorConfig> bootstrap) {
     initializeLogging();
     log.info("bootstrapping ...");
     bootstrap.addCommand(new InspectCommand<>(this));
@@ -371,11 +322,10 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     // Enable variable substitution with environment variables
     bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(
         bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(false)));
-    bootstrap.addBundle(new ConfiguredAssetsBundle("/static", "/", "index.html"));
-    bootstrap.addBundle(new SwaggerBundle<MainConfiguration>() {
+    bootstrap.addBundle(new SwaggerBundle<MigratorConfig>() {
       @Override
-      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MainConfiguration mainConfiguration) {
-        return mainConfiguration.getSwaggerBundleConfiguration();
+      protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(MigratorConfig mainConfiguration) {
+        return mainConfiguration.getCg().getSwaggerBundleConfiguration();
       }
     });
     bootstrap.addBundle(new FileAssetsBundle("/.well-known"));
@@ -407,7 +357,7 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
   }
 
   @Override
-  public void run(final MainConfiguration configuration, Environment environment) throws Exception {
+  public void run(final MigratorConfig configuration, Environment environment) throws Exception {
     log.info("Starting app ...");
     log.info("Entering startup maintenance mode");
     MaintenanceController.forceMaintenance(true);
@@ -416,11 +366,11 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
         20, 1000, 500L, TimeUnit.MILLISECONDS, new ThreadFactoryBuilder().setNameFormat("main-app-pool-%d").build()));
 
     List<Module> modules = new ArrayList<>();
-    addModules(configuration, modules);
+    addModules(configuration.getCg(), modules);
 
     Injector injector = Guice.createInjector(modules);
 
-    initializeManagerSvc(injector, environment, configuration);
+    initializeManagerSvc(injector, environment, configuration.getCg());
     log.info("Starting app done");
     log.info("Manager is running on JRE: {}", System.getProperty("java.version"));
   }
@@ -613,6 +563,7 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     modules.add(new DelegateServiceModule());
     modules.add(new CapabilityModule());
     modules.add(MigrationModule.getInstance());
+    registerRemoteObserverModule(configuration, modules);
     modules.add(new WingsModule(configuration, StartupMode.MANAGER));
     modules.add(new TotpModule());
     modules.add(new ProviderModule() {
@@ -693,12 +644,6 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
         return MANAGER.getServiceId();
       }
     });
-  }
-
-  private void registerEventConsumers(final Injector injector) {
-    final ExecutorService entityCRUDConsumerExecutor =
-        Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat(ENTITY_CRUD).build());
-    entityCRUDConsumerExecutor.execute(injector.getInstance(EntityCRUDConsumer.class));
   }
 
   private void registerAtmosphereStreams(Environment environment, Injector injector) {
@@ -878,111 +823,8 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     }
   }
 
-  private void registerWaitEnginePublishers(Injector injector) {
-    final QueuePublisher<NotifyEvent> publisher =
-        injector.getInstance(Key.get(new TypeLiteral<QueuePublisher<NotifyEvent>>() {}));
-    final NotifyQueuePublisherRegister notifyQueuePublisherRegister =
-        injector.getInstance(NotifyQueuePublisherRegister.class);
-    notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
-    notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
-  }
-
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
-  }
-
-  private void registerQueueListeners(Injector injector) {
-    log.info("Initializing queue listeners...");
-
-    QueueListenerController queueListenerController = injector.getInstance(QueueListenerController.class);
-    EventListener genericEventListener =
-        injector.getInstance(Key.get(EventListener.class, Names.named("GenericEventListener")));
-    queueListenerController.register((QueueListener) genericEventListener, 1);
-
-    queueListenerController.register(injector.getInstance(ArtifactCollectEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(DelayEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(DeploymentEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(InstanceEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(DeploymentTimeSeriesEventListener.class), 2);
-    queueListenerController.register(injector.getInstance(EmailNotificationListener.class), 1);
-    queueListenerController.register(injector.getInstance(ExecutionEventListener.class), 3);
-    queueListenerController.register(injector.getInstance(SecretMigrationEventListener.class), 1);
-    queueListenerController.register(injector.getInstance(GeneralNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class), 5);
-    queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
-  }
-
-  private void scheduleJobsManager(
-      Injector injector, MainConfiguration configuration, ScheduledExecutorService delegateExecutor) {
-    log.info("Initializing scheduled jobs...");
-    injector.getInstance(NotifierScheduledExecutorService.class)
-        .scheduleWithFixedDelay(
-            injector.getInstance(NotifyResponseCleaner.class), random.nextInt(300), 300L, TimeUnit.SECONDS);
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("gitChangeSet")))
-        .scheduleWithFixedDelay(
-            injector.getInstance(GitChangeSetRunnable.class), random.nextInt(4), 4L, TimeUnit.SECONDS);
-
-    injector.getInstance(DeploymentReconExecutorService.class)
-        .scheduleWithFixedDelay(
-            injector.getInstance(DeploymentReconTask.class), random.nextInt(60), 15 * 60L, TimeUnit.SECONDS);
-    ImmutableList<Class<? extends AccountDataRetentionEntity>> classes =
-        ImmutableList.<Class<? extends AccountDataRetentionEntity>>builder()
-            .add(WorkflowExecution.class)
-            .add(StateExecutionInstance.class)
-            .add(Activity.class)
-            .add(Log.class)
-            .build();
-    ScheduledExecutorService taskPollExecutor =
-        injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("taskPollExecutor")));
-    if (configuration.getDistributedLockImplementation() == DistributedLockImplementation.MONGO) {
-      taskPollExecutor.scheduleWithFixedDelay(
-          injector.getInstance(PersistentLockCleanup.class), random.nextInt(60), 60L, TimeUnit.MINUTES);
-    }
-
-    taskPollExecutor.scheduleWithFixedDelay(
-        new Schedulable("Failed ensure data retention",
-            () -> { injector.getInstance(AccountService.class).ensureDataRetention(classes); }),
-        durationTillDayTime(System.currentTimeMillis(), ofHours(10)).toMillis(), ofHours(24).toMillis(),
-        TimeUnit.MILLISECONDS);
-
-    taskPollExecutor.scheduleAtFixedRate(new Schedulable("Failed ensure data retention", () -> {
-      Map<String, Long> dataRetentionMap = injector.getInstance(AccountService.class).obtainAccountDataRetentionMap();
-      injector.getInstance(DataStoreService.class).purgeDataRetentionOlderRecords(dataRetentionMap);
-    }), 0, 60L, TimeUnit.MINUTES);
-
-    // Cleanup delegate versions from global account
-    taskPollExecutor.scheduleWithFixedDelay(
-        new Schedulable("Failed cleaning up manager versions.", injector.getInstance(ManagerVersionsCleanUpJob.class)),
-        0L, 5L, TimeUnit.MINUTES);
-  }
-
-  private void scheduleJobsDelegateService(
-      Injector injector, MainConfiguration configuration, ScheduledExecutorService delegateExecutor) {
-    log.info("Initializing delegate service scheduled jobs ...");
-    // delegate task broadcasting schedule job
-    injector.getInstance(Key.get(ScheduledExecutorService.class, Names.named("delegateTaskNotifier")))
-        .scheduleWithFixedDelay(injector.getInstance(DelegateQueueTask.class), random.nextInt(5), 5L, TimeUnit.SECONDS);
-
-    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring task progress updates",
-                                                injector.getInstance(ProgressUpdateService.class)),
-        0L, 5L, TimeUnit.SECONDS);
-
-    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while detecting disconnected delegates",
-                                                injector.getInstance(DelegateDisconnectedDetector.class)),
-        0L, 60L, TimeUnit.SECONDS);
-
-    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while monitoring sync task responses",
-                                                injector.getInstance(DelegateSyncServiceImpl.class)),
-        0L, 2L, TimeUnit.SECONDS);
-
-    delegateExecutor.scheduleWithFixedDelay(new Schedulable("Failed while calculating delegate insights summaries",
-                                                injector.getInstance(DelegateInsightsSummaryJob.class)),
-        0L, 10L, TimeUnit.MINUTES);
-
-    delegateExecutor.scheduleWithFixedDelay(
-        new Schedulable("Failed while broadcasting perpetual tasks",
-            () -> injector.getInstance(PerpetualTaskServiceImpl.class).broadcastToDelegate()),
-        0L, 10L, TimeUnit.SECONDS);
   }
 
   public void registerObservers(MainConfiguration configuration, Injector injector) {
@@ -1093,77 +935,6 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
     ObserversHelper.registerSharedObservers(injector);
   }
 
-  public static void registerIteratorsDelegateService(Injector injector) {
-    injector.getInstance(DelegateCapabilitiesRecordHandler.class).registerIterators(5);
-    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class).registerIterators(5);
-    injector.getInstance(PerpetualTaskRecordHandler.class).registerIterators(5, 5);
-  }
-
-  public static void registerIteratorsManager(Injector injector) {
-    final ScheduledThreadPoolExecutor artifactCollectionExecutor = new ScheduledThreadPoolExecutor(
-        25, new ThreadFactoryBuilder().setNameFormat("Iterator-ArtifactCollection").build());
-    final ScheduledThreadPoolExecutor eventDeliveryExecutor = new ScheduledThreadPoolExecutor(
-        25, new ThreadFactoryBuilder().setNameFormat("Iterator-Event-Delivery").build());
-
-    injector.getInstance(AlertReconciliationHandler.class).registerIterators();
-    injector.getInstance(ArtifactCollectionHandler.class).registerIterators(artifactCollectionExecutor);
-    injector.getInstance(ArtifactCleanupHandler.class).registerIterators(artifactCollectionExecutor);
-    injector.getInstance(EventDeliveryHandler.class).registerIterators(eventDeliveryExecutor);
-    injector.getInstance(InstanceSyncHandler.class).registerIterators(10);
-    injector.getInstance(LicenseCheckHandler.class).registerIterators();
-    injector.getInstance(ApprovalPollingHandler.class).registerIterators();
-    injector.getInstance(GCPBillingHandler.class).registerIterators();
-    injector.getInstance(SegmentGroupEventJob.class).registerIterators();
-    injector.getInstance(BarrierServiceImpl.class).registerIterators();
-    injector.getInstance(EntityAuditRecordHandler.class).registerIterators();
-    injector.getInstance(UsageMetricsHandler.class).registerIterators();
-    injector.getInstance(ResourceConstraintBackupHandler.class).registerIterators(10);
-    injector.getInstance(WorkflowExecutionMonitorHandler.class).registerIterators(5);
-    injector.getInstance(SettingAttributeValidateConnectivityHandler.class).registerIterators(5);
-    injector.getInstance(VaultSecretManagerRenewalHandler.class).registerIterators(5);
-    injector.getInstance(SettingAttributesSecretsMigrationHandler.class).registerIterators();
-    injector.getInstance(GitSyncEntitiesExpiryHandler.class).registerIterators();
-    injector.getInstance(ExportExecutionsRequestHandler.class).registerIterators();
-    injector.getInstance(ExportExecutionsRequestCleanupHandler.class).registerIterators();
-    injector.getInstance(DeploymentFreezeActivationHandler.class).registerIterators();
-    injector.getInstance(DeploymentFreezeDeactivationHandler.class).registerIterators();
-    injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
-    injector.getInstance(DeleteAccountHandler.class).registerIterators();
-    injector.getInstance(TimeoutEngine.class).registerIterators();
-    injector.getInstance(DeletedEntityHandler.class).registerIterators();
-    injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
-    injector.getInstance(AccessRequestHandler.class).registerIterators();
-    injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
-    injector.getInstance(LdapGroupScheduledHandler.class).registerIterators();
-  }
-
-  private void registerCronJobs(Injector injector) {
-    log.info("Register cron jobs...");
-    final PersistentScheduler jobScheduler =
-        injector.getInstance(Key.get(PersistentScheduler.class, Names.named("BackgroundJobScheduler")));
-
-    PersistentLocker persistentLocker = injector.getInstance(Key.get(PersistentLocker.class));
-
-    try (AcquiredLock acquiredLock = persistentLocker.waitToAcquireLock(
-             NGMigrationApplication.class, "Initialization", ofSeconds(5), ofSeconds(10))) {
-      // If we do not get the lock, that's not critical - that's most likely because other managers took it
-      // and they will initialize the jobs.
-      if (acquiredLock != null) {
-        YamlChangeSetPruneJob.add(jobScheduler);
-        InstancesPurgeJob.add(jobScheduler);
-        AccountPasswordExpirationJob.add(jobScheduler);
-      }
-    }
-
-    WingsPersistence wingsPersistence = injector.getInstance(Key.get(WingsPersistence.class));
-
-    new Thread(() -> {
-      AdvancedDatastore datastore = wingsPersistence.getDatastore(HPersistence.DEFAULT_STORE);
-      QuartzCleaner.cleanup(datastore, "quartz");
-      QuartzCleaner.cleanup(datastore, "quartz_verification");
-    }).start();
-  }
-
   private void registerJerseyProviders(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(KryoFeature.class));
     environment.jersey().register(EarlyEofExceptionMapper.class);
@@ -1194,5 +965,192 @@ public class NGMigrationApplication extends Application<MainConfiguration> {
 
   private void runMigrations(Injector injector) {
     injector.getInstance(MigrationService.class).runMigrations();
+  }
+
+  public boolean isDms() {
+    return startupMode.equals(StartupMode.DELEGATE_SERVICE);
+  }
+
+  private boolean shouldEnableRemoteObservers(final MainConfiguration configuration) {
+    return isDms() || configuration.isDisableDelegateMgmtInManager();
+  }
+
+  private void registerRemoteObserverModule(MainConfiguration configuration, List<Module> modules) {
+    if (shouldEnableRemoteObservers(configuration)) {
+      modules.add(new AbstractRemoteObserverModule() {
+        @Override
+        public boolean noOpProducer() {
+          return false;
+        }
+
+        @Override
+        public Set<RemoteObserver> observers() {
+          Set<RemoteObserver> remoteObservers = new HashSet<>();
+          if (isManager()) {
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(YamlPushServiceImpl.class)
+                                    .observerClass(EntityCrudOperationObserver.class)
+                                    .observer(AuditServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(AuditServiceHelper.class)
+                                    .observerClass(EntityCrudOperationObserver.class)
+                                    .observer(AuditServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(SettingsServiceImpl.class)
+                                    .observerClass(CloudProviderObserver.class)
+                                    .observer(ClusterRecordHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(SettingsServiceImpl.class)
+                                    .observerClass(SettingAttributeObserver.class)
+                                    .observer(ArtifactStreamSettingAttributePTaskManager.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(InfrastructureDefinitionServiceImpl.class)
+                                    .observerClass(InfrastructureDefinitionServiceObserver.class)
+                                    .observer(ClusterRecordHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(InfrastructureMappingServiceImpl.class)
+                                    .observerClass(InfrastructureMappingServiceObserver.class)
+                                    .observer(ClusterRecordHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(ClusterRecordServiceImpl.class)
+                                    .observerClass(ClusterRecordObserver.class)
+                                    .observer(CEPerpetualTaskHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(ArtifactStreamServiceImpl.class)
+                                    .observerClass(ArtifactStreamServiceObserver.class)
+                                    .observer(ArtifactStreamPTaskManager.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(ArtifactStreamServiceImpl.class)
+                                    .observerClass(ArtifactStreamServiceObserver.class)
+                                    .observer(ArtifactStreamPTaskManager.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(AccountServiceImpl.class)
+                                    .observerClass(AccountCrudObserver.class)
+                                    .observer(DelegateProfileServiceImpl.class)
+                                    .observer(CEPerpetualTaskHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(ApplicationManifestServiceImpl.class)
+                                    .observerClass(ApplicationManifestServiceObserver.class)
+                                    .observer(ManifestPerpetualTaskManger.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(SettingsServiceImpl.class)
+                                    .observerClass(SettingsServiceManipulationObserver.class)
+                                    .observer(WorkflowServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(StateMachineExecutor.class)
+                                    .observerClass(StateStatusUpdate.class)
+                                    .observer(WorkflowExecutionServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(StateInspectionServiceImpl.class)
+                                    .observerClass(StateInspectionListener.class)
+                                    .observer(StateMachineExecutor.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateServiceImpl.class)
+                                    .observerClass(DelegateObserver.class)
+                                    .observer(KubernetesClusterHandler.class)
+                                    .build());
+          }
+
+          if (isDms()) {
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateServiceImpl.class)
+                                    .observerClass(DelegateTaskStatusObserver.class)
+                                    .observer(DelegateInsightsServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateTaskServiceImpl.class)
+                                    .observerClass(DelegateTaskStatusObserver.class)
+                                    .observer(DelegateInsightsServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateServiceImpl.class)
+                                    .observerClass(DelegateObserver.class)
+                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
+                                    .observer(PerpetualTaskServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateProfileServiceImpl.class)
+                                    .observerClass(DelegateObserver.class)
+                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateServiceImpl.class)
+                                    .observerClass(DelegateProfileObserver.class)
+                                    .observer(DelegateProfileEventHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(DelegateProfileServiceImpl.class)
+                                    .observerClass(DelegateProfileObserver.class)
+                                    .observer(DelegateProfileEventHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(PerpetualTaskServiceImpl.class)
+                                    .observerClass(PerpetualTaskCrudObserver.class)
+                                    .observer(PerpetualTaskRecordHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(PerpetualTaskServiceImpl.class)
+                                    .observerClass(PerpetualTaskStateObserver.class)
+                                    .observer(DelegateInsightsServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(CapabilityServiceImpl.class)
+                                    .observerClass(CapabilitySubjectPermissionCrudObserver.class)
+                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(PerpetualTaskServiceImpl.class)
+                                    .observerClass(PerpetualTaskStateObserver.class)
+                                    .observer(DelegateInsightsServiceImpl.class)
+                                    .build());
+            remoteObservers.add(RemoteObserver.builder()
+                                    .subjectCLass(AccountServiceImpl.class)
+                                    .observerClass(AccountCrudObserver.class)
+                                    .observer(DelegateTokenServiceImpl.class)
+                                    .build());
+          }
+          return remoteObservers;
+        }
+
+        @Override
+        public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+          if (isManager()) {
+            return ManagerObserverEventProducer.class;
+          }
+          return DmsObserverEventProducer.class;
+        }
+      });
+    } else {
+      modules.add(new AbstractRemoteObserverModule() {
+        @Override
+        public boolean noOpProducer() {
+          return true;
+        }
+
+        @Override
+        public Set<RemoteObserver> observers() {
+          return Collections.emptySet();
+        }
+
+        @Override
+        public Class<? extends RemoteObserverInformer> getRemoteObserverImpl() {
+          return NoOpRemoteObserverInformerImpl.class;
+        }
+      });
+    }
   }
 }

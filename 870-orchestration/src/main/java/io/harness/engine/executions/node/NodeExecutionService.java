@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -13,13 +20,17 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 import lombok.NonNull;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface NodeExecutionService {
   NodeExecution get(String nodeExecutionId);
+
+  NodeExecution getWithFieldsIncluded(String nodeExecutionId, Set<String> fieldsToInclude);
 
   NodeExecution getByPlanNodeUuid(String planNodeUuid, String planExecutionId);
 
@@ -35,8 +46,15 @@ public interface NodeExecutionService {
 
   NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
 
+  NodeExecution update(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops, Set<String> fieldsToBeIncluded);
+
+  void updateV2(@NonNull String nodeExecutionId, @NonNull Consumer<Update> ops);
+
   NodeExecution updateStatusWithOps(@NonNull String nodeExecutionId, @NonNull Status targetStatus, Consumer<Update> ops,
       EnumSet<Status> overrideStatusSet);
+
+  NodeExecution updateStatusWithOpsV2(@NonNull String nodeExecutionId, @NonNull Status targetStatus,
+      Consumer<Update> ops, EnumSet<Status> overrideStatusSet, Set<String> fieldsToBeIncluded);
 
   NodeExecution updateStatusWithUpdate(
       @NonNull String nodeExecutionId, @NonNull Status targetStatus, Update ops, EnumSet<Status> overrideStatusSet);
@@ -44,6 +62,9 @@ public interface NodeExecutionService {
   NodeExecution save(NodeExecution nodeExecution);
 
   NodeExecution save(NodeExecutionProto nodeExecution);
+
+  NodeExecution updateStatusWithUpdate(@NotNull String nodeExecutionId, @NotNull Status status, Update ops,
+      EnumSet<Status> overrideStatusSet, Set<String> includedFields, boolean shouldUseProjections);
 
   long markLeavesDiscontinuing(String planExecutionId, List<String> leafInstanceIds);
 

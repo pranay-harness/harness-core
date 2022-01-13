@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.infra.steps;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -21,6 +28,7 @@ import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.utils.ConnectorUtils;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.connector.ConnectorType;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -180,6 +188,7 @@ public class InfrastructureStep implements SyncExecutableWithRbac<Infrastructure
     if (!connectorDTO.isPresent()) {
       throw new InvalidRequestException(String.format("Connector not found for identifier : [%s]", connectorRefValue));
     }
+    ConnectorUtils.checkForConnectorValidityOrThrow(connectorDTO.get());
 
     return connectorDTO.get().getConnector();
   }

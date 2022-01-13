@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk.core;
 
 import static io.harness.eventsframework.EventsFrameworkConstants.PIPELINE_PARTIAL_PLAN_RESPONSE;
@@ -21,17 +28,21 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
   private static PmsSdkCoreEventsFrameworkModule instance;
 
   private final EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  private final PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig;
   private final String serviceName;
 
-  public static PmsSdkCoreEventsFrameworkModule getInstance(EventsFrameworkConfiguration config, String serviceName) {
+  public static PmsSdkCoreEventsFrameworkModule getInstance(EventsFrameworkConfiguration config,
+      PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig, String serviceName) {
     if (instance == null) {
-      instance = new PmsSdkCoreEventsFrameworkModule(config, serviceName);
+      instance = new PmsSdkCoreEventsFrameworkModule(config, pipelineSdkRedisEventsConfig, serviceName);
     }
     return instance;
   }
 
-  private PmsSdkCoreEventsFrameworkModule(EventsFrameworkConfiguration config, String serviceName) {
+  private PmsSdkCoreEventsFrameworkModule(EventsFrameworkConfiguration config,
+      PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig, String serviceName) {
     this.eventsFrameworkConfiguration = config;
+    this.pipelineSdkRedisEventsConfig = pipelineSdkRedisEventsConfig;
     this.serviceName = serviceName;
   }
 
@@ -50,12 +61,12 @@ public class PmsSdkCoreEventsFrameworkModule extends AbstractModule {
       bind(Producer.class)
           .annotatedWith(Names.named(SDK_RESPONSE_EVENT_PRODUCER))
           .toInstance(RedisProducer.of(PIPELINE_SDK_RESPONSE_EVENT_TOPIC, redissonClient,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName,
+              pipelineSdkRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
               redisConfig.getEnvNamespace()));
       bind(Producer.class)
           .annotatedWith(Names.named(PARTIAL_PLAN_RESPONSE_EVENT_PRODUCER))
           .toInstance(RedisProducer.of(PIPELINE_PARTIAL_PLAN_RESPONSE, redissonClient,
-              EventsFrameworkConstants.PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE, serviceName,
+              pipelineSdkRedisEventsConfig.getPipelineSdkResponseEvent().getMaxTopicSize(), serviceName,
               redisConfig.getEnvNamespace()));
     }
   }

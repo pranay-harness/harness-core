@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.sdk;
 
 import static org.springframework.data.mongodb.core.query.Criteria.where;
@@ -37,6 +44,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.cache.Cache;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
@@ -54,7 +62,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
   private final SchemaFetcher schemaFetcher;
   Cache<String, PmsSdkInstance> instanceCache;
   TransactionHelper transactionHelper;
-  boolean shouldUseInstanceCache;
+  @Setter boolean shouldUseInstanceCache;
 
   @Inject
   public PmsSdkInstanceService(PmsSdkInstanceRepository pmsSdkInstanceRepository, MongoTemplate mongoTemplate,
@@ -85,6 +93,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
       schemaFetcher.invalidateAllCache();
     }
+    // TODO: ADD ERROR HANDLING
     responseObserver.onNext(InitializeSdkResponse.newBuilder().build());
     responseObserver.onCompleted();
   }
@@ -124,9 +133,14 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
       PmsSdkInstance instance = mongoTemplate.findAndModify(
           query, update, new FindAndModifyOptions().upsert(true).returnNew(true), PmsSdkInstance.class);
       if (instance != null) {
+        log.info("Updating sdkInstanceCache for module {}", request.getName());
         instanceCache.put(request.getName(), instance);
+        log.info("Updated sdkInstanceCache for module {}", request.getName());
+      } else {
+        log.warn("Found instance as null for module {} . Fallback to database", request.getName());
+        shouldUseInstanceCache = false;
       }
-      return null;
+      return instance;
     });
   }
 
@@ -197,5 +211,9 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
 
   public List<PmsSdkInstance> getActiveInstances() {
     return new ArrayList<>(getSdkInstanceCacheValue().values());
+  }
+
+  public List<PmsSdkInstance> getActiveInstancesFromDB() {
+    return new ArrayList<>(pmsSdkInstanceRepository.findByActive(true));
   }
 }

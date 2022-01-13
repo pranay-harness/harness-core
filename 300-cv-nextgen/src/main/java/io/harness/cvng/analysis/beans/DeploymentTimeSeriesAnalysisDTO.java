@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.beans;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -13,7 +20,7 @@ import lombok.Value;
 public class DeploymentTimeSeriesAnalysisDTO {
   @JsonDeserialize(using = RiskDeserializer.class) int risk;
   public Risk getRisk() {
-    return Risk.valueOf(risk);
+    return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(risk);
   }
   Double score;
   List<HostInfo> hostSummaries;
@@ -41,7 +48,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     boolean canary;
     @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
-      return Risk.valueOf(risk);
+      return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(risk);
     }
     Double score;
   }
@@ -52,7 +59,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String hostName;
     @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
-      return Risk.valueOf(risk);
+      return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(risk);
     }
     Double score;
     List<Double> controlData;
@@ -80,7 +87,7 @@ public class DeploymentTimeSeriesAnalysisDTO {
     String metricName;
     @JsonDeserialize(using = RiskDeserializer.class) int risk;
     public Risk getRisk() {
-      return Risk.valueOf(this.risk);
+      return Risk.valueOfRiskForDeploymentTimeSeriesAnalysis(this.risk);
     }
 
     Double score;

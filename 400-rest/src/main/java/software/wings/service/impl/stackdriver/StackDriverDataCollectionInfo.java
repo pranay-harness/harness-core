@@ -1,3 +1,10 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.stackdriver;
 
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
@@ -25,6 +32,7 @@ import lombok.EqualsAndHashCode;
 public class StackDriverDataCollectionInfo
     extends DataCollectionInfo implements TaskParameters, ExecutionCapabilityDemander {
   private GcpConfig gcpConfig;
+
   private long startTime;
   private long endTime;
 
@@ -39,6 +47,7 @@ public class StackDriverDataCollectionInfo
   private Map<String, List<StackDriverMetric>> loadBalancerMetrics;
   private List<StackDriverMetric> podMetrics;
   List<StackDriverMetricDefinition> timeSeriesToCollect;
+  private String projectId;
 
   @Builder
   public StackDriverDataCollectionInfo(String accountId, String applicationId, String stateExecutionId,
@@ -47,7 +56,7 @@ public class StackDriverDataCollectionInfo
       TimeSeriesMlAnalysisType timeSeriesMlAnalysisType, List<EncryptedDataDetail> encryptedDataDetails,
       Map<String, String> hosts, Map<String, List<StackDriverMetric>> loadBalancerMetrics,
       List<StackDriverMetric> podMetrics, int initialDelayMinutes,
-      List<StackDriverMetricDefinition> timeSeriesToCollect) {
+      List<StackDriverMetricDefinition> timeSeriesToCollect, String projectId) {
     super(accountId, applicationId, stateExecutionId, cvConfigId, workflowId, workflowExecutionId, serviceId);
     this.gcpConfig = gcpConfig;
     this.startTime = startTime;
@@ -62,6 +71,7 @@ public class StackDriverDataCollectionInfo
     this.loadBalancerMetrics = loadBalancerMetrics;
     this.podMetrics = podMetrics;
     this.timeSeriesToCollect = timeSeriesToCollect;
+    this.projectId = projectId;
   }
 
   @Override

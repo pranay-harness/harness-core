@@ -1,9 +1,17 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.governance;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
@@ -27,7 +35,9 @@ public class ExpansionRequestsHelper {
     activeInstances.forEach(sdkInstance -> {
       String sdkInstanceName = sdkInstance.getName();
       ModuleType module = ModuleType.fromString(sdkInstanceName);
-      Set<String> expandableFields = new HashSet<>(sdkInstance.getExpandableFields());
+      List<String> expandableFieldsList = sdkInstance.getExpandableFields();
+      Set<String> expandableFields =
+          EmptyPredicate.isEmpty(expandableFieldsList) ? new HashSet<>() : new HashSet<>(expandableFieldsList);
       expandableFieldsPerService.put(module, expandableFields);
     });
     return expandableFieldsPerService;

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -55,6 +62,7 @@ public class PlanExecutionResourceTest extends CategoryTest {
     String yaml = "pipeline:\n"
         + "  identifier: p1\n"
         + "  name: p1\n"
+        + "  allowStageExecutions: true\n"
         + "  stages:\n"
         + "  - stage:\n"
         + "      identifier: qaStage\n"
@@ -71,6 +79,7 @@ public class PlanExecutionResourceTest extends CategoryTest {
                  .identifier(PIPELINE_IDENTIFIER)
                  .name(PIPELINE_IDENTIFIER)
                  .yaml(yaml)
+                 .allowStageExecutions(true)
                  .build();
   }
 

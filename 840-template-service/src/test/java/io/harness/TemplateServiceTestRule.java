@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -36,6 +43,7 @@ import io.harness.rule.InjectorRuleMixin;
 import io.harness.serializer.KryoModule;
 import io.harness.serializer.KryoRegistrar;
 import io.harness.serializer.TemplateServiceModuleRegistrars;
+import io.harness.serializer.jackson.TemplateServiceJacksonModule;
 import io.harness.service.intfc.DelegateAsyncService;
 import io.harness.service.intfc.DelegateSyncService;
 import io.harness.springdata.HTransactionTemplate;
@@ -46,6 +54,7 @@ import io.harness.threading.ExecutorModule;
 import io.harness.time.TimeModule;
 import io.harness.utils.NGObjectMapperHelper;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -56,14 +65,15 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Named;
+import io.dropwizard.jackson.Jackson;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import java.io.Closeable;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.Collection;
 import java.util.function.Supplier;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.rules.MethodRule;
@@ -139,6 +149,16 @@ public class TemplateServiceTestRule implements InjectorRuleMixin, MethodRule, M
       OutboxService getOutboxService(OutboxEventRepository outboxEventRepository) {
         return new OutboxServiceImpl(
             new OutboxDaoImpl(outboxEventRepository), NGObjectMapperHelper.NG_PIPELINE_OBJECT_MAPPER);
+      }
+
+      @Provides
+      @Named("yaml-schema-mapper")
+      @Singleton
+      public ObjectMapper getYamlSchemaObjectMapper() {
+        ObjectMapper objectMapper = Jackson.newObjectMapper();
+        NGObjectMapperHelper.configureNGObjectMapper(objectMapper);
+        objectMapper.registerModule(new TemplateServiceJacksonModule());
+        return objectMapper;
       }
 
       @Provides

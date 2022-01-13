@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -49,9 +56,9 @@ import io.harness.k8s.model.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -178,7 +185,7 @@ public class K8sRollingRequestHandler extends K8sRequestHandler {
     }
   }
 
-  private void saveRelease(K8sRollingDeployRequest k8sRollingDeployRequest, Status status) throws YamlException {
+  private void saveRelease(K8sRollingDeployRequest k8sRollingDeployRequest, Status status) throws IOException {
     releaseHistory.setReleaseStatus(status);
     kubernetesContainerService.saveReleaseHistory(kubernetesConfig, k8sRollingDeployRequest.getReleaseName(),
         releaseHistory.getAsYaml(), !customWorkloads.isEmpty());

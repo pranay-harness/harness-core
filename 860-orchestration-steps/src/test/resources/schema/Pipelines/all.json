@@ -1706,6 +1706,9 @@
         "name"
       ],
       "properties": {
+        "allowStageExecutions": {
+          "type": "boolean"
+        },
         "description": {
           "type": "string"
         },
@@ -2985,8 +2988,7 @@
           "$ref": "#/definitions/JsonNode"
         },
         "templateRef": {
-          "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          "type": "string"
         },
         "versionLabel": {
           "type": "string",

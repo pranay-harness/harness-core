@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -52,6 +59,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -61,6 +69,8 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
+import org.mongodb.morphia.query.Criteria;
+import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 @Slf4j
@@ -324,6 +334,37 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
         .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
         .filter(ServiceLevelIndicatorKeys.identifier, identifier)
         .get();
+  }
+
+  @Override
+  public List<String> getSLIsWithMetrics(ProjectParams projectParams, String monitoredServiceIdentifier,
+      String healthSourceIdentifier, List<String> metricIdentifiers) {
+    Query<ServiceLevelIndicator> query =
+        hPersistence.createQuery(ServiceLevelIndicator.class)
+            .disableValidation()
+            .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceLevelIndicatorKeys.healthSourceIdentifier, healthSourceIdentifier)
+            .filter(ServiceLevelIndicatorKeys.monitoredServiceIdentifier, monitoredServiceIdentifier)
+            .project(ServiceLevelIndicatorKeys.identifier, true);
+    query.or(Arrays.stream(SLIMetricType.values())
+                 .flatMap(type -> type.getMetricDbFields().stream())
+                 .map(metricFieldName -> query.criteria(metricFieldName).in(metricIdentifiers))
+                 .toArray(Criteria[] ::new));
+    return query.asList().stream().map(ServiceLevelIndicator::getIdentifier).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<String> getSLIs(ProjectParams projectParams, String monitoredServiceIdentifier) {
+    Query<ServiceLevelIndicator> query =
+        hPersistence.createQuery(ServiceLevelIndicator.class)
+            .filter(ServiceLevelIndicatorKeys.accountId, projectParams.getAccountIdentifier())
+            .filter(ServiceLevelIndicatorKeys.orgIdentifier, projectParams.getOrgIdentifier())
+            .filter(ServiceLevelIndicatorKeys.projectIdentifier, projectParams.getProjectIdentifier())
+            .filter(ServiceLevelIndicatorKeys.monitoredServiceIdentifier, monitoredServiceIdentifier)
+            .project(ServiceLevelIndicatorKeys.identifier, true);
+    return query.asList().stream().map(ServiceLevelIndicator::getIdentifier).collect(Collectors.toList());
   }
 
   private ServiceLevelIndicatorDTO sliEntityToDTO(ServiceLevelIndicator serviceLevelIndicator) {

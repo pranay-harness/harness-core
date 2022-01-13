@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -11,6 +18,7 @@ import lombok.experimental.UtilityClass;
 public class NGCommonEntityConstants {
   public static final String ACCOUNT_KEY = "accountIdentifier";
   public static final String ORG_KEY = "orgIdentifier";
+  public static final String ORGS_KEY = "orgIdentifiers";
   public static final String PROJECT_KEY = "projectIdentifier";
   public static final String VERSION_LABEL_KEY = "versionLabel";
   public static final String SERVICE_KEY = "serviceId";
@@ -57,6 +65,7 @@ public class NGCommonEntityConstants {
 
   public static final String ACCOUNT_PARAM_MESSAGE = "Account Identifier for the Entity";
   public static final String ORG_PARAM_MESSAGE = "Organization Identifier for the Entity";
+  public static final String ORG_LIST_PARAM_MESSAGE = "List of Organization Identifiers for the Entities";
   public static final String PROJECT_PARAM_MESSAGE = "Project Identifier for the Entity";
   public static final String TAGS = "Tags";
   public static final String DESCRIPTION = "Description of the entity";

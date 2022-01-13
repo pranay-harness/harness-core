@@ -1,8 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.utils;
 
 public class Thresholds {
   private Thresholds() {}
-  public static double HEALTHY_PERCENTAGE = 75;
-  public static double OBSERVE_PERCENTAGE = 50;
-  public static double NEED_ATTENTION_PERCENTAGE = 25;
+  public static final double HEALTHY_PERCENTAGE = 75;
+  public static final double OBSERVE_PERCENTAGE = 50;
+  public static final double NEED_ATTENTION_PERCENTAGE = 25;
+  public static final double UNHEALTHY_PERCENTAGE = 0;
 }

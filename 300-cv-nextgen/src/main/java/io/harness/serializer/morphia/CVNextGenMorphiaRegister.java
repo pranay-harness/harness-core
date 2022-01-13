@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.morphia;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -10,8 +17,6 @@ import io.harness.cvng.activity.entities.KubernetesActivity;
 import io.harness.cvng.activity.entities.KubernetesActivitySource;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity;
 import io.harness.cvng.activity.entities.PagerDutyActivity;
-import io.harness.cvng.alert.entities.AlertRule;
-import io.harness.cvng.alert.entities.AlertRuleAnomaly;
 import io.harness.cvng.analysis.entities.CanaryLogAnalysisLearningEngineTask;
 import io.harness.cvng.analysis.entities.ClusteredLog;
 import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
@@ -73,6 +78,7 @@ import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.migration.beans.CVNGSchema;
 import io.harness.cvng.servicelevelobjective.entities.RatioServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.SLIRecord;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelObjective;
 import io.harness.cvng.servicelevelobjective.entities.ThresholdServiceLevelIndicator;
@@ -138,7 +144,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(TestLogAnalysisLearningEngineTask.class);
     set.add(TimeSeriesLoadTestLearningEngineTask.class);
     set.add(MetricCVConfig.class);
-    set.add(AlertRuleAnomaly.class);
     set.add(HostRecord.class);
     set.add(HealthVerificationJob.class);
     set.add(SplunkCVConfig.class);
@@ -153,7 +158,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(LogAnalysisResult.class);
     set.add(KubernetesActivitySource.class);
     set.add(LogAnalysisRecord.class);
-    set.add(AlertRule.class);
     set.add(CanaryVerificationJob.class);
     set.add(CanaryBlueGreenVerificationJob.class);
     set.add(DeploymentActivity.class);
@@ -187,6 +191,7 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(CVNGDemoPerpetualTask.class);
     set.add(ServiceLevelIndicator.class);
     set.add(RatioServiceLevelIndicator.class);
+    set.add(SLOHealthIndicator.class);
     set.add(ThresholdServiceLevelIndicator.class);
     set.add(SLIRecord.class);
   }

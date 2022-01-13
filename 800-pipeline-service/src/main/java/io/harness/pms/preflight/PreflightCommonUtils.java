@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.preflight;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -22,6 +29,16 @@ public class PreflightCommonUtils {
             Collections.singletonList(PreFlightCause.builder().cause("Connector not found or does not exist").build()))
         .resolution(
             Collections.singletonList(PreFlightResolution.builder().resolution("Create this connector").build()))
+        .build();
+  }
+
+  public PreFlightEntityErrorInfo getInvalidConnectorInfo() {
+    return PreFlightEntityErrorInfo.builder()
+        .summary("Connector not valid")
+        .causes(Collections.singletonList(
+            PreFlightCause.builder().cause("The connector YAML provided on git is invalid").build()))
+        .resolution(
+            Collections.singletonList(PreFlightResolution.builder().resolution("Fix the connector yaml").build()))
         .build();
   }
 

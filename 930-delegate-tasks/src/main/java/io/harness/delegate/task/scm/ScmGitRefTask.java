@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.scm;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -13,6 +20,7 @@ import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.UnknownEnumTypeException;
 import io.harness.impl.ScmResponseStatusUtils;
 import io.harness.product.ci.scm.proto.CompareCommitsResponse;
+import io.harness.product.ci.scm.proto.CreateBranchResponse;
 import io.harness.product.ci.scm.proto.FindCommitResponse;
 import io.harness.product.ci.scm.proto.FindPRResponse;
 import io.harness.product.ci.scm.proto.GetLatestCommitResponse;
@@ -126,6 +134,15 @@ public class ScmGitRefTask extends AbstractDelegateRunnableTask {
         return ScmGitRefTaskResponseData.builder()
             .gitRefType(scmGitRefTaskParams.getGitRefType())
             .findCommitResponse(commitResponse.toByteArray())
+            .build();
+      }
+      case CREATE_NEW_BRANCH: {
+        final CreateBranchResponse createBranchResponse = scmDelegateClient.processScmRequest(c
+            -> scmServiceClient.createNewBranch(scmGitRefTaskParams.getScmConnector(), scmGitRefTaskParams.getBranch(),
+                scmGitRefTaskParams.getBaseBranch(), SCMGrpc.newBlockingStub(c)));
+        return ScmGitRefTaskResponseData.builder()
+            .gitRefType(scmGitRefTaskParams.getGitRefType())
+            .createBranchResponse(createBranchResponse.toByteArray())
             .build();
       }
       default:

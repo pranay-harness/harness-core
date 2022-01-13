@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.user.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
@@ -136,7 +143,8 @@ public class UserResource {
         ApiResponse(responseCode = "default", description = "Returns current logged in user info")
       })
   public ResponseDTO<UserInfo>
-  getUserInfo() {
+  getUserInfo(@Parameter(description = "Account Identifier", required = true) @NotNull @QueryParam(
+      NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(userInfoService.getCurrentUser());
   }
 

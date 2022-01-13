@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -248,6 +255,8 @@ public class ExecutionHelperTest extends CategoryTest {
     assertThat(planExecutionMetadata.getYaml()).isEqualTo(mergedPipelineYaml);
     assertThat(planExecutionMetadata.getStagesExecutionMetadata().isStagesExecution()).isEqualTo(false);
     assertThat(planExecutionMetadata.getProcessedYaml()).isEqualTo(YamlUtils.injectUuid(mergedPipelineYaml));
+    verify(pmsPipelineService, times(1))
+        .fetchExpandedPipelineJSONFromYaml(accountId, orgId, projectId, mergedPipelineYaml);
 
     buildExecutionMetadataVerifications();
   }
@@ -287,6 +296,8 @@ public class ExecutionHelperTest extends CategoryTest {
     verify(pipelineRbacServiceImpl, times(0))
         .extractAndValidateStaticallyReferredEntities(accountId, orgId, projectId, pipelineId, pipelineYaml);
     verify(planExecutionMetadataService, times(0)).findByPlanExecutionId(anyString());
+    verify(pmsPipelineService, times(1))
+        .fetchExpandedPipelineJSONFromYaml(accountId, orgId, projectId, mergedPipelineYaml);
   }
 
   @Test
@@ -317,6 +328,8 @@ public class ExecutionHelperTest extends CategoryTest {
         .isEqualTo(Collections.singletonList("s2"));
     assertThat(planExecutionMetadata.getStagesExecutionMetadata().getExpressionValues()).isNull();
     assertThat(planExecutionMetadata.getProcessedYaml()).isEqualTo(YamlUtils.injectUuid(mergedPipelineYamlForS2));
+    verify(pmsPipelineService, times(1))
+        .fetchExpandedPipelineJSONFromYaml(accountId, orgId, projectId, mergedPipelineYamlForS2);
 
     buildExecutionMetadataVerifications();
   }
@@ -357,6 +370,8 @@ public class ExecutionHelperTest extends CategoryTest {
         .extractAndValidateStaticallyReferredEntities(
             accountId, orgId, projectId, pipelineId, pipelineYamlWithExpressions);
     verify(planExecutionMetadataService, times(0)).findByPlanExecutionId(anyString());
+    verify(pmsPipelineService, times(1))
+        .fetchExpandedPipelineJSONFromYaml(accountId, orgId, projectId, mergedPipelineYamlForS2);
   }
 
   private void buildExecutionArgsMocks() {
@@ -364,7 +379,7 @@ public class ExecutionHelperTest extends CategoryTest {
     when(UUIDGenerator.generateUuid()).thenReturn(generatedExecutionId);
 
     doReturn(executionPrincipalInfo).when(principalInfoHelper).getPrincipalInfoFromSecurityContext();
-
+    doReturn(394).when(pmsPipelineService).incrementRunSequence(any());
     doReturn(null).when(pmsGitSyncHelper).getGitSyncBranchContextBytesThreadLocal(pipelineEntity);
     doNothing().when(pmsYamlSchemaService).validateYamlSchema(accountId, orgId, projectId, mergedPipelineYaml);
     doNothing()

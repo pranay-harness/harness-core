@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.cdng.services.impl;
 
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
@@ -133,8 +140,10 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
         verificationJobInstanceService.get(Arrays.asList(getByCallBackId(callBackId).getVerificationJobInstanceId()));
     verificationJobInstances.forEach(verificationJobInstance -> {
       verificationJobInstance.getCvConfigMap().forEach((s, cvConfig) -> {
-        healthSourceDTOS.add(HealthSourceDTO.toHealthSourceDTO(
-            HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), dataSourceTypeToHealthSourceTransformerMap)));
+        HealthSourceDTO healthSourceDTO = HealthSourceDTO.toHealthSourceDTO(
+            HealthSourceDTO.toHealthSource(Arrays.asList(cvConfig), dataSourceTypeToHealthSourceTransformerMap));
+        healthSourceDTO.setIdentifier(cvConfig.getFullyQualifiedIdentifier());
+        healthSourceDTOS.add(healthSourceDTO);
       });
     });
     return healthSourceDTOS;

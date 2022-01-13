@@ -2154,10 +2154,14 @@
     "GcpBillingExportSpec": {
       "type": "object",
       "required": [
-        "datasetId"
+        "datasetId",
+        "tableId"
       ],
       "properties": {
         "datasetId": {
+          "type": "string"
+        },
+        "tableId": {
           "type": "string"
         }
       },

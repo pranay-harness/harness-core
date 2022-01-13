@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ccm;
 
 import static io.harness.ccm.AWSConnectorTestHelper.createNonEmptyObjectListing;
@@ -76,6 +83,7 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
     doReturn(awsConfig).when(ceNextGenConfiguration).getAwsConfig();
     doReturn(null).when(connectorValidator).getCredentialProvider(any());
     when(ceConnectorsHelper.isDataSyncCheck(any(), any(), any(), any())).thenReturn(true);
+    doReturn(Collections.emptyList()).when(connectorValidator).validateIfBucketIsPresent(any(), any(), any());
     doReturn(Collections.singletonList(new EvaluationResult().withEvalDecision("allowed")))
         .when(awsClient)
         .simulatePrincipalPolicy(any(), any(), any(), any());
@@ -146,7 +154,6 @@ public class CEAwsConnectorValidatorTest extends CategoryTest {
 
     doReturn(Optional.of(report)).when(awsClient).getReportDefinition(any(), any());
     doReturn(s3Object).when(awsClient).getBucket(any(), any(), any());
-
     ConnectorValidationResult result = connectorValidator.validate(ceawsConnectorResponseDTO, null);
     assertThat(result.getStatus()).isEqualTo(ConnectivityStatus.SUCCESS);
     assertThat(result.getErrors()).isNullOrEmpty();

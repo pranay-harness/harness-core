@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.progress;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -71,12 +78,11 @@ public class EngineProgressCallbackTest extends OrchestrationTestBase {
         BinaryResponseData.builder().data(kryoSerializer.asDeflatedBytes(unitProgressData)).build();
 
     when(progressEventPublisher.publishEvent(nodeExecutionId, binaryResponseData)).thenReturn(null);
-    when(nodeExecutionService.update(anyString(), any())).thenReturn(null);
 
     engineProgressCallback.notify(correlationId, binaryResponseData);
 
     verify(progressEventPublisher).publishEvent(nodeExecutionId, binaryResponseData);
-    verify(nodeExecutionService).update(anyString(), any());
+    verify(nodeExecutionService).updateV2(anyString(), any());
   }
 
   @Test
@@ -94,7 +100,7 @@ public class EngineProgressCallbackTest extends OrchestrationTestBase {
     engineProgressCallback.notify(correlationId, binaryResponseData);
 
     verify(progressEventPublisher).publishEvent(nodeExecutionId, binaryResponseData);
-    verify(nodeExecutionService, never()).update(anyString(), any());
+    verify(nodeExecutionService, never()).updateV2(anyString(), any());
   }
 
   private static class TestResponseData implements ProgressData {}

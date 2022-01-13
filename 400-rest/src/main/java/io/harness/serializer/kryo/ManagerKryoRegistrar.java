@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
@@ -96,7 +103,6 @@ import software.wings.api.TemplatizedSecretManagerStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.WaitStateExecutionData;
 import software.wings.api.WingsTimestamp;
 import software.wings.api.WorkflowElement;
@@ -1522,7 +1528,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(io.harness.dashboard.Action.class, 7453);
 
     kryo.register(TemplatizedSecretManagerStateExecutionData.class, 7457);
-    kryo.register(TerraformPlanParam.class, 7458);
     kryo.register(AzureVMSSCommandRequest.class, 8035);
     kryo.register(CeLicenseInfo.class, 7465);
     kryo.register(CeLicenseType.class, 7466);
@@ -1694,5 +1699,6 @@ public class ManagerKryoRegistrar implements KryoRegistrar {
     kryo.register(SetupStatus.class, 400130);
     kryo.register(Type.class, 400131);
     kryo.register(OSType.class, 400132);
+    kryo.register(HelmChartCollectionParams.HelmChartCollectionType.class, 400134);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.pms.commons.events;
 
 import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
@@ -9,14 +16,14 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
 import io.harness.OrchestrationModuleConfig;
+import io.harness.OrchestrationRedisEventsConfig;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.FeatureName;
 import io.harness.events.PmsRedissonClientFactory;
-import io.harness.eventsframework.EventsFrameworkConstants;
 import io.harness.eventsframework.api.Producer;
 import io.harness.eventsframework.impl.noop.NoOpProducer;
-import io.harness.eventsframework.impl.redis.RedisProducer;
+import io.harness.eventsframework.impl.redis.RedisProducerFactory;
 import io.harness.eventsframework.producer.Message;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.PmsFeatureFlagService;
@@ -60,6 +67,7 @@ public class PmsEventSender {
   @Inject private MongoTemplate mongoTemplate;
   @Inject private OrchestrationModuleConfig moduleConfig;
   @Inject private PmsFeatureFlagService pmsFeatureFlagService;
+  @Inject private RedisProducerFactory redisProducerFactory;
 
   private final LoadingCache<ProducerCacheKey, Producer> producerCache =
       CacheBuilder.newBuilder()
@@ -116,31 +124,32 @@ public class PmsEventSender {
   @VisibleForTesting
   Producer obtainProducer(ProducerCacheKey cacheKey) {
     PmsSdkInstance instance = getPmsSdkInstance(cacheKey.getServiceName());
+    OrchestrationRedisEventsConfig orchestrationRedisEventsConfig = moduleConfig.getOrchestrationRedisEventsConfig();
     switch (cacheKey.getEventCategory()) {
       case INTERRUPT_EVENT:
-        return extractProducer(
-            instance.getInterruptConsumerConfig(), EventsFrameworkConstants.PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getInterruptConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineInterruptEvent().getMaxTopicSize());
       case ORCHESTRATION_EVENT:
         return extractProducer(instance.getOrchestrationEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineOrchestrationEvent().getMaxTopicSize());
       case FACILITATOR_EVENT:
         return extractProducer(instance.getFacilitatorEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineFacilitatorEvent().getMaxTopicSize());
       case NODE_START:
         return extractProducer(instance.getNodeStartEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineNodeStartEvent().getMaxTopicSize());
       case PROGRESS_EVENT:
-        return extractProducer(
-            instance.getProgressEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_PROGRESS_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getProgressEventConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineProgressEvent().getMaxTopicSize());
       case NODE_ADVISE:
-        return extractProducer(
-            instance.getNodeAdviseEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_NODE_ADVISE_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getNodeAdviseEventConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineNodeAdviseEvent().getMaxTopicSize());
       case NODE_RESUME:
-        return extractProducer(
-            instance.getNodeResumeEventConsumerConfig(), EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
+        return extractProducer(instance.getNodeResumeEventConsumerConfig(),
+            orchestrationRedisEventsConfig.getPipelineNodeResumeEvent().getMaxTopicSize());
       case CREATE_PARTIAL_PLAN:
         return extractProducer(instance.getStartPlanCreationEventConsumerConfig(),
-            EventsFrameworkConstants.PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE);
+            orchestrationRedisEventsConfig.getPipelineStartPartialPlanCreator().getMaxTopicSize());
       default:
         throw new InvalidRequestException("Invalid Event Category while obtaining Producer");
     }
@@ -162,8 +171,8 @@ public class PmsEventSender {
   private Producer buildRedisProducer(String topicName, RedisConfig redisConfig, String serviceId, int topicSize) {
     return redisConfig.getRedisUrl().equals(DUMMY_REDIS_URL)
         ? NoOpProducer.of(topicName)
-        : RedisProducer.of(topicName, PmsRedissonClientFactory.getRedisClient(redisConfig), topicSize, serviceId,
-            redisConfig.getEnvNamespace());
+        : redisProducerFactory.createRedisProducer(topicName, PmsRedissonClientFactory.getRedisClient(redisConfig),
+            topicSize, serviceId, redisConfig.getEnvNamespace());
   }
 
   PmsSdkInstance getPmsSdkInstance(String serviceName) {

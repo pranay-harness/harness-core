@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cdng.creator.plan.artifact;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -23,15 +30,22 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.fork.ForkStepParameters;
 
+import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -39,56 +53,11 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Value;
 import lombok.experimental.FieldDefaults;
-import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 @OwnedBy(HarnessTeam.CDC)
-@UtilityClass
-public class ArtifactsPlanCreator {
-  public PlanCreationResponse createPlanForArtifactsNode(ServiceConfig serviceConfig) {
-    String artifactsId = UUIDGenerator.generateUuid();
-    ArtifactListConfig artifactListConfig = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
-    ArtifactListBuilder artifactListBuilder = new ArtifactListBuilder(artifactListConfig);
-    artifactListBuilder.addOverrideSets(serviceConfig);
-    artifactListBuilder.addStageOverrides(serviceConfig);
-    ArtifactList artifactList = artifactListBuilder.build();
-    if (artifactList.getPrimary() == null && EmptyPredicate.isEmpty(artifactList.getSidecars())) {
-      return PlanCreationResponse.builder().build();
-    }
-
-    List<PlanNode> planNodes = new ArrayList<>();
-    List<String> childrenIds = new ArrayList<>();
-    if (artifactList.getPrimary() != null) {
-      PlanNode primaryNode = createPlanForArtifactNode(YamlTypes.PRIMARY_ARTIFACT, artifactList.getPrimary());
-      planNodes.add(primaryNode);
-      childrenIds.add(primaryNode.getUuid());
-    }
-    if (EmptyPredicate.isNotEmpty(artifactList.getSidecars())) {
-      ImmutablePair<String, List<PlanNode>> pair = createPlanForSidecarsNode(artifactsId, artifactList);
-      planNodes.addAll(pair.getRight());
-      childrenIds.add(pair.getLeft());
-    }
-
-    ForkStepParameters stepParameters = ForkStepParameters.builder().parallelNodeIds(childrenIds).build();
-    PlanNode artifactsNode =
-        PlanNode.builder()
-            .uuid(artifactsId)
-            .stepType(ArtifactsStep.STEP_TYPE)
-            .name(PlanCreatorConstants.ARTIFACTS_NODE_NAME)
-            .identifier(YamlTypes.ARTIFACT_LIST_CONFIG)
-            .stepParameters(stepParameters)
-            .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder()
-                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
-                    .build())
-            .skipExpressionChain(false)
-            .build();
-    planNodes.add(artifactsNode);
-    return PlanCreationResponse.builder()
-        .nodes(planNodes.stream().collect(Collectors.toMap(PlanNode::getUuid, Function.identity())))
-        .startingNodeId(artifactsNode.getUuid())
-        .build();
-  }
+public class ArtifactsPlanCreator implements PartialPlanCreator<ArtifactListConfig> {
+  @Inject KryoSerializer kryoSerializer;
 
   private ImmutablePair<String, List<PlanNode>> createPlanForSidecarsNode(
       String artifactListUuid, ArtifactList artifactList) {
@@ -130,6 +99,66 @@ public class ArtifactsPlanCreator {
                 .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
                 .build())
         .skipExpressionChain(false)
+        .build();
+  }
+
+  @Override
+  public Class<ArtifactListConfig> getFieldClass() {
+    return ArtifactListConfig.class;
+  }
+
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap(YamlTypes.ARTIFACT_LIST_CONFIG, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
+  }
+
+  @Override
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, ArtifactListConfig artifactListDefault) {
+    // Fetching uuid and actualServiceConfig passed as Dependency from parent (ServicePlanCreator) plan creator
+    String artifactsId = (String) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
+    ServiceConfig serviceConfig = (ServiceConfig) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(YamlTypes.SERVICE_CONFIG).toByteArray());
+
+    ArtifactListConfig artifactListConfig = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
+    ArtifactListBuilder artifactListBuilder = new ArtifactListBuilder(artifactListConfig);
+    artifactListBuilder.addOverrideSets(serviceConfig);
+    artifactListBuilder.addStageOverrides(serviceConfig);
+    ArtifactList artifactList = artifactListBuilder.build();
+    if (artifactList.getPrimary() == null && EmptyPredicate.isEmpty(artifactList.getSidecars())) {
+      return PlanCreationResponse.builder().build();
+    }
+
+    List<PlanNode> planNodes = new ArrayList<>();
+    List<String> childrenIds = new ArrayList<>();
+    if (artifactList.getPrimary() != null) {
+      PlanNode primaryNode = createPlanForArtifactNode(YamlTypes.PRIMARY_ARTIFACT, artifactList.getPrimary());
+      planNodes.add(primaryNode);
+      childrenIds.add(primaryNode.getUuid());
+    }
+    if (EmptyPredicate.isNotEmpty(artifactList.getSidecars())) {
+      ImmutablePair<String, List<PlanNode>> pair = createPlanForSidecarsNode(artifactsId, artifactList);
+      planNodes.addAll(pair.getRight());
+      childrenIds.add(pair.getLeft());
+    }
+
+    ForkStepParameters stepParameters = ForkStepParameters.builder().parallelNodeIds(childrenIds).build();
+    PlanNode artifactsNode =
+        PlanNode.builder()
+            .uuid(artifactsId)
+            .stepType(ArtifactsStep.STEP_TYPE)
+            .name(PlanCreatorConstants.ARTIFACTS_NODE_NAME)
+            .identifier(YamlTypes.ARTIFACT_LIST_CONFIG)
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
+            .skipExpressionChain(false)
+            .build();
+    planNodes.add(artifactsNode);
+    return PlanCreationResponse.builder()
+        .nodes(planNodes.stream().collect(Collectors.toMap(PlanNode::getUuid, Function.identity())))
         .build();
   }
 

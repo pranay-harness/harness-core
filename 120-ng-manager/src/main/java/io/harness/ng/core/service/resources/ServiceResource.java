@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.service.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -24,6 +31,7 @@ import io.harness.ng.core.service.dto.ServiceResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceEntity.ServiceEntityKeys;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
+import io.harness.ng.core.service.services.ServiceEntityManagementService;
 import io.harness.ng.core.service.services.ServiceEntityService;
 import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.utils.PageUtils;
@@ -53,6 +61,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -70,8 +79,10 @@ import org.springframework.data.mongodb.core.query.Criteria;
       , @ApiResponse(code = 500, response = ErrorDTO.class, message = "Internal server error")
     })
 @OwnedBy(HarnessTeam.CDC)
+@Slf4j
 public class ServiceResource {
   private final ServiceEntityService serviceEntityService;
+  private final ServiceEntityManagementService serviceEntityManagementService;
 
   @GET
   @Path("{serviceIdentifier}")
@@ -116,8 +127,8 @@ public class ServiceResource {
       @PathParam("serviceIdentifier") String serviceIdentifier, @QueryParam("accountId") String accountId,
       @QueryParam("orgIdentifier") String orgIdentifier,
       @QueryParam(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier) {
-    return ResponseDTO.newResponse(serviceEntityService.delete(accountId, orgIdentifier, projectIdentifier,
-        serviceIdentifier, isNumeric(ifMatch) ? parseLong(ifMatch) : null));
+    return ResponseDTO.newResponse(serviceEntityManagementService.deleteService(
+        accountId, orgIdentifier, projectIdentifier, serviceIdentifier, ifMatch));
   }
 
   @PUT

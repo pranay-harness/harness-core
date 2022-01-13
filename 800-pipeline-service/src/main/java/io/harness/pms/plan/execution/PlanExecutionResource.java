@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static java.lang.String.format;
@@ -53,6 +60,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -72,7 +80,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.NotEmpty;
 
-@Tag(name = "execute", description = "This contains APIs related to pipeline execution")
+@Tag(name = "Execute", description = "This contains APIs for executing a Pipeline.")
 @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Bad Request",
     content =
     {
@@ -594,14 +602,6 @@ public class PlanExecutionResource {
   }
 
   @GET
-  @ApiOperation(value = "Run a schema on db.", nickname = "runSchemaOnDb")
-  @Path("/internal/runSchema")
-  public ResponseDTO<String> runASchemaMigration() {
-    orchestrationEventLogRepository.schemaMigrationForOldEvenLog();
-    return ResponseDTO.newResponse("Deleted Old Orchestration event log entries");
-  }
-
-  @GET
   @ApiOperation(value = "get list of stages for stage execution", nickname = "getStagesExecutionList")
   @Path("/stagesExecutionList")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
@@ -628,6 +628,9 @@ public class PlanExecutionResource {
           pipelineIdentifier, projectIdentifier, orgIdentifier));
     }
     PipelineEntity pipelineEntity = optionalPipelineEntity.get();
+    if (!pipelineEntity.shouldAllowStageExecutions()) {
+      return ResponseDTO.newResponse(Collections.emptyList());
+    }
     List<StageExecutionResponse> stageExecutionResponse =
         StageExecutionSelectorHelper.getStageExecutionResponse(pipelineEntity.getYaml());
     return ResponseDTO.newResponse(stageExecutionResponse);

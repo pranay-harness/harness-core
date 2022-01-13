@@ -1,3 +1,9 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
 
 package io.harness.perpetualtask.datacollection;
 
@@ -30,6 +36,7 @@ import io.harness.perpetualtask.PerpetualTaskExecutionParams;
 import io.harness.perpetualtask.PerpetualTaskExecutor;
 import io.harness.perpetualtask.PerpetualTaskId;
 import io.harness.perpetualtask.PerpetualTaskResponse;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 import io.harness.serializer.KryoSerializer;
 import io.harness.verificationclient.CVNextGenServiceClient;
@@ -79,10 +86,22 @@ public class DataCollectionPerpetualTaskExecutor implements PerpetualTaskExecuto
     try (DataCollectionLogContext ignored = new DataCollectionLogContext(
              taskParams.getDataCollectionWorkerId(), dataCollectionInfo.getDataCollectionType(), OVERRIDE_ERROR)) {
       List<DecryptableEntity> decryptableEntities = dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities();
-      secretDecryptionService.decrypt(isNotEmpty(decryptableEntities)
-              ? dataCollectionInfo.getConnectorConfigDTO().getDecryptableEntities().get(0)
-              : null,
-          dataCollectionInfo.getEncryptedDataDetails());
+      List<List<EncryptedDataDetail>> encryptedDataDetails = dataCollectionInfo.getEncryptedDataDetails();
+
+      if (isNotEmpty(decryptableEntities)) {
+        for (int index = 0; index < decryptableEntities.size(); index++) {
+          DecryptableEntity decryptableEntity = decryptableEntities.get(index);
+          if (encryptedDataDetails.get(index) instanceof EncryptedDataDetail) {
+            EncryptedDataDetail encryptedDataDetail = (EncryptedDataDetail) encryptedDataDetails.get(index);
+            List<EncryptedDataDetail> encryptedDataDetailList = new ArrayList<>();
+            encryptedDataDetailList.add(encryptedDataDetail);
+            secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetailList);
+          } else {
+            secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetails.get(index));
+          }
+        }
+      }
+
       dataCollectionDSLService.registerDatacollectionExecutorService(dataCollectionService);
       List<DataCollectionTaskDTO> dataCollectionTasks;
       // TODO: What happens if this task takes more time then the schedule?

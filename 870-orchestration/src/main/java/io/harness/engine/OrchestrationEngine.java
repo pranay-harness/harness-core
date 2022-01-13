@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -15,6 +22,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -63,7 +71,8 @@ public class OrchestrationEngine {
 
   @Deprecated
   public void resumeNodeExecution(String nodeExecutionId, Map<String, ByteString> response, boolean asyncError) {
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withAmbiance);
     resumeNodeExecution(nodeExecution.getAmbiance(), response, asyncError);
   }
 

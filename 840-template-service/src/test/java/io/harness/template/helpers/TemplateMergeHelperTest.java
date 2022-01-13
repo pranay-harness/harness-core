@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.template.helpers;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -302,5 +309,46 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
       assertThat(ngTemplateResolveException.getErrorResponseDTO()).isNotNull();
       assertThat(ngTemplateResolveException.getErrorResponseDTO().getErrorMap()).hasSize(3);
     }
+  }
+
+  @Test
+  @Owner(developers = INDER)
+  @Category(UnitTests.class)
+  public void testMergeTemplateSpecToPipelineYamlHavingTemplateFields() {
+    String filename = "http-step-template.yaml";
+    String httpStepTemplate = readFile(filename);
+    TemplateEntity templateEntity = TemplateEntity.builder()
+                                        .accountId(ACCOUNT_ID)
+                                        .orgIdentifier(ORG_ID)
+                                        .projectIdentifier(PROJECT_ID)
+                                        .yaml(httpStepTemplate)
+                                        .identifier("httpTemplate")
+                                        .deleted(false)
+                                        .versionLabel("1")
+                                        .build();
+
+    when(templateService.getOrThrowExceptionIfInvalid(ACCOUNT_ID, ORG_ID, PROJECT_ID, "httpTemplate", "1", false))
+        .thenReturn(Optional.of(templateEntity));
+
+    String pipelineYamlFile = "pipeline-with-template-field.yaml";
+    String pipelineYaml = readFile(pipelineYamlFile);
+    TemplateMergeResponseDTO pipelineMergeResponse =
+        templateMergeHelper.mergeTemplateSpecToPipelineYaml(ACCOUNT_ID, ORG_ID, PROJECT_ID, pipelineYaml);
+    String finalPipelineYaml = pipelineMergeResponse.getMergedPipelineYaml();
+    assertThat(finalPipelineYaml).isNotNull();
+    assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).isNotNull();
+    List<TemplateReferenceSummary> templateReferenceSummaryList = new ArrayList<>();
+    templateReferenceSummaryList.add(TemplateReferenceSummary.builder()
+                                         .templateIdentifier("httpTemplate")
+                                         .versionLabel("1")
+                                         .scope(Scope.PROJECT)
+                                         .fqn("pipeline.stages.ci.spec.execution.steps.http")
+                                         .build());
+    assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).hasSize(1);
+    assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).containsAll(templateReferenceSummaryList);
+
+    String resFile = "pipeline-with-template-field-replaced.yaml";
+    String resPipeline = readFile(resFile);
+    assertThat(finalPipelineYaml).isEqualTo(resPipeline);
   }
 }

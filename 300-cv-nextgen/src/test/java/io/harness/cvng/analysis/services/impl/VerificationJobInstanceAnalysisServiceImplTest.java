@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.analysis.services.impl;
 
 import static io.harness.cvng.beans.DataSourceType.APP_DYNAMICS;
@@ -34,7 +41,6 @@ import io.harness.cvng.analysis.entities.DeploymentLogAnalysis;
 import io.harness.cvng.analysis.entities.DeploymentTimeSeriesAnalysis;
 import io.harness.cvng.analysis.services.api.DeploymentLogAnalysisService;
 import io.harness.cvng.analysis.services.api.DeploymentTimeSeriesAnalysisService;
-import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.beans.HostRecordDTO;
@@ -59,7 +65,10 @@ import io.harness.cvng.verificationjob.services.api.VerificationJobService;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
 
+import com.google.common.base.Charsets;
+import com.google.common.io.Resources;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -79,7 +88,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
   @Inject private VerificationTaskService verificationTaskService;
   @Inject private DeploymentTimeSeriesAnalysisService deploymentTimeSeriesAnalysisService;
   @Inject private DeploymentLogAnalysisService deploymentLogAnalysisService;
-  @Inject private VerificationJobInstanceAnalysisService verificationJobInstanceAnalysisService;
+  @Inject private VerificationJobInstanceAnalysisServiceImpl verificationJobInstanceAnalysisService;
   @Inject private ActivityService activityService;
 
   private String accountId;
@@ -198,11 +207,11 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.OBSERVE);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -285,7 +294,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -326,11 +335,11 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node1");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.OBSERVE);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(2);
     assertThat(canaryHosts.get(1).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(1).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(1).getAnomalousMetricsCount()).isEqualTo(0);
     assertThat(canaryHosts.get(1).getAnomalousLogClustersCount()).isEqualTo(3);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -434,7 +443,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
     canaryBlueGreenAdditionalInfo.getCanary().forEach(
-        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.NEED_ATTENTION));
+        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.UNHEALTHY));
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
@@ -494,7 +503,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(1);
     List<HostSummaryInfo> canaryHosts = new ArrayList<>(canaryBlueGreenAdditionalInfo.getCanary());
     assertThat(canaryHosts.get(0).getHostName()).isEqualTo("node2");
-    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.NEED_ATTENTION);
+    assertThat(canaryHosts.get(0).getRisk()).isEqualTo(Risk.UNHEALTHY);
     assertThat(canaryHosts.get(0).getAnomalousMetricsCount()).isEqualTo(2);
     assertThat(canaryHosts.get(0).getAnomalousLogClustersCount()).isEqualTo(0);
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
@@ -542,7 +551,7 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(canaryBlueGreenAdditionalInfo.getCanary().size()).isEqualTo(2);
     assertThat(canaryBlueGreenAdditionalInfo.getPrimary()).isEqualTo(canaryBlueGreenAdditionalInfo.getCanary());
     canaryBlueGreenAdditionalInfo.getCanary().forEach(
-        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.NEED_ATTENTION));
+        node -> assertThat(node.getRisk()).isEqualByComparingTo(Risk.UNHEALTHY));
     assertThat(canaryBlueGreenAdditionalInfo.getTrafficSplitPercentage()).isNull();
   }
 
@@ -757,6 +766,18 @@ public class VerificationJobInstanceAnalysisServiceImplTest extends CvNextGenTes
     assertThat(
         verificationJobInstanceAnalysisService.getLatestRiskScore(accountId, verificationJobInstance.getUuid()).get())
         .isEqualTo(Risk.HEALTHY);
+  }
+  @Test
+  @Owner(developers = KAMAL)
+  @Category(UnitTests.class)
+  public void testGetDemoTemplatePath_allProviders() throws IOException {
+    for (DataSourceType dataSourceType : DataSourceType.values()) {
+      String demoData =
+          Resources.toString(this.getClass().getResource(verificationJobInstanceAnalysisService.getDemoTemplatePath(
+                                 ActivityVerificationStatus.VERIFICATION_PASSED, dataSourceType)),
+              Charsets.UTF_8);
+      assertThat(demoData).isNotNull();
+    }
   }
 
   private HostRecordDTO createHostRecordDTO(Set<String> preDeploymentHosts, String verificationTaskId) {

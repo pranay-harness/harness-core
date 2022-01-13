@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.yaml.schema;
 
 import static io.harness.yaml.schema.beans.SchemaConstants.ALL_OF_NODE;
@@ -33,10 +40,12 @@ public class YamlSchemaTransientHelper {
     {
       add(EntityType.HTTP_STEP);
       add(EntityType.JIRA_CREATE_STEP);
+      add(EntityType.JIRA_UPDATE_STEP);
       add(EntityType.SHELL_SCRIPT_STEP);
       add(EntityType.K8S_CANARY_DEPLOY_STEP);
       add(EntityType.TEMPLATE);
       add(EntityType.SERVICENOW_APPROVAL_STEP);
+      add(EntityType.JIRA_APPROVAL_STEP);
     }
   };
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.azure;
 
 import static io.harness.azure.model.AzureConstants.SUBSCRIPTION_ID_NULL_VALIDATION_MSG;
@@ -5,9 +12,13 @@ import static io.harness.eraro.ErrorCode.AZURE_CLIENT_EXCEPTION;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.network.Http.getOkHttpClientBuilder;
 
+import static com.google.common.base.Charsets.UTF_8;
+import static java.lang.String.format;
+import static org.apache.commons.codec.binary.Base64.encodeBase64String;
 import static org.apache.commons.lang3.StringUtils.isBlank;
 
 import io.harness.azure.client.AzureBlueprintRestClient;
+import io.harness.azure.client.AzureContainerRegistryRestClient;
 import io.harness.azure.client.AzureManagementRestClient;
 import io.harness.azure.context.AzureClientContext;
 import io.harness.azure.model.AzureConfig;
@@ -131,6 +142,11 @@ public class AzureClient {
     return getAzureRestClient(url, AzureBlueprintRestClient.class);
   }
 
+  protected AzureContainerRegistryRestClient getAzureContainerRegistryRestClient(final String repositoryHost) {
+    String repositoryHostUrl = buildRepositoryHostUrl(repositoryHost);
+    return getAzureRestClient(repositoryHostUrl, AzureContainerRegistryRestClient.class);
+  }
+
   protected <T> T getAzureRestClient(String url, Class<T> clazz) {
     OkHttpClient okHttpClient = getOkHttpClientBuilder()
                                     .connectTimeout(AzureConstants.REST_CLIENT_CONNECT_TIMEOUT, TimeUnit.SECONDS)
@@ -159,5 +175,13 @@ public class AzureClient {
       handleAzureAuthenticationException(e);
     }
     return null;
+  }
+
+  protected String getAzureBasicAuthHeader(final String username, final String password) {
+    return "Basic " + encodeBase64String(format("%s:%s", username, password).getBytes(UTF_8));
+  }
+
+  private String buildRepositoryHostUrl(String repositoryHost) {
+    return format("https://%s%s", repositoryHost, repositoryHost.endsWith("/") ? "" : "/");
   }
 }

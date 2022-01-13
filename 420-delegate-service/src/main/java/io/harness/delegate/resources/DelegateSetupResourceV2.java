@@ -1,11 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.resources;
 
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_EDIT_PERMISSION;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_RESOURCE_TYPE;
 import static io.harness.delegate.utils.RbacConstants.DELEGATE_VIEW_PERMISSION;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
-
-import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.NGResourceFilterConstants;
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -23,8 +28,6 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.rest.RestResponse;
 import io.harness.service.intfc.DelegateSetupService;
-
-import software.wings.security.annotations.AuthRule;
 
 import com.codahale.metrics.annotation.ExceptionMetered;
 import com.codahale.metrics.annotation.Timed;
@@ -51,7 +54,6 @@ import retrofit2.http.Body;
 @Api("/setup/delegates/ng/v2")
 @Path("/setup/delegates/ng/v2")
 @Produces("application/json")
-@AuthRule(permissionType = LOGGED_IN)
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
 @Tag(name = "Delegate Setup", description = "Contains APIs related to Delegate Setup")

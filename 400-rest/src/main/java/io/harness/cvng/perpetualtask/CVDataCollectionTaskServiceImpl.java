@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.cvng.perpetualtask;
 
 import static io.harness.annotations.dev.HarnessTeam.CV;
@@ -12,6 +19,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.cvng.beans.CVDataCollectionInfo;
 import io.harness.cvng.beans.CVNGPerpetualTaskDTO;
+import io.harness.cvng.beans.CVNGPerpetualTaskDTO.CVNGPerpetualTaskDTOBuilder;
 import io.harness.cvng.beans.CVNGPerpetualTaskState;
 import io.harness.cvng.beans.CVNGPerpetualTaskUnassignedReason;
 import io.harness.cvng.beans.DataCollectionConnectorBundle;
@@ -55,6 +63,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.util.Durations;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.groovy.util.Maps;
 import org.jetbrains.annotations.NotNull;
 
@@ -102,7 +112,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
 
   private PerpetualTaskExecutionBundle createExecutionBundle(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
-    List<EncryptedDataDetail> encryptedDataDetailList =
+    List<List<EncryptedDataDetail>> encryptedDataDetailList =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     CVDataCollectionInfo cvDataCollectionInfo = CVDataCollectionInfo.builder()
                                                     .connectorConfigDTO(bundle.getConnectorDTO().getConnectorConfig())
@@ -142,9 +152,15 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
       default:
         throw new IllegalStateException("Invalid type " + bundle.getDataCollectionType());
     }
-    List<ExecutionCapability> executionCapabilities =
-        EncryptedDataDetailsCapabilityHelper.fetchExecutionCapabilitiesForEncryptedDataDetails(
-            encryptedDataDetailList, null);
+    List<ExecutionCapability> executionCapabilities = new ArrayList<>();
+    for (List<EncryptedDataDetail> encryptedDataDetails : encryptedDataDetailList) {
+      executionCapabilities = Stream
+                                  .concat(executionCapabilities.stream(),
+                                      EncryptedDataDetailsCapabilityHelper
+                                          .fetchExecutionCapabilitiesForEncryptedDataDetails(encryptedDataDetails, null)
+                                          .stream())
+                                  .collect(Collectors.toList());
+    }
     executionCapabilities.addAll(bundle.fetchRequiredExecutionCapabilities(null));
     return createPerpetualTaskExecutionBundle(
         perpetualTaskPack, executionCapabilities, orgIdentifier, projectIdentifier);
@@ -166,7 +182,7 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         .build();
   }
 
-  private List<EncryptedDataDetail> getEncryptedDataDetail(
+  private List<List<EncryptedDataDetail>> getEncryptedDataDetail(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
     NGAccess basicNGAccessObject = BaseNGAccess.builder()
                                        .accountIdentifier(accountId)
@@ -175,10 +191,17 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
                                        .build();
     switch (bundle.getDataCollectionType()) {
       case CV:
-        return getEncryptedDataDetails(basicNGAccessObject,
-            isNotEmpty(bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities())
-                ? bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities().get(0)
-                : null);
+        List<DecryptableEntity> decryptableEntities =
+            bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities();
+        List<List<EncryptedDataDetail>> encryptedData = new ArrayList<>();
+        if (isNotEmpty(decryptableEntities)) {
+          for (int decryptableEntityIndex = 0; decryptableEntityIndex < decryptableEntities.size();
+               decryptableEntityIndex++) {
+            encryptedData.add(getEncryptedDataDetails(basicNGAccessObject,
+                bundle.getConnectorDTO().getConnectorConfig().getDecryptableEntities().get(decryptableEntityIndex)));
+          }
+        }
+        return encryptedData;
       case KUBERNETES:
         KubernetesClusterConfigDTO kubernetesClusterConfigDTO =
             (KubernetesClusterConfigDTO) bundle.getConnectorDTO().getConnectorConfig();
@@ -186,8 +209,8 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
         if (!credential.getKubernetesCredentialType().isDecryptable()) {
           return new ArrayList<>();
         }
-        return getEncryptedDataDetails(
-            basicNGAccessObject, ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials());
+        return new ArrayList(getEncryptedDataDetails(
+            basicNGAccessObject, ((KubernetesClusterDetailsDTO) credential.getConfig()).getAuth().getCredentials()));
       default:
         Switch.unhandled(bundle.getDataCollectionType());
         throw new IllegalStateException("invalid type " + bundle.getDataCollectionType());
@@ -210,13 +233,18 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
   @Override
   public CVNGPerpetualTaskDTO getCVNGPerpetualTaskDTO(String taskId) {
     PerpetualTaskRecord perpetualTaskRecord = perpetualTaskService.getTaskRecord(taskId);
-    return CVNGPerpetualTaskDTO.builder()
-        .delegateId(perpetualTaskRecord.getDelegateId())
-        .accountId(perpetualTaskRecord.getAccountId())
-        .cvngPerpetualTaskUnassignedReason(
-            mapUnassignedReasonFromPerpetualTaskToCVNG(perpetualTaskRecord.getUnassignedReason()))
-        .cvngPerpetualTaskState(mapStateFromPerpetualTaskToCVNG(perpetualTaskRecord.getState()))
-        .build();
+    CVNGPerpetualTaskDTOBuilder cvngPerpetualTaskDTOBuilder = CVNGPerpetualTaskDTO.builder()
+                                                                  .delegateId(perpetualTaskRecord.getDelegateId())
+                                                                  .accountId(perpetualTaskRecord.getAccountId());
+    if (perpetualTaskRecord.getUnassignedReason() != null) {
+      cvngPerpetualTaskDTOBuilder.cvngPerpetualTaskUnassignedReason(
+          mapUnassignedReasonFromPerpetualTaskToCVNG(perpetualTaskRecord.getUnassignedReason()));
+    }
+    if (perpetualTaskRecord.getState() != null) {
+      cvngPerpetualTaskDTOBuilder.cvngPerpetualTaskState(
+          mapStateFromPerpetualTaskToCVNG(perpetualTaskRecord.getState()));
+    }
+    return cvngPerpetualTaskDTOBuilder.build();
   }
 
   private CVNGPerpetualTaskUnassignedReason mapUnassignedReasonFromPerpetualTaskToCVNG(
@@ -289,30 +317,30 @@ public class CVDataCollectionTaskServiceImpl implements CVDataCollectionTaskServ
 
   public List<String> getNamespaces(String accountId, String orgIdentifier, String projectIdentifier, String filter,
       DataCollectionConnectorBundle bundle) {
-    List<EncryptedDataDetail> encryptedDataDetails =
+    List<List<EncryptedDataDetail>> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
-        .getNameSpaces(bundle, encryptedDataDetails, filter);
+        .getNameSpaces(bundle, isNotEmpty(encryptedDataDetails) ? encryptedDataDetails.get(0) : null, filter);
   }
 
   @Override
   public List<String> getWorkloads(String accountId, String orgIdentifier, String projectIdentifier, String namespace,
       String filter, DataCollectionConnectorBundle bundle) {
-    List<EncryptedDataDetail> encryptedDataDetails =
+    List<List<EncryptedDataDetail>> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
-        .getWorkloads(namespace, bundle, encryptedDataDetails, filter);
+        .getWorkloads(namespace, bundle, isNotEmpty(encryptedDataDetails) ? encryptedDataDetails.get(0) : null, filter);
   }
 
   @Override
   public List<String> checkCapabilityToGetEvents(
       String accountId, String orgIdentifier, String projectIdentifier, DataCollectionConnectorBundle bundle) {
-    List<EncryptedDataDetail> encryptedDataDetails =
+    List<List<EncryptedDataDetail>> encryptedDataDetails =
         getEncryptedDataDetail(accountId, orgIdentifier, projectIdentifier, bundle);
     SyncTaskContext syncTaskContext = getSyncTaskContext(accountId, orgIdentifier, projectIdentifier);
     return delegateProxyFactory.get(K8InfoDataService.class, syncTaskContext)
-        .checkCapabilityToGetEvents(bundle, encryptedDataDetails);
+        .checkCapabilityToGetEvents(bundle, isNotEmpty(encryptedDataDetails) ? encryptedDataDetails.get(0) : null);
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.helpers.ext.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -86,7 +93,6 @@ import software.wings.service.intfc.GitService;
 import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.yaml.GitClient;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.TimeLimiter;
@@ -557,7 +563,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   private void saveK8sReleaseHistory(
-      HelmCommandRequest request, HelmCommandResponse response, ReleaseHistory releaseHistory) throws YamlException {
+      HelmCommandRequest request, HelmCommandResponse response, ReleaseHistory releaseHistory) throws IOException {
     KubernetesConfig kubernetesConfig =
         containerDeploymentDelegateHelper.getKubernetesConfig(request.getContainerServiceParams());
     releaseHistory.setReleaseStatus(

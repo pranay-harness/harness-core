@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.walktree.visitor.entityreference;
 
 import static io.harness.rule.OwnerRule.NAMAN;
@@ -41,11 +48,13 @@ public class EntityReferenceExtractorVisitorTest extends CDNGTestBase {
     String ACCOUNT = "ACCOUNT";
     String ORG = "ORG";
     String PROJECT = "PROJECT";
-    Set<String> expectedReferences =
-        Sets.newHashSet("pipeline.stages.stage_1.spec.infrastructure.infrastructureDefinition.spec.connectorRef",
-            "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
-            "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
-            "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
+    Set<String> expectedReferences = Sets.newHashSet(
+        "pipeline.stages.stage_1.spec.infrastructure.infrastructureDefinition.spec.connectorRef",
+        "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.manifest1.spec.store.spec.connectorRef",
+        "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.manifests.values.spec.store.spec.connectorRef",
+        "pipeline.stages.stage_1.spec.serviceConfig.serviceDefinition.spec.artifacts.primary.spec.connectorRef",
+        "pipeline.stages.stage_1.spec.serviceConfig.service.identifier",
+        "pipeline.stages.stage_1.spec.infrastructure.environment.identifier");
 
     ClassLoader classLoader = getClass().getClassLoader();
     String pipelineFilename = "visitor-framework-pipeline.yml";

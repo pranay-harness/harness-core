@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -66,9 +73,9 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sRollingDeployResponse;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 
-import com.esotericsoftware.yamlbeans.YamlException;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -292,7 +299,7 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
   }
 
   private void saveRelease(K8sRollingDeployTaskParameters k8sRollingDeployTaskParameters, Status status)
-      throws YamlException {
+      throws IOException {
     k8sRollingHandlerConfig.getReleaseHistory().setReleaseStatus(status);
     k8sTaskHelperBase.saveReleaseHistory(k8sRollingHandlerConfig.getKubernetesConfig(),
         k8sRollingDeployTaskParameters.getReleaseName(), k8sRollingHandlerConfig.getReleaseHistory().getAsYaml(),

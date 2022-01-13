@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.execution;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -144,8 +151,13 @@ public class ExecutionHelper {
       pipelineYaml = StagesExpressionExtractor.replaceExpressions(pipelineYaml, expressionValues);
       stagesExecutionInfo = StagesExecutionHelper.getStagesExecutionInfo(pipelineYaml, stagesToRun, expressionValues);
     }
-    PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(
-        mergedRuntimeInputYaml, executionId, stagesExecutionInfo, originalExecutionId, retryExecutionParameters);
+
+    String expandedJson = pmsPipelineService.fetchExpandedPipelineJSONFromYaml(pipelineEntity.getAccountId(),
+        pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
+        stagesExecutionInfo.getPipelineYamlToRun());
+
+    PlanExecutionMetadata planExecutionMetadata = obtainPlanExecutionMetadata(mergedRuntimeInputYaml, executionId,
+        stagesExecutionInfo, originalExecutionId, retryExecutionParameters, expandedJson);
     pipelineEnforcementService.validateExecutionEnforcementsBasedOnStage(
         pipelineEntity.getAccountId(), YamlUtils.extractPipelineField(planExecutionMetadata.getProcessedYaml()));
     ExecutionMetadata executionMetadata = buildExecutionMetadata(
@@ -161,9 +173,7 @@ public class ExecutionHelper {
             .setExecutionUuid(executionId)
             .setTriggerInfo(triggerInfo)
             .setModuleType(moduleType)
-            .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity.getAccountId(),
-                pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(),
-                pipelineEntity.getIdentifier(), false))
+            .setRunSequence(pmsPipelineService.incrementRunSequence(pipelineEntity))
             .setPipelineIdentifier(pipelineIdentifier)
             .setRetryInfo(retryExecutionInfo)
             .setPrincipalInfo(principalInfoHelper.getPrincipalInfoFromSecurityContext());
@@ -212,7 +222,7 @@ public class ExecutionHelper {
 
   private PlanExecutionMetadata obtainPlanExecutionMetadata(String mergedRuntimeInputYaml, String executionId,
       StagesExecutionInfo stagesExecutionInfo, String originalExecutionId,
-      RetryExecutionParameters retryExecutionParameters) {
+      RetryExecutionParameters retryExecutionParameters, String expandedPipelineJson) {
     boolean isRetry = retryExecutionParameters.isRetry();
     String pipelineYaml = stagesExecutionInfo.getPipelineYamlToRun();
     PlanExecutionMetadata.Builder planExecutionMetadataBuilder =
@@ -220,6 +230,7 @@ public class ExecutionHelper {
             .planExecutionId(executionId)
             .inputSetYaml(mergedRuntimeInputYaml)
             .yaml(pipelineYaml)
+            .expandedPipelineJson(expandedPipelineJson)
             .stagesExecutionMetadata(stagesExecutionInfo.toStagesExecutionMetadata());
     String currentProcessedYaml;
     try {

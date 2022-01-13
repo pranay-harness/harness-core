@@ -620,6 +620,9 @@
         },
         {
           "type": "object",
+          "required": [
+            "resourceNames"
+          ],
           "properties": {
             "resourceNames": {
               "oneOf": [
@@ -634,7 +637,8 @@
                   "pattern": "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
                   "minLength": 1
                 }
-              ]
+              ],
+              "minLength": 1
             }
           }
         }

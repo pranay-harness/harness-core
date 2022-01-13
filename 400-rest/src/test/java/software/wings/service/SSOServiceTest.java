@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service;
 
 import static io.harness.rule.OwnerRule.RUSHABH;
@@ -35,6 +42,7 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserSettings;
+import software.wings.beans.sso.SAMLProviderType;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -128,8 +136,9 @@ public class SSOServiceTest extends WingsBaseTest {
     mockSamlSettings.setDisplayName("Okta");
     when(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(anyString())).thenReturn(mockSamlSettings);
 
-    SSOConfig settings = ssoService.uploadSamlConfiguration(account.getUuid(),
-        getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group", true, logoutUrl, "app.harness.io");
+    SSOConfig settings =
+        ssoService.uploadSamlConfiguration(account.getUuid(), getClass().getResourceAsStream("/okta-IDP-metadata.xml"),
+            "Okta", "group", true, logoutUrl, "app.harness.io", SAMLProviderType.OKTA.name(), anyString(), any());
     String idpRedirectUrl = ((SamlSettings) settings.getSsoSettings().get(0)).getUrl();
     assertThat(idpRedirectUrl)
         .isEqualTo("https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
@@ -137,7 +146,7 @@ public class SSOServiceTest extends WingsBaseTest {
 
     try {
       ssoService.uploadSamlConfiguration(account.getUuid(), getClass().getResourceAsStream("/SamlResponse.txt"), "Okta",
-          "group", true, logoutUrl, "app.harness.io");
+          "group", true, logoutUrl, "app.harness.io", SAMLProviderType.OKTA.name(), anyString(), any());
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());

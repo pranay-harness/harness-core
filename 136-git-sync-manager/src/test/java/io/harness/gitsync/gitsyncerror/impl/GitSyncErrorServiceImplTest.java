@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -93,6 +100,8 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
     doReturn(yamlGitConfigDTO).when(yamlGitConfigService).getByProjectIdAndRepo(any(), any(), any(), any());
     when(yamlGitConfigService.getByAccountAndRepo(anyString(), anyString()))
         .thenReturn(Collections.singletonList(yamlGitConfigDTO));
+    when(yamlGitConfigService.list(anyString(), anyString(), anyString())).thenReturn(Arrays.asList(yamlGitConfigDTO));
+
     FieldUtils.writeField(gitSyncErrorService, "yamlGitConfigService", yamlGitConfigService, true);
   }
 
@@ -284,6 +293,9 @@ public class GitSyncErrorServiceImplTest extends GitSyncTestBase {
         accountId, orgId, projectId, repoId, new PageRequest(0, 10, new ArrayList<>()));
     assertThat(gitSyncErrorList.getContent()).isNotEmpty();
     assertThat(gitSyncErrorList.getContent()).hasSize(1);
+
+    when(yamlGitConfigService.list(anyString(), anyString(), anyString()))
+        .thenReturn(Arrays.asList(yamlGitConfigDTO, YamlGitConfigDTO.builder().repo("repoUrl1").build()));
 
     gitSyncErrorList = gitSyncErrorService.listConnectivityErrors(
         accountId, orgId, projectId, null, new PageRequest(0, 10, new ArrayList<>()));

@@ -1,6 +1,14 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.filters;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.pms.yaml.YAMLFieldNameConstants.STEP;
 import static io.harness.walktree.visitor.utilities.VisitorParentPathUtils.PATH_CONNECTOR;
 
@@ -56,9 +64,11 @@ public abstract class GenericStepPMSFilterJsonCreator implements FilterJsonCreat
         if (ParameterField.isNull(entry.getValue())) {
           continue;
         }
-        String fullQualifiedDomainName =
-            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode()) + PATH_CONNECTOR
-            + YAMLFieldNameConstants.SPEC + PATH_CONNECTOR + entry.getKey();
+        String fullQualifiedDomainNameFromNode =
+            YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode());
+        String fullQualifiedDomainName = fullQualifiedDomainNameFromNode
+            + (isEmpty(fullQualifiedDomainNameFromNode) ? "" : PATH_CONNECTOR) + YAMLFieldNameConstants.SPEC
+            + PATH_CONNECTOR + entry.getKey();
         result.add(FilterCreatorHelper.convertToEntityDetailProtoDTO(accountIdentifier, orgIdentifier,
             projectIdentifier, fullQualifiedDomainName, entry.getValue(), EntityTypeProtoEnum.CONNECTORS));
       }

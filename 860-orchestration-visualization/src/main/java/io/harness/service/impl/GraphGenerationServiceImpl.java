@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.service.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -25,9 +32,12 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryService;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
 import io.harness.service.GraphGenerationService;
 import io.harness.skip.service.VertexSkipperService;
+import io.harness.springdata.TransactionHelper;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -38,6 +48,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @Singleton
@@ -54,51 +65,65 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
   @Inject private GraphStatusUpdateHelper graphStatusUpdateHelper;
   @Inject private PlanExecutionStatusUpdateEventHandler planExecutionStatusUpdateEventHandler;
   @Inject private StepDetailsUpdateEventHandler stepDetailsUpdateEventHandler;
+  @Inject private TransactionHelper transactionHelper;
+  @Inject private PmsExecutionSummaryService pmsExecutionSummaryService;
 
   @Override
   public void updateGraph(String planExecutionId) {
-    long startTs = System.currentTimeMillis();
-    Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
-        OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
-    if (lastUpdatedAt == null) {
-      return;
-    }
-    List<OrchestrationEventLog> unprocessedEventLogs =
-        orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
-    if (!unprocessedEventLogs.isEmpty()) {
-      OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
-      if (orchestrationGraph == null) {
-        log.warn("[PMS_GRAPH] Graph not yet generated. Passing on to next iteration");
-        return;
+    transactionHelper.performTransactionWithoutRetry(() -> {
+      long startTs = System.currentTimeMillis();
+      Long lastUpdatedAt = mongoStore.getEntityUpdatedAt(
+          OrchestrationGraph.ALGORITHM_ID, OrchestrationGraph.STRUCTURE_HASH, planExecutionId, null);
+      if (lastUpdatedAt == null) {
+        return null;
       }
-      if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
-        log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
-      }
-      Set<String> processedNodeExecutionIds = new HashSet<>();
-      for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
-        OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
-        if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
-          orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
-        } else if (orchestrationEventType == OrchestrationEventType.STEP_DETAILS_UPDATE) {
-          orchestrationGraph = stepDetailsUpdateEventHandler.handleEvent(
-              planExecutionId, orchestrationEventLog.getNodeExecutionId(), orchestrationGraph);
-        } else {
-          String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
-          if (processedNodeExecutionIds.contains(nodeExecutionId)) {
-            continue;
-          }
-          processedNodeExecutionIds.add(nodeExecutionId);
-          orchestrationGraph = graphStatusUpdateHelper.handleEvent(
-              planExecutionId, nodeExecutionId, orchestrationEventType, orchestrationGraph);
+      List<OrchestrationEventLog> unprocessedEventLogs =
+          orchestrationEventLogRepository.findUnprocessedEvents(planExecutionId, lastUpdatedAt);
+      Update executionSummaryUpdate = new Update();
+      if (!unprocessedEventLogs.isEmpty()) {
+        OrchestrationGraph orchestrationGraph = getCachedOrchestrationGraph(planExecutionId);
+        if (orchestrationGraph == null) {
+          log.warn("[PMS_GRAPH] Graph not yet generated. Passing on to next iteration");
+          return null;
         }
-        lastUpdatedAt = orchestrationEventLog.getCreatedAt();
+        if (unprocessedEventLogs.size() > THRESHOLD_LOG) {
+          log.warn("[PMS_GRAPH] Found [{}] unprocessed event logs", unprocessedEventLogs.size());
+        }
+        Set<String> processedNodeExecutionIds = new HashSet<>();
+        for (OrchestrationEventLog orchestrationEventLog : unprocessedEventLogs) {
+          OrchestrationEventType orchestrationEventType = orchestrationEventLog.getOrchestrationEventType();
+          if (orchestrationEventType == OrchestrationEventType.PLAN_EXECUTION_STATUS_UPDATE) {
+            orchestrationGraph = planExecutionStatusUpdateEventHandler.handleEvent(planExecutionId, orchestrationGraph);
+          } else if (orchestrationEventType == OrchestrationEventType.STEP_DETAILS_UPDATE) {
+            orchestrationGraph = stepDetailsUpdateEventHandler.handleEvent(
+                planExecutionId, orchestrationEventLog.getNodeExecutionId(), orchestrationGraph);
+          } else {
+            String nodeExecutionId = orchestrationEventLog.getNodeExecutionId();
+            if (processedNodeExecutionIds.contains(nodeExecutionId)) {
+              continue;
+            }
+            processedNodeExecutionIds.add(nodeExecutionId);
+            NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+            ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(
+                executionSummaryUpdate, planExecutionId, nodeExecution);
+            ExecutionSummaryUpdateUtils.addStageUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
+            orchestrationGraph = graphStatusUpdateHelper.handleEventV2(
+                planExecutionId, nodeExecution, orchestrationEventType, orchestrationGraph);
+          }
+          lastUpdatedAt = orchestrationEventLog.getCreatedAt();
+        }
+        orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
+
+        long finalLastUpdatedAt = lastUpdatedAt;
+        OrchestrationGraph finalOrchestrationGraph = orchestrationGraph;
+
+        cachePartialOrchestrationGraph(finalOrchestrationGraph, finalLastUpdatedAt);
+        pmsExecutionSummaryService.update(planExecutionId, executionSummaryUpdate);
+        log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
+            unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
       }
-      orchestrationEventLogRepository.updateTtlForProcessedEvents(unprocessedEventLogs);
-      orchestrationGraph.setLastUpdatedAt(lastUpdatedAt);
-      cachePartialOrchestrationGraph(orchestrationGraph, lastUpdatedAt);
-      log.info("[PMS_GRAPH] Processing of [{}] orchestration event logs completed in [{}ms]",
-          unprocessedEventLogs.size(), System.currentTimeMillis() - startTs);
-    }
+      return null;
+    });
   }
 
   @Override

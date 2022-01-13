@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.ng.core.outbox;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -283,9 +290,10 @@ public class UserEventHandlerTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
+    String userName = randomAlphabetic(10);
     AddCollaboratorEvent addCollaboratorEvent = new AddCollaboratorEvent(accountIdentifier,
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
-        randomAlphabetic(10), UserMembershipUpdateSource.ACCEPTED_INVITE);
+        randomAlphabetic(10), userName, UserMembershipUpdateSource.ACCEPTED_INVITE);
     String eventData = objectMapper.writeValueAsString(addCollaboratorEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))
@@ -317,9 +325,10 @@ public class UserEventHandlerTest extends CategoryTest {
     String accountIdentifier = randomAlphabetic(10);
     String orgIdentifier = randomAlphabetic(10);
     String email = randomAlphabetic(10);
+    String userName = randomAlphabetic(10);
     RemoveCollaboratorEvent removeCollaboratorEvent = new RemoveCollaboratorEvent(accountIdentifier,
         Scope.builder().accountIdentifier(accountIdentifier).orgIdentifier(orgIdentifier).build(), email,
-        randomAlphabetic(10), UserMembershipUpdateSource.SYSTEM);
+        randomAlphabetic(10), userName, UserMembershipUpdateSource.SYSTEM);
     String eventData = objectMapper.writeValueAsString(removeCollaboratorEvent);
     OutboxEvent outboxEvent = OutboxEvent.builder()
                                   .id(randomAlphabetic(10))

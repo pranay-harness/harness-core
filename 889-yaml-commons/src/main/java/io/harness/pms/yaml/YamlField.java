@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.yaml;
 
 import io.harness.pms.contracts.plan.YamlFieldBlob;
@@ -67,6 +74,11 @@ public class YamlField {
 
   public static YamlField fromYamlPath(String yaml, String path) throws IOException {
     YamlNode node = YamlNode.fromYamlPath(yaml, path);
+    return node == null ? null : new YamlField(node);
+  }
+
+  public YamlField fromYamlPath(String path) throws IOException {
+    YamlNode node = YamlNode.fromYamlPath(this, path);
     return node == null ? null : new YamlField(node);
   }
 }

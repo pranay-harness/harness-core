@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import io.harness.alert.AlertData;
@@ -37,10 +44,6 @@ public interface AlertService extends OwnedByAccount, OwnedByApplication {
   void closeAllAlerts(String accountId, String appId, AlertType alertType, AlertData alertData);
 
   void closeAlertsOfType(String accountId, String appId, AlertType alertType);
-
-  void delegateAvailabilityUpdated(String accountId);
-
-  void delegateEligibilityUpdated(String accountId, String delegateId);
 
   void deploymentCompleted(String appId, String executionId);
 

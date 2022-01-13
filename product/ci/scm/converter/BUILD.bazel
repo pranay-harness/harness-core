@@ -14,7 +14,7 @@ go_library(
     deps = [
         "//product/ci/scm/proto",
         "@com_github_drone_go_scm//scm",
-        "@com_github_golang_protobuf//ptypes:go_default_library_gen",
+        "@org_golang_google_protobuf//types/known/timestamppb",
     ],
 )
 

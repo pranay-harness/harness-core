@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# Copyright 2021 Harness Inc. All rights reserved.
+# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# that can be found in the licenses directory at the root of this repository, also available at
+# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
 
 CONFIG_FILE=/opt/harness/config.yml
 NEWRELIC_FILE=/opt/harness/newrelic.yml
@@ -34,8 +38,8 @@ write_mongo_params() {
   done
 }
 
-yq delete -i $CONFIG_FILE server.applicationConnectors[0]
-yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE 'server.applicationConnectors.(type==h2)'
+yq delete -i $CONFIG_FILE 'grpcServerConfig.connectors.(secure==true)'
 
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
@@ -243,17 +247,17 @@ fi
 yq write -i $CONFIG_FILE server.requestLog.appenders[0].threshold "TRACE"
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[2]
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==file)'
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
   if [[ "$ROLLING_FILE_LOGGING_ENABLED" == "true" ]]; then
-    yq delete -i $CONFIG_FILE logging.appenders[1]
-    yq write -i $CONFIG_FILE logging.appenders[1].currentLogFilename "/opt/harness/logs/portal.log"
-    yq write -i $CONFIG_FILE logging.appenders[1].archivedLogFilenamePattern "/opt/harness/logs/portal.%d.%i.log"
+    yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
+    yq write -i $CONFIG_FILE 'logging.appenders.(type==file).currentLogFilename' "/opt/harness/logs/portal.log"
+    yq write -i $CONFIG_FILE 'logging.appenders.(type==file).archivedLogFilenamePattern' "/opt/harness/logs/portal.%d.%i.log"
   else
-    yq delete -i $CONFIG_FILE logging.appenders[2]
-    yq delete -i $CONFIG_FILE logging.appenders[1]
+    yq delete -i $CONFIG_FILE 'logging.appenders.(type==file)'
+    yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
   fi
 fi
 
@@ -717,7 +721,7 @@ if [[ "" != "$REDIS_SENTINELS" ]]; then
   for REDIS_SENTINEL_URL in "${REDIS_SENTINEL_URLS[@]}"; do
     yq write -i $CONFIG_FILE redisLockConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
     yq write -i $CONFIG_FILE redisAtmosphereConfig.sentinelUrls.[$INDEX] "${REDIS_SENTINEL_URL}"
-    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
 fi
@@ -963,18 +967,18 @@ if [[ "" != "$USE_GLOBAL_KMS_AS_BASE_ALGO" ]]; then
   yq write -i $CONFIG_FILE useGlobalKMSAsBaseAlgo "$USE_GLOBAL_KMS_AS_BASE_ALGO"
 fi
 
-if [[ "" != "$SEGMENT_NG_ENABLED" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_NG_ENABLED"
+if [[ "" != "$SEGMENT_ENABLED_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.enabled "$SEGMENT_ENABLED_NG"
 fi
 
-if [[ "" != "$SEGMENT_NG_URL" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_NG_URL"
+if [[ "" != "$SEGMENT_URL_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.url "$SEGMENT_URL_NG"
 fi
 
-if [[ "" != "$SEGMENT_NG_APIKEY" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_NG_APIKEY"
+if [[ "" != "$SEGMENT_APIKEY_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.apiKey "$SEGMENT_APIKEY_NG"
 fi
 
-if [[ "" != "$SEGMENT_NG_VERIFY_CERT" ]]; then
-  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_NG_VERIFY_CERT"
+if [[ "" != "$SEGMENT_VERIFY_CERT_NG" ]]; then
+  yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT_NG"
 fi

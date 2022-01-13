@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.event;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -38,9 +45,17 @@ public class GraphStatusUpdateHelper {
     if (isEmpty(nodeExecutionId)) {
       return orchestrationGraph;
     }
-    try {
-      NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    return handleEventV2(planExecutionId, nodeExecution, eventType, orchestrationGraph);
+  }
 
+  public OrchestrationGraph handleEventV2(String planExecutionId, NodeExecution nodeExecution,
+      OrchestrationEventType eventType, OrchestrationGraph orchestrationGraph) {
+    if (nodeExecution == null) {
+      return orchestrationGraph;
+    }
+    String nodeExecutionId = nodeExecution.getUuid();
+    try {
       if (orchestrationGraph.getRootNodeIds().isEmpty()) {
         log.info("[PMS_GRAPH]  Setting rootNodeId: [{}] for plan [{}]", nodeExecutionId, planExecutionId);
         orchestrationGraph.getRootNodeIds().add(nodeExecutionId);

@@ -1,3 +1,8 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package db
 
 import (
@@ -7,7 +12,7 @@ import (
 
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"github.com/wings-software/portal/product/ci/ti-service/logger"
+	logger "github.com/wings-software/portal/commons/go/lib/logs"
 	"go.uber.org/zap"
 )
 

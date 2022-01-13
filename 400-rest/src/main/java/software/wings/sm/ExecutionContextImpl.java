@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
@@ -49,12 +56,14 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluator;
 import io.harness.expression.LateBindingMap;
 import io.harness.expression.SecretString;
+import io.harness.expression.TerraformPlanExpressionFunctor;
 import io.harness.expression.VariableResolverTracker;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.security.SimpleEncryption;
 import io.harness.serializer.KryoSerializer;
+import io.harness.terraform.expression.TerraformPlanExpressionInterface;
 
 import software.wings.api.DeploymentType;
 import software.wings.api.InfraMappingElement;
@@ -119,6 +128,7 @@ import software.wings.service.intfc.ArtifactService;
 import software.wings.service.intfc.ArtifactStreamService;
 import software.wings.service.intfc.ArtifactStreamServiceBindingService;
 import software.wings.service.intfc.BuildSourceService;
+import software.wings.service.intfc.FileService;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 import software.wings.service.intfc.InfrastructureMappingService;
 import software.wings.service.intfc.ServiceResourceService;
@@ -199,6 +209,7 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
   @Inject private transient KryoSerializer kryoSerializer;
   @Inject private transient CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private transient HelmChartService helmChartService;
+  @Inject private transient FileService fileService;
 
   private StateMachine stateMachine;
   private StateExecutionInstance stateExecutionInstance;
@@ -926,6 +937,19 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
       evaluator.addFunctor("shell", shellScriptFunctor);
     }
 
+    Application app = getApp();
+    if (stateExecutionContext != null && app != null
+        && featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, app.getAccountId())) {
+      evaluator.addFunctor(TerraformPlanExpressionInterface.FUNCTOR_NAME,
+          TerraformPlanExpressionFunctor.builder()
+              .obtainTfPlanFunction(planName
+                  -> sweepingOutputService.findSweepingOutput(
+                      prepareSweepingOutputInquiryBuilder().name(planName).build()))
+              .expressionFunctorToken(stateExecutionContext.getExpressionFunctorToken())
+              .fileService(fileService)
+              .build());
+    }
+
     LateBindingServiceVariablesBuilder serviceVariablesBuilder =
         LateBindingServiceVariables.builder()
             .phaseOverrides(phaseElement == null ? null : phaseElement.getVariableOverrides())
@@ -967,7 +991,6 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
 
     contextMap.put("harnessShellUtils", SubstitutionFunctor.builder().build());
 
-    Application app = getApp();
     if (app != null) {
       Environment env = getEnv();
       contextMap.put("secrets",

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.verificationjob.services.impl;
 
 import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_RETRIGGER_BUFFER_MINS;
@@ -18,7 +25,6 @@ import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.cvng.activity.beans.ActivityVerificationSummary;
 import io.harness.cvng.activity.beans.DeploymentActivityResultDTO.DeploymentVerificationJobInstanceSummary;
-import io.harness.cvng.alert.services.api.AlertRuleService;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.analysis.services.api.VerificationJobInstanceAnalysisService;
 import io.harness.cvng.beans.DataCollectionInfo;
@@ -61,6 +67,7 @@ import io.harness.ng.core.environment.beans.EnvironmentType;
 import io.harness.ng.core.environment.dto.EnvironmentResponseDTO;
 import io.harness.persistence.HPersistence;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Clock;
@@ -98,7 +105,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
   @Inject private Clock clock;
   @Inject private HealthVerificationHeatMapService healthVerificationHeatMapService;
   @Inject private NextGenService nextGenService;
-  @Inject private AlertRuleService alertRuleService;
   @Inject private MonitoringSourcePerpetualTaskService monitoringSourcePerpetualTaskService;
   @Inject private MetricService metricService;
 
@@ -375,8 +381,6 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       Set<String> verificatioTaskIds = verificationTaskService.getVerificationTaskIds(
           verificationJobInstance.getAccountId(), verificationJobInstanceId);
       orchestrationService.markCompleted(verificatioTaskIds);
-
-      alertRuleService.processDeploymentVerificationJobInstanceId(verificationJobInstanceId);
     }
   }
 
@@ -474,7 +478,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
     }
   }
 
-  private ActivityVerificationStatus getDeploymentVerificationStatus(VerificationJobInstance verificationJobInstance) {
+  @VisibleForTesting
+  ActivityVerificationStatus getDeploymentVerificationStatus(VerificationJobInstance verificationJobInstance) {
     switch (verificationJobInstance.getExecutionStatus()) {
       case QUEUED:
         return ActivityVerificationStatus.NOT_STARTED;
@@ -683,7 +688,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
           dataSourceTypeDataCollectionInfoMapperMap.get(cvConfig.getType());
 
       if (preDeploymentTimeRange.isPresent()) {
-        DataCollectionInfo preDeploymentDataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo preDeploymentDataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         preDeploymentDataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());
         preDeploymentDataCollectionInfo.setCollectHostData(verificationJob.collectHostData());
         dataCollectionTasks.add(DeploymentDataCollectionTask.builder()
@@ -703,7 +709,8 @@ public class VerificationJobInstanceServiceImpl implements VerificationJobInstan
       }
 
       timeRanges.forEach(timeRange -> {
-        DataCollectionInfo dataCollectionInfo = dataCollectionInfoMapper.toDataCollectionInfo(cvConfig);
+        DataCollectionInfo dataCollectionInfo =
+            dataCollectionInfoMapper.toDataCollectionInfo(cvConfig, TaskType.DEPLOYMENT);
         // TODO: For Now the DSL is same for both. We need to see how this evolves when implementation other provider.
         // Keeping this simple for now.
         dataCollectionInfo.setDataCollectionDsl(cvConfig.getDataCollectionDsl());

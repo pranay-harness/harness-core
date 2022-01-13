@@ -72,10 +72,12 @@ segmentConfig:
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
 
+#not needed for dms, keeping it for dependency injection
 segmentConfiguration:
   enabled: false
   url: "segment_url_place_holder"
   apiKey: "segment_api_key"
+  certValidationRequired: false
 
 distributedLockImplementation: MONGO
 

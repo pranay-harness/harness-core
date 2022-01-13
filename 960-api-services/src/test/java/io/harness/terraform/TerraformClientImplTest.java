@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -17,6 +24,7 @@ import io.harness.category.element.UnitTests;
 import io.harness.cli.CliHelper;
 import io.harness.cli.CliResponse;
 import io.harness.exception.runtime.TerraformCliRuntimeException;
+import io.harness.filesystem.FileIo;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.PlanJsonLogOutputStream;
@@ -31,6 +39,7 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.TimeoutException;
+import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -45,9 +54,17 @@ public class TerraformClientImplTest extends CategoryTest {
   @Mock private PlanJsonLogOutputStream planJsonLogOutputStream;
   @InjectMocks private TerraformClientImpl terraformClientImpl;
 
+  private static final String SCRIPT_FILES_DIRECTORY = "SCRIPT_FILES_DIRECTORY";
+
   @Before
-  public void setUp() {
+  public void setUp() throws IOException {
     MockitoAnnotations.initMocks(this);
+    FileIo.createDirectoryIfDoesNotExist(SCRIPT_FILES_DIRECTORY);
+  }
+
+  @AfterClass
+  public static void afterClass() throws IOException {
+    FileIo.deleteDirectoryAndItsContentIfExists(SCRIPT_FILES_DIRECTORY);
   }
 
   @Test
@@ -63,10 +80,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(format("echo \"no\" | %s", command)), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT),
-            eq(Collections.emptyMap()), eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(Collections.emptyMap()), eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.init(terraformInitCommandRequest,
-        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -88,10 +105,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.destroy(terraformDestroyCommandRequest,
-        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -110,10 +127,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.plan(terraformPlanCommandRequest,
-        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -131,10 +148,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.refresh(terraformRefreshCommandRequest,
-        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -161,10 +178,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(loggingCommand), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(loggingCommand), any());
 
     CliResponse actualResponse = terraformClientImpl.refresh(terraformRefreshCommandRequest,
-        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -187,10 +204,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.apply(terraformApplyCommandRequest,
-        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -205,10 +222,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.workspace(workspace, true, DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-        Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+        Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -223,10 +240,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
     CliResponse actualResponse = terraformClientImpl.show(plan, DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-        Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback, planJsonLogOutputStream);
+        Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback, planJsonLogOutputStream);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -241,10 +258,10 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
-    CliResponse actualResponse = terraformClientImpl.output(tfOutputsFile, DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-        Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+    CliResponse actualResponse = terraformClientImpl.output(
+        tfOutputsFile, DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
 
     assertThat(actualResponse).isEqualTo(cliResponse);
   }
@@ -260,9 +277,9 @@ public class TerraformClientImplTest extends CategoryTest {
     doReturn(cliResponse)
         .when(cliHelper)
         .executeCliCommand(eq(command), eq(DEFAULT_TERRAFORM_COMMAND_TIMEOUT), eq(Collections.emptyMap()),
-            eq("SCRIPT_FILES_DIRECTORY"), eq(logCallback), eq(command), any());
+            eq(SCRIPT_FILES_DIRECTORY), eq(logCallback), eq(command), any());
 
-    CliResponse actualResponse = terraformClientImpl.output(tfOutputsFile, DEFAULT_TERRAFORM_COMMAND_TIMEOUT,
-        Collections.emptyMap(), "SCRIPT_FILES_DIRECTORY", logCallback);
+    CliResponse actualResponse = terraformClientImpl.output(
+        tfOutputsFile, DEFAULT_TERRAFORM_COMMAND_TIMEOUT, Collections.emptyMap(), SCRIPT_FILES_DIRECTORY, logCallback);
   }
 }

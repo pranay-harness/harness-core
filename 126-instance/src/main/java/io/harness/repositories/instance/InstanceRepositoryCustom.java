@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.repositories.instance;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -21,6 +28,9 @@ public interface InstanceRepositoryCustom {
   List<Instance> getActiveInstancesByAccount(String accountIdentifier, long timestamp);
 
   List<Instance> getInstancesDeployedInInterval(String accountIdentifier, long startTimestamp, long endTimeStamp);
+
+  List<Instance> getInstancesDeployedInInterval(
+      String accountIdentifier, String organizationId, String projectId, long startTimestamp, long endTimeStamp);
 
   List<Instance> getInstances(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String infrastructureMappingId);
@@ -46,4 +56,6 @@ public interface InstanceRepositoryCustom {
 
   AggregationResults<CountByServiceIdAndEnvType> getActiveServiceInstanceCountBreakdown(String accountIdentifier,
       String orgIdentifier, String projectIdentifier, List<String> serviceId, long timestampInMs);
+
+  Instance findFirstInstance(Criteria criteria);
 }

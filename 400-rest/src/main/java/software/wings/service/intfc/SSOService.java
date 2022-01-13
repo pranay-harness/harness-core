@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.intfc;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -29,10 +36,11 @@ public interface SSOService {
 
   SSOConfig uploadSamlConfiguration(@NotNull String accountId, @NotNull InputStream inputStream,
       @NotNull String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl,
-      String entityIdentifier);
+      String entityIdentifier, String samlProviderType, String clientId, char[] clientSecret);
 
   SSOConfig updateSamlConfiguration(@NotNull String accountId, InputStream inputStream, String displayName,
-      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl, String entityIdentifier);
+      String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl, String entityIdentifier,
+      String samlProviderType, String clientId, char[] clientSecret);
 
   SSOConfig updateLogoutUrlSamlSettings(@NotNull String accountId, @NotNull String logoutUrl);
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.accesscontrol.acl.persistence;
 
 import static io.harness.accesscontrol.acl.persistence.ACL.getAclQueryString;
@@ -6,9 +13,11 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.accesscontrol.Principal;
 import io.harness.accesscontrol.acl.PermissionCheck;
 import io.harness.accesscontrol.acl.persistence.repositories.ACLRepository;
+import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.annotations.dev.OwnedBy;
 
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -27,8 +36,11 @@ import org.apache.commons.lang3.StringUtils;
 @Slf4j
 public class ACLDAOImpl implements ACLDAO {
   private static final String PATH_DELIMITER = "/";
+  private static final String ALL_RESOURCES_IDENTIFIER = "*";
+  private static final String INCLUDE_CHILD_SCOPES_IDENTIFIER = "**";
   private final ACLRepository aclRepository;
   private final Set<String> scopeResourceTypes;
+  private final Set<String> createScopePermissions = Sets.newHashSet("core_project_create", "core_organization_create");
 
   @Inject
   public ACLDAOImpl(@Named(ACL.PRIMARY_COLLECTION) ACLRepository aclRepository, Map<String, ScopeLevel> scopeLevels) {
@@ -39,6 +51,33 @@ public class ACLDAOImpl implements ACLDAO {
 
   private String getResourceSelector(String resourceType, String resourceIdentifier) {
     return PATH_DELIMITER.concat(resourceType).concat(PATH_DELIMITER).concat(resourceIdentifier);
+  }
+
+  private String getIncludeChildScopesResourceSelector(String resourceType) {
+    return PATH_DELIMITER.concat(INCLUDE_CHILD_SCOPES_IDENTIFIER)
+        .concat(PATH_DELIMITER)
+        .concat(resourceType)
+        .concat(PATH_DELIMITER)
+        .concat(ALL_RESOURCES_IDENTIFIER);
+  }
+
+  private boolean isValidPermissionCheckForSameScopeLevel(PermissionCheck permissionCheck) {
+    String resourceType = permissionCheck.getResourceType();
+    String resourceIdentifier = permissionCheck.getResourceIdentifier();
+    if (!scopeResourceTypes.contains(resourceType)) {
+      return true;
+    }
+    if (createScopePermissions.contains(permissionCheck.getPermission())) {
+      return true;
+    }
+    if (permissionCheck.getResourceScope() == null) {
+      return true;
+    }
+    if (resourceType.equalsIgnoreCase(permissionCheck.getResourceScope().getLevel().toString())) {
+      return resourceIdentifier == null
+          || resourceIdentifier.equals(permissionCheck.getResourceScope().getInstanceId());
+    }
+    return false;
   }
 
   private Set<String> getQueryStrings(PermissionCheck permissionCheck, Principal principal) {
@@ -54,13 +93,29 @@ public class ACLDAOImpl implements ACLDAO {
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
 
-    // query for resource=/RESOURCE_TYPE/* in given scope
-    queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, "*"),
-        principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+    if (isValidPermissionCheckForSameScopeLevel(permissionCheck)) {
+      // query for resource=/RESOURCE_TYPE/* in given scope
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, ALL_RESOURCES_IDENTIFIER),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
-    // query for resource=/*/* in given scope
-    queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
-        principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+      // query for resource=/*/* in given scope
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(ALL_RESOURCES_IDENTIFIER, ALL_RESOURCES_IDENTIFIER),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+    }
+
+    Scope currentScope = permissionCheck.getResourceScope();
+    while (currentScope != null) {
+      // query for resource=/**/RESOURCE_TYPE/* in given scope
+      queryStrings.add(getAclQueryString(currentScope.toString(), getIncludeChildScopesResourceSelector(resourceType),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      // query for resource=/**/*/* in given scope
+      queryStrings.add(getAclQueryString(currentScope.toString(),
+          getIncludeChildScopesResourceSelector(ALL_RESOURCES_IDENTIFIER), principal.getPrincipalType().name(),
+          principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      currentScope = currentScope.getParentScope();
+    }
 
     // if RESOURCE_TYPE is a scope, query for scope = {given_scope}/RESOURCE_TYPE/{resourceIdentifier}
     if (scopeResourceTypes.contains(resourceType)) {
@@ -73,12 +128,20 @@ public class ACLDAOImpl implements ACLDAO {
       }
 
       // and resource = /RESOURCE_TYPE/*
-      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, "*"),
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(resourceType, ALL_RESOURCES_IDENTIFIER),
           principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
 
       // and resource = /*/*
-      queryStrings.add(getAclQueryString(scope, getResourceSelector("*", "*"), principal.getPrincipalType().name(),
-          principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+      queryStrings.add(getAclQueryString(scope, getResourceSelector(ALL_RESOURCES_IDENTIFIER, ALL_RESOURCES_IDENTIFIER),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      // query for resource=/**/RESOURCE_TYPE/* in given scope
+      queryStrings.add(getAclQueryString(scope, getIncludeChildScopesResourceSelector(resourceType),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
+
+      // query for resource=/**/*/* in given scope
+      queryStrings.add(getAclQueryString(scope, getIncludeChildScopesResourceSelector(ALL_RESOURCES_IDENTIFIER),
+          principal.getPrincipalType().name(), principal.getPrincipalIdentifier(), permissionCheck.getPermission()));
     }
     return queryStrings;
   }

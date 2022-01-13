@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.AuthorizationServiceHeader.MANAGER;
@@ -92,10 +99,13 @@ import io.harness.manifest.ManifestCollectionPTaskServiceClient;
 import io.harness.marketplace.gcp.GcpMarketplaceSubscriberService;
 import io.harness.metrics.HarnessMetricRegistry;
 import io.harness.metrics.MetricRegistryModule;
+import io.harness.metrics.jobs.RecordMetricsJob;
+import io.harness.metrics.service.api.MetricService;
 import io.harness.migrations.MigrationModule;
 import io.harness.mongo.AbstractMongoModule;
 import io.harness.mongo.QuartzCleaner;
 import io.harness.mongo.QueryFactory;
+import io.harness.mongo.iterator.IteratorConfig;
 import io.harness.mongo.tracing.TraceMode;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.ng.core.CorrelationFilter;
@@ -759,6 +769,8 @@ public class WingsApplication extends Application<MainConfiguration> {
 
     initializeGrpcServer(injector);
 
+    initMetrics(injector);
+
     log.info("Leaving startup maintenance mode");
     MaintenanceController.resetForceMaintenance();
   }
@@ -867,7 +879,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                       }
                     }))
                     .build());
-
     modules.add(new ValidationModule(validatorFactory) {
       @Override
       protected void configureAop(ValidationMethodInterceptor interceptor) {
@@ -1456,13 +1467,15 @@ public class WingsApplication extends Application<MainConfiguration> {
     injector.getInstance(DeploymentFreezeDeactivationHandler.class).registerIterators();
     injector.getInstance(CeLicenseExpiryHandler.class).registerIterators();
     injector.getInstance(DeleteAccountHandler.class).registerIterators();
-    injector.getInstance(TimeoutEngine.class).registerIterators();
     injector.getInstance(DeletedEntityHandler.class).registerIterators();
     injector.getInstance(ResourceLookupSyncHandler.class).registerIterators();
     injector.getInstance(AccessRequestHandler.class).registerIterators();
     injector.getInstance(ScheduledTriggerHandler.class).registerIterators();
     injector.getInstance(LdapGroupScheduledHandler.class).registerIterators();
     injector.getInstance(EncryptedDataLocalToGcpKmsMigrationHandler.class).registerIterators();
+    injector.getInstance(TimeoutEngine.class)
+        .registerIterators(
+            IteratorConfig.builder().enabled(true).targetIntervalInSeconds(10).threadPoolCount(5).build());
   }
 
   private void registerCronJobs(Injector injector) {
@@ -1522,5 +1535,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void runMigrations(Injector injector) {
     injector.getInstance(MigrationService.class).runMigrations();
+  }
+
+  private void initMetrics(Injector injector) {
+    injector.getInstance(MetricService.class).initializeMetrics();
+    injector.getInstance(RecordMetricsJob.class).scheduleMetricsTasks();
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.approval.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -11,20 +18,20 @@ import io.harness.delegate.task.jira.JiraTaskNGResponse;
 import io.harness.exception.ApprovalStepNGException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.HarnessJiraException;
-import io.harness.exception.InvalidRequestException;
 import io.harness.jira.JiraIssueNG;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogLevel;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
+import io.harness.pms.approval.AbstractApprovalCallback;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.serializer.KryoSerializer;
-import io.harness.steps.approval.step.ApprovalInstanceService;
+import io.harness.servicenow.TicketNG;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.CriteriaSpecDTO;
+import io.harness.steps.approval.step.evaluation.CriteriaEvaluator;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
-import io.harness.steps.approval.step.jira.evaluation.CriteriaEvaluator;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 import io.harness.waiter.PushThroughNotifyCallback;
@@ -41,10 +48,9 @@ import lombok.extern.slf4j.Slf4j;
 @OwnedBy(CDC)
 @Data
 @Slf4j
-public class JiraApprovalCallback implements PushThroughNotifyCallback {
+public class JiraApprovalCallback extends AbstractApprovalCallback implements PushThroughNotifyCallback {
   private final String approvalInstanceId;
 
-  @Inject private ApprovalInstanceService approvalInstanceService;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
   @Inject private KryoSerializer kryoSerializer;
 
@@ -67,10 +73,8 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
     NGLogCallback logCallback = new NGLogCallback(logStreamingStepClientFactory, ambiance, null, false);
 
     if (instance.hasExpired()) {
-      log.info("Approval instance has expired");
-      logCallback.saveExecutionLog(LogHelper.color("Approval step timed out before completion", LogColor.Red),
-          LogLevel.INFO, CommandExecutionStatus.FAILURE);
-      approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.EXPIRED);
+      updateApprovalInstanceAndLog(logCallback, "Approval instance has expired", LogColor.Red,
+          CommandExecutionStatus.FAILURE, ApprovalStatus.EXPIRED, instance.getId());
     }
 
     JiraTaskNGResponse jiraTaskNGResponse;
@@ -78,9 +82,7 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
       ResponseData responseData = response.values().iterator().next();
       responseData = (ResponseData) kryoSerializer.asInflatedObject(((BinaryResponseData) responseData).getData());
       if (responseData instanceof ErrorNotifyResponseData) {
-        ErrorNotifyResponseData errorResponse = (ErrorNotifyResponseData) responseData;
-        log.error(String.format("Failed to fetch jira issue: %s", errorResponse.getErrorMessage()),
-            errorResponse.getException());
+        handleErrorNotifyResponse(logCallback, (ErrorNotifyResponseData) responseData, "Failed to fetch jira issue:");
         return;
       }
 
@@ -105,15 +107,11 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
     }
 
     try {
-      checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), instance, logCallback);
+      checkApprovalAndRejectionCriteria(jiraTaskNGResponse.getIssue(), instance, logCallback,
+          instance.getApprovalCriteria(), instance.getRejectionCriteria());
     } catch (Exception ex) {
       if (ex instanceof ApprovalStepNGException && ((ApprovalStepNGException) ex).isFatal()) {
-        log.error("Error while evaluating approval/rejection criteria", ex);
-        String errorMessage =
-            String.format("Fatal error evaluating approval/rejection criteria: %s", ExceptionUtils.getMessage(ex));
-        logCallback.saveExecutionLog(
-            LogHelper.color(errorMessage, LogColor.Red), LogLevel.INFO, CommandExecutionStatus.FAILURE);
-        approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.FAILED, errorMessage);
+        handleFatalException(instance, logCallback, (ApprovalStepNGException) ex);
         return;
       }
 
@@ -125,40 +123,8 @@ public class JiraApprovalCallback implements PushThroughNotifyCallback {
     }
   }
 
-  private void checkApprovalAndRejectionCriteria(
-      JiraIssueNG issue, JiraApprovalInstance instance, NGLogCallback logCallback) {
-    if (isNull(instance.getApprovalCriteria()) || isNull(instance.getApprovalCriteria().getCriteriaSpecDTO())) {
-      throw new InvalidRequestException("Approval criteria can't be empty");
-    }
-
-    logCallback.saveExecutionLog("Evaluating approval criteria...");
-    CriteriaSpecDTO approvalCriteriaSpec = instance.getApprovalCriteria().getCriteriaSpecDTO();
-    boolean approvalEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, approvalCriteriaSpec);
-    if (approvalEvaluationResult) {
-      log.info("Approval criteria has been met");
-      logCallback.saveExecutionLog(LogHelper.color("Approval criteria has been met", LogColor.Cyan), LogLevel.INFO,
-          CommandExecutionStatus.SUCCESS);
-      approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.APPROVED);
-      return;
-    }
-    logCallback.saveExecutionLog("Approval criteria has not been met");
-
-    if (isNull(instance.getRejectionCriteria()) || isNull(instance.getRejectionCriteria().getCriteriaSpecDTO())
-        || instance.getRejectionCriteria().getCriteriaSpecDTO().isEmpty()) {
-      logCallback.saveExecutionLog("Rejection criteria is not present");
-      return;
-    }
-
-    logCallback.saveExecutionLog("Evaluating rejection criteria...");
-    CriteriaSpecDTO rejectionCriteriaSpec = instance.getRejectionCriteria().getCriteriaSpecDTO();
-    boolean rejectionEvaluationResult = CriteriaEvaluator.evaluateCriteria(issue, rejectionCriteriaSpec);
-    if (rejectionEvaluationResult) {
-      log.info("Rejection criteria has been met");
-      logCallback.saveExecutionLog(LogHelper.color("Rejection criteria has been met", LogColor.Red), LogLevel.INFO,
-          CommandExecutionStatus.FAILURE);
-      approvalInstanceService.finalizeStatus(instance.getId(), ApprovalStatus.REJECTED);
-      return;
-    }
-    logCallback.saveExecutionLog("Rejection criteria has also not been met");
+  @Override
+  protected boolean evaluateCriteria(TicketNG ticket, CriteriaSpecDTO criteriaSpec) {
+    return CriteriaEvaluator.evaluateCriteria((JiraIssueNG) ticket, criteriaSpec);
   }
 }

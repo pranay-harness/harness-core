@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.app;
 
 import static io.harness.beans.DelegateTask.Status.ABORTED;
@@ -10,6 +17,7 @@ import static io.harness.delegate.task.TaskFailureReason.EXPIRED;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.maintenance.MaintenanceController.getMaintenanceFlag;
+import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_TASK_EXPIRED;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import static java.lang.System.currentTimeMillis;
@@ -26,16 +34,15 @@ import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.TaskLogContext;
 import io.harness.exception.WingsException;
-import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AccountLogContext;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.ExceptionLogger;
+import io.harness.metrics.intfc.DelegateMetricsService;
 import io.harness.persistence.HIterator;
 import io.harness.persistence.HPersistence;
 import io.harness.selection.log.BatchDelegateSelectionLog;
 import io.harness.service.intfc.DelegateTaskService;
 import io.harness.version.VersionInfoManager;
-import io.harness.waiter.WaitNotifyEngine;
 
 import software.wings.beans.TaskType;
 import software.wings.core.managerConfiguration.ConfigurationController;
@@ -43,7 +50,6 @@ import software.wings.service.impl.DelegateTaskBroadcastHelper;
 import software.wings.service.intfc.AssignDelegateService;
 import software.wings.service.intfc.DelegateSelectionLogsService;
 import software.wings.service.intfc.DelegateService;
-import software.wings.service.intfc.DelegateTaskServiceClassic;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.Lists;
@@ -57,6 +63,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import lombok.extern.slf4j.Slf4j;
 import org.mongodb.morphia.Key;
@@ -73,7 +80,6 @@ public class DelegateQueueTask implements Runnable {
   private static final SecureRandom random = new SecureRandom();
 
   @Inject private HPersistence persistence;
-  @Inject private WaitNotifyEngine waitNotifyEngine;
   @Inject private Clock clock;
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private AssignDelegateService assignDelegateService;
@@ -81,9 +87,8 @@ public class DelegateQueueTask implements Runnable {
   @Inject private DelegateTaskBroadcastHelper broadcastHelper;
   @Inject private ConfigurationController configurationController;
   @Inject private DelegateTaskService delegateTaskService;
-  @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateSelectionLogsService delegateSelectionLogsService;
-  @Inject private DelegateTaskServiceClassic delegateTaskServiceClassic;
+  @Inject private DelegateMetricsService delegateMetricsService;
 
   @Override
   public void run() {
@@ -164,6 +169,7 @@ public class DelegateQueueTask implements Runnable {
         if (shouldExpireTask(task)) {
           tasksToExpire.add(task);
           taskIdsToExpire.add(task.getUuid());
+          delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_EXPIRED);
         }
       }
 
@@ -180,6 +186,7 @@ public class DelegateQueueTask implements Runnable {
           if (shouldExpireTask(task)) {
             taskIdsToExpire.add(taskId);
             delegateTasks.put(taskId, task);
+            delegateMetricsService.recordDelegateTaskMetrics(task, DELEGATE_TASK_EXPIRED);
             if (isNotEmpty(task.getWaitId())) {
               taskWaitIds.put(taskId, task.getWaitId());
             }
@@ -234,16 +241,14 @@ public class DelegateQueueTask implements Runnable {
     // Re-broadcast queued tasks not picked up by any Delegate and not in process of validation
     long now = clock.millis();
 
-    Query<DelegateTask> unassignedTasksQuery =
-        persistence.createQuery(DelegateTask.class, excludeAuthority)
-            .filter(DelegateTaskKeys.status, QUEUED)
-            .filter(DelegateTaskKeys.version, versionInfoManager.getVersionInfo().getVersion())
-            .field(DelegateTaskKeys.nextBroadcast)
-            .lessThan(now)
-            .field(DelegateTaskKeys.expiry)
-            .greaterThan(now)
-            .field(DelegateTaskKeys.delegateId)
-            .doesNotExist();
+    Query<DelegateTask> unassignedTasksQuery = persistence.createQuery(DelegateTask.class, excludeAuthority)
+                                                   .filter(DelegateTaskKeys.status, QUEUED)
+                                                   .field(DelegateTaskKeys.nextBroadcast)
+                                                   .lessThan(now)
+                                                   .field(DelegateTaskKeys.expiry)
+                                                   .greaterThan(now)
+                                                   .field(DelegateTaskKeys.delegateId)
+                                                   .doesNotExist();
 
     try (HIterator<DelegateTask> iterator = new HIterator<>(unassignedTasksQuery.fetch())) {
       int count = 0;
@@ -256,21 +261,19 @@ public class DelegateQueueTask implements Runnable {
         LinkedList<String> eligibleDelegatesList = delegateTask.getEligibleToExecuteDelegateIds();
 
         if (isEmpty(eligibleDelegatesList)) {
+          log.info("No eligible delegates for task {}", delegateTask.getUuid());
           continue;
         }
+
         // add connected eligible delegates to broadcast list. Also rotate the eligibleDelegatesList list
         List<String> broadcastToDelegates = Lists.newArrayList();
-        List<String> nonActiveDelegates = Lists.newArrayList();
-        int broadcastLimit = Math.min(eligibleDelegatesList.size(), broadcastHelper.getMaxBroadcastCount(delegateTask));
+        int broadcastLimit = Math.min(eligibleDelegatesList.size(), 10);
+
         Iterator<String> delegateIdIterator = eligibleDelegatesList.iterator();
 
         while (delegateIdIterator.hasNext() && broadcastLimit > broadcastToDelegates.size()) {
           String delegateId = eligibleDelegatesList.removeFirst();
-          if (delegateService.checkDelegateConnected(delegateTask.getAccountId(), delegateId)) {
-            broadcastToDelegates.add(delegateId);
-          } else {
-            nonActiveDelegates.add(delegateId);
-          }
+          broadcastToDelegates.add(delegateId);
           eligibleDelegatesList.addLast(delegateId);
         }
 
@@ -279,7 +282,7 @@ public class DelegateQueueTask implements Runnable {
                 .set(DelegateTaskKeys.lastBroadcastAt, now)
                 .set(DelegateTaskKeys.broadcastCount, delegateTask.getBroadcastCount() + 1)
                 .set(DelegateTaskKeys.eligibleToExecuteDelegateIds, eligibleDelegatesList)
-                .set(DelegateTaskKeys.nextBroadcast, broadcastHelper.findNextBroadcastTimeForTask(delegateTask));
+                .set(DelegateTaskKeys.nextBroadcast, now + TimeUnit.SECONDS.toMillis(5));
         delegateTask = persistence.findAndModify(query, updateOperations, HPersistence.returnNewOptions);
         // update failed, means this was broadcast by some other manager
         if (delegateTask == null) {
@@ -293,17 +296,19 @@ public class DelegateQueueTask implements Runnable {
           delegateSelectionLogsService.logBroadcastToDelegate(
               batch, Sets.newHashSet(broadcastToDelegates), delegateTask.getAccountId());
         }
-        if (isNotEmpty(nonActiveDelegates)) {
-          delegateSelectionLogsService.logDisconnectedDelegate(
-              batch, delegateTask.getAccountId(), Sets.newHashSet(nonActiveDelegates));
-        }
+
         delegateSelectionLogsService.save(batch);
 
         try (AutoLogContext ignore1 = new TaskLogContext(delegateTask.getUuid(), delegateTask.getData().getTaskType(),
                  TaskType.valueOf(delegateTask.getData().getTaskType()).getTaskGroup().name(), OVERRIDE_ERROR);
              AutoLogContext ignore2 = new AccountLogContext(delegateTask.getAccountId(), OVERRIDE_ERROR)) {
-          log.info("Rebroadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
-              delegateTask.getBroadcastCount());
+          if (delegateTask.getBroadcastCount() > 1) {
+            log.info("Rebroadcast queued task id {} on broadcast attempt: {} to {} ", delegateTask.getUuid(),
+                delegateTask.getBroadcastCount(), delegateTask.getBroadcastToDelegateIds());
+          } else {
+            log.debug("Broadcast queued task id {}. Broadcast count: {}", delegateTask.getUuid(),
+                delegateTask.getBroadcastCount());
+          }
           broadcastHelper.rebroadcastDelegateTask(delegateTask);
           count++;
         }

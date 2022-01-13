@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl;
 
 import static io.harness.cvng.core.services.CVNextGenConstants.CUSTOM_PACK_IDENTIFIER;
@@ -200,13 +207,17 @@ public class MetricPackServiceImpl implements MetricPackService {
   @Override
   public void createDefaultMetricPackAndThresholds(String accountId, String orgIdentifier, String projectIdentifier) {
     List<DataSourceType> dataSourceTypes = DataSourceType.getTimeSeriesTypes();
-
+    log.info(String.format("Adding Metric packs for accountId %s, orgIdentifier %s, projectIdentifier %s", accountId,
+        orgIdentifier, projectIdentifier));
     for (DataSourceType dataSourceType : dataSourceTypes) {
       final Map<String, MetricPack> metricPackDefinitionsFromYaml =
           getMetricPackDefinitionsFromYaml(accountId, orgIdentifier, projectIdentifier, dataSourceType);
       final ArrayList<MetricPack> metricPacks = Lists.newArrayList(metricPackDefinitionsFromYaml.values());
 
       if (isEmpty(getMetricPacks(accountId, orgIdentifier, projectIdentifier, dataSourceType))) {
+        log.info(String.format(
+            "Saving Metric packs for accountId %s, orgIdentifier %s, projectIdentifier %s for dataSourceType %s",
+            accountId, orgIdentifier, projectIdentifier, dataSourceType));
         hPersistence.save(metricPacks);
         metricPacks.forEach(metricPack
             -> createDefaultIgnoreThresholds(

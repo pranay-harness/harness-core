@@ -1,11 +1,20 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.remote;
 
 import static io.harness.NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE;
+import static io.harness.NGCommonEntityConstants.ORG_LIST_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.ORG_PARAM_MESSAGE;
 import static io.harness.NGCommonEntityConstants.PROJECT_PARAM_MESSAGE;
 import static io.harness.NGConstants.DEFAULT_ORG_IDENTIFIER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.CREATE_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.DELETE_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformPermissions.EDIT_PROJECT_PERMISSION;
@@ -199,6 +208,49 @@ public class ProjectResource {
             .moduleType(moduleType)
             .identifiers(identifiers)
             .build();
+    Page<Project> projects =
+        projectService.listPermittedProjects(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO);
+    return ResponseDTO.newResponse(getNGPageResponse(projects.map(ProjectMapper::toResponseWrapper)));
+  }
+
+  @GET
+  @Path("/list")
+  @ApiOperation(value = "Get Project list", nickname = "getProjectListWithMultiOrgFilter")
+  @Operation(operationId = "getProjectListWithMultiOrgFilter",
+      summary = "List user's project with support to filter by multiple organizations",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(responseCode = "default", description = "Paginated list of Projects")
+      })
+  public ResponseDTO<PageResponse<ProjectResponse>>
+  listWithMultiOrg(@Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+                       NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
+      @Parameter(description = ORG_LIST_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORGS_KEY) Set<String> orgIdentifiers,
+      @Parameter(description = "This boolean specifies whether to Filter Projects which has the Module of type "
+              + "passed in the module type parameter or to Filter Projects which does not has the Module of type "
+              + "passed in the module type parameter") @QueryParam(NGResourceFilterConstants.HAS_MODULE_KEY)
+      @DefaultValue("true") boolean hasModule,
+      @Parameter(
+          description = "This is the list of Project Identifiers. Details specific to these IDs would be fetched.")
+      @QueryParam(NGResourceFilterConstants.IDENTIFIERS) List<String> identifiers,
+      @Parameter(description = "Filter Projects by module type") @QueryParam(
+          NGResourceFilterConstants.MODULE_TYPE_KEY) ModuleType moduleType,
+      @Parameter(description = "Filter Projects by searching for this word in Name, Id, and Tag")
+      @QueryParam(NGResourceFilterConstants.SEARCH_TERM_KEY) String searchTerm, @BeanParam PageRequest pageRequest) {
+    if (isEmpty(pageRequest.getSortOrders())) {
+      SortOrder order =
+          SortOrder.Builder.aSortOrder().withField(ProjectKeys.lastModifiedAt, SortOrder.OrderType.DESC).build();
+      pageRequest.setSortOrders(ImmutableList.of(order));
+    }
+    ProjectFilterDTO projectFilterDTO = ProjectFilterDTO.builder()
+                                            .searchTerm(searchTerm)
+                                            .orgIdentifiers(isNotEmpty(orgIdentifiers) ? orgIdentifiers : null)
+                                            .hasModule(hasModule)
+                                            .moduleType(moduleType)
+                                            .identifiers(identifiers)
+                                            .build();
     Page<Project> projects =
         projectService.listPermittedProjects(accountIdentifier, getPageRequest(pageRequest), projectFilterDTO);
     return ResponseDTO.newResponse(getNGPageResponse(projects.map(ProjectMapper::toResponseWrapper)));

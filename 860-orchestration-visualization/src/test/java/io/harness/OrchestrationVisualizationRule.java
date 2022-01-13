@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.cache.CacheBackend.CAFFEINE;
@@ -27,6 +34,8 @@ import io.harness.mongo.MongoPersistence;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.opaclient.OpaServiceClient;
 import io.harness.persistence.HPersistence;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryService;
+import io.harness.pms.plan.execution.service.PmsExecutionSummaryServiceImpl;
 import io.harness.pms.sdk.PmsSdkConfiguration;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
@@ -151,6 +160,7 @@ public class OrchestrationVisualizationRule implements MethodRule, InjectorRuleM
         bind(UserClient.class).toInstance(mock(UserClient.class));
         bind(OpaServiceClient.class).toInstance(mock(OpaServiceClient.class));
         bind(HPersistence.class).to(MongoPersistence.class);
+        bind(PmsExecutionSummaryService.class).toInstance(mock(PmsExecutionSummaryServiceImpl.class));
         bind(new TypeLiteral<DelegateServiceGrpc.DelegateServiceBlockingStub>() {
         }).toInstance(DelegateServiceGrpc.newBlockingStub(InProcessChannelBuilder.forName(generateUuid()).build()));
       }

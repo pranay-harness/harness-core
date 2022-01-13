@@ -30,6 +30,7 @@ Anubhaw Srivastava anubhaw@harness.io
 Archit Singla archit.singla@harness.io
 Arpit Tiwari arpit.tiwari@harness.io
 Arvind Choudhary arvind.choudhary@harness.io
+Ashish Sanodia ashish.sanodia@harness.io
 Bharat Goel bharat.goel@harness.io
 Bogdan Azaric bogdan.azaric@harness.io
 Bojan Micovic bojan.micovic@harness.io
@@ -61,6 +62,7 @@ George Georgiev george@harness.io
 Guna Chandrasekaran guna.chandrasekaran@harness.io
 Hannah Tang hannah.tang@harness.io
 Harsh Jain harsh.jain@harness.io
+Hemanth Mantri hemanth.mantri@harness.io
 Hitesh Aringa hitesh.aringa@harness.io
 Igor Gere igor.gere@harness.io
 Inderpreet Chera inderpreet.chera@harness.io
@@ -110,6 +112,7 @@ Nikhil Ranjan nikhil.ranjan@harness.io
 Nikola Obucina nikola.obucina@harness.io
 Nikunj Badjatya nikunj.badjatya@harness.io
 Nitin Kotwal nitin.kotwal@harness.io
+Nishant Saini nishant.saini@harness.io
 Parnian Zargham parnian@harness.io
 Piyush Patel piyush.patel@harness.io
 Pooja Singhal pooja.singhal@harness.io
@@ -216,3 +219,4 @@ Hodaya Gamliel hodaya.gamliel@harness.io
 Amnon Danieli amnon.danieli@harness.io
 Gaurav Jain gaurav.jain@harness.io
 Trunapushpa trunapushpa.surkar@harness.io
+David Warren david.warren@harness.io

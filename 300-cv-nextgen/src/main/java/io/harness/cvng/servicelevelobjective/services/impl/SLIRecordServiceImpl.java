@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.services.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -16,6 +23,7 @@ import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
 import io.harness.persistence.HPersistence;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.time.Duration;
 import java.time.Instant;
@@ -32,8 +40,8 @@ import org.mongodb.morphia.query.Sort;
 
 public class SLIRecordServiceImpl implements SLIRecordService {
   @VisibleForTesting static int MAX_NUMBER_OF_POINTS = 2000;
-  @Inject private HPersistence hPersistence;
   private static final int RETRY_COUNT = 3;
+  @Inject private HPersistence hPersistence;
 
   @Override
   public void create(List<SLIRecordParam> sliRecordParamList, String sliId, String verificationTaskId, int sliVersion) {
@@ -125,6 +133,7 @@ public class SLIRecordServiceImpl implements SLIRecordService {
   @Override
   public SLOGraphData getGraphData(String sliId, Instant startTime, Instant endTime, int totalErrorBudgetMinutes,
       SLIMissingDataType sliMissingDataType, int sliVersion) {
+    Preconditions.checkState(totalErrorBudgetMinutes != 0, "Total error budget minutes should not be zero.");
     List<SLIRecord> sliRecords = sliRecords(sliId, startTime, endTime);
     List<Point> sliTread = new ArrayList<>();
     List<Point> errorBudgetBurndown = new ArrayList<>();

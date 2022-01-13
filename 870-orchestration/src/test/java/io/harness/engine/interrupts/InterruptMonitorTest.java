@@ -1,12 +1,21 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.interrupts;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.interrupts.Interrupt.State.PROCESSED_SUCCESSFULLY;
+import static io.harness.interrupts.Interrupt.State.PROCESSED_UNSUCCESSFULLY;
 import static io.harness.rule.OwnerRule.PRASHANT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -36,6 +45,8 @@ import org.junit.experimental.categories.Category;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.data.mapping.model.MappingInstantiationException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public class InterruptMonitorTest extends OrchestrationTestBase {
@@ -557,5 +568,96 @@ public class InterruptMonitorTest extends OrchestrationTestBase {
             discontinuingNodeCaptor.capture(), eq(interrupt.getUuid()), eq(interrupt.getInterruptConfig()));
     NodeExecution dne = discontinuingNodeCaptor.getValue();
     assertThat(dne.getUuid()).isEqualTo(stepSg2.getUuid());
+  }
+
+  @Test
+  @Owner(developers = PRASHANT)
+  @Category(UnitTests.class)
+  public void shouldTestLeafDiscontinuingException() {
+    String planExecutionId = generateUuid();
+    PlanExecution planExecution = PlanExecution.builder().uuid(planExecutionId).status(Status.RUNNING).build();
+    Interrupt interrupt = Interrupt.builder()
+                              .uuid(generateUuid())
+                              .planExecutionId(planExecutionId)
+                              .type(InterruptType.ABORT_ALL)
+                              .state(Interrupt.State.PROCESSING)
+                              .build();
+    NodeExecution pipeline = NodeExecution.builder()
+                                 .uuid(generateUuid() + "_pipeline")
+                                 .status(Status.RUNNING)
+                                 .mode(ExecutionMode.CHILD)
+                                 .build();
+    NodeExecution stages = NodeExecution.builder()
+                               .uuid(generateUuid() + "_stages")
+                               .status(Status.RUNNING)
+                               .mode(ExecutionMode.CHILD)
+                               .parentId(pipeline.getUuid())
+                               .build();
+    NodeExecution stage = NodeExecution.builder()
+                              .uuid(generateUuid() + "_stage")
+                              .status(Status.RUNNING)
+                              .mode(ExecutionMode.CHILD)
+                              .parentId(stages.getUuid())
+                              .build();
+    NodeExecution execution = NodeExecution.builder()
+                                  .uuid(generateUuid() + "_execution")
+                                  .status(Status.RUNNING)
+                                  .mode(ExecutionMode.CHILD)
+                                  .parentId(stage.getUuid())
+                                  .build();
+
+    NodeExecution fork = NodeExecution.builder()
+                             .uuid(generateUuid() + "_fork")
+                             .status(Status.RUNNING)
+                             .mode(ExecutionMode.CHILDREN)
+                             .parentId(execution.getUuid())
+                             .build();
+
+    NodeExecution sg1 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg1")
+                            .status(Status.SUCCEEDED)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg1 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg1")
+                                .status(Status.SUCCEEDED)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg1.getUuid())
+                                .build();
+
+    NodeExecution sg2 = NodeExecution.builder()
+                            .uuid(generateUuid() + "_sg2")
+                            .status(Status.RUNNING)
+                            .mode(ExecutionMode.CHILD)
+                            .parentId(fork.getUuid())
+                            .build();
+
+    NodeExecution stepSg2 = NodeExecution.builder()
+                                .uuid(generateUuid() + "_stepSg2")
+                                .status(Status.DISCONTINUING)
+                                .mode(ExecutionMode.SYNC)
+                                .parentId(sg2.getUuid())
+                                .build();
+
+    when(planExecutionService.get(eq(planExecutionId))).thenReturn(planExecution);
+    when(nodeExecutionService.findAllNodeExecutionsTrimmed(eq(planExecutionId)))
+        .thenReturn(Arrays.asList(pipeline, stages, stage, execution, fork, sg1, sg2, stepSg1, stepSg2));
+
+    when(nodeExecutionService.updateStatusWithOps(
+             eq(sg2.getUuid()), eq(Status.DISCONTINUING), any(), eq(EnumSet.noneOf(Status.class))))
+        .thenReturn(NodeExecution.builder()
+                        .uuid(sg2.getUuid())
+                        .status(Status.DISCONTINUING)
+                        .mode(ExecutionMode.CHILD)
+                        .parentId(stage.getUuid())
+                        .build());
+    doThrow(MappingInstantiationException.class)
+        .when(abortHelper)
+        .abortDiscontinuingNode(stepSg2, interrupt.getUuid(), interrupt.getInterruptConfig());
+    interruptMonitor.handle(interrupt);
+    verify(interruptService, times(1)).markProcessed(eq(interrupt.getUuid()), eq(PROCESSED_UNSUCCESSFULLY));
+    Mockito.verifyNoMoreInteractions(interruptService);
   }
 }

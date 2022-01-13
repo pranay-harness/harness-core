@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.k8s;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -19,6 +26,7 @@ import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
 import io.fabric8.kubernetes.api.model.extensions.Ingress;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.kubernetes.client.openapi.models.V1ConfigMap;
+import io.kubernetes.client.openapi.models.V1ObjectMeta;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1Secret;
 import io.kubernetes.client.openapi.models.V1SelfSubjectAccessReview;
@@ -26,6 +34,7 @@ import io.kubernetes.client.openapi.models.V1Service;
 import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.openapi.models.V1TokenReviewStatus;
 import io.kubernetes.client.openapi.models.VersionInfo;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -144,17 +153,16 @@ public interface KubernetesContainerService {
   void waitForPodsToStop(KubernetesConfig kubernetesConfig, Map<String, String> labels, int serviceSteadyStateTimeout,
       List<Pod> originalPods, long startTime, LogCallback logCallback);
 
-  String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String infraMappingId);
+  String fetchReleaseHistoryFromConfigMap(KubernetesConfig kubernetesConfig, String infraMappingId) throws IOException;
 
-  String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId);
+  String fetchReleaseHistoryFromSecrets(KubernetesConfig kubernetesConfig, String infraMappingId) throws IOException;
 
-  V1ConfigMap saveReleaseHistoryInConfigMap(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
+  String fetchReleaseHistoryValue(V1ConfigMap configMap) throws IOException;
 
-  V1Secret saveReleaseHistoryInSecrets(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory);
+  String fetchReleaseHistoryValue(V1Secret secret) throws IOException;
 
-  void saveReleaseHistory(
-      KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory, boolean storeInSecrets);
+  V1ObjectMeta saveReleaseHistory(KubernetesConfig kubernetesConfig, String releaseName, String releaseHistory,
+      boolean storeInSecrets) throws IOException;
 
   List<V1Pod> getRunningPodsWithLabels(KubernetesConfig kubernetesConfig, String namespace, Map<String, String> labels);
 

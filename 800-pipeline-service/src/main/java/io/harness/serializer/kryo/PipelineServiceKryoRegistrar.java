@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.serializer.kryo;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -6,7 +13,10 @@ import io.harness.pms.approval.jira.JiraApprovalCallback;
 import io.harness.pms.approval.servicenow.ServiceNowApprovalCallback;
 import io.harness.pms.async.plan.PartialPlanCreatorResponseData;
 import io.harness.pms.async.plan.PartialPlanResponseCallback;
-import io.harness.pms.pipeline.service.yamlschema.PartialSchemaValue;
+import io.harness.pms.pipeline.service.yamlschema.cache.PartialSchemaDTOValue;
+import io.harness.pms.pipeline.service.yamlschema.cache.PartialSchemaDTOWrapperValue;
+import io.harness.pms.pipeline.service.yamlschema.cache.YamlSchemaDetailsValue;
+import io.harness.pms.pipeline.service.yamlschema.cache.YamlSchemaDetailsWrapperValue;
 import io.harness.serializer.KryoRegistrar;
 
 import com.esotericsoftware.kryo.Kryo;
@@ -19,6 +29,9 @@ public class PipelineServiceKryoRegistrar implements KryoRegistrar {
     kryo.register(PartialPlanResponseCallback.class, 800002);
     kryo.register(PartialPlanCreatorResponseData.class, 800003);
     kryo.register(ServiceNowApprovalCallback.class, 800004);
-    kryo.register(PartialSchemaValue.class, 800005);
+    kryo.register(PartialSchemaDTOValue.class, 800005);
+    kryo.register(YamlSchemaDetailsWrapperValue.class, 800006);
+    kryo.register(YamlSchemaDetailsValue.class, 800007);
+    kryo.register(PartialSchemaDTOWrapperValue.class, 800008);
   }
 }

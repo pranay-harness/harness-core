@@ -1,11 +1,21 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.exceptionhandler.handler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAILED_TO_GET_EXISTING_WORKSPACES;
+import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Hints.HINT_FAIL_TO_INSTALL_PROVIDER;
 import static io.harness.delegate.task.terraform.TerraformExceptionConstants.Message.MESSAGE_FAILED_TO_GET_EXISTING_WORKSPACES;
 import static io.harness.rule.OwnerRule.ABOSII;
+import static io.harness.rule.OwnerRule.TATHAGAT;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -39,6 +49,14 @@ public class TerraformRuntimeExceptionHandlerTest {
       "\u001B[31m\u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mUnknown error with terraform block and argument\u001B[0m\u001B[0m  on main.tf line 1, in cloud \"test\":   1: argument \"test\" \u001B[4m{\u001B[0m\u001B[0mSomething went wrong and we're not aware of this error or error itself is self explanatory\u001B[0m\u001B[0m";
   private static final String TEST_ERROR_FAILED_WORKSPACES =
       "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mFailed to get existing workspaces: Get \"http://127.0.0.1:8500/v1/kv/state-env:?keys=&separator=%2F\": dial tcp 127.0.0.1:8500: connect: connection refused\u001B[0m  \u001B[0m\u001B[0m\u001B[0m";
+  private static final String TEST_ERROR_INVALID_REGION_TF13 =
+      "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mInvalid AWS Region: random\u001B[0m  \u001B[0m  on config.tf line 15, in provider \"aws\":   15: provider \"aws\" \u001B[4m{\u001B[0m \u001B[0m \u001B[0m\u001B[0m";
+  private static final String TEST_ERROR_S3_BACKEND_CONFIG =
+      "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1merror configuring S3 Backend: no valid credential sources for S3 Backend found \u001B[0m  \u001B[0m\u001B[0m\u001B[0m";
+  private static final String NO_DIR_EXIST_ERROR_MESSAGE =
+      "Could not find provided terraform config folder terraform-dir/module1";
+  private static final String TEST_ERROR_FAILED_INSTALL_PROVIDER =
+      "[31m \u001B[1m\u001B[31mError: \u001B[0m\u001B[0m\u001B[1mFailed to install provider\u001B[0m  \u001B[0mError while installing hashicorp/null v3.1.0: mkdir .terraform: no such file or directory \u001B[0m\u001B[0m";
 
   TerraformRuntimeExceptionHandler handler = new TerraformRuntimeExceptionHandler();
 
@@ -76,6 +94,52 @@ public class TerraformRuntimeExceptionHandlerTest {
         format(HINT_CHECK_TERRAFORM_CONFIG_LOCATION_ARGUMENT, "main.tf", "1", "cloud \"test\"", "argument \"test\""),
         "Something went wrong and we're not aware of this error or error itself is self explanatory",
         "Unknown error with terraform block");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleErrorInvalidRegionOldTfVersion13() {
+    TerraformCliRuntimeException cliRuntimeException =
+        new TerraformCliRuntimeException("Terraform failed", "terraform refresh", TEST_ERROR_INVALID_REGION_TF13);
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException),
+        format(HINT_CHECK_TERRAFORM_CONFIG_LOCATION, "config.tf", "15", "provider \"aws\""), null,
+        "terraform refresh failed with: Invalid AWS Region: random");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleConfigDirNotExistError() {
+    TerraformCliRuntimeException cliRuntimeException = new TerraformCliRuntimeException(
+        format("Failed to execute terraform Command %s : Reason: %s", "terraform init", NO_DIR_EXIST_ERROR_MESSAGE),
+        "terraform init", NO_DIR_EXIST_ERROR_MESSAGE);
+
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException),
+        "Please check your inputs for Configuration File Repository", null,
+        format("terraform init failed with: %s", NO_DIR_EXIST_ERROR_MESSAGE));
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testHandleErrorInvalidS3BackendConfig() {
+    TerraformCliRuntimeException cliRuntimeException =
+        new TerraformCliRuntimeException("Terraform failed", "terraform init", TEST_ERROR_S3_BACKEND_CONFIG);
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException), HINT_FAILED_TO_GET_EXISTING_WORKSPACES,
+        "error configuring S3 Backend: no valid credential sources for S3 Backend found",
+        "terraform init failed with: error configuring S3 Backend: no valid credential sources for S3 Backend found");
+  }
+
+  @Test
+  @Owner(developers = TATHAGAT)
+  @Category(UnitTests.class)
+  public void testFailedToInstallProviderError() {
+    TerraformCliRuntimeException cliRuntimeException =
+        new TerraformCliRuntimeException("Terraform failed", "terraform init", TEST_ERROR_FAILED_INSTALL_PROVIDER);
+    assertSingleErrorMessage(handler.handleException(cliRuntimeException), HINT_FAIL_TO_INSTALL_PROVIDER,
+        "Error while installing hashicorp/null v3.1.0: mkdir .terraform: no such file or directory",
+        "terraform init failed with: Failed to install provider");
   }
 
   @Test
@@ -118,7 +182,9 @@ public class TerraformRuntimeExceptionHandlerTest {
         ExceptionUtils.cause(TerraformCommandExecutionException.class, exception);
 
     assertThat(hintException.getMessage()).isEqualTo(hint);
-    assertThat(explanationException.getMessage()).contains(explanation);
+    if (explanationException != null && isNotEmpty(explanationException.getMessage())) {
+      assertThat(explanationException.getMessage()).contains(explanation);
+    }
     assertThat(terraformException.getMessage()).contains(message);
   }
 

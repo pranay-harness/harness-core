@@ -1,6 +1,13 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.k8s.watch;
 
-import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.MOST_RECENT;
+import static io.harness.perpetualtask.k8s.utils.ResourceVersionMatch.NOT_OLDER_THAN;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.HarnessTeam;
@@ -34,7 +41,7 @@ public class NamespaceFetcher {
         sharedInformerFactory
             .sharedIndexInformerFor((CallGeneratorParams callGeneratorParams)
                                         -> this.coreV1Api.listNamespaceCall(null, null, null, null, null, null,
-                                            callGeneratorParams.resourceVersion, MOST_RECENT,
+                                            callGeneratorParams.resourceVersion, NOT_OLDER_THAN,
                                             callGeneratorParams.timeoutSeconds, callGeneratorParams.watch, null),
                 V1Namespace.class, V1NamespaceList.class)
             .getIndexer();

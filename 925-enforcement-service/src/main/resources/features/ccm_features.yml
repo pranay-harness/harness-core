@@ -8,7 +8,7 @@ clients:
     secretConfig: nextGenConfig.ngManagerServiceSecret
   - name: lightwing
     clientConfig: lightwingClientConfig
-    secretConfig: nextGenConfig.ngManagerServiceSecret
+    secretConfig: nextGenConfig.jwtAuthSecret
 features:
   - name: PERSPECTIVES
     description: Availability & limiting number of custom perspectives

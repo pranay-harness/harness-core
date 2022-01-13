@@ -39,8 +39,8 @@ commonPoolConfig:
   timeUnit: ${COMMON_POOL_IDLE_TIME_TIME_UNIT:-MILLISECONDS}
 
 orchestrationVisualizationThreadPoolConfig:
-  corePoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_CORE_SIZE:-10}
-  maxPoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_MAX_SIZE:-20}
+  corePoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_CORE_SIZE:-3}
+  maxPoolSize: ${ORCHESTRATION_VISUALIZATION_POOL_MAX_SIZE:-10}
   idleTime: ${ORCHESTRATION_VISUALIZATION_POOL_IDLE_TIME:-10}
   timeUnit: ${ORCHESTRATION_VISUALIZATION_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
 
@@ -231,7 +231,7 @@ iteratorsConfig:
     enabled: true
     targetIntervalInSeconds: 60
   interruptMonitor:
-    threadPoolCount: 1
+    threadPoolCount: 2
     enabled: true
     targetIntervalInSeconds: 180
 
@@ -343,7 +343,7 @@ segmentConfiguration:
 enforcementClientConfiguration:
   enforcementCheckEnabled: false
 
-shouldUseInstanceCache: true
+shouldUseInstanceCache: ${SHOULD_USE_INSTANCE_CACHE:-true}
 
 pmsPlanCreatorServicePoolConfig:
   corePoolSize: ${PLAN_CREATOR_SERVICE_EXECUTOR_POOL_CORE_SIZE:-2}
@@ -356,3 +356,37 @@ planCreatorMergeServicePoolConfig:
   maxPoolSize: ${PLAN_CREATOR_MERGE_SERVICE_EXECUTOR_POOL_MAX_SIZE:-10}
   idleTime: ${PLAN_CREATOR_MERGE_SERVICE_EXECUTOR_POOL_IDLE_TIME:-30}
   timeUnit: ${PLAN_CREATOR_MERGE_SERVICE_EXECUTOR_POOL_IDLE_TIME_TIME_UNIT:-SECONDS}
+
+pipelineRedisEventsConfig:
+  setupUsage:
+    maxTopicSize: ${SETUP_USAGE_MAX_TOPIC_SIZE:-10000}
+  planNotifyEvent:
+    maxTopicSize: ${PLAN_NOTIFY_EVENT_MAX_TOPIC_SIZE:-5000}
+  webhookPayloadDetails:
+    maxTopicSize: ${WEBHOOK_REQUEST_PAYLOAD_DETAILS_MAX_TOPIC_SIZE:-10000}
+  entityCrud:
+    maxTopicSize: ${ENTITY_CRUD_MAX_TOPIC_SIZE:-100000}
+  orchestrationNotifyEvent:
+    maxTopicSize: ${PMS_ORCHESTRATION_NOTIFY_EVENT_MAX_TOPIC_SIZE:-5000}
+
+pipelineSdkRedisEventsConfig:
+  pipelineSdkResponseEvent:
+    maxTopicSize: ${PIPELINE_SDK_RESPONSE_EVENT_MAX_TOPIC_SIZE:-5000}
+
+orchestrationRedisEventsConfig:
+  pipelineInterruptEvent:
+    maxTopicSize: ${PIPELINE_INTERRUPT_EVENT_MAX_TOPIC_SIZE:-1000}
+  pipelineOrchestrationEvent:
+    maxTopicSize: ${PIPELINE_ORCHESTRATION_EVENT_MAX_TOPIC_SIZE:-5000}
+  pipelineFacilitatorEvent:
+    maxTopicSize: ${PIPELINE_FACILITATOR_EVENT_MAX_TOPIC_SIZE:-5000}
+  pipelineNodeStartEvent:
+    maxTopicSize: ${PIPELINE_NODE_START_EVENT_MAX_TOPIC_SIZE:-5000}
+  pipelineProgressEvent:
+    maxTopicSize: ${PIPELINE_PROGRESS_MAX_TOPIC_SIZE:-5000}
+  pipelineNodeAdviseEvent:
+    maxTopicSize: ${PIPELINE_NODE_ADVISE_MAX_TOPIC_SIZE:-5000}
+  pipelineNodeResumeEvent:
+    maxTopicSize: ${PIPELINE_NODE_RESUME_MAX_TOPIC_SIZE:-5000}
+  pipelineStartPartialPlanCreator:
+    maxTopicSize: ${START_PARTIAL_PLAN_CREATOR_MAX_TOPIC_SIZE:-5000}

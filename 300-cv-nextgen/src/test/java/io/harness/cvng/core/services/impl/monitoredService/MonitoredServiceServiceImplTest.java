@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.cvng.core.utils.DateTimeUtils.roundDownTo5MinBoundary;
@@ -27,9 +34,16 @@ import io.harness.cvng.BuilderFactory;
 import io.harness.cvng.analysis.beans.Risk;
 import io.harness.cvng.beans.CVMonitoringCategory;
 import io.harness.cvng.beans.DataSourceType;
+import io.harness.cvng.beans.MonitoredServiceDataSourceType;
 import io.harness.cvng.beans.MonitoredServiceType;
+import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.beans.change.ChangeEventDTO;
 import io.harness.cvng.client.NextGenService;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO.DeploymentVerificationDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.AnalysisDTO.LiveMonitoringDTO;
+import io.harness.cvng.core.beans.HealthSourceMetricDefinition.SLIDTO;
+import io.harness.cvng.core.beans.RiskProfile;
 import io.harness.cvng.core.beans.change.ChangeSummaryDTO;
 import io.harness.cvng.core.beans.monitoredService.ChangeSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.CountServiceDTO;
@@ -44,6 +58,8 @@ import io.harness.cvng.core.beans.monitoredService.MonitoredServiceListItemDTO;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceResponse;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceWithHealthSources;
 import io.harness.cvng.core.beans.monitoredService.RiskData;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec;
+import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.AppDynamicsHealthSourceSpec.AppDMetricDefinitions;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceSpec;
 import io.harness.cvng.core.beans.params.ProjectParams;
@@ -68,6 +84,9 @@ import io.harness.cvng.dashboard.entities.HeatMap;
 import io.harness.cvng.dashboard.entities.HeatMap.HeatMapRisk;
 import io.harness.cvng.dashboard.services.api.HeatMapService;
 import io.harness.cvng.models.VerificationType;
+import io.harness.cvng.servicelevelobjective.beans.ErrorBudgetRisk;
+import io.harness.cvng.servicelevelobjective.entities.SLOHealthIndicator;
+import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ng.beans.PageResponse;
@@ -87,6 +106,7 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -111,7 +131,7 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
   @Inject HeatMapService heatMapService;
   @Inject HPersistence hPersistence;
   @Inject ServiceDependencyService serviceDependencyService;
-  @Inject HealthSourceService healthSourceService;
+  @Inject ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Mock NextGenService nextGenService;
   @Mock SetupUsageEventService setupUsageEventService;
   @Mock ChangeSourceService changeSourceServiceMock;
@@ -387,6 +407,64 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
             .map(changeSource -> changeSource.getIdentifier())
             .collect(toList()));
     assertThat(changeSources.size()).isEqualTo(2);
+  }
+
+  @Test
+  @Owner(developers = ABHIJITH)
+  @Category(UnitTests.class)
+  public void testUpdate_beforeUpdatehandlerInvoked() {
+    MonitoredServiceDTO existingMonitoredService =
+        builderFactory.monitoredServiceDTOBuilder()
+            .sources(
+                Sources.builder()
+                    .healthSources(new HashSet<>(Arrays.asList(
+                        HealthSource.builder()
+                            .identifier("healthSourceIdentifier")
+                            .name("health source name")
+                            .type(MonitoredServiceDataSourceType.APP_DYNAMICS)
+                            .spec(AppDynamicsHealthSourceSpec.builder()
+                                      .applicationName("appApplicationName")
+                                      .tierName("tier")
+                                      .connectorRef("CONNECTOR_IDENTIFIER")
+                                      .feature("Application Monitoring")
+                                      .metricDefinitions(Arrays.asList(
+                                          AppDMetricDefinitions.builder()
+                                              .identifier("metric1")
+                                              .metricName("metric2")
+                                              .groupName("group1")
+                                              .metricPath("path2")
+                                              .baseFolder("baseFolder2")
+                                              .sli(SLIDTO.builder().enabled(true).build())
+                                              .analysis(
+                                                  AnalysisDTO.builder()
+                                                      .riskProfile(RiskProfile.builder()
+                                                                       .category(CVMonitoringCategory.ERRORS)
+                                                                       .metricType(TimeSeriesMetricType.INFRA)
+                                                                       .build())
+                                                      .deploymentVerification(DeploymentVerificationDTO.builder()
+                                                                                  .enabled(true)
+                                                                                  .serviceInstanceMetricPath("path")
+                                                                                  .build())
+                                                      .liveMonitoring(LiveMonitoringDTO.builder().enabled(true).build())
+                                                      .build())
+                                              .build()))
+                                      .build())
+                            .build())))
+                    .build())
+            .build();
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), existingMonitoredService);
+    MonitoredServiceDTO updatingMonitoredService =
+        builderFactory.monitoredServiceDTOBuilder()
+            .identifier(existingMonitoredService.getIdentifier())
+            .sources(Sources.builder().healthSources(new HashSet<>()).build())
+            .build();
+    serviceLevelIndicatorService.create(builderFactory.getProjectParams(),
+        Arrays.asList(builderFactory.getServiceLevelIndicatorDTOBuilder()), "sloIdentifier",
+        existingMonitoredService.getIdentifier(), "healthSourceIdentifier");
+    assertThatThrownBy(
+        () -> monitoredServiceService.update(builderFactory.getContext().getAccountId(), updatingMonitoredService))
+        .hasMessage(
+            "Deleting metrics are used in SLIs, Please delete the SLIs before deleting metrics. SLIs : sloIdentifier_metric1");
   }
 
   @Test
@@ -1043,6 +1121,15 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
 
     assertThat(monitoredServiceWithHealthSourcesList.size()).isEqualTo(2);
     assertThat(monitoredServiceWithHealthSourcesList.get(0).getIdentifier()).isEqualTo(identifier1);
+    assertThat(monitoredServiceWithHealthSourcesList.get(0).getHealthSources().size()).isEqualTo(1);
+    assertThat(
+        monitoredServiceWithHealthSourcesList.get(0).getHealthSources().stream().findFirst().get().getIdentifier())
+        .isEqualTo("healthSourceIdentifier");
+    assertThat(monitoredServiceWithHealthSourcesList.get(1).getIdentifier()).isEqualTo(identifier2);
+    assertThat(monitoredServiceWithHealthSourcesList.get(1).getHealthSources().size()).isEqualTo(1);
+    assertThat(
+        monitoredServiceWithHealthSourcesList.get(1).getHealthSources().stream().findFirst().get().getIdentifier())
+        .isEqualTo("healthSourceIdentifier");
   }
 
   @Test
@@ -1311,6 +1398,117 @@ public class MonitoredServiceServiceImplTest extends CvNextGenTestBase {
     assertThat(monitoredServiceListItemDTO.getDependentHealthScore().size()).isEqualTo(2);
     assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(0).getRiskStatus()).isEqualTo(Risk.UNHEALTHY);
     assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testGetMonitoredServiceFromDependencyGraph_withCorrectServiceIdentifierAndSLOHealthIndicator() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    MonitoredServiceDTO monitoredServiceOneDTO = createMonitoredServiceDTOWithCustomDependencies("service_1_local",
+        environmentParams.getServiceIdentifier(), Sets.newHashSet("service_2_local", "service_3_local"));
+    MonitoredServiceDTO monitoredServiceTwoDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_2_local", "service_2", Sets.newHashSet());
+    MonitoredServiceDTO monitoredServiceThreeDTO =
+        createMonitoredServiceDTOWithCustomDependencies("service_3_local", "service_3", Sets.newHashSet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceOneDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceTwoDTO);
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceThreeDTO);
+
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+
+    HeatMap msOneHeatMap = builderFactory.heatMapBuilder()
+                               .serviceIdentifier(environmentParams.getServiceIdentifier())
+                               .heatMapResolution(FIVE_MIN)
+                               .build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msOneHeatMap, endTime, 0.15, 0.15);
+    hPersistence.save(msOneHeatMap);
+
+    HeatMap msTwoHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_2").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msTwoHeatMap, endTime, 0.85, 0.85);
+    hPersistence.save(msTwoHeatMap);
+
+    HeatMap msThreeHeatMap =
+        builderFactory.heatMapBuilder().serviceIdentifier("service_3").heatMapResolution(FIVE_MIN).build();
+    setStartTimeEndTimeAndRiskScoreWith5MinBucket(msThreeHeatMap, endTime, 0.50, 0.50);
+    hPersistence.save(msThreeHeatMap);
+    SLOHealthIndicator sloHealthIndicator = SLOHealthIndicator.builder()
+                                                .accountId(builderFactory.getContext().getAccountId())
+                                                .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+                                                .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+                                                .monitoredServiceIdentifier("service_1_local")
+                                                .serviceLevelObjectiveIdentifier("sloIdentifier")
+                                                .errorBudgetRemainingPercentage(70.0)
+                                                .build();
+    hPersistence.save(sloHealthIndicator);
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO =
+        monitoredServiceService.getMonitoredServiceDetails(environmentParams);
+    assertThat(monitoredServiceListItemDTO.getIdentifier()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getName()).isEqualTo("service_1_local");
+    assertThat(monitoredServiceListItemDTO.getServiceRef()).isEqualTo(environmentParams.getServiceIdentifier());
+    assertThat(monitoredServiceListItemDTO.getEnvironmentRef()).isEqualTo(environmentParams.getEnvironmentIdentifier());
+    assertThat(monitoredServiceListItemDTO.getType()).isEqualTo(MonitoredServiceType.APPLICATION);
+    assertThat(monitoredServiceListItemDTO.isHealthMonitoringEnabled()).isTrue();
+    assertThat(monitoredServiceListItemDTO.getServiceName()).isEqualTo("serviceName");
+    assertThat(monitoredServiceListItemDTO.getEnvironmentName()).isEqualTo("environmentName");
+    assertThat(monitoredServiceListItemDTO.getCurrentHealthScore().getRiskStatus()).isEqualTo(Risk.HEALTHY);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().size()).isEqualTo(2);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(0).getRiskStatus()).isEqualTo(Risk.UNHEALTHY);
+    assertThat(monitoredServiceListItemDTO.getDependentHealthScore().get(1).getRiskStatus()).isEqualTo(Risk.OBSERVE);
+    assertThat(monitoredServiceListItemDTO.getSloHealthIndicators().size()).isEqualTo(1);
+    MonitoredServiceListItemDTO.SloHealthIndicatorDTO sloHealthIndicatorResponse =
+        monitoredServiceListItemDTO.getSloHealthIndicators().get(0);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.OBSERVE);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRemainingPercentage()).isEqualTo(70.0);
+    assertThat(sloHealthIndicatorResponse.getServiceLevelObjectiveIdentifier()).isEqualTo("sloIdentifier");
+  }
+
+  @Test
+  @Owner(developers = DEEPAK_CHHIKARA)
+  @Category(UnitTests.class)
+  public void testGetMonitoredService_withSLOHealthIndicator() {
+    MonitoredServiceDTO monitoredServiceDTO = createMonitoredServiceDTO();
+    monitoredServiceDTO.setDependencies(Collections.emptySet());
+    monitoredServiceService.create(builderFactory.getContext().getAccountId(), monitoredServiceDTO);
+    when(nextGenService.listService(any(), any(), any(), any())).thenReturn(new ArrayList<ServiceResponse>() {
+      { add(ServiceResponse.builder().service(ServiceResponseDTO.builder().name("serviceName").build()).build()); }
+    });
+    when(nextGenService.listEnvironment(any(), any(), any(), any())).thenReturn(new ArrayList<EnvironmentResponse>() {
+      {
+        add(EnvironmentResponse.builder()
+                .environment(EnvironmentResponseDTO.builder().name("environmentName").build())
+                .build());
+      }
+    });
+    SLOHealthIndicator sloHealthIndicator = SLOHealthIndicator.builder()
+                                                .accountId(builderFactory.getContext().getAccountId())
+                                                .orgIdentifier(builderFactory.getContext().getOrgIdentifier())
+                                                .projectIdentifier(builderFactory.getContext().getProjectIdentifier())
+                                                .monitoredServiceIdentifier(monitoredServiceIdentifier)
+                                                .serviceLevelObjectiveIdentifier("sloIdentifier")
+                                                .errorBudgetRemainingPercentage(70.0)
+                                                .build();
+    hPersistence.save(sloHealthIndicator);
+    PageResponse<MonitoredServiceListItemDTO> monitoredServiceListItemDTOPageResponse =
+        monitoredServiceService.list(projectParams, environmentIdentifier, 0, 10, null, false);
+    MonitoredServiceListItemDTO monitoredServiceListItemDTO =
+        monitoredServiceListItemDTOPageResponse.getContent().get(0);
+    assertThat(monitoredServiceListItemDTO.getSloHealthIndicators().size()).isEqualTo(1);
+    MonitoredServiceListItemDTO.SloHealthIndicatorDTO sloHealthIndicatorResponse =
+        monitoredServiceListItemDTO.getSloHealthIndicators().get(0);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRisk()).isEqualTo(ErrorBudgetRisk.OBSERVE);
+    assertThat(sloHealthIndicatorResponse.getErrorBudgetRemainingPercentage()).isEqualTo(70.0);
+    assertThat(sloHealthIndicatorResponse.getServiceLevelObjectiveIdentifier()).isEqualTo("sloIdentifier");
   }
 
   @Test

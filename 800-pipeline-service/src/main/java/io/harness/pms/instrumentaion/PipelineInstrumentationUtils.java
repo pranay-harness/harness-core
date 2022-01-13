@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.instrumentaion;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -12,9 +19,12 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
@@ -50,15 +60,20 @@ public class PipelineInstrumentationUtils {
         .collect(Collectors.toList());
   }
 
-  public List<String> getErrorMessagesFromPipelineExecutionSummary(
+  public Set<String> getErrorMessagesFromPipelineExecutionSummary(
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
     if (pipelineExecutionSummaryEntity.getFailureInfo() == null) {
-      return Collections.emptyList();
+      return Collections.emptySet();
     }
-    return pipelineExecutionSummaryEntity.getFailureInfo()
-        .getResponseMessages()
-        .stream()
-        .map(o -> o.getMessage())
-        .collect(Collectors.toList());
+    Set<String> errorMessages = new HashSet<>();
+    if (!StringUtils.isEmpty(pipelineExecutionSummaryEntity.getFailureInfo().getMessage())) {
+      errorMessages.add(pipelineExecutionSummaryEntity.getFailureInfo().getMessage());
+    }
+    errorMessages.addAll(pipelineExecutionSummaryEntity.getFailureInfo()
+                             .getResponseMessages()
+                             .stream()
+                             .map(o -> o.getMessage())
+                             .collect(Collectors.toList()));
+    return errorMessages;
   }
 }

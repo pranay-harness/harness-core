@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
@@ -109,6 +116,7 @@ import software.wings.beans.alert.ManualInterventionNeededAlert;
 import software.wings.beans.alert.RuntimeInputsRequiredAlert;
 import software.wings.common.NotificationMessageResolver;
 import software.wings.dl.WingsPersistence;
+import software.wings.exception.StateExecutionInstanceUpdateException;
 import software.wings.exception.StateMachineIssueException;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
@@ -614,6 +622,8 @@ public class StateMachineExecutor implements StateInspectionListener {
       executionResponse = getExecutionResponseWithAdvise(context, executionResponse, currentState);
 
       handleResponse(context, executionResponse);
+    } catch (StateExecutionInstanceUpdateException exception) {
+      log.error("Exception occurred while updating state execution instance : {}", exception);
     } catch (WingsException exception) {
       ex = exception;
       log.error("Exception occurred while starting state execution : {}", exception);
@@ -768,7 +778,9 @@ public class StateMachineExecutor implements StateInspectionListener {
           StateExecutionInstance dbStateExecutionInstance =
               wingsPersistence.get(StateExecutionInstance.class, stateExecutionInstance.getUuid());
           if (ExecutionStatus.isFinalStatus(dbStateExecutionInstance.getStatus())) {
-            throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
+            log.warn("updateStateExecutionData failed. StateExecutionInstance is in status: "
+                + stateExecutionInstance.getStatus());
+            throw new StateExecutionInstanceUpdateException("updateStateExecutionData failed");
           } else {
             throw new WingsException("updateStateExecutionData failed", WingsException.NOBODY);
           }

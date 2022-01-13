@@ -1,0 +1,8 @@
+name: Get stats of redis event
+identifier: redis_event_stats
+metricGroup: redis_event
+metrics:
+  - metricName: redis_push_event_metric
+    metricDefinition: redis push event metric
+    type: Count
+    unit: "1"

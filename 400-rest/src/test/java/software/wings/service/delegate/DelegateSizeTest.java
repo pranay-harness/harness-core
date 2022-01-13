@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.delegate;
 
 import static io.harness.rule.OwnerRule.BOJAN;
@@ -35,12 +42,11 @@ public class DelegateSizeTest extends WingsBaseTest {
     PowerMockito.mockStatic(DeployVariant.class);
     PowerMockito.when(DeployVariant.isCommunity(anyString())).thenReturn(false);
 
-    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDelegateSize();
+    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDockerDelegateSize();
 
     assertThat(delegateSizeDetails.getCpu()).isEqualTo(0.5);
     assertThat(delegateSizeDetails.getLabel()).isEqualTo("Default");
     assertThat(delegateSizeDetails.getRam()).isEqualTo(2048);
-    assertThat(delegateSizeDetails.getTaskLimit()).isEqualTo(50);
     assertThat(delegateSizeDetails.getReplicas()).isEqualTo(0);
     assertThat(delegateSizeDetails.getSize()).isNull();
   }
@@ -52,12 +58,11 @@ public class DelegateSizeTest extends WingsBaseTest {
     PowerMockito.mockStatic(DeployVariant.class);
     PowerMockito.when(DeployVariant.isCommunity(anyString())).thenReturn(true);
 
-    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDelegateSize();
+    DelegateSizeDetails delegateSizeDetails = delegateService.fetchDefaultDockerDelegateSize();
 
     assertThat(delegateSizeDetails.getCpu()).isEqualTo(0.5);
     assertThat(delegateSizeDetails.getLabel()).isEqualTo("Default Community Size");
     assertThat(delegateSizeDetails.getRam()).isEqualTo(768);
-    assertThat(delegateSizeDetails.getTaskLimit()).isEqualTo(50);
     assertThat(delegateSizeDetails.getReplicas()).isEqualTo(0);
     assertThat(delegateSizeDetails.getSize()).isNull();
   }

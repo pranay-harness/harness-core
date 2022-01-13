@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.userGroup;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -63,6 +70,7 @@ import software.wings.beans.Service;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.security.AppFilter;
 import software.wings.security.EnvFilter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute.Action;
@@ -262,14 +270,22 @@ mutation {
     return GenericEntityFilter.builder().filterType("SELECTED").ids(ids).build();
   }
 
+  private AppFilter createAppFilterwithTypeAll() {
+    return AppFilter.builder().filterType(AppFilter.FilterType.ALL).build();
+  }
+  private AppFilter createAppFilterwithIds(String id1, String id2) {
+    Set<String> ids = new HashSet<>(Arrays.asList(id1, id2));
+    return AppFilter.builder().filterType(AppFilter.FilterType.SELECTED).ids(ids).build();
+  }
+
   private AppPermission createAllEntityAllAppsPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     return AppPermission.builder().permissionType(ALL_APP_ENTITIES).actions(actions).appFilter(appFilter).build();
   }
 
   private AppPermission createAllEntitySelectedAppsPermission() {
-    GenericEntityFilter appFilter = createGenericFilterwithIds(application1.getUuid(), application2.getUuid());
+    AppFilter appFilter = createAppFilterwithIds(application1.getUuid(), application2.getUuid());
     return AppPermission.builder()
         .permissionType(ALL_APP_ENTITIES)
         .actions(createActionSet())
@@ -360,7 +376,7 @@ mutation {
 
   private AppPermission createServiceAllAppPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     GenericEntityFilter serviceFilter = createGenericFilterwithTypeAll();
     return AppPermission.builder()
         .permissionType(SERVICE)
@@ -415,7 +431,7 @@ mutation {
   }
 
   private AppPermission createServiceWithIdPermission() {
-    GenericEntityFilter appFilter = createGenericFilterwithIds(application1.getUuid(), application2.getUuid());
+    AppFilter appFilter = createAppFilterwithIds(application1.getUuid(), application2.getUuid());
     GenericEntityFilter serviceFilter = createGenericFilterwithIds(service1.getUuid(), service2.getUuid());
     return AppPermission.builder()
         .permissionType(SERVICE)
@@ -468,7 +484,7 @@ mutation {
 
   private AppPermission createEnvAllAppsPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     List<String> envList = Arrays.asList("PROD", "NON_PROD");
     Set<String> envFilterTypes = new HashSet<>(envList);
     EnvFilter envFilter = EnvFilter.builder().filterTypes(envFilterTypes).build();
@@ -526,7 +542,7 @@ mutation {
 
   private AppPermission createEnvWithIdsPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithIds(application1.getUuid(), application2.getUuid());
+    AppFilter appFilter = createAppFilterwithIds(application1.getUuid(), application2.getUuid());
     List<String> envList = Arrays.asList(environment1.getUuid(), environment2.getUuid());
     Set<String> ids = new HashSet<>(envList);
     EnvFilter envFilter = EnvFilter.builder().ids(ids).filterTypes(new HashSet<>(Arrays.asList("SELECTED"))).build();
@@ -581,7 +597,7 @@ mutation {
 
   private AppPermission createWorkflowAllAppsPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     List<String> workflowList = Arrays.asList("PROD", "NON_PROD", "TEMPLATES");
     Set<String> workflowFilterTypes = new HashSet<>(workflowList);
     WorkflowFilter workflowFilter = new WorkflowFilter(null, workflowFilterTypes);
@@ -636,7 +652,7 @@ mutation {
 
   private AppPermission createDeploymentAllAppsPermission() {
     Set<Action> actions = new HashSet<>(Arrays.asList(Action.READ));
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     List<String> deploymentList = Arrays.asList("PROD", "NON_PROD");
     Set<String> deploymentFilterTypes = new HashSet<>(deploymentList);
     EnvFilter deploymentFilter = EnvFilter.builder().filterTypes(deploymentFilterTypes).build();
@@ -691,7 +707,7 @@ mutation {
 
   private AppPermission createPipelineAllAppsPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     List<String> deploymentList = Arrays.asList("PROD", "NON_PROD");
     Set<String> deploymentFilterTypes = new HashSet<>(deploymentList);
     EnvFilter deploymentFilter = EnvFilter.builder().filterTypes(deploymentFilterTypes).build();
@@ -744,7 +760,7 @@ mutation {
 
   private AppPermission createProvisonersAllAppsPermission() {
     Set<Action> actions = createActionSet();
-    GenericEntityFilter appFilter = createGenericFilterwithTypeAll();
+    AppFilter appFilter = createAppFilterwithTypeAll();
     GenericEntityFilter provisionerFilter = createGenericFilterwithTypeAll();
     return AppPermission.builder()
         .permissionType(PROVISIONER)
@@ -823,7 +839,7 @@ mutation {
   }
   private Set<AppPermission> createListOfAppPermissions() {
     Set<AppPermission> appPermissions = new HashSet<>();
-    GenericEntityFilter appFilter = createGenericFilterwithIds(application1.getUuid(), application2.getUuid());
+    AppFilter appFilter = createAppFilterwithIds(application1.getUuid(), application2.getUuid());
     GenericEntityFilter provisionerFilter = createGenericFilterwithId(infrastructureProvisioner.getUuid());
     AppPermission provionserPermissions = AppPermission.builder()
                                               .permissionType(PROVISIONER)

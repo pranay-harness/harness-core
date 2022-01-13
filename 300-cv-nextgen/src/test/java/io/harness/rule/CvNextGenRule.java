@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.rule;
 
 import static io.harness.AuthorizationServiceHeader.CV_NEXT_GEN;
@@ -18,8 +25,10 @@ import io.harness.cvng.CVNextGenCommonsServiceModule;
 import io.harness.cvng.CVServiceModule;
 import io.harness.cvng.EventsFrameworkModule;
 import io.harness.cvng.VerificationConfiguration;
+import io.harness.cvng.client.MockedNextGenService;
 import io.harness.cvng.client.MockedVerificationManagerService;
 import io.harness.cvng.client.NextGenClientModule;
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.client.VerificationManagerClientModule;
 import io.harness.cvng.client.VerificationManagerService;
 import io.harness.cvng.core.NGManagerServiceConfig;
@@ -131,6 +140,7 @@ public class CvNextGenRule implements MethodRule, InjectorRuleMixin, MongoRuleMi
       binder.bind(FeatureFlagService.class).to(AlwaysFalseFeatureFlagServiceImpl.class);
       binder.bind(VerificationManagerService.class).to(MockedVerificationManagerService.class);
       binder.bind(Clock.class).toInstance(CVNGTestConstants.FIXED_TIME_FOR_TESTS);
+      binder.bind(NextGenService.class).to(MockedNextGenService.class);
     }));
     MongoBackendConfiguration mongoBackendConfiguration =
         MongoBackendConfiguration.builder().uri("mongodb://localhost:27017/notificationChannel").build();

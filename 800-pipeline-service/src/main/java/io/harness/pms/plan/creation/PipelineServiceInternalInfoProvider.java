@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.creation;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -35,11 +42,13 @@ import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
 import io.harness.steps.StepSpecTypeConstants;
 import io.harness.steps.approval.ApprovalStepVariableCreator;
+import io.harness.steps.approval.step.jira.JiraApprovalStepPlanCreator;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepPlanCreator;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepVariableCreator;
 import io.harness.steps.cf.FlagConfigurationStep;
 import io.harness.steps.jira.JiraStepVariableCreator;
 import io.harness.steps.jira.create.JiraCreateStepPlanCreator;
+import io.harness.steps.jira.update.JiraUpdateStepPlanCreator;
 import io.harness.steps.shellscript.ShellScriptStepPlanCreator;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
@@ -62,6 +71,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new PMSStepPlanCreator());
     planCreators.add(new HttpStepPlanCreator());
     planCreators.add(new JiraCreateStepPlanCreator());
+    planCreators.add(new JiraUpdateStepPlanCreator());
     planCreators.add(new ShellScriptStepPlanCreator());
     planCreators.add(new ApprovalStagePlanCreator());
     planCreators.add(new ExecutionPmsPlanCreator());
@@ -70,6 +80,7 @@ public class PipelineServiceInternalInfoProvider implements PipelineServiceInfoP
     planCreators.add(new FeatureFlagStagePlanCreator());
     planCreators.add(new CfExecutionPMSPlanCreator());
     planCreators.add(new ServiceNowApprovalStepPlanCreator());
+    planCreators.add(new JiraApprovalStepPlanCreator());
     injectorUtils.injectMembers(planCreators);
     return planCreators;
   }

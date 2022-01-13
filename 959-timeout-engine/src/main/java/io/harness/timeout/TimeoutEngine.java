@@ -1,11 +1,20 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.timeout;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.iterator.PersistenceIterator.ProcessMode.LOOP;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
 import static io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType.REGULAR;
 
 import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
@@ -18,18 +27,24 @@ import io.harness.mongo.iterator.filter.SpringFilterExpander;
 import io.harness.mongo.iterator.provider.SpringPersistenceRequiredProvider;
 import io.harness.registries.timeout.TimeoutRegistry;
 import io.harness.repositories.TimeoutInstanceRepository;
+import io.harness.threading.ThreadPool;
 import io.harness.timeout.TimeoutInstance.TimeoutInstanceKeys;
 import io.harness.timeout.contracts.Dimension;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutParameters;
 import io.harness.timeout.trackers.absolute.AbsoluteTimeoutTrackerFactory;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import javax.validation.constraints.NotNull;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
@@ -48,6 +63,9 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
   @Inject private TimeoutRegistry timeoutRegistry;
 
   private PersistenceIterator<TimeoutInstance> iterator;
+
+  private static final ExecutorService executor =
+      Executors.newSingleThreadExecutor(new ThreadFactoryBuilder().setNameFormat("timeout-engine-iterator").build());
 
   public TimeoutInstance registerTimeout(@NotNull Dimension dimension, @NotNull TimeoutParameters timeoutParameters,
       @NotNull TimeoutCallback timeoutCallback) {
@@ -102,32 +120,24 @@ public class TimeoutEngine implements Handler<TimeoutInstance> {
     }
   }
 
-  public void registerIterators() {
-    IteratorConfig iteratorConfig =
-        IteratorConfig.builder().enabled(true).targetIntervalInSeconds(10).threadPoolCount(5).build();
-    registerIterators(iteratorConfig);
-  }
-
   public void registerIterators(IteratorConfig iteratorConfig) {
-    PersistenceIteratorFactory.PumpExecutorOptions options =
-        PersistenceIteratorFactory.PumpExecutorOptions.builder()
-            .interval(Duration.ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
-            .poolSize(iteratorConfig.getThreadPoolCount())
-            .name("TimeoutEngineHandler-%d")
-            .build();
-    iterator = persistenceIteratorFactory.createLoopIteratorWithDedicatedThreadPool(options, TimeoutInstance.class,
+    ExecutorService executorService =
+        ThreadPool.create(iteratorConfig.getThreadPoolCount(), iteratorConfig.getThreadPoolCount(), 30,
+            TimeUnit.SECONDS, new ThreadFactoryBuilder().setNameFormat("TimeoutEngineHandler-%d").build());
+    iterator = persistenceIteratorFactory.createIterator(TimeoutEngine.class,
         MongoPersistenceIterator.<TimeoutInstance, SpringFilterExpander>builder()
+            .mode(LOOP)
             .clazz(TimeoutInstance.class)
             .fieldName(TimeoutInstanceKeys.nextIteration)
-            // targetInterval is just to add retry mechanism. The document should ideally be deleted after callback is
-            // executed.
-            .targetInterval(Duration.ofMinutes(2))
-            .acceptableNoAlertDelay(Duration.ofSeconds(45))
-            .acceptableExecutionTime(Duration.ofSeconds(30))
+            .targetInterval(ofSeconds(iteratorConfig.getTargetIntervalInSeconds()))
+            .acceptableNoAlertDelay(ofSeconds(10))
+            .acceptableExecutionTime(ofSeconds(10))
+            .executorService(executorService)
+            .semaphore(new Semaphore(iteratorConfig.getThreadPoolCount()))
             .handler(this)
-            .schedulingType(REGULAR)
             .persistenceProvider(new SpringPersistenceRequiredProvider<>(mongoTemplate))
-            .redistribute(true));
+            .schedulingType(REGULAR));
+    executor.submit(() -> iterator.process());
   }
 
   @Override

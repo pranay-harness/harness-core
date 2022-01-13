@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -19,6 +26,7 @@ import io.harness.mongo.MongoConfig;
 import io.harness.ngtriggers.TriggerConfiguration;
 import io.harness.notification.NotificationClientConfiguration;
 import io.harness.opaclient.OpaServiceConfiguration;
+import io.harness.pms.sdk.core.PipelineSdkRedisEventsConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
@@ -108,6 +116,9 @@ public class PipelineServiceConfiguration extends Configuration {
   @JsonProperty("shouldUseInstanceCache") boolean shouldUseInstanceCache;
   @JsonProperty("pmsPlanCreatorServicePoolConfig") private ThreadPoolConfig pmsPlanCreatorServicePoolConfig;
   @JsonProperty("planCreatorMergeServicePoolConfig") private ThreadPoolConfig planCreatorMergeServicePoolConfig;
+  @JsonProperty("pipelineRedisEventsConfig") private PipelineRedisEventsConfig pipelineRedisEventsConfig;
+  @JsonProperty("pipelineSdkRedisEventsConfig") private PipelineSdkRedisEventsConfig pipelineSdkRedisEventsConfig;
+  @JsonProperty("orchestrationRedisEventsConfig") private OrchestrationRedisEventsConfig orchestrationRedisEventsConfig;
 
   private String managerServiceSecret;
   private String managerTarget;
@@ -195,10 +206,10 @@ public class PipelineServiceConfiguration extends Configuration {
     return classes.stream().map(aClass -> aClass.getPackage().getName()).collect(toSet());
   }
 
-  public static Set<String> getUniquePackagesContainingOpenApiResources() {
+  public static Set<String> getOpenApiResources() {
     return HARNESS_RESOURCE_CLASSES.stream()
         .filter(x -> x.isAnnotationPresent(Tag.class))
-        .map(aClass -> aClass.getPackage().getName())
+        .map(Class::getName)
         .collect(toSet());
   }
 }

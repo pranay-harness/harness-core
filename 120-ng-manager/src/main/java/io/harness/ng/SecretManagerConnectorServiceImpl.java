@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
@@ -31,6 +38,7 @@ import io.harness.delegate.beans.connector.vaultconnector.VaultConnectorDTO;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.eraro.ErrorCode;
+import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
@@ -336,5 +344,10 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   @Override
   public boolean checkConnectorExecutableOnDelegate(ConnectorInfoDTO connectorInfo) {
     return defaultConnectorService.checkConnectorExecutableOnDelegate(connectorInfo);
+  }
+
+  @Override
+  public ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO) {
+    return defaultConnectorService.fullSyncEntity(entityDetailProtoDTO);
   }
 }

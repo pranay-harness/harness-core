@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.datahandler.services;
 
 import static io.harness.annotations.dev.HarnessModule._955_ACCOUNT_MGMT;
@@ -179,5 +186,10 @@ public class AdminAccountServiceImpl implements AdminAccountService {
   public boolean enableOrDisableNextGen(String accountId, boolean enabled) {
     accountService.updateNextGenEnabled(accountId, enabled);
     return true;
+  }
+
+  @Override
+  public boolean updateRingName(String accountId, String ringName) {
+    return accountService.updateRingName(accountId, ringName);
   }
 }

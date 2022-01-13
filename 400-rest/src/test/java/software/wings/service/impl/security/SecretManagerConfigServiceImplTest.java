@@ -1,8 +1,14 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.impl.security;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.rule.OwnerRule.DEEPAK;
-import static io.harness.rule.OwnerRule.PRATEEK;
 import static io.harness.rule.OwnerRule.UTKARSH;
 
 import static software.wings.beans.Account.GLOBAL_ACCOUNT_ID;
@@ -99,17 +105,5 @@ public class SecretManagerConfigServiceImplTest extends WingsBaseTest {
     String configId = secretManagerConfigService.save(secretManagerConfig);
     String name = secretManagerConfigService.getSecretManagerName(configId, accountId);
     assertThat(name).isEqualTo(null);
-  }
-
-  @Test(expected = SecretManagementException.class)
-  @Owner(developers = PRATEEK)
-  @Category(UnitTests.class)
-  public void test_getSecretManagerConfig_NotFoundException() {
-    char[] credentials = "{\"credentials\":\"abc\"}".toCharArray();
-    SecretManagerConfig secretManagerConfig =
-            new GcpKmsConfig("name", "projectId", "region", "keyRing", "keyName", credentials, null);
-    secretManagerConfig.setAccountId(accountId);
-    secretManagerConfigService.save(secretManagerConfig);
-    secretManagerConfigService.getSecretManager(accountId, "test-configId");
   }
 }

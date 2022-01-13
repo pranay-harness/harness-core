@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.resources;
 
 import io.harness.accesscontrol.AccountIdentifier;
@@ -27,9 +34,9 @@ import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.BeanParam;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -38,7 +45,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import org.apache.commons.collections.CollectionUtils;
 import retrofit2.http.Body;
 
 @Api("slo")
@@ -121,15 +127,11 @@ public class ServiceLevelObjectiveResource {
   @ApiOperation(value = "get all service level objectives ", nickname = "getServiceLevelObjectives")
   @NGAccessControlCheck(resourceType = SLO, permission = VIEW_PERMISSION)
   public ResponseDTO<PageResponse<ServiceLevelObjectiveResponse>> getServiceLevelObjectives(
-      @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
-      @QueryParam("orgIdentifier") @NotNull @OrgIdentifier String orgIdentifier,
-      @QueryParam("projectIdentifier") @NotNull @ProjectIdentifier String projectIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("accountId") @AccountIdentifier String accountId,
+      @ApiParam(required = true) @NotNull @QueryParam("orgIdentifier") @OrgIdentifier String orgIdentifier,
+      @ApiParam(required = true) @NotNull @QueryParam("projectIdentifier") @ProjectIdentifier String projectIdentifier,
       @QueryParam("offset") @NotNull Integer offset, @QueryParam("pageSize") @NotNull Integer pageSize,
-      @QueryParam("userJourneys") List<String> userJourneys) {
-    ServiceLevelObjectiveFilter serviceLevelObjectiveFilter = ServiceLevelObjectiveFilter.builder().build();
-    if (CollectionUtils.isNotEmpty(userJourneys)) {
-      serviceLevelObjectiveFilter.setUserJourneys(userJourneys);
-    }
+      @BeanParam ServiceLevelObjectiveFilter serviceLevelObjectiveFilter) {
     ProjectParams projectParams = ProjectParams.builder()
                                       .accountIdentifier(accountId)
                                       .orgIdentifier(orgIdentifier)

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.perpetualtask.internal;
 
 import static io.harness.rule.OwnerRule.HANTANG;
@@ -28,8 +35,6 @@ import io.harness.perpetualtask.PerpetualTaskType;
 import io.harness.perpetualtask.k8s.watch.K8sWatchPerpetualTaskServiceClient;
 import io.harness.rule.Owner;
 
-import software.wings.beans.alert.AlertType;
-import software.wings.beans.alert.PerpetualTaskAlert;
 import software.wings.service.intfc.AlertService;
 import software.wings.service.intfc.DelegateService;
 
@@ -88,12 +93,6 @@ public class PerpetualTaskRecordHandlerTest extends CategoryTest {
     when(delegateService.executeTask(isA(DelegateTask.class))).thenReturn(response);
     perpetualTaskRecordHandler.assign(record);
     verify(perpetualTaskService).appointDelegate(eq(accountId), anyString(), eq(delegateId), anyLong());
-    verify(alertService, times(1))
-        .closeAlert(eq(accountId), eq(null), eq(AlertType.PerpetualTaskAlert),
-            eq(PerpetualTaskAlert.builder()
-                    .accountId(accountId)
-                    .perpetualTaskType(PerpetualTaskType.K8S_WATCH)
-                    .build()));
   }
 
   @Test

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.engine.pms.start;
 
 import static io.harness.springdata.SpringDataMongoUtils.setUnset;
@@ -22,6 +29,7 @@ import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.facilitators.FacilitatorResponseProto;
 import io.harness.pms.events.base.PmsEventCategory;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.expression.PmsEngineExpressionService;
 import io.harness.pms.sdk.core.execution.NodeExecutionUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
@@ -54,7 +62,7 @@ public class NodeStartHelper {
   public void startNode(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
     String nodeExecutionId = AmbianceUtils.obtainCurrentRuntimeId(ambiance);
     Status targetStatus = calculateStatusFromMode(facilitatorResponse.getExecutionMode());
-    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(nodeExecutionId, targetStatus);
+    NodeExecution nodeExecution = prepareNodeExecutionForInvocation(nodeExecutionId, targetStatus, facilitatorResponse);
     if (nodeExecution == null) {
       // This is just for debugging if this is happening then the node status has changed from QUEUED
       // This should never happen
@@ -80,17 +88,21 @@ public class NodeStartHelper {
         nodeExecution.getAmbiance(), nodeStartEvent.toByteString(), PmsEventCategory.NODE_START, serviceName, true);
   }
 
-  private NodeExecution prepareNodeExecutionForInvocation(String nodeExecutionId, Status targetStatus) {
+  private NodeExecution prepareNodeExecutionForInvocation(
+      String nodeExecutionId, Status targetStatus, FacilitatorResponseProto facilitatorResponse) {
     NodeExecution nodeExecution =
-        nodeExecutionService.updateStatusWithOps(nodeExecutionId, targetStatus, null, EnumSet.noneOf(Status.class));
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.withAmbianceAndNode);
+
     if (nodeExecution == null) {
       log.warn("NodeExecution Status update failed while preparing for invocation Target Status : {}", targetStatus);
       return null;
     }
     PlanNode planNode = nodeExecution.getNode();
     List<String> timeoutInstanceIds = registerTimeouts(nodeExecution.getAmbiance(), planNode.getTimeoutObtainments());
-    return nodeExecutionService.update(
-        nodeExecution.getUuid(), ops -> setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, timeoutInstanceIds));
+    return nodeExecutionService.updateStatusWithOps(nodeExecution.getUuid(), targetStatus, ops -> {
+      setUnset(ops, NodeExecutionKeys.timeoutInstanceIds, timeoutInstanceIds);
+      ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode());
+    }, EnumSet.noneOf(Status.class));
   }
 
   private Status calculateStatusFromMode(ExecutionMode executionMode) {

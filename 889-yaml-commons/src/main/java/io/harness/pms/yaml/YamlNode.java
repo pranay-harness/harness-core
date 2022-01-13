@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.pms.yaml;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -37,6 +44,7 @@ public class YamlNode implements Visitable {
   public static final String TYPE_FIELD_NAME = "type";
   public static final String NAME_FIELD_NAME = "name";
   public static final String KEY_FIELD_NAME = "key";
+  public static final String TEMPLATE_FIELD_NAME = "template";
 
   public static final String PATH_SEP = "/";
 
@@ -66,6 +74,10 @@ public class YamlNode implements Visitable {
     }
 
     YamlField field = YamlUtils.readTree(yaml);
+    return field.getNode().gotoPath(path);
+  }
+
+  public static YamlNode fromYamlPath(YamlField field, String path) throws IOException {
     return field.getNode().gotoPath(path);
   }
 
@@ -336,6 +348,10 @@ public class YamlNode implements Visitable {
 
   public String getKey() {
     return getStringValue(KEY_FIELD_NAME);
+  }
+
+  public JsonNode getTemplate() {
+    return getValueInternal(TEMPLATE_FIELD_NAME);
   }
 
   public String getNameOrIdentifier() {

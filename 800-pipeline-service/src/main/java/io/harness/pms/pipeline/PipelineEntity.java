@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -103,11 +110,14 @@ public class PipelineEntity
   @Wither @Version Long version;
 
   @Default Map<String, org.bson.Document> filters = new HashMap<>();
+  // Todo: Move this to pipelineMetadata
   ExecutionSummaryInfo executionSummaryInfo;
   int runSequence;
 
   @Wither int stageCount;
   @Wither @Singular List<String> stageNames;
+
+  @Wither Boolean allowStageExecutions;
 
   @Wither @Setter @NonFinal @Default Boolean templateReference = false;
 
@@ -137,5 +147,9 @@ public class PipelineEntity
   @Override
   public String getInvalidYamlString() {
     return yaml;
+  }
+
+  public boolean shouldAllowStageExecutions() {
+    return allowStageExecutions != null && allowStageExecutions;
   }
 }

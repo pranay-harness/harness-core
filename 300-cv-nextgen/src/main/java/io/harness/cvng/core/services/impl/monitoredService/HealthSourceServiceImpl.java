@@ -1,6 +1,16 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.core.services.impl.monitoredService;
 
 import static io.harness.cvng.core.utils.FeatureFlagNames.CVNG_MONITORED_SERVICE_DEMO;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
+import static java.util.stream.Collectors.groupingBy;
 
 import io.harness.cvng.beans.DataSourceType;
 import io.harness.cvng.core.beans.monitoredService.HealthSource;
@@ -8,6 +18,7 @@ import io.harness.cvng.core.beans.monitoredService.HealthSource.CVConfigUpdateRe
 import io.harness.cvng.core.beans.monitoredService.healthSouceSpec.HealthSourceDTO;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.entities.CVConfig;
+import io.harness.cvng.core.entities.MonitoredService;
 import io.harness.cvng.core.services.api.CVConfigService;
 import io.harness.cvng.core.services.api.FeatureFlagService;
 import io.harness.cvng.core.services.api.MetricPackService;
@@ -19,11 +30,13 @@ import io.harness.exception.DuplicateFieldException;
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 
 public class HealthSourceServiceImpl implements HealthSourceService {
   @Inject private Map<DataSourceType, CVConfigToHealthSourceTransformer> dataSourceTypeToHealthSourceTransformerMap;
@@ -145,5 +158,42 @@ public class HealthSourceServiceImpl implements HealthSourceService {
                                       .projectIdentifier(projectIdentifier)
                                       .build();
     return cvConfigService.getCVConfigs(projectParams, identifier);
+  }
+
+  @Override
+  public Map<String, Set<HealthSource>> getHealthSource(List<MonitoredService> monitoredServiceEntities) {
+    Map<String, Set<HealthSource>> healthSourceMap = new HashMap<>();
+    if (isEmpty(monitoredServiceEntities)) {
+      return healthSourceMap;
+    }
+    List<String> identifiers = monitoredServiceEntities.stream()
+                                   .map(monitoredServiceEntity
+                                       -> monitoredServiceEntity.getHealthSourceIdentifiers()
+                                              .stream()
+                                              .map(healthSourceIdentifier
+                                                  -> HealthSourceService.getNameSpacedIdentifier(
+                                                      monitoredServiceEntity.getIdentifier(), healthSourceIdentifier))
+                                              .collect(Collectors.toList()))
+                                   .flatMap(List::stream)
+                                   .collect(Collectors.toList());
+    MonitoredService monitoredService = monitoredServiceEntities.get(0);
+    ProjectParams projectParams = ProjectParams.builder()
+                                      .projectIdentifier(monitoredService.getProjectIdentifier())
+                                      .accountIdentifier(monitoredService.getAccountId())
+                                      .orgIdentifier(monitoredService.getOrgIdentifier())
+                                      .build();
+    List<CVConfig> cvConfigList = cvConfigService.list(projectParams, identifiers);
+    Map<String, List<CVConfig>> cvConfigMap = cvConfigList.stream().collect(groupingBy(CVConfig::getIdentifier));
+    for (Map.Entry<String, List<CVConfig>> cvConfig : cvConfigMap.entrySet()) {
+      Pair<String, String> nameSpaceAndIdentifier =
+          HealthSourceService.getNameSpaceAndIdentifier(cvConfig.getValue().get(0).getFullyQualifiedIdentifier());
+      HealthSource healthSource =
+          HealthSourceDTO.toHealthSource(cvConfig.getValue(), dataSourceTypeToHealthSourceTransformerMap);
+      Set<HealthSource> healthSourceSet =
+          healthSourceMap.getOrDefault(nameSpaceAndIdentifier.getKey(), new HashSet<>());
+      healthSourceSet.add(healthSource);
+      healthSourceMap.put(nameSpaceAndIdentifier.getKey(), healthSourceSet);
+    }
+    return healthSourceMap;
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.batch.processing.tasklet.util;
 
 import static io.harness.batch.processing.tasklet.util.InstanceMetaDataUtils.getInstanceCategory;
@@ -49,7 +56,7 @@ public class InstanceMetaDataUtilsTest extends BatchProcessingTestBase {
   public void testPopulateNodePoolNameFromLabel() throws Exception {
     assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.GKE_NODE_POOL_KEY, NODE_POOL_NAME)));
     assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.AKS_NODE_POOL_KEY, NODE_POOL_NAME)));
-    assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.EKS_NODE_POOL_KEY, NODE_POOL_NAME)));
+    assertTrue(isNodePoolNameCorrect(ImmutableMap.of(K8sCCMConstants.EKSCTL_NODE_POOL_KEY, NODE_POOL_NAME)));
   }
 
   private static boolean isNodePoolNameCorrect(Map<String, String> labelsMap) {

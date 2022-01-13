@@ -1,0 +1,653 @@
+{
+  "tables": [
+    {
+      "name": "PrimaryResult",
+      "columns": [
+        {
+          "name": "Name",
+          "type": "string"
+        },
+        {
+          "name": "TimeGenerated",
+          "type": "datetime"
+        },
+        {
+          "name": "avg_DurationMs",
+          "type": "real"
+        }
+      ],
+      "rows": [
+        [
+          "GET /index.html",
+          "2021-08-25T15:15:00Z",
+          0.2997166666666667
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:16:00Z",
+          0.29775833333333335
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:22:00Z",
+          0.346225
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:23:00Z",
+          0.2984583333333333
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:24:00Z",
+          0.29975
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:25:00Z",
+          0.3161083333333333
+        ],
+        [
+          "PUT Documents/Put",
+          "2021-08-25T15:25:00Z",
+          3.283
+        ],
+        [
+          "GET Roles/GetAll",
+          "2021-08-25T15:25:00Z",
+          525.4355
+        ],
+        [
+          "GET DataManagement/GetEntities",
+          "2021-08-25T15:25:00Z",
+          1116.0563
+        ],
+        [
+          "GET DocumentTypes/GetAll",
+          "2021-08-25T15:25:00Z",
+          30.7182
+        ],
+        [
+          "GET DocumentTypes/GetAll",
+          "2021-08-25T15:26:00Z",
+          30.78805
+        ],
+        [
+          "GET Roles/GetRolePermissions [roleId]",
+          "2021-08-25T15:26:00Z",
+          57.9943
+        ],
+        [
+          "POST Roles/Create",
+          "2021-08-25T15:26:00Z",
+          231.95014444444445
+        ],
+        [
+          "GET DataManagement/GetEntities",
+          "2021-08-25T15:26:00Z",
+          1551.6378
+        ],
+        [
+          "GET Roles/GetAll",
+          "2021-08-25T15:26:00Z",
+          580.7209799999999
+        ],
+        [
+          "POST DataManagement/GetAll",
+          "2021-08-25T15:26:00Z",
+          2688.74258
+        ],
+        [
+          "POST Roles/AddPermissions [roleId]",
+          "2021-08-25T15:26:00Z",
+          517.64038
+        ],
+        [
+          "DELETE Roles/Delete [id]",
+          "2021-08-25T15:26:00Z",
+          243.91746250000003
+        ],
+        [
+          "DELETE /Roles",
+          "2021-08-25T15:26:00Z",
+          0.4371
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:26:00Z",
+          0.24815555555555557
+        ],
+        [
+          "PATCH Roles/UpdatePermissions [roleId]",
+          "2021-08-25T15:26:00Z",
+          388.87507500000004
+        ],
+        [
+          "DELETE /DataManagement/7008",
+          "2021-08-25T15:26:00Z",
+          0.3893
+        ],
+        [
+          "PUT /Roles",
+          "2021-08-25T15:26:00Z",
+          0.9437
+        ],
+        [
+          "PUT Documents/Put",
+          "2021-08-25T15:26:00Z",
+          401.39390000000003
+        ],
+        [
+          "POST Documents/GetAll",
+          "2021-08-25T15:26:00Z",
+          420.51379999999995
+        ],
+        [
+          "PUT /DataManagement/7008",
+          "2021-08-25T15:26:00Z",
+          0.3657
+        ],
+        [
+          "PATCH /Roles",
+          "2021-08-25T15:26:00Z",
+          0.5705
+        ],
+        [
+          "PATCH /DataManagement/7008",
+          "2021-08-25T15:26:00Z",
+          0.325
+        ],
+        [
+          "COPY /Roles",
+          "2021-08-25T15:26:00Z",
+          0.4549
+        ],
+        [
+          "HEAD /DataManagement/7008",
+          "2021-08-25T15:26:00Z",
+          0.3975
+        ],
+        [
+          "POST DataManagement/GetAllDetails [id]",
+          "2021-08-25T15:26:00Z",
+          314.16
+        ],
+        [
+          "GET Roles/Get [id]",
+          "2021-08-25T15:26:00Z",
+          43.1493
+        ],
+        [
+          "GET DataManagement/Get [id]",
+          "2021-08-25T15:26:00Z",
+          582.9668
+        ],
+        [
+          "GET Roles/GetUsersOfRole [id]",
+          "2021-08-25T15:26:00Z",
+          127.6144
+        ],
+        [
+          "PUT SystemMessage/Put",
+          "2021-08-25T15:26:00Z",
+          13.090833333333334
+        ],
+        [
+          "GET Users/GetAll",
+          "2021-08-25T15:26:00Z",
+          207.80334
+        ],
+        [
+          "DELETE Users/Delete [id]",
+          "2021-08-25T15:26:00Z",
+          429.70640000000003
+        ],
+        [
+          "GET Users/FindUsers",
+          "2021-08-25T15:26:00Z",
+          151.1396
+        ],
+        [
+          "POST Users/CreateUser",
+          "2021-08-25T15:26:00Z",
+          372.73779999999994
+        ],
+        [
+          "DELETE Roles/RemoveUserFromRole [roleId/userId]",
+          "2021-08-25T15:26:00Z",
+          274.8224
+        ],
+        [
+          "POST Users/Enroll",
+          "2021-08-25T15:26:00Z",
+          786.07065
+        ],
+        [
+          "GET Users/Get [id]",
+          "2021-08-25T15:26:00Z",
+          96.08988000000001
+        ],
+        [
+          "PATCH Users/UpdateUser",
+          "2021-08-25T15:26:00Z",
+          832.5969333333333
+        ],
+        [
+          "COPY /DataManagement/Entities",
+          "2021-08-25T15:26:00Z",
+          0.4012
+        ],
+        [
+          "GET /Roles/d147ac1e-42d2-4d7c-befe-72684cc1a1ab/13d8ae6f-683e-4a09-a2d5-93ac897ac18e",
+          "2021-08-25T15:26:00Z",
+          0.4343
+        ],
+        [
+          "DELETE /DocumentTypes",
+          "2021-08-25T15:26:00Z",
+          0.3618
+        ],
+        [
+          "PUT /DocumentTypes",
+          "2021-08-25T15:26:00Z",
+          0.3758
+        ],
+        [
+          "COPY /DocumentTypes",
+          "2021-08-25T15:26:00Z",
+          0.316
+        ],
+        [
+          "HEAD /DocumentTypes",
+          "2021-08-25T15:26:00Z",
+          0.3463
+        ],
+        [
+          "POST /ClientEntitlements",
+          "2021-08-25T15:26:00Z",
+          0.4154
+        ],
+        [
+          "PATCH /Roles/d147ac1e-42d2-4d7c-befe-72684cc1a1ab/13d8ae6f-683e-4a09-a2d5-93ac897ac18e",
+          "2021-08-25T15:26:00Z",
+          0.3745
+        ],
+        [
+          "PUT /ClientEntitlements",
+          "2021-08-25T15:26:00Z",
+          0.3458
+        ],
+        [
+          "PATCH /ClientEntitlements",
+          "2021-08-25T15:26:00Z",
+          0.3454
+        ],
+        [
+          "COPY /Roles/d147ac1e-42d2-4d7c-befe-72684cc1a1ab/13d8ae6f-683e-4a09-a2d5-93ac897ac18e",
+          "2021-08-25T15:26:00Z",
+          0.4281
+        ],
+        [
+          "GET ClientEntitlements/GetAll",
+          "2021-08-25T15:26:00Z",
+          9.7669
+        ],
+        [
+          "POST /Permissions",
+          "2021-08-25T15:26:00Z",
+          0.4075
+        ],
+        [
+          "POST /EntityMetaData",
+          "2021-08-25T15:26:00Z",
+          0.4211
+        ],
+        [
+          "HEAD /Roles/d147ac1e-42d2-4d7c-befe-72684cc1a1ab/13d8ae6f-683e-4a09-a2d5-93ac897ac18e",
+          "2021-08-25T15:26:00Z",
+          0.4729
+        ],
+        [
+          "PATCH /Permissions",
+          "2021-08-25T15:26:00Z",
+          0.4176
+        ],
+        [
+          "HEAD /Permissions",
+          "2021-08-25T15:26:00Z",
+          0.4088
+        ],
+        [
+          "GET EntityMetaData/GetAll",
+          "2021-08-25T15:26:00Z",
+          17.8455
+        ],
+        [
+          "COPY /EntityMetaData",
+          "2021-08-25T15:26:00Z",
+          0.3395
+        ],
+        [
+          "GET Users/GetRoles [id]",
+          "2021-08-25T15:26:00Z",
+          100.3348
+        ],
+        [
+          "PUT /Users",
+          "2021-08-25T15:26:00Z",
+          0.3973
+        ],
+        [
+          "COPY /Users",
+          "2021-08-25T15:26:00Z",
+          0.5111
+        ],
+        [
+          "DELETE /UserTypes",
+          "2021-08-25T15:26:00Z",
+          0.4508
+        ],
+        [
+          "COPY /UserTypes",
+          "2021-08-25T15:26:00Z",
+          0.6268
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:27:00Z",
+          0.30738000000000004
+        ],
+        [
+          "GET Users/FindUsers",
+          "2021-08-25T15:27:00Z",
+          99.6639
+        ],
+        [
+          "POST Users/CreateUser",
+          "2021-08-25T15:27:00Z",
+          418.2985
+        ],
+        [
+          "PATCH Users/UpdateUser",
+          "2021-08-25T15:27:00Z",
+          1567.6541
+        ],
+        [
+          "GET Users/Get [id]",
+          "2021-08-25T15:27:00Z",
+          147.6202
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:28:00Z",
+          0.3193111111111111
+        ],
+        [
+          "PUT Documents/Put",
+          "2021-08-25T15:28:00Z",
+          5.3243
+        ],
+        [
+          "GET DataManagement/GetEntities",
+          "2021-08-25T15:28:00Z",
+          1090.261
+        ],
+        [
+          "GET Roles/GetRolePermissions [roleId]",
+          "2021-08-25T15:28:00Z",
+          42.0802
+        ],
+        [
+          "POST Roles/Create",
+          "2021-08-25T15:28:00Z",
+          182.3154
+        ],
+        [
+          "GET Roles/GetAll",
+          "2021-08-25T15:28:00Z",
+          599.07835
+        ],
+        [
+          "POST DataManagement/GetAll",
+          "2021-08-25T15:28:00Z",
+          1371.8897
+        ],
+        [
+          "PATCH Roles/UpdatePermissions [roleId]",
+          "2021-08-25T15:28:00Z",
+          813.8957
+        ],
+        [
+          "POST Documents/GetAll",
+          "2021-08-25T15:28:00Z",
+          34.2756
+        ],
+        [
+          "PUT /Roles",
+          "2021-08-25T15:28:00Z",
+          0.4155
+        ],
+        [
+          "DELETE Roles/Delete [id]",
+          "2021-08-25T15:28:00Z",
+          223.4123
+        ],
+        [
+          "POST Documents/GetAll",
+          "2021-08-25T15:29:00Z",
+          34.14765
+        ],
+        [
+          "PATCH /Roles",
+          "2021-08-25T15:29:00Z",
+          0.4701
+        ],
+        [
+          "GET Roles/GetAll",
+          "2021-08-25T15:29:00Z",
+          673.3685750000001
+        ],
+        [
+          "COPY /Roles",
+          "2021-08-25T15:29:00Z",
+          0.6774
+        ],
+        [
+          "POST DataManagement/GetAllDetails [id]",
+          "2021-08-25T15:29:00Z",
+          298.8256
+        ],
+        [
+          "POST Roles/Create",
+          "2021-08-25T15:29:00Z",
+          185.25967500000002
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:29:00Z",
+          0.31764000000000003
+        ],
+        [
+          "POST Roles/AddPermissions [roleId]",
+          "2021-08-25T15:29:00Z",
+          817.8575000000001
+        ],
+        [
+          "HEAD /DataManagement/7008",
+          "2021-08-25T15:29:00Z",
+          0.603
+        ],
+        [
+          "PATCH Roles/UpdatePermissions [roleId]",
+          "2021-08-25T15:29:00Z",
+          1.1764
+        ],
+        [
+          "POST DataManagement/GetAll",
+          "2021-08-25T15:29:00Z",
+          1510.1385
+        ],
+        [
+          "DELETE Roles/Delete [id]",
+          "2021-08-25T15:29:00Z",
+          298.599
+        ],
+        [
+          "GET Roles/Get [id]",
+          "2021-08-25T15:29:00Z",
+          48.286
+        ],
+        [
+          "GET Roles/GetUsersOfRole [id]",
+          "2021-08-25T15:29:00Z",
+          177.0232
+        ],
+        [
+          "GET Users/FindUsers",
+          "2021-08-25T15:29:00Z",
+          212.34965000000003
+        ],
+        [
+          "PUT SystemMessage/Put",
+          "2021-08-25T15:29:00Z",
+          14.535
+        ],
+        [
+          "GET Users/GetAll",
+          "2021-08-25T15:29:00Z",
+          315.2828333333334
+        ],
+        [
+          "GET UserTypes/GetAll",
+          "2021-08-25T15:29:00Z",
+          9.3137
+        ],
+        [
+          "POST Users/CreateUser",
+          "2021-08-25T15:29:00Z",
+          318.04154444444447
+        ],
+        [
+          "DELETE Roles/RemoveUserFromRole [roleId/userId]",
+          "2021-08-25T15:29:00Z",
+          331.7864
+        ],
+        [
+          "COPY /DataManagement/Entities",
+          "2021-08-25T15:29:00Z",
+          0.3445
+        ],
+        [
+          "GET Users/Get [id]",
+          "2021-08-25T15:29:00Z",
+          119.93965000000001
+        ],
+        [
+          "DELETE Users/Delete [id]",
+          "2021-08-25T15:29:00Z",
+          467.166425
+        ],
+        [
+          "PUT /ClientEntitlements",
+          "2021-08-25T15:29:00Z",
+          0.5788
+        ],
+        [
+          "PATCH /ClientEntitlements",
+          "2021-08-25T15:29:00Z",
+          0.3395
+        ],
+        [
+          "COPY /ClientEntitlements",
+          "2021-08-25T15:29:00Z",
+          0.3622
+        ],
+        [
+          "HEAD /Roles/d147ac1e-42d2-4d7c-befe-72684cc1a1ab/13d8ae6f-683e-4a09-a2d5-93ac897ac18e",
+          "2021-08-25T15:29:00Z",
+          0.3764
+        ],
+        [
+          "POST /EntityMetaData",
+          "2021-08-25T15:29:00Z",
+          0.3935
+        ],
+        [
+          "DELETE /EntityMetaData",
+          "2021-08-25T15:29:00Z",
+          0.4285
+        ],
+        [
+          "PUT /EntityMetaData",
+          "2021-08-25T15:29:00Z",
+          0.3704
+        ],
+        [
+          "DELETE /Permissions",
+          "2021-08-25T15:29:00Z",
+          0.4973
+        ],
+        [
+          "POST /Permissions",
+          "2021-08-25T15:29:00Z",
+          0.5528
+        ],
+        [
+          "GET Users/AuditLog [id]",
+          "2021-08-25T15:29:00Z",
+          53.5176
+        ],
+        [
+          "POST /UserTypes",
+          "2021-08-25T15:29:00Z",
+          0.4215
+        ],
+        [
+          "COPY /UserTypes",
+          "2021-08-25T15:29:00Z",
+          0.541
+        ],
+        [
+          "PUT /UserTypes",
+          "2021-08-25T15:29:00Z",
+          0.4263
+        ],
+        [
+          "PATCH Users/UpdateUser",
+          "2021-08-25T15:29:00Z",
+          298.66360000000003
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:17:00Z",
+          0.2912333333333334
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:20:00Z",
+          0.316725
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:21:00Z",
+          0.3606916666666667
+        ],
+        [
+          "GET Users/GetAll",
+          "2021-08-25T15:21:00Z",
+          193.7605
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:18:00Z",
+          0.345075
+        ],
+        [
+          "GET /index.html",
+          "2021-08-25T15:19:00Z",
+          0.29684166666666667
+        ]
+      ]
+    }
+  ]
+}

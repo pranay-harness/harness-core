@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.migrations.all;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -13,7 +20,7 @@ import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
 import software.wings.beans.security.UserGroup.UserGroupKeys;
 import software.wings.dl.WingsPersistence;
-import software.wings.security.GenericEntityFilter;
+import software.wings.security.AppFilter;
 import software.wings.service.intfc.UserGroupService;
 
 import com.google.inject.Inject;
@@ -75,7 +82,7 @@ public class RemoveDeletedAppIdsFromUserGroups implements Migration {
     }
 
     for (AppPermission permission : groupAppPermissions) {
-      GenericEntityFilter filter = permission.getAppFilter();
+      AppFilter filter = permission.getAppFilter();
       Set<String> ids = filter.getIds();
       if (isEmpty(ids)) {
         continue;

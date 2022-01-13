@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.ng.core.api.impl;
 
 import static io.harness.NGConstants.HARNESS_SECRET_MANAGER_IDENTIFIER;
@@ -62,6 +69,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
@@ -541,6 +549,11 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     if (path != null && encryptionType == EncryptionType.VAULT && path.indexOf('#') < 0) {
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR,
           "Secret path need to include the # sign with the the key name after. E.g. /foo/bar/my-secret#my-key.", USER);
+    }
+    // check if reference secrets are allowed based on EncryptionType
+    if (Arrays.asList(GCP_KMS, KMS).contains(encryptionType)) {
+      throw new SecretManagementException(
+          SECRET_MANAGEMENT_ERROR, "Reference secrets are not allowed in KMS type Secret Managers", USER);
     }
   }
 

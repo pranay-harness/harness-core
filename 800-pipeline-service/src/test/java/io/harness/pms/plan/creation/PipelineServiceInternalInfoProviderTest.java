@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.plan.creation;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -39,9 +46,12 @@ import io.harness.pms.utils.InjectorUtils;
 import io.harness.pms.variables.HTTPStepVariableCreator;
 import io.harness.rule.Owner;
 import io.harness.steps.approval.ApprovalStepVariableCreator;
+import io.harness.steps.approval.step.jira.JiraApprovalStepPlanCreator;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepPlanCreator;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepVariableCreator;
 import io.harness.steps.jira.JiraStepVariableCreator;
+import io.harness.steps.jira.create.JiraCreateStepPlanCreator;
+import io.harness.steps.jira.update.JiraUpdateStepPlanCreator;
 import io.harness.steps.shellscript.ShellScriptStepVariableCreator;
 
 import java.util.List;
@@ -74,7 +84,7 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
             .stream()
             .map(e -> e.getClass())
             .collect(Collectors.toSet());
-    assertThat(planCreatorClasses).hasSize(14);
+    assertThat(planCreatorClasses).hasSize(16);
     assertThat(planCreatorClasses.contains(NGPipelinePlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(StagesPlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(ParallelPlanCreator.class)).isTrue();
@@ -86,6 +96,9 @@ public class PipelineServiceInternalInfoProviderTest extends CategoryTest {
     assertThat(planCreatorClasses.contains(FeatureFlagStagePlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(CfExecutionPMSPlanCreator.class)).isTrue();
     assertThat(planCreatorClasses.contains(ServiceNowApprovalStepPlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(JiraUpdateStepPlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(JiraCreateStepPlanCreator.class)).isTrue();
+    assertThat(planCreatorClasses.contains(JiraApprovalStepPlanCreator.class)).isTrue();
   }
 
   @Test

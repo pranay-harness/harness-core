@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.migration.list;
 
 import io.harness.cvng.beans.CVMonitoringCategory;
@@ -32,7 +39,7 @@ public class AppDCustomMetricForExistingProjects implements CVNGMigration {
                                   .filter(MetricPackKeys.dataSourceType, DataSourceType.APP_DYNAMICS)
                                   .filter(MetricPackKeys.identifier, CVNextGenConstants.CUSTOM_PACK_IDENTIFIER)
                                   .filter(MetricPackKeys.accountId, pack.getAccountId())
-                                  .filter(MetricPackKeys.projectIdentifier, pack.getOrgIdentifier())
+                                  .filter(MetricPackKeys.projectIdentifier, pack.getProjectIdentifier())
                                   .filter(MetricPackKeys.orgIdentifier, pack.getOrgIdentifier())
                                   .get();
 

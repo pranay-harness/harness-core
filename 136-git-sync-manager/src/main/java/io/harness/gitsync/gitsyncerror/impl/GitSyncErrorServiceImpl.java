@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.gitsync.gitsyncerror.impl;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -53,6 +60,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -102,7 +110,7 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         skip(pageable.getOffset()), limit(pageable.getPageSize()));
     List<GitSyncErrorAggregateByCommit> gitSyncErrorAggregateByCommitList =
         gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults();
-    long totalCount = gitSyncErrorRepository.count(criteria);
+    long totalCount = getAggregateErrorsCount(criteria, pageable, numberOfErrorsInSummary);
     List<GitSyncErrorAggregateByCommitDTO> gitSyncErrorAggregateByCommitDTOList =
         emptyIfNull(gitSyncErrorAggregateByCommitList)
             .stream()
@@ -161,7 +169,14 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
         .andExpression(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView)
         .slice(numberOfErrorsInSummary)
         .as(GitSyncErrorAggregateByCommitKeys.errorsForSummaryView);
-    //
+  }
+
+  private long getAggregateErrorsCount(Criteria criteria, Pageable pageable, Integer numberOfErrorsInSummary) {
+    Aggregation aggregation = newAggregation(match(criteria), getProjectionOperationForProjectingActiveError(),
+        getGroupOperationForGroupingErrorsWithCommitId(),
+        getProjectionOperationForProjectingGitSyncErrorAggregateByCommitKeys(numberOfErrorsInSummary),
+        skip(pageable.getOffset()));
+    return gitSyncErrorRepository.aggregate(aggregation, GitSyncErrorAggregateByCommit.class).getMappedResults().size();
   }
 
   private String getRepoId(String repoUrl, String accountId, String orgId, String projectId) {
@@ -211,19 +226,37 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String repoIdentifier, String branch, GitSyncErrorType errorType) {
     Criteria criteria = new Criteria();
     List<String> branches = new ArrayList<>();
-    if (StringUtils.isNotEmpty(repoIdentifier)) {
+    List<Pair<String, String>> repoBranchList = new ArrayList<>();
+    if (StringUtils.isEmpty(repoIdentifier)) {
+      List<YamlGitConfigDTO> yamlGitConfigDTOS =
+          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
+      repoBranchList = emptyIfNull(yamlGitConfigDTOS)
+                           .stream()
+                           .map(yamlGitConfigDTO -> {
+                             String repo = yamlGitConfigDTO.getRepo();
+                             String defaultBranch = yamlGitConfigDTO.getBranch();
+                             return Pair.of(repo, defaultBranch);
+                           })
+                           .collect(Collectors.toList());
+    } else {
       YamlGitConfigDTO yamlGitConfigDTO =
           yamlGitConfigService.get(projectIdentifier, orgIdentifier, accountIdentifier, repoIdentifier);
       branch = StringUtils.isEmpty(branch) ? yamlGitConfigDTO.getBranch() : branch;
-      criteria.and(GitSyncErrorKeys.repoUrl).is(yamlGitConfigDTO.getRepo());
-      branches.add(branch);
-    } else if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
-      List<YamlGitConfigDTO> yamlGitConfigs =
-          yamlGitConfigService.list(projectIdentifier, orgIdentifier, accountIdentifier);
-      branches.addAll(yamlGitConfigs.stream().map(YamlGitConfigDTO::getBranch).collect(Collectors.toList()));
+      repoBranchList.add(Pair.of(yamlGitConfigDTO.getRepo(), branch));
     }
+
     if (errorType.equals(GitSyncErrorType.GIT_TO_HARNESS)) {
-      criteria.and(GitSyncErrorKeys.branchName).in(branches);
+      List<Criteria> criteriaList = new ArrayList<>();
+      for (Pair<String, String> repoBranch : repoBranchList) {
+        criteriaList.add(Criteria.where(GitSyncErrorKeys.repoUrl)
+                             .is(repoBranch.getLeft())
+                             .and(GitSyncErrorKeys.branchName)
+                             .is(repoBranch.getRight()));
+      }
+      criteria.orOperator(criteriaList.toArray(new Criteria[criteriaList.size()]));
+    } else {
+      List<String> repoUrls = repoBranchList.stream().map(repoBranch -> repoBranch.getLeft()).collect(toList());
+      criteria.and(GitSyncErrorKeys.repoUrl).in(repoUrls);
     }
     return criteria;
   }
@@ -431,10 +464,10 @@ public class GitSyncErrorServiceImpl implements GitSyncErrorService {
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String repoIdentifier, String branch) {
     Criteria criteria = Criteria.where(GitSyncErrorKeys.accountIdentifier)
                             .is(accountIdentifier)
-                            .and(GitSyncErrorKeys.errorType)
-                            .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE)
                             .and(GitSyncErrorKeys.scopes)
-                            .is(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier));
+                            .is(Scope.of(accountIdentifier, orgIdentifier, projectIdentifier))
+                            .and(GitSyncErrorKeys.errorType)
+                            .in(GitSyncErrorType.FULL_SYNC, GitSyncErrorType.CONNECTIVITY_ISSUE);
     Criteria repoBranchCriteria = getRepoBranchCriteria(accountIdentifier, orgIdentifier, projectIdentifier,
         repoIdentifier, branch, GitSyncErrorType.CONNECTIVITY_ISSUE);
 

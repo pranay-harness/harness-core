@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.watcher.service;
 
 import static io.harness.concurrent.HTimeLimiter.callInterruptible21;
@@ -189,7 +196,7 @@ public class WatcherServiceImpl implements WatcherService {
     String deployMode = System.getenv().get("DEPLOY_MODE");
     multiVersion = isEmpty(deployMode) || !(deployMode.equals("ONPREM") || deployMode.equals("KUBERNETES_ONPREM"));
   }
-
+  private static final String DELEGATE_TYPE = System.getenv().get("DELEGATE_TYPE");
   private static final String DELEGATE_SCRIPT = "delegate.sh";
 
   @Inject @Named("inputExecutor") private ScheduledExecutorService inputExecutor;
@@ -1024,7 +1031,7 @@ public class WatcherServiceImpl implements WatcherService {
       restResponse = callInterruptible21(timeLimiter, ofMinutes(1),
           ()
               -> SafeHttpCall.execute(managerClient.getDelegateScriptsNg(
-                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion)));
+                  watcherConfiguration.getAccountId(), updatedVersion, patchVersion, DELEGATE_TYPE)));
     }
 
     if (restResponse == null) {

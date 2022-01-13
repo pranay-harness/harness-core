@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.service.delegate;
 
 import static io.harness.beans.DelegateTask.DELEGATE_QUEUE_TIMEOUT;
@@ -47,6 +54,7 @@ import io.harness.beans.EnvironmentType;
 import io.harness.capability.service.CapabilityService;
 import io.harness.category.element.UnitTests;
 import io.harness.common.NGTaskType;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.delegate.beans.Delegate;
 import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateConfiguration;
@@ -546,6 +554,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createDelegate(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     DelegateTask delegateTask =
         DelegateTask.builder()
             .accountId(accountId)
@@ -806,6 +815,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createNGProjectLevelDelegateWithOwner(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     BaseNGAccess ngAccess =
         BaseNGAccess.builder().projectIdentifier(PROJ_ID).orgIdentifier(ORG_ID).accountIdentifier(accountId).build();
     DockerArtifactDelegateRequest dockerArtifactDelegateRequest =
@@ -1057,6 +1067,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
                                                     .build();
     when(delegateConnectionResultCache.get(ImmutablePair.of(delegate.getUuid(), connectionResult.getCriteria())))
         .thenReturn(of(connectionResult));
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     delegateTaskServiceClassic.scheduleSyncTask(delegateTask);
     DelegateTask task = persistence.get(DelegateTask.class, delegateTask.getUuid());
     assertThat(task).isNull();
@@ -1071,6 +1082,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createDelegateWithScope(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     GitConfig gitConfig =
         GitConfig.builder().repoUrl(HELM_SOURCE_REPO_URL).branch("master").accountId(accountId).build();
 
@@ -1107,6 +1119,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createDelegateWithScope(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     PcfConfig pcfConfig =
         PcfConfig.builder().accountId(accountId).endpointUrl(URL).username(USER_NAME_DECRYPTED).build();
     DelegateTask delegateTask =
@@ -1148,6 +1161,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createDelegateWithScope(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     StackDriverDataCollectionInfo dataCollectionInfo =
         StackDriverDataCollectionInfo.builder()
             .collectionTime(10)
@@ -1266,6 +1280,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createDelegateWithDelegateProfile(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     GitConfig gitConfig =
         GitConfig.builder().repoUrl(HELM_SOURCE_REPO_URL).branch("master").accountId(accountId).build();
 
@@ -1299,6 +1314,7 @@ public class DelegateTaskProcessTest extends WingsBaseTest {
     Delegate delegate = createDelegateWithDelegateProfile(accountId);
     when(accountDelegatesCache.get(accountId)).thenReturn(singletonList(delegate));
     when(delegateCache.get(accountId, delegate.getUuid(), false)).thenReturn(delegate);
+    thrown.expect(NoEligibleDelegatesInAccountException.class);
     GitConfig gitConfig =
         GitConfig.builder().repoUrl(HELM_SOURCE_REPO_URL).branch("master").accountId(accountId).build();
 

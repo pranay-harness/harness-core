@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.pcf;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -10,6 +17,7 @@ import static io.harness.pcf.CfCommandUnitConstants.CheckExistingApps;
 import static io.harness.pcf.CfCommandUnitConstants.FetchCustomFiles;
 import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
+import static io.harness.pcf.CfCommandUnitConstants.VerifyManifests;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
 import static io.harness.pcf.model.PcfConstants.PCF_INFRA_ROUTE;
@@ -704,22 +712,24 @@ public class PcfSetupStateTest extends WingsBaseTest {
     List<CommandUnit> commandUnits = pcfSetupState.getCommandUnitList(true, false);
     List<String> commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
     assertThat(commandUnits).isNotNull();
-    assertThat(commandUnits.size()).isEqualTo(4);
-    assertThat(commandUnitNames).containsExactly(FetchGitFiles, CheckExistingApps, PcfSetup, Wrapup);
+    assertThat(commandUnits.size()).isEqualTo(5);
+    assertThat(commandUnitNames).containsExactly(FetchGitFiles, VerifyManifests, CheckExistingApps, PcfSetup, Wrapup);
 
     commandUnits = pcfSetupState.getCommandUnitList(false, false);
     commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
     assertThat(commandUnits).isNotNull();
-    assertThat(commandUnits.size()).isEqualTo(3);
-    assertThat(commandUnitNames).containsExactly(CheckExistingApps, PcfSetup, Wrapup);
+    assertThat(commandUnits.size()).isEqualTo(4);
+    assertThat(commandUnitNames).containsExactly(VerifyManifests, CheckExistingApps, PcfSetup, Wrapup);
 
     commandUnits = pcfSetupState.getCommandUnitList(false, true);
     commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
-    assertThat(commandUnitNames).containsExactly(FetchCustomFiles, CheckExistingApps, PcfSetup, Wrapup);
+    assertThat(commandUnitNames)
+        .containsExactly(FetchCustomFiles, VerifyManifests, CheckExistingApps, PcfSetup, Wrapup);
 
     commandUnits = pcfSetupState.getCommandUnitList(true, true);
     commandUnitNames = commandUnits.stream().map(CommandUnit::getName).collect(toList());
-    assertThat(commandUnitNames).containsExactly(FetchGitFiles, FetchCustomFiles, CheckExistingApps, PcfSetup, Wrapup);
+    assertThat(commandUnitNames)
+        .containsExactly(FetchGitFiles, FetchCustomFiles, VerifyManifests, CheckExistingApps, PcfSetup, Wrapup);
   }
 
   @Test

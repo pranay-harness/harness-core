@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.service;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -17,12 +24,14 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.category.element.UnitTests;
 import io.harness.exception.InvalidRequestException;
 import io.harness.git.model.ChangeType;
 import io.harness.observer.Subject;
 import io.harness.outbox.OutboxEvent;
 import io.harness.outbox.api.impl.OutboxServiceImpl;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.governance.ExpansionResponseProto;
@@ -85,6 +94,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Mock private PmsGitSyncHelper gitSyncHelper;
   @Mock private ExpansionRequestsExtractor expansionRequestsExtractor;
   @Mock private JsonExpander jsonExpander;
+  @Mock PmsFeatureFlagService pmsFeatureFlagService;
   @InjectMocks private PMSPipelineServiceImpl pmsPipelineService;
   @Inject private PMSPipelineRepository pmsPipelineRepository;
   StepCategory library;
@@ -339,6 +349,7 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testFetchExpandedPipelineJSONFromYaml() {
+    doReturn(true).when(pmsFeatureFlagService).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
     String dummyYaml = "don't really need a proper yaml cuz only testing the flow";
     ByteString randomByteString = ByteString.copyFromUtf8("sss");
     ExpansionRequestMetadata expansionRequestMetadata = ExpansionRequestMetadata.newBuilder()
@@ -358,6 +369,16 @@ public class PMSPipelineServiceImplTest extends PipelineServiceTestBase {
     Set<ExpansionResponseBatch> dummyResponseSet = Collections.singleton(dummyResponseBatch);
     doReturn(dummyResponseSet).when(jsonExpander).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);
     pmsPipelineService.fetchExpandedPipelineJSONFromYaml(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, dummyYaml);
+    verify(pmsFeatureFlagService, times(1)).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
+    verify(gitSyncHelper, times(1)).getGitSyncBranchContextBytesThreadLocal();
+    verify(expansionRequestsExtractor, times(1)).fetchExpansionRequests(dummyYaml);
+    verify(jsonExpander, times(1)).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);
+
+    doReturn(false).when(pmsFeatureFlagService).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
+    String noExp =
+        pmsPipelineService.fetchExpandedPipelineJSONFromYaml(accountId, ORG_IDENTIFIER, PROJ_IDENTIFIER, dummyYaml);
+    assertThat(noExp).isEqualTo(dummyYaml);
+    verify(pmsFeatureFlagService, times(2)).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
     verify(gitSyncHelper, times(1)).getGitSyncBranchContextBytesThreadLocal();
     verify(expansionRequestsExtractor, times(1)).fetchExpansionRequests(dummyYaml);
     verify(jsonExpander, times(1)).fetchExpansionResponses(dummyRequestSet, expansionRequestMetadata);

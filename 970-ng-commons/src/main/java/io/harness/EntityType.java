@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -35,6 +42,12 @@ public enum EntityType {
   @JsonProperty(EntityTypeConstants.JIRA_CREATE)
   JIRA_CREATE_STEP(
       ModuleType.PMS, EntityTypeConstants.JIRA_CREATE, IdentifierRef.class, EntityYamlRootNames.JIRA_CREATE),
+  @JsonProperty(EntityTypeConstants.JIRA_UPDATE)
+  JIRA_UPDATE_STEP(
+      ModuleType.PMS, EntityTypeConstants.JIRA_UPDATE, IdentifierRef.class, EntityYamlRootNames.JIRA_UPDATE),
+  @JsonProperty(EntityTypeConstants.JIRA_APPROVAL)
+  JIRA_APPROVAL_STEP(
+      ModuleType.PMS, EntityTypeConstants.JIRA_APPROVAL, IdentifierRef.class, EntityYamlRootNames.JIRA_APPROVAL),
   @JsonProperty(EntityTypeConstants.SHELL_SCRIPT)
   SHELL_SCRIPT_STEP(
       ModuleType.PMS, EntityTypeConstants.SHELL_SCRIPT, IdentifierRef.class, EntityYamlRootNames.SHELL_SCRIPT),
@@ -80,7 +93,7 @@ public enum EntityType {
       ModuleType.CD, EntityTypeConstants.DEPLOYMENT_STAGE, IdentifierRef.class, EntityYamlRootNames.DEPLOYMENT_STAGE),
   @JsonProperty(EntityTypeConstants.APPROVAL_STAGE)
   APPROVAL_STAGE(
-      ModuleType.CD, EntityTypeConstants.APPROVAL_STAGE, IdentifierRef.class, EntityYamlRootNames.APPROVAL_STAGE),
+      ModuleType.PMS, EntityTypeConstants.APPROVAL_STAGE, IdentifierRef.class, EntityYamlRootNames.APPROVAL_STAGE),
   @JsonProperty(EntityTypeConstants.FEATURE_FLAG_STAGE)
   FEATURE_FLAG_STAGE(ModuleType.CF, EntityTypeConstants.FEATURE_FLAG_STAGE, IdentifierRef.class,
       EntityYamlRootNames.FEATURE_FLAG_STAGE),
@@ -111,6 +124,9 @@ public enum EntityType {
   public static EntityType fromString(@JsonProperty("type") String entityType) {
     for (EntityType entityTypeEnum : EntityType.values()) {
       if (entityTypeEnum.getYamlName().equalsIgnoreCase(entityType)) {
+        return entityTypeEnum;
+      }
+      if (entityTypeEnum.name().equalsIgnoreCase(entityType)) {
         return entityTypeEnum;
       }
     }

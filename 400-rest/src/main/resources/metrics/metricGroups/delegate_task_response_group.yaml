@@ -1,0 +1,11 @@
+name: DelegateTaskResponse
+identifier: delegate_task_response
+labels:
+  - accountId
+  - delegateId
+  - status
+  - version
+  - ng
+  - taskType
+  - async
+  - responseCode

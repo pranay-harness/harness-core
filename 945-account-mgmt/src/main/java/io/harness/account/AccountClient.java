@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.account;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
@@ -36,6 +43,8 @@ public interface AccountClient {
   String DEFAULT_PROJECT_TOKENS = "/default-for-projects";
 
   @POST(ACCOUNT_API) Call<RestResponse<AccountDTO>> create(@Body AccountDTO dto);
+
+  @GET(ACCOUNT_API + "/list") Call<RestResponse<List<AccountDTO>>> getAllAccounts();
 
   @GET(ACCOUNT_API + "/{accountId}") Call<RestResponse<AccountDTO>> getAccountDTO(@Path("accountId") String accountId);
 

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.delegate.task.terraform;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -15,6 +22,7 @@ import static io.harness.provision.TerraformConstants.TERRAFORM_APPLY_PLAN_FILE_
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_FILE_OUTPUT_NAME;
+import static io.harness.provision.TerraformConstants.TERRAFORM_PLAN_JSON_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_STATE_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TERRAFORM_VARIABLES_FILE_NAME;
 import static io.harness.provision.TerraformConstants.TF_BASE_DIR;
@@ -210,7 +218,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
           CommandExecutionStatus.RUNNING);
       saveTerraformPlanContentToFile(terraformExecuteStepRequest.getEncryptionConfig(),
           terraformExecuteStepRequest.getEncryptedTfPlan(), terraformExecuteStepRequest.getScriptDirectory(),
-          TERRAFORM_PLAN_FILE_OUTPUT_NAME);
+          terraformExecuteStepRequest.getAccountId(), TERRAFORM_PLAN_FILE_OUTPUT_NAME);
       terraformExecuteStepRequest.getLogCallback().saveExecutionLog(
           color("\nUsing approved terraform plan \n", LogColor.Yellow, LogWeight.Bold), INFO,
           CommandExecutionStatus.RUNNING);
@@ -236,7 +244,8 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
             executeTerraformShowCommandWithTfClient(terraformExecuteStepRequest.isTfPlanDestroy() ? DESTROY : APPLY,
                 terraformExecuteStepRequest.getTimeoutInMillis(), terraformExecuteStepRequest.getEnvVars(),
                 terraformExecuteStepRequest.getScriptDirectory(), terraformExecuteStepRequest.getLogCallback(),
-                terraformExecuteStepRequest.getPlanJsonLogOutputStream());
+                terraformExecuteStepRequest.getPlanJsonLogOutputStream(),
+                terraformExecuteStepRequest.isUseOptimizedTfPlan());
       }
     }
     return response;
@@ -323,7 +332,8 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       if (terraformExecuteStepRequest.isSaveTerraformJson()) {
         response = executeTerraformShowCommandWithTfClient(DESTROY, terraformExecuteStepRequest.getTimeoutInMillis(),
             terraformExecuteStepRequest.getEnvVars(), terraformExecuteStepRequest.getScriptDirectory(),
-            terraformExecuteStepRequest.getLogCallback(), terraformExecuteStepRequest.getPlanJsonLogOutputStream());
+            terraformExecuteStepRequest.getLogCallback(), terraformExecuteStepRequest.getPlanJsonLogOutputStream(),
+            terraformExecuteStepRequest.isUseOptimizedTfPlan());
       }
     } else {
       if (terraformExecuteStepRequest.getEncryptedTfPlan() == null) {
@@ -340,7 +350,7 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       } else {
         saveTerraformPlanContentToFile(terraformExecuteStepRequest.getEncryptionConfig(),
             terraformExecuteStepRequest.getEncryptedTfPlan(), terraformExecuteStepRequest.getScriptDirectory(),
-            TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME);
+            terraformExecuteStepRequest.getAccountId(), TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME);
         TerraformApplyCommandRequest terraformApplyCommandRequest =
             TerraformApplyCommandRequest.builder().planName(TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME).build();
         response = terraformClient.apply(terraformApplyCommandRequest, terraformExecuteStepRequest.getTimeoutInMillis(),
@@ -353,27 +363,30 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
 
   private CliResponse executeTerraformShowCommandWithTfClient(TerraformCommand terraformCommand, long timeoutInMillis,
       Map<String, String> envVars, String scriptDirectory, LogCallback logCallback,
-      PlanJsonLogOutputStream planJsonLogOutputStream) throws IOException, InterruptedException, TimeoutException {
+      PlanJsonLogOutputStream planJsonLogOutputStream, boolean useOptimizedTfPlan)
+      throws IOException, InterruptedException, TimeoutException {
     String planName =
         terraformCommand == APPLY ? TERRAFORM_PLAN_FILE_OUTPUT_NAME : TERRAFORM_DESTROY_PLAN_FILE_OUTPUT_NAME;
     logCallback.saveExecutionLog(
         format("%nGenerating json representation of %s %n", planName), INFO, CommandExecutionStatus.RUNNING);
     CliResponse response =
         terraformClient.show(planName, timeoutInMillis, envVars, scriptDirectory, logCallback, planJsonLogOutputStream);
-    logCallback.saveExecutionLog(
-        format("%nJson representation of %s is exported as a variable %s %n", planName,
-            terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
-        INFO, CommandExecutionStatus.RUNNING);
+    if (!useOptimizedTfPlan) {
+      logCallback.saveExecutionLog(
+          format("%nJson representation of %s is exported as a variable %s %n", planName,
+              terraformCommand == APPLY ? TERRAFORM_APPLY_PLAN_FILE_VAR_NAME : TERRAFORM_DESTROY_PLAN_FILE_VAR_NAME),
+          INFO, CommandExecutionStatus.RUNNING);
+    }
+
     return response;
   }
 
   @VisibleForTesting
   public void saveTerraformPlanContentToFile(EncryptionConfig encryptionConfig, EncryptedRecordData encryptedTfPlan,
-      String scriptDirectory, String terraformOutputFileName) throws IOException {
+      String scriptDirectory, String accountId, String terraformOutputFileName) throws IOException {
     File tfPlanFile = Paths.get(scriptDirectory, terraformOutputFileName).toFile();
-
-    byte[] decryptedTerraformPlan = encryptDecryptHelper.getDecryptedContent(encryptionConfig, encryptedTfPlan);
-
+    byte[] decryptedTerraformPlan =
+        encryptDecryptHelper.getDecryptedContent(encryptionConfig, encryptedTfPlan, accountId);
     FileUtils.copyInputStreamToFile(new ByteArrayInputStream(decryptedTerraformPlan), tfPlanFile);
   }
 
@@ -652,5 +665,24 @@ public class TerraformBaseHelperImpl implements TerraformBaseHelper {
       }
       logCallback.saveExecutionLog("Done cleaning up directories.", INFO, CommandExecutionStatus.SUCCESS);
     }
+  }
+
+  @Override
+  public String uploadTfPlanJson(String accountId, String delegateId, String taskId, String entityId, String planName,
+      String localFilePath) throws IOException {
+    final DelegateFile delegateFile = aDelegateFile()
+                                          .withAccountId(accountId)
+                                          .withDelegateId(delegateId)
+                                          .withTaskId(taskId)
+                                          .withEntityId(entityId)
+                                          .withBucket(FileBucket.TERRAFORM_PLAN_JSON)
+                                          .withFileName(format(TERRAFORM_PLAN_JSON_FILE_NAME, planName))
+                                          .build();
+
+    try (InputStream fileStream = new FileInputStream(localFilePath)) {
+      delegateFileManagerBase.upload(delegateFile, fileStream);
+    }
+
+    return delegateFile.getFileId();
   }
 }

@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.statemachine.services.api;
 
 import io.harness.cvng.analysis.beans.TimeSeriesRecordDTO;
@@ -10,6 +17,7 @@ import io.harness.cvng.servicelevelobjective.entities.SLIRecord.SLIRecordParam;
 import io.harness.cvng.servicelevelobjective.entities.ServiceLevelIndicator;
 import io.harness.cvng.servicelevelobjective.services.api.SLIDataProcessorService;
 import io.harness.cvng.servicelevelobjective.services.api.SLIRecordService;
+import io.harness.cvng.servicelevelobjective.services.api.SLOHealthIndicatorService;
 import io.harness.cvng.servicelevelobjective.services.api.ServiceLevelIndicatorService;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.SLIMetricAnalysisTransformer;
 import io.harness.cvng.servicelevelobjective.transformer.servicelevelindicator.ServiceLevelIndicatorEntityAndDTOTransformer;
@@ -39,6 +47,8 @@ public class SLIMetricAnalysisStateExecutor extends AnalysisStateExecutor<SLIMet
 
   @Inject private SLIMetricAnalysisTransformer sliMetricAnalysisTransformer;
 
+  @Inject private SLOHealthIndicatorService sloHealthIndicatorService;
+
   @Override
   public AnalysisState execute(SLIMetricAnalysisState analysisState) {
     Instant startTime = analysisState.getInputs().getStartTime();
@@ -57,6 +67,7 @@ public class SLIMetricAnalysisStateExecutor extends AnalysisStateExecutor<SLIMet
     List<SLIRecordParam> sliRecordList = sliMetricAnalysisTransformer.getSLIAnalyseResponse(sliAnalyseResponseList);
     sliRecordService.create(
         sliRecordList, serviceLevelIndicator.getUuid(), verificationTaskId, serviceLevelIndicator.getVersion());
+    sloHealthIndicatorService.upsert(serviceLevelIndicator);
     analysisState.setStatus(AnalysisStatus.SUCCESS);
     return analysisState;
   }

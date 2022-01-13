@@ -24,7 +24,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -61,7 +61,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -98,7 +98,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -135,7 +135,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -172,7 +172,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -209,7 +209,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -246,7 +246,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -283,7 +283,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -320,7 +320,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -357,7 +357,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -394,7 +394,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -431,7 +431,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -468,7 +468,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -505,7 +505,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -542,7 +542,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -579,7 +579,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -616,7 +616,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -653,7 +653,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
               }
@@ -690,83 +690,9 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_COUNT"
-              }
-            }
-          },
-          "plotType": "LINE"
-        }
-      ],
-      "timeshiftDuration": "0s",
-      "yAxis": {
-        "label": "y1Axis",
-        "scale": "LINEAR"
-      },
-      "chartOptions": {
-        "mode": "COLOR"
-      }
-    }
-  },
-  {
-    "title": "Analysis Statemachine Metrics - orchestrator_queue_size",
-    "xyChart": {
-      "dataSets": [
-        {
-          "timeSeriesQuery": {
-            "apiSource": "DEFAULT_CLOUD",
-            "timeSeriesFilter": {
-              "aggregation": {
-                "alignmentPeriod": "60s",
-                "crossSeriesReducer": "REDUCE_NONE",
-                "perSeriesAligner": "ALIGN_MEAN"
-              },
-              "filter": "metric.type=\"custom.googleapis.com/opencensus/orchestrator_queue_size\" resource.type=\"k8s_container\"",
-              "secondaryAggregation": {
-                "alignmentPeriod": "60s",
-                "crossSeriesReducer": "REDUCE_SUM",
-                "groupByFields": [
-                  "metric.label.\"accountId\""
-                ],
-                "perSeriesAligner": "ALIGN_MEAN"
-              }
-            }
-          },
-          "plotType": "LINE"
-        }
-      ],
-      "timeshiftDuration": "0s",
-      "yAxis": {
-        "label": "y1Axis",
-        "scale": "LINEAR"
-      },
-      "chartOptions": {
-        "mode": "COLOR"
-      }
-    }
-  },
-  {
-    "title": "Task duration metrics - verification_job_instance_extra_time",
-    "xyChart": {
-      "dataSets": [
-        {
-          "timeSeriesQuery": {
-            "apiSource": "DEFAULT_CLOUD",
-            "timeSeriesFilter": {
-              "aggregation": {
-                "alignmentPeriod": "60s",
-                "crossSeriesReducer": "REDUCE_NONE",
-                "perSeriesAligner": "ALIGN_DELTA"
-              },
-              "filter": "metric.type=\"custom.googleapis.com/opencensus/verification_job_instance_extra_time\" resource.type=\"k8s_container\"",
-              "secondaryAggregation": {
-                "alignmentPeriod": "60s",
-                "crossSeriesReducer": "REDUCE_PERCENTILE_99",
-                "groupByFields": [
-                  "metric.label.\"accountId\""
-                ],
-                "perSeriesAligner": "ALIGN_DELTA"
               }
             }
           },
@@ -801,7 +727,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -838,7 +764,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -875,7 +801,44 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_PERCENTILE_99",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
+                ],
+                "perSeriesAligner": "ALIGN_DELTA"
+              }
+            }
+          },
+          "plotType": "LINE"
+        }
+      ],
+      "timeshiftDuration": "0s",
+      "yAxis": {
+        "label": "y1Axis",
+        "scale": "LINEAR"
+      },
+      "chartOptions": {
+        "mode": "COLOR"
+      }
+    }
+  },
+  {
+    "title": "Task duration metrics - verification_job_instance_extra_time",
+    "xyChart": {
+      "dataSets": [
+        {
+          "timeSeriesQuery": {
+            "apiSource": "DEFAULT_CLOUD",
+            "timeSeriesFilter": {
+              "aggregation": {
+                "alignmentPeriod": "60s",
+                "crossSeriesReducer": "REDUCE_NONE",
+                "perSeriesAligner": "ALIGN_DELTA"
+              },
+              "filter": "metric.type=\"custom.googleapis.com/opencensus/verification_job_instance_extra_time\" resource.type=\"k8s_container\"",
+              "secondaryAggregation": {
+                "alignmentPeriod": "60s",
+                "crossSeriesReducer": "REDUCE_PERCENTILE_99",
+                "groupByFields": [
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_DELTA"
               }
@@ -912,7 +875,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_MEAN"
               }
@@ -949,7 +912,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_MEAN"
               }
@@ -986,7 +949,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_MEAN"
               }
@@ -1023,7 +986,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_MEAN"
               }
@@ -1060,7 +1023,7 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_MEAN"
               }
@@ -1097,7 +1060,44 @@ resource "google_monitoring_dashboard" "cvng_dashboard_1" {
                 "alignmentPeriod": "60s",
                 "crossSeriesReducer": "REDUCE_SUM",
                 "groupByFields": [
-                  "metric.label.\"accountId\""
+                  "metric.label.\"environment\""
+                ],
+                "perSeriesAligner": "ALIGN_MEAN"
+              }
+            }
+          },
+          "plotType": "LINE"
+        }
+      ],
+      "timeshiftDuration": "0s",
+      "yAxis": {
+        "label": "y1Axis",
+        "scale": "LINEAR"
+      },
+      "chartOptions": {
+        "mode": "COLOR"
+      }
+    }
+  },
+  {
+    "title": "CVNG tasks status count - analysis_state_machine_transition_count",
+    "xyChart": {
+      "dataSets": [
+        {
+          "timeSeriesQuery": {
+            "apiSource": "DEFAULT_CLOUD",
+            "timeSeriesFilter": {
+              "aggregation": {
+                "alignmentPeriod": "60s",
+                "crossSeriesReducer": "REDUCE_NONE",
+                "perSeriesAligner": "ALIGN_MEAN"
+              },
+              "filter": "metric.type=\"custom.googleapis.com/opencensus/analysis_state_machine_transition_count\" resource.type=\"k8s_container\"",
+              "secondaryAggregation": {
+                "alignmentPeriod": "60s",
+                "crossSeriesReducer": "REDUCE_SUM",
+                "groupByFields": [
+                  "metric.label.\"environment\""
                 ],
                 "perSeriesAligner": "ALIGN_MEAN"
               }

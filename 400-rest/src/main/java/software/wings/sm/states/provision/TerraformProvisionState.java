@@ -1,3 +1,10 @@
+/*
+ * Copyright 2022 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package software.wings.sm.states.provision;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
@@ -60,6 +67,8 @@ import io.harness.beans.FeatureName;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SweepingOutputInstance;
 import io.harness.beans.TriggeredBy;
+import io.harness.beans.terraform.TerraformPlanParam;
+import io.harness.beans.terraform.TerraformPlanParam.TerraformPlanParamBuilder;
 import io.harness.context.ContextElementType;
 import io.harness.data.algorithm.HashGenerator;
 import io.harness.data.structure.EmptyPredicate;
@@ -76,6 +85,7 @@ import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptedDataDetail;
+import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.serializer.JsonUtils;
 import io.harness.tasks.ResponseData;
 
@@ -83,7 +93,6 @@ import software.wings.api.ScriptStateExecutionData;
 import software.wings.api.TerraformApplyMarkerParam;
 import software.wings.api.TerraformExecutionData;
 import software.wings.api.TerraformOutputInfoElement;
-import software.wings.api.TerraformPlanParam;
 import software.wings.api.terraform.TerraformOutputVariables;
 import software.wings.api.terraform.TerraformProvisionInheritPlanElement;
 import software.wings.api.terraform.TfVarGitSource;
@@ -279,6 +288,7 @@ public abstract class TerraformProvisionState extends State {
     terraformExecutionData.setActivityId(activityId);
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     updateActivityStatus(activityId, context.getAppId(), terraformExecutionData.getExecutionStatus());
+    boolean useOptimizedTfPlan = featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId());
     if (exportPlanToApplyStep || (runPlanOnly && TerraformCommand.DESTROY == command())) {
       String planName = getPlanName(context);
       terraformPlanHelper.saveEncryptedTfPlanToSweepingOutput(
@@ -286,7 +296,7 @@ public abstract class TerraformProvisionState extends State {
       fileService.updateParentEntityIdAndVersion(PhaseStep.class, terraformExecutionData.getEntityId(), null,
           terraformExecutionData.getStateFileId(), null, FileBucket.TERRAFORM_STATE);
     }
-    saveTerraformPlanJson(terraformExecutionData.getTfPlanJson(), context, command());
+    saveTerraformPlanJson(terraformExecutionData, context, command());
 
     TerraformProvisionInheritPlanElement inheritPlanElement =
         TerraformProvisionInheritPlanElement.builder()
@@ -302,7 +312,11 @@ public abstract class TerraformProvisionState extends State {
             .backendConfigs(terraformExecutionData.getBackendConfigs())
             .environmentVariables(terraformExecutionData.getEnvironmentVariables())
             .workspace(terraformExecutionData.getWorkspace())
-            .encryptedTfPlan(terraformExecutionData.getEncryptedTfPlan())
+            // In case of OPTIMIZED_TF_PLAN FF enabled we don't want to store encryptedTfPlan record in context element
+            // We're ending in storing 3 times, since the encryptedValue for KMS secret manager will be the value itself
+            // it will reduce the max encrypted plan size to 5mb. Will use sweeping output for getting encrypted tf plan
+            .encryptedTfPlan(useOptimizedTfPlan ? null : terraformExecutionData.getEncryptedTfPlan())
+            .tfPlanJsonFileId(terraformExecutionData.getTfPlanJsonFiledId())
             .build();
 
     return ExecutionResponse.builder()
@@ -315,7 +329,7 @@ public abstract class TerraformProvisionState extends State {
   }
 
   private void saveTerraformPlanJson(
-      String terraformPlan, ExecutionContext context, TerraformCommand terraformCommand) {
+      TerraformExecutionData executionData, ExecutionContext context, TerraformCommand terraformCommand) {
     if (featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId())) {
       String variableName = terraformCommand == TerraformCommand.APPLY ? TF_APPLY_VAR_NAME : TF_DESTROY_VAR_NAME;
       // if the plan variable exists overwrite it
@@ -323,13 +337,25 @@ public abstract class TerraformProvisionState extends State {
           sweepingOutputService.find(context.prepareSweepingOutputInquiryBuilder().name(variableName).build());
       if (sweepingOutputInstance != null) {
         sweepingOutputService.deleteById(context.getAppId(), sweepingOutputInstance.getUuid());
+
+        if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+          TerraformPlanParam existingTerraformPlanJson = (TerraformPlanParam) sweepingOutputInstance.getValue();
+          if (isNotEmpty(existingTerraformPlanJson.getTfPlanJsonFileId())) {
+            fileService.deleteFile(existingTerraformPlanJson.getTfPlanJsonFileId(), FileBucket.TERRAFORM_PLAN_JSON);
+          }
+        }
+      }
+
+      TerraformPlanParamBuilder tfPlanParamBuilder = TerraformPlanParam.builder();
+      if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+        tfPlanParamBuilder.tfPlanJsonFileId(executionData.getTfPlanJsonFiledId());
+      } else {
+        tfPlanParamBuilder.tfplan(format("'%s'", JsonUtils.prettifyJsonString(executionData.getTfPlanJson())));
       }
 
       sweepingOutputService.save(context.prepareSweepingOutputBuilder(SweepingOutputInstance.Scope.PIPELINE)
                                      .name(variableName)
-                                     .value(TerraformPlanParam.builder()
-                                                .tfplan(format("'%s'", JsonUtils.prettifyJsonString(terraformPlan)))
-                                                .build())
+                                     .value(tfPlanParamBuilder.build())
                                      .build());
     }
   }
@@ -337,6 +363,10 @@ public abstract class TerraformProvisionState extends State {
   private String getPlanName(ExecutionContext context) {
     String planPrefix = TerraformCommand.DESTROY == command() ? TF_DESTROY_NAME_PREFIX : TF_NAME_PREFIX;
     return String.format(planPrefix, context.getWorkflowExecutionId());
+  }
+
+  private String getEncryptedPlanName(ExecutionContext context) {
+    return getPlanName(context).replaceAll("_", "-");
   }
 
   protected String getMarkerName() {
@@ -371,6 +401,17 @@ public abstract class TerraformProvisionState extends State {
     TerraformInfrastructureProvisioner terraformProvisioner = getTerraformInfrastructureProvisioner(context);
     if (!(this instanceof DestroyTerraformProvisionState)) {
       markApplyExecutionCompleted(context);
+    }
+
+    if (featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())) {
+      context.getContextElementList(TERRAFORM_INHERIT_PLAN)
+          .stream()
+          .map(TerraformProvisionInheritPlanElement.class ::cast)
+          .filter(element -> element.getProvisionerId().equals(provisionerId))
+          .filter(element -> isNotEmpty(element.getTfPlanJsonFileId()))
+          .findFirst()
+          .map(TerraformProvisionInheritPlanElement::getTfPlanJsonFileId)
+          .ifPresent(tfPlanJsonFileId -> fileService.deleteFile(tfPlanJsonFileId, FileBucket.TERRAFORM_PLAN_JSON));
     }
 
     if (terraformExecutionData.getExecutionStatus() == FAILED) {
@@ -684,6 +725,11 @@ public abstract class TerraformProvisionState extends State {
       }
     }
 
+    EncryptedRecordData encryptedTfPlan =
+        featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId())
+        ? terraformPlanHelper.getEncryptedTfPlanFromSweepingOutput(context, getPlanName(context))
+        : element.getEncryptedTfPlan();
+
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerraformProvisionParametersBuilder terraformProvisionParametersBuilder =
         TerraformProvisionParameters.builder()
@@ -715,9 +761,9 @@ public abstract class TerraformProvisionState extends State {
             .workspace(workspace)
             .delegateTag(element.getDelegateTag())
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
-            .encryptedTfPlan(element.getEncryptedTfPlan())
+            .encryptedTfPlan(encryptedTfPlan)
             .secretManagerConfig(secretManagerConfig)
-            .planName(getPlanName(context))
+            .planName(getEncryptedPlanName(context))
             .useTfClient(
                 featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .isGitHostConnectivityCheck(
@@ -955,6 +1001,7 @@ public abstract class TerraformProvisionState extends State {
             .runPlanOnly(runPlanOnly)
             .exportPlanToApplyStep(exportPlanToApplyStep)
             .saveTerraformJson(featureFlagService.isEnabled(FeatureName.EXPORT_TF_PLAN, context.getAccountId()))
+            .useOptimizedTfPlanJson(featureFlagService.isEnabled(FeatureName.OPTIMIZED_TF_PLAN, context.getAccountId()))
             .tfVarFiles(getRenderedTfVarFiles(tfVarFiles, context))
             .workspace(workspace)
             .delegateTag(delegateTag)
@@ -962,7 +1009,7 @@ public abstract class TerraformProvisionState extends State {
             .skipRefreshBeforeApplyingPlan(terraformProvisioner.isSkipRefreshBeforeApplyingPlan())
             .secretManagerConfig(secretManagerConfig)
             .encryptedTfPlan(null)
-            .planName(getPlanName(context))
+            .planName(getEncryptedPlanName(context))
             .useTfClient(
                 featureFlagService.isEnabled(FeatureName.USE_TF_CLIENT, executionContext.getApp().getAccountId()))
             .isGitHostConnectivityCheck(

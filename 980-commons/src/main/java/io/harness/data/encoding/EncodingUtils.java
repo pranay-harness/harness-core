@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package io.harness.data.encoding;
 
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
@@ -12,6 +19,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -25,6 +33,19 @@ public class EncodingUtils {
     ByteArrayOutputStream bos = new ByteArrayOutputStream(toCompress.length());
     GZIPOutputStream gzip = new GZIPOutputStream(bos);
     gzip.write(toCompress.getBytes(Charset.forName("UTF-8")));
+    gzip.close();
+    byte[] compressed = bos.toByteArray();
+    bos.close();
+    return compressed;
+  }
+
+  public static byte[] compressString(String toCompress, int level) throws IOException {
+    Preconditions.checkState(isNotEmpty(toCompress));
+    ByteArrayOutputStream bos = new ByteArrayOutputStream(toCompress.length());
+    GZIPOutputStream gzip = new GZIPOutputStream(bos) {
+      { def.setLevel(level); }
+    };
+    gzip.write(toCompress.getBytes(StandardCharsets.UTF_8));
     gzip.close();
     byte[] compressed = bos.toByteArray();
     bos.close();

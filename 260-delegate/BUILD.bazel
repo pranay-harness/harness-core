@@ -681,18 +681,18 @@ java_binary(
 )
 
 config_setting(
-  name = "immutable",
-  values = {
-      "define": "is_immutable=true",
-  }
+    name = "immutable",
+    values = {
+        "define": "is_immutable=true",
+    },
 )
 
 springboot(
     name = "module_deploy",
     boot_app_class = select({
-                                ":immutable": "io.harness.delegate.app.DelegateAgentApplication",
-                                "//conditions:default": "io.harness.delegate.app.DelegateApplication"
-                            }),
+        ":immutable": "io.harness.delegate.app.DelegateAgentApplication",
+        "//conditions:default": "io.harness.delegate.app.DelegateApplication",
+    }),
     java_library = ":module",
     visibility = ["//visibility:public"],
 )

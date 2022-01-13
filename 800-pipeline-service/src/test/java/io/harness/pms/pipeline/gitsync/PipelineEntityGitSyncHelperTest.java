@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.pipeline.gitsync;
 
 import static io.harness.EntityType.PIPELINES;
@@ -19,6 +26,7 @@ import static org.mockito.Mockito.when;
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.beans.IdentifierRef;
 import io.harness.category.element.UnitTests;
 import io.harness.common.EntityReference;
@@ -31,6 +39,7 @@ import io.harness.gitsync.sdk.EntityGitDetails;
 import io.harness.ng.core.EntityDetail;
 import io.harness.ng.core.template.TemplateMergeResponseDTO;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.pms.PmsFeatureFlagService;
 import io.harness.pms.pipeline.PipelineEntity;
 import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.mappers.PMSPipelineDtoMapper;
@@ -55,6 +64,7 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Mock private PMSPipelineService pipelineService;
   @Mock private PMSPipelineTemplateHelper pipelineTemplateHelper;
   @Mock private PMSYamlSchemaService pmsYamlSchemaService;
+  @Mock private PmsFeatureFlagService pmsFeatureFlagService;
   @InjectMocks PipelineEntityGitSyncHelper pipelineEntityGitSyncHelper;
   static String accountId = "accountId";
   static String orgId = "orgId";
@@ -115,6 +125,7 @@ public class PipelineEntityGitSyncHelperTest extends CategoryTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
+    doReturn(false).when(pmsFeatureFlagService).isEnabled(accountId, FeatureName.OPA_PIPELINE_GOVERNANCE);
   }
 
   @Test

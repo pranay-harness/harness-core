@@ -1,3 +1,10 @@
+/*
+ * Copyright 2020 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
+ */
+
 package software.wings.verification;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
@@ -18,7 +25,7 @@ public class StackDriverMetricsCVConfigurationYamlHandler
     StackDriverMetricCVConfigurationYaml yaml = StackDriverMetricCVConfigurationYaml.builder().build();
     super.toYaml(yaml, bean);
     yaml.setMetricDefinitions(bean.getMetricDefinitions());
-
+    yaml.setProjectId(bean.getProjectId());
     yaml.setType(StateType.STACK_DRIVER.name());
     return yaml;
   }
@@ -43,6 +50,7 @@ public class StackDriverMetricsCVConfigurationYamlHandler
     bean.setMetricDefinitions(changeContext.getYaml().getMetricDefinitions());
     bean.setMetricFilters();
     bean.setStateType(StateType.STACK_DRIVER);
+    bean.setProjectId(changeContext.getYaml().getProjectId());
 
     if (previous != null) {
       bean.setUuid(previous.getUuid());

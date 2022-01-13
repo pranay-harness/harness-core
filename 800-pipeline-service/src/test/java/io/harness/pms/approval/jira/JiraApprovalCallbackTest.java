@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.pms.approval.jira;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
@@ -16,6 +23,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ErrorNotifyResponseData;
 import io.harness.delegate.task.jira.JiraTaskNGResponse;
+import io.harness.errorhandling.NGErrorHelper;
 import io.harness.exception.ApprovalStepNGException;
 import io.harness.exception.HarnessJiraException;
 import io.harness.jira.JiraIssueNG;
@@ -26,11 +34,11 @@ import io.harness.rule.Owner;
 import io.harness.serializer.KryoSerializer;
 import io.harness.steps.approval.step.ApprovalInstanceService;
 import io.harness.steps.approval.step.beans.ApprovalType;
-import io.harness.steps.approval.step.jira.beans.CriteriaSpecWrapperDTO;
-import io.harness.steps.approval.step.jira.beans.JexlCriteriaSpecDTO;
-import io.harness.steps.approval.step.jira.beans.KeyValuesCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.CriteriaSpecWrapperDTO;
+import io.harness.steps.approval.step.beans.JexlCriteriaSpecDTO;
+import io.harness.steps.approval.step.beans.KeyValuesCriteriaSpecDTO;
+import io.harness.steps.approval.step.evaluation.CriteriaEvaluator;
 import io.harness.steps.approval.step.jira.entities.JiraApprovalInstance;
-import io.harness.steps.approval.step.jira.evaluation.CriteriaEvaluator;
 import io.harness.tasks.BinaryResponseData;
 import io.harness.tasks.ResponseData;
 
@@ -55,6 +63,7 @@ public class JiraApprovalCallbackTest extends CategoryTest {
   @Mock private KryoSerializer kryoSerializer;
   private static String approvalInstanceId = "approvalInstanceId";
   @Mock ILogStreamingStepClient iLogStreamingStepClient;
+  @Mock NGErrorHelper ngErrorHelper;
   @InjectMocks private JiraApprovalCallback jiraApprovalCallback;
   private static String accountId = "accountId";
   private static String orgIdentifier = "orgIdentifier";
@@ -67,6 +76,7 @@ public class JiraApprovalCallbackTest extends CategoryTest {
     on(jiraApprovalCallback).set("approvalInstanceService", approvalInstanceService);
     on(jiraApprovalCallback).set("logStreamingStepClientFactory", logStreamingStepClientFactory);
     on(jiraApprovalCallback).set("kryoSerializer", kryoSerializer);
+    on(jiraApprovalCallback).set("ngErrorHelper", ngErrorHelper);
   }
 
   @Test

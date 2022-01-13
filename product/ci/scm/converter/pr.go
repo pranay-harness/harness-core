@@ -1,9 +1,14 @@
+// Copyright 2021 Harness Inc. All rights reserved.
+// Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+// that can be found in the licenses directory at the root of this repository, also available at
+// https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+
 package converter
 
 import (
 	"github.com/drone/go-scm/scm"
-	"github.com/golang/protobuf/ptypes"
 	pb "github.com/wings-software/portal/product/ci/scm/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 // ConvertPRHook converts scm.PullRequestHook to protobuf object
@@ -39,14 +44,8 @@ func ConvertPR(pr *scm.PullRequest) (*pb.PullRequest, error) {
 	if err != nil {
 		return nil, err
 	}
-	createTS, err := ptypes.TimestampProto(pr.Created)
-	if err != nil {
-		return nil, err
-	}
-	updateTS, err := ptypes.TimestampProto(pr.Updated)
-	if err != nil {
-		return nil, err
-	}
+	createTS := timestamppb.New(pr.Created)
+	updateTS := timestamppb.New(pr.Updated)
 
 	var labels []*pb.Label
 	for _, l := range pr.Labels {

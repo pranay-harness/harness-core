@@ -1,10 +1,19 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.cvng.servicelevelobjective.services.impl;
 
+import io.harness.cvng.client.NextGenService;
 import io.harness.cvng.core.beans.monitoredService.MonitoredServiceDTO;
 import io.harness.cvng.core.beans.params.PageParams;
 import io.harness.cvng.core.beans.params.ProjectParams;
 import io.harness.cvng.core.services.api.monitoredService.MonitoredServiceService;
 import io.harness.cvng.core.utils.DateTimeUtils;
+import io.harness.cvng.servicelevelobjective.SLORiskCountResponse;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardApiFilter;
 import io.harness.cvng.servicelevelobjective.beans.SLODashboardWidget;
 import io.harness.cvng.servicelevelobjective.beans.ServiceLevelIndicatorDTO;
@@ -37,6 +46,7 @@ public class SLODashboardServiceImpl implements SLODashboardService {
   @Inject private SLIRecordService sliRecordService;
   @Inject private ServiceLevelIndicatorService serviceLevelIndicatorService;
   @Inject private Clock clock;
+  @Inject private NextGenService nextGenService;
   @Override
   public PageResponse<SLODashboardWidget> getSloDashboardWidgets(
       ProjectParams projectParams, SLODashboardApiFilter filter, PageParams pageParams) {
@@ -62,6 +72,12 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .pageItemCount(sloPageResponse.getPageItemCount())
         .content(sloDashboardWidgets)
         .build();
+  }
+
+  @Override
+  public SLORiskCountResponse getRiskCount(
+      ProjectParams projectParams, SLODashboardApiFilter serviceLevelObjectiveFilter) {
+    return serviceLevelObjectiveService.getRiskCount(projectParams, serviceLevelObjectiveFilter);
   }
 
   private SLODashboardWidget getSloDashboardWidget(ProjectParams projectParams,
@@ -94,12 +110,26 @@ public class SLODashboardServiceImpl implements SLODashboardService {
         .sloTargetPercentage(serviceLevelObjective.getSloTargetPercentage())
         .monitoredServiceIdentifier(slo.getMonitoredServiceRef())
         .monitoredServiceName(monitoredService.getName())
+        .environmentIdentifier(monitoredService.getEnvironmentRef())
+        .environmentName(
+            nextGenService
+                .getEnvironment(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
+                    serviceLevelObjective.getProjectIdentifier(), monitoredService.getEnvironmentRef())
+                .getName())
+        .serviceName(nextGenService
+                         .getService(serviceLevelObjective.getAccountId(), serviceLevelObjective.getOrgIdentifier(),
+                             serviceLevelObjective.getProjectIdentifier(), monitoredService.getServiceRef())
+                         .getName())
+        .serviceIdentifier(monitoredService.getServiceRef())
         .healthSourceIdentifier(slo.getHealthSourceRef())
         .healthSourceName(getHealthSourceName(monitoredService, slo.getHealthSourceRef()))
         .tags(slo.getTags())
         .type(slo.getServiceLevelIndicators().get(0).getType())
         .totalErrorBudget(totalErrorBudgetMinutes)
         .timeRemainingDays(timePeriod.getRemainingDays(currentLocalDate).getDays())
+        .burnRate(SLODashboardWidget.BurnRate.builder()
+                      .currentRatePercentage(sloGraphData.dailyBurnRate(serviceLevelObjective.getZoneOffset()))
+                      .build())
         .build();
   }
 
