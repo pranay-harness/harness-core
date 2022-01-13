@@ -608,6 +608,11 @@ import lombok.RequiredArgsConstructor;
 public class DelegateModule extends AbstractModule {
   private final DelegateConfiguration configuration;
 
+    /*
+     * Creates and return ScheduledExecutorService object, which can be used for health monitoring purpose
+     * Currently this executor has been used for sending heartbeat to manager and watcher. This is also being
+     * used to send KeepAlive packet to manager.
+     */
   @Provides
   @Singleton
   @Named("healthMonitorExecutor")
@@ -618,6 +623,11 @@ public class DelegateModule extends AbstractModule {
     return healthMonitorExecutor;
   }
 
+    /*
+     * Creates and return ScheduledExecutorService object, which can be used for monitoring watcher.
+     * Note that, this will only be used for monitoring, any action taken will be than executed by some
+     * another threadpool.
+     */
   @Provides
   @Singleton
   @Named("watcherMonitorExecutor")
@@ -628,6 +638,9 @@ public class DelegateModule extends AbstractModule {
     return watcherMonitorExecutor;
   }
 
+    /*
+     * Creates and return ScheduledExecutorService object, which can be used for scheduling self upgrade check.
+     */
   @Provides
   @Singleton
   @Named("upgradeExecutor")
@@ -638,6 +651,10 @@ public class DelegateModule extends AbstractModule {
     return upgradeExecutor;
   }
 
+    /*
+     * Creates and return ScheduledExecutorService object, which can be used for reading message from
+     * watcher and take appropriate action.
+     */
   @Provides
   @Singleton
   @Named("inputExecutor")
@@ -648,6 +665,10 @@ public class DelegateModule extends AbstractModule {
     return inputExecutor;
   }
 
+    /*
+     * Creates and return ScheduledExecutorService object, which can be used for tracking delegate profile
+     * and execute it in case of any changes.
+     */
   @Provides
   @Singleton
   @Named("profileExecutor")
@@ -658,6 +679,9 @@ public class DelegateModule extends AbstractModule {
     return profileExecutor;
   }
 
+    /*
+     * Creates and return ScheduledExecutorService object, which can be used for fetching task in case of polling.
+     */
   @Provides
   @Singleton
   @Named("rescheduleExecutor")
@@ -668,16 +692,20 @@ public class DelegateModule extends AbstractModule {
     return rescheduleExecutor;
   }
 
-  @Provides
-  @Singleton
-  @Named("verificationExecutor")
-  public ScheduledExecutorService verificationExecutor() {
-    ScheduledExecutorService verificationExecutor = new ScheduledThreadPoolExecutor(
-        2, new ThreadFactoryBuilder().setNameFormat("verification-%d").setPriority(Thread.NORM_PRIORITY).build());
-    Runtime.getRuntime().addShutdownHook(new Thread(verificationExecutor::shutdownNow));
-    return verificationExecutor;
-  }
+//  @Provides
+//  @Singleton
+//  @Named("verificationExecutor")
+//  public ScheduledExecutorService verificationExecutor() {
+//    ScheduledExecutorService verificationExecutor = new ScheduledThreadPoolExecutor(
+//        2, new ThreadFactoryBuilder().setNameFormat("verification-%d").setPriority(Thread.NORM_PRIORITY).build());
+//    Runtime.getRuntime().addShutdownHook(new Thread(verificationExecutor::shutdownNow));
+//    return verificationExecutor;
+//  }
 
+    /*
+     * Creates and return ExecutorService object, which can be used for performing low priority activities.
+     * Currently this is being used for performing graceful stop.
+     */
   @Provides
   @Singleton
   @Named("backgroundExecutor")
