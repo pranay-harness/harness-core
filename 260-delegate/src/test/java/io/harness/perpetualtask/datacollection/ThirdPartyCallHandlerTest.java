@@ -87,4 +87,26 @@ public class ThirdPartyCallHandlerTest extends DelegateTestBase {
         .isInstanceOf(NullPointerException.class)
         .hasMessage("Call Details request is null.");
   }
+
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category({UnitTests.class})
+  public void testAccept_withNULLBody() {
+    ArgumentCaptor<ApiCallLogDTO> apiCallLogCaptor = ArgumentCaptor.forClass(ApiCallLogDTO.class);
+    ArgumentCaptor<String> accountIdCaptor = ArgumentCaptor.forClass(String.class);
+    ThirdPartyCallHandler thirdPartyCallHandler =
+        new ThirdPartyCallHandler(accountId, requestUuid, delegateLogService, startTime, endTime);
+    Request request = new Request.Builder().url("http://example.com/test").build();
+    Call<String> call = mock(Call.class);
+    when(call.request()).thenReturn(request);
+    Response<String> response = Response.success(null);
+    CallDetails callDetails =
+        CallDetails.builder().request(call).response(response).requestTime(startTime).responseTime(endTime).build();
+    thirdPartyCallHandler.accept(callDetails);
+    verify(delegateLogService, times(1)).save(accountIdCaptor.capture(), apiCallLogCaptor.capture());
+    assertThat(accountIdCaptor.getValue()).isEqualTo(accountId);
+    assertThat(apiCallLogCaptor.getValue().getAccountId()).isEqualTo(accountId);
+    assertThat(apiCallLogCaptor.getValue().getStartTime()).isEqualTo(startTime.toEpochMilli());
+    assertThat(apiCallLogCaptor.getValue().getEndTime()).isEqualTo(endTime.toEpochMilli());
+  }
 }
