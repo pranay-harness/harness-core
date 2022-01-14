@@ -44,4 +44,4 @@ else
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/platform-service.log 2>&1
 fi
 
-JAVA_OPTS=$JAVA_OPTS" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=localhost:5006"
+JAVA_OPTS=$JAVA_OPTS" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5006"

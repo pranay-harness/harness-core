@@ -39,3 +39,5 @@ if [[ "${DEPLOY_MODE}" == "KUBERNETES" ]] || [[ "${DEPLOY_MODE}" == "KUBERNETES_
 else
     java $JAVA_OPTS -jar $CAPSULE_JAR $COMMAND /opt/harness/config.yml > /opt/harness/logs/accesscontrol-service.log 2>&1
 fi
+
+JAVA_OPTS=$JAVA_OPTS" -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5007"
