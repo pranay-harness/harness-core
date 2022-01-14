@@ -71,6 +71,12 @@ type Delegate {
   lastHeartBeat: Long
   version: String
   delegateProfileId: String
+  connection: [DelegateConnection]
+  includeScopes: [DelegateScope]
+  excludeScopes: [DelegateScope]
+  tags: [String]
+  supportedTasks: [String]
+
 }
 
 type AddDelegateScopePayload {
@@ -94,7 +100,10 @@ type DelegateScope {
   services: [String]
   infrastructureDefinitions: [String]
 }
-
+type DelegateConnection {
+  disconnected: Boolean
+  version: String
+}
 enum DelegateApproval {
   ACTIVATE
   REJECT
