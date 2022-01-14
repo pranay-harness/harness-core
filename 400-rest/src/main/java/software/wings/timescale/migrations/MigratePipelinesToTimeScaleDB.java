@@ -48,7 +48,8 @@ public class MigratePipelinesToTimeScaleDB {
   private static final String insert_statement =
       "INSERT INTO CG_PIPELINES (ID,NAME,ACCOUNT_ID,APP_ID,ENV_IDS,WORKFLOW_IDS,CREATED_AT,LAST_UPDATED_AT,CREATED_BY,LAST_UPDATED_BY) VALUES (?,?,?,?,?,?,?,?,?,?)";
 
-  private static final String update_statement = "UPDATE CG_PIPELINES SET NAME=? WHERE ID=?";
+  private static final String update_statement =
+      "UPDATE CG_PIPELINES SET NAME=?, ACCOUNT_ID=?, APP_ID=?, ENV_IDS=?, WORKFLOW_IDS=?, CREATED_AT=?, LAST_UPDATED_AT=?, CREATED_BY=?, LAST_UPDATED_BY=? WHERE ID=?";
 
   private static final String query_statement = "SELECT * FROM CG_PIPELINES WHERE ID=?";
 
@@ -177,7 +178,58 @@ public class MigratePipelinesToTimeScaleDB {
 
   private void updateDataInTimeScaleDB(Pipeline pipeline, Connection connection, PreparedStatement updateStatement)
       throws SQLException {
-    log.info("Update operation is not supported");
+    updateStatement.setString(1, pipeline.getName());
+    updateStatement.setString(2, pipeline.getAccountId());
+    updateStatement.setString(3, pipeline.getAppId());
+
+    List<PipelineStage> pipelineStages = pipeline.getPipelineStages();
+    List<String> envIds = new ArrayList<>();
+    Map<String, String> isEnvIdPresent = new HashMap<>();
+    List<String> workflowIds = new ArrayList<>();
+    Map<String, String> isWorkflowIdPresent = new HashMap<>();
+    for (PipelineStage pipelineStage : pipelineStages) {
+      List<PipelineStageElement> pipelineStageElements = pipelineStage.getPipelineStageElements();
+      for (PipelineStageElement pipelineStageElement : pipelineStageElements) {
+        if (pipelineStageElement.getProperties().containsKey("envId")) {
+          String envId = pipelineStageElement.getProperties().get("envId").toString();
+          if (envId != null) {
+            if (!isEnvIdPresent.containsKey(envId)) {
+              envIds.add(envId);
+              isEnvIdPresent.put(envId, envId);
+            }
+          }
+        }
+
+        if (pipelineStageElement.getProperties().containsKey("workflowId")) {
+          String workflowId = pipelineStageElement.getProperties().get("workflowId").toString();
+          if (workflowId != null) {
+            if (!isWorkflowIdPresent.containsKey(workflowId)) {
+              workflowIds.add(workflowId);
+              isWorkflowIdPresent.put(workflowId, workflowId);
+            }
+          }
+        }
+      }
+    }
+    insertArrayData(4, connection, updateStatement, envIds);
+    insertArrayData(5, connection, updateStatement, workflowIds);
+
+    updateStatement.setLong(6, pipeline.getCreatedAt());
+    updateStatement.setLong(7, pipeline.getLastUpdatedAt());
+
+    String created_by = null;
+    if (pipeline.getCreatedBy() != null) {
+      created_by = pipeline.getCreatedBy().getName();
+    }
+    String updated_by = null;
+    if (pipeline.getLastUpdatedBy() != null) {
+      updated_by = pipeline.getLastUpdatedBy().getName();
+    }
+    updateStatement.setString(8, created_by);
+    updateStatement.setString(9, updated_by);
+    updateStatement.setString(10, pipeline.getUuid());
+
+    updateStatement.execute();
   }
 
   private void insertArrayData(

@@ -35,5 +35,6 @@ public class DelegateAgentConfig extends Configuration {
   @JsonProperty private final String logStreamingServiceBaseUrl;
   @JsonProperty private final boolean clientToolsDownloadDisabled;
   @JsonProperty private final boolean installClientToolsInBackground;
+  @JsonProperty private final boolean versionCheckDisabled;
   @JsonProperty private final int maxCachedArtifacts;
 }

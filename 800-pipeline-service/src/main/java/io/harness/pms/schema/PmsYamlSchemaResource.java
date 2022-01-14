@@ -88,11 +88,14 @@ public class PmsYamlSchemaResource implements YamlSchemaResource {
   @GET
   @Path("/get")
   @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
-  public ResponseDTO<JsonNode> getIndividualYamlSchema(@NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier,
-      @QueryParam(ORG_KEY) String orgIdentifier, @QueryParam(PROJECT_KEY) String projectIdentifier,
-      @QueryParam("yamlGroup") String yamlGroup,
+  public ResponseDTO<YamlSchemaResponse> getIndividualYamlSchema(
+      @NotNull @QueryParam(ACCOUNT_KEY) String accountIdentifier, @QueryParam(ORG_KEY) String orgIdentifier,
+      @QueryParam(PROJECT_KEY) String projectIdentifier, @QueryParam("yamlGroup") String yamlGroup,
       @QueryParam(NGCommonEntityConstants.ENTITY_TYPE) EntityType stepEntityType, @QueryParam("scope") Scope scope) {
-    return ResponseDTO.newResponse(pmsYamlSchemaService.getIndividualYamlSchema(
-        accountIdentifier, orgIdentifier, projectIdentifier, scope, stepEntityType, yamlGroup));
+    // TODO(Brijesh): write logic to handle empty schema when ff or feature restriction is off.
+    JsonNode schema = pmsYamlSchemaService.getIndividualYamlSchema(
+        accountIdentifier, orgIdentifier, projectIdentifier, scope, stepEntityType, yamlGroup);
+    return ResponseDTO.newResponse(
+        YamlSchemaResponse.builder().schema(schema).schemaErrorResponse(SchemaErrorResponse.builder().build()).build());
   }
 }

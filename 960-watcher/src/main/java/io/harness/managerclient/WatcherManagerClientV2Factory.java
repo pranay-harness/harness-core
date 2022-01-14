@@ -7,6 +7,8 @@
 
 package io.harness.managerclient;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
+
 import io.harness.network.FibonacciBackOff;
 import io.harness.network.Http;
 import io.harness.network.NoopHostnameVerifier;
@@ -72,7 +74,11 @@ public class WatcherManagerClientV2Factory implements Provider<ManagerClientV2> 
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader("User-Agent", "watcher");
             if (chain.request().url().uri().getPath().contains("delegateScripts")) {
-              request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
+              String versionHeaderParam = chain.request().url().queryParameter("delegateVersion");
+              log.info("Delegate version on call for delegateScripts " + versionHeaderParam);
+              if (isNotBlank(versionHeaderParam)) {
+                request.addHeader("Version", chain.request().url().queryParameter("delegateVersion"));
+              }
             }
             return chain.proceed(request.build());
           })
