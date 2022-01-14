@@ -5,19 +5,16 @@ import static io.harness.rule.OwnerRule.JENNY;
 
 import static org.mockito.Mockito.when;
 
-import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
 import io.harness.app.datafetcher.delegate.AttachAllScopesToDelegateDataFetcher;
-import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
-import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
 import io.harness.app.schema.mutation.delegate.input.QLAttachAllScopesToDelegateInput;
-import io.harness.app.schema.mutation.delegate.input.QLAttachScopeToDelegateInput;
-import io.harness.app.schema.mutation.delegate.payload.QLAddDelegateScopePayload;
+import io.harness.app.schema.mutation.delegate.input.QLAttachAllScopesToDelegateInput.QLAttachAllScopesToDelegateInputBuilder;
 import io.harness.app.schema.mutation.delegate.payload.QLAttachScopeToDelegatePayload;
-import io.harness.app.schema.type.delegate.QLTaskGroup;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.Delegate.DelegateBuilder;
 import io.harness.delegate.beans.DelegateInstanceStatus;
 import io.harness.delegate.beans.DelegateScope;
+import io.harness.delegate.beans.DelegateScope.DelegateScopeBuilder;
 import io.harness.delegate.beans.TaskGroup;
 import io.harness.persistence.HPersistence;
 import io.harness.rule.Owner;
@@ -25,9 +22,6 @@ import io.harness.service.intfc.DelegateCache;
 
 import software.wings.graphql.datafetcher.AbstractDataFetcherTestBase;
 import software.wings.graphql.datafetcher.MutationContext;
-import software.wings.graphql.schema.type.QLEnvironmentType;
-import software.wings.graphql.schema.type.aggregation.QLIdFilter;
-import software.wings.graphql.schema.type.aggregation.QLIdOperator;
 import software.wings.service.intfc.DelegateScopeService;
 import software.wings.service.intfc.DelegateService;
 
@@ -35,7 +29,6 @@ import com.google.inject.Inject;
 import io.jsonwebtoken.lang.Assert;
 import java.sql.SQLException;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
@@ -77,7 +70,7 @@ public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetche
     DelegateScope delegateScope = createDelegateScopeBuilder(accountId, delegateScopeName).build();
     persistence.save(delegateScope);
 
-    QLAttachAllScopesToDelegateInput.QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
+    QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
         QLAttachAllScopesToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId).delegateId(delegateId).build();
 
@@ -100,7 +93,7 @@ public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetche
     Delegate existingDelegate = createDelegateBuilder(accountId, delegateId).build();
     persistence.save(existingDelegate);
 
-    QLAttachAllScopesToDelegateInput.QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
+    QLAttachAllScopesToDelegateInputBuilder attachScopeToDelegateInputBuilder =
         QLAttachAllScopesToDelegateInput.builder();
     attachScopeToDelegateInputBuilder.accountId(accountId).delegateId(delegateId).build();
 
@@ -112,7 +105,7 @@ public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetche
         qlAttachScopeToDelegatePayload.getMessage().startsWith("No Scopes available in account to add to delegate"));
   }
 
-  private Delegate.DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
+  private DelegateBuilder createDelegateBuilder(String accountId, String delegateId) {
     return Delegate.builder()
         .accountId(accountId)
         .ip("127.0.0.1")
@@ -125,7 +118,7 @@ public class AttachAllScopesToDelegateDataFetcherTest extends AbstractDataFetche
         .lastHeartBeat(System.currentTimeMillis());
   }
 
-  private DelegateScope.DelegateScopeBuilder createDelegateScopeBuilder(String accountId, String delegateScopeName) {
+  private DelegateScopeBuilder createDelegateScopeBuilder(String accountId, String delegateScopeName) {
     List<String> applicationList = Arrays.asList("app1", "app2");
     List<TaskGroup> taskGroups = Arrays.asList(TaskGroup.JIRA, TaskGroup.AWS);
     return DelegateScope.builder()
