@@ -8,6 +8,7 @@
 package io.harness.perpetualtask.datacollection;
 
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.rule.OwnerRule.KAMAL;
 import static io.harness.rule.OwnerRule.KANHAIYA;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -89,7 +90,7 @@ public class ThirdPartyCallHandlerTest extends DelegateTestBase {
   }
 
   @Test
-  @Owner(developers = KANHAIYA)
+  @Owner(developers = KAMAL)
   @Category({UnitTests.class})
   public void testAccept_withNULLBody() {
     ArgumentCaptor<ApiCallLogDTO> apiCallLogCaptor = ArgumentCaptor.forClass(ApiCallLogDTO.class);
