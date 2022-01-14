@@ -124,11 +124,14 @@ import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
 import io.harness.steps.approval.ApprovalNotificationHandler;
+import io.harness.steps.approval.step.harness.HarnessApprovalStepNode;
 import io.harness.steps.approval.step.jira.JiraApprovalHelperService;
+import io.harness.steps.approval.step.jira.JiraApprovalStepNode;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalHelperService;
 import io.harness.steps.approval.step.servicenow.ServiceNowApprovalStepNode;
 import io.harness.steps.jira.JiraStepHelperService;
 import io.harness.steps.jira.create.JiraCreateStepNode;
+import io.harness.steps.jira.update.JiraUpdateStepNode;
 import io.harness.steps.shellscript.ShellScriptHelperService;
 import io.harness.steps.shellscript.ShellScriptHelperServiceImpl;
 import io.harness.steps.shellscript.ShellScriptStepNode;
@@ -200,6 +203,9 @@ public class PipelineServiceModule extends AbstractModule {
       add(ShellScriptStepNode.class);
       add(TemplateStepNode.class);
       add(ServiceNowApprovalStepNode.class);
+      add(JiraUpdateStepNode.class);
+      add(JiraApprovalStepNode.class);
+      add(HarnessApprovalStepNode.class);
     }
   };
 

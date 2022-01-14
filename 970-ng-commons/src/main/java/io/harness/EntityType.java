@@ -113,7 +113,10 @@ public enum EntityType {
       ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS),
   @JsonProperty(EntityTypeConstants.SERVICENOW_APPROVAL)
   SERVICENOW_APPROVAL_STEP(ModuleType.CD, EntityTypeConstants.SERVICENOW_APPROVAL, IdentifierRef.class,
-      EntityYamlRootNames.SERVICENOW_APPROVAL);
+      EntityYamlRootNames.SERVICENOW_APPROVAL),
+  @JsonProperty(EntityTypeConstants.HARNESS_APPROVAL)
+  HARNESS_APPROVAL_STEP(
+      ModuleType.CD, EntityTypeConstants.HARNESS_APPROVAL, IdentifierRef.class, EntityYamlRootNames.HARNESS_APPROVAL);
 
   private final ModuleType moduleType;
   String yamlName;
