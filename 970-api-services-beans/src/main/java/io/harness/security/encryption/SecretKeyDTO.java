@@ -5,19 +5,24 @@
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
 
-package io.harness.pms.schema;
+package io.harness.security.encryption;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.Builder;
 import lombok.Data;
 
-@OwnedBy(HarnessTeam.PIPELINE)
+@OwnedBy(HarnessTeam.PL)
 @Data
 @Builder
-public class YamlSchemaResponse {
-  JsonNode schema;
-  SchemaErrorResponse schemaErrorResponse;
+public class SecretKeyDTO {
+  private String uuid;
+  private byte[] key;
+  private String algorithm;
+
+  public SecretKeySpec getSecretKeySpec() {
+    return new SecretKeySpec(key, algorithm);
+  }
 }

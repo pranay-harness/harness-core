@@ -5,19 +5,14 @@
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
 
-package io.harness.pms.schema;
+package io.harness.security.encryption;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import lombok.Builder;
-import lombok.Data;
-
-@OwnedBy(HarnessTeam.PIPELINE)
-@Data
-@Builder
-public class YamlSchemaResponse {
-  JsonNode schema;
-  SchemaErrorResponse schemaErrorResponse;
+@OwnedBy(HarnessTeam.PL)
+public enum EncryptedMech {
+  LOCAL_CRYPTO,
+  MULTI_CRYPTO,
+  AWS_ENCRYPTION_SDK_CRYPTO;
 }
