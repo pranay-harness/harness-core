@@ -5,19 +5,19 @@
  * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
  */
 
-package io.harness.pms.schema;
+package io.harness.gitsync.core.fullsync.beans;
 
-import io.harness.annotations.dev.HarnessTeam;
-import io.harness.annotations.dev.OwnedBy;
+import io.harness.Microservice;
+import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Value;
 
-@OwnedBy(HarnessTeam.PIPELINE)
-@Data
+@Value
 @Builder
-public class YamlSchemaResponse {
-  JsonNode schema;
-  SchemaErrorResponse schemaErrorResponse;
+public class FullSyncFilesGroupedByMsvc {
+  Microservice microservice;
+  List<GitFullSyncEntityInfo> gitFullSyncEntityInfoList;
+  ;
 }
