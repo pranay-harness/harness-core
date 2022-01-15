@@ -53,8 +53,8 @@ public class CurrentUserHelper {
 
   public EmbeddedUser getFromSecurityContextFromPrincipal() {
     if (SourcePrincipalContextBuilder.getSourcePrincipal() == null
-        || !USER.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())
-        || !SERVICE_ACCOUNT.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())) {
+        || !(USER.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType())
+            || SERVICE_ACCOUNT.equals(SourcePrincipalContextBuilder.getSourcePrincipal().getType()))) {
       throw new InvalidRequestException("Unable to fetch current user");
     }
 
