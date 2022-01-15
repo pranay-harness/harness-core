@@ -159,7 +159,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
 
   public String addDependenciesForPrimaryNode(YamlField artifactField, ArtifactStepParameters artifactStepParameters,
       LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
-    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder(); //.build()
+    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     YamlField primaryYamlField =
         PrimaryArtifactsUtility.createPrimaryArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
 
