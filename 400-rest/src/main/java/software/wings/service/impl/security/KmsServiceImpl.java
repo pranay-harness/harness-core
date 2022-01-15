@@ -28,9 +28,11 @@ import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.EncryptedDataParent;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.serializer.KryoSerializer;
@@ -62,6 +64,7 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   public static final String KMS_NAME_PATTERN = "^[0-9a-zA-Z-' _!]+$";
   @Inject private KryoSerializer kryoSerializer;
   @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @Override
   public String saveGlobalKmsConfig(String accountId, KmsConfig kmsConfig) {
@@ -308,8 +311,11 @@ public class KmsServiceImpl extends AbstractSecretServiceImpl implements KmsServ
   private void validateKms(String accountId, KmsConfig kmsConfig) {
     validateUserInput(kmsConfig);
     try {
-      kmsEncryptorsRegistry.getKmsEncryptor(kmsConfig).encryptSecret(
-          accountId, UUID.randomUUID().toString(), kmsConfig);
+      KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(kmsConfig);
+      if (localEncryptorHelper.isLocalEncryptor(kmsEncryptor)) {
+        localEncryptorHelper.populateConfigForEncryption(kmsConfig);
+      }
+      kmsEncryptor.encryptSecret(accountId, UUID.randomUUID().toString(), kmsConfig);
     } catch (WingsException e) {
       String message = "Was not able to encrypt using given credentials. Please check your credentials and try again";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message + e.getMessage(), USER);

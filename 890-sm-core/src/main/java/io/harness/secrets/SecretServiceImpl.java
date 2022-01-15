@@ -51,6 +51,7 @@ import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.persistence.HIterator;
 import io.harness.queue.QueuePublisher;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -102,13 +103,15 @@ public class SecretServiceImpl implements SecretService {
   private final CustomEncryptorsRegistry customRegistry;
   private final KryoSerializer kryoSerializer;
   private final QueuePublisher<MigrateSecretTask> secretsMigrationProcessor;
+  private final LocalEncryptorHelper localEncryptorHelper;
 
   @Inject
   public SecretServiceImpl(KryoSerializer kryoSerializer, SecretsDao secretsDao, SecretsRBACService secretsRBACService,
       SecretSetupUsageService secretSetupUsageService, SecretsFileService secretsFileService,
       SecretManagerConfigService secretManagerConfigService, SecretValidatorsRegistry secretValidatorsRegistry,
       SecretsAuditService secretsAuditService, KmsEncryptorsRegistry kmsRegistry, VaultEncryptorsRegistry vaultRegistry,
-      CustomEncryptorsRegistry customRegistry, QueuePublisher<MigrateSecretTask> secretsMigrationProcessor) {
+      CustomEncryptorsRegistry customRegistry, QueuePublisher<MigrateSecretTask> secretsMigrationProcessor,
+      LocalEncryptorHelper localEncryptorHelper) {
     this.kryoSerializer = kryoSerializer;
     this.secretsDao = secretsDao;
     this.secretsRBACService = secretsRBACService;
@@ -121,6 +124,7 @@ public class SecretServiceImpl implements SecretService {
     this.vaultRegistry = vaultRegistry;
     this.customRegistry = customRegistry;
     this.secretsMigrationProcessor = secretsMigrationProcessor;
+    this.localEncryptorHelper = localEncryptorHelper;
   }
 
   @Override
@@ -453,6 +457,9 @@ public class SecretServiceImpl implements SecretService {
 
   private EncryptedRecord encryptSecret(String accountId, String value, SecretManagerConfig secretManagerConfig) {
     KmsEncryptor kmsEncryptor = kmsRegistry.getKmsEncryptor(secretManagerConfig);
+    if (localEncryptorHelper.isLocalManagerConfig(secretManagerConfig)) {
+      localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+    }
     EncryptedRecord encryptedRecord = kmsEncryptor.encryptSecret(accountId, value, secretManagerConfig);
     validateEncryptedData(encryptedRecord);
     return encryptedRecord;

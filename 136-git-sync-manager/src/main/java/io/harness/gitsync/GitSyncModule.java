@@ -7,11 +7,10 @@
 
 package io.harness.gitsync;
 
-import static io.harness.EntityType.CONNECTORS;
-import static io.harness.EntityType.FEATURE_FLAGS;
-import static io.harness.EntityType.INPUT_SETS;
-import static io.harness.EntityType.PIPELINES;
-import static io.harness.EntityType.TEMPLATE;
+import static io.harness.Microservice.CF;
+import static io.harness.Microservice.CORE;
+import static io.harness.Microservice.PMS;
+import static io.harness.Microservice.TEMPLATESERVICE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.eventsframework.EventsFrameworkConstants.GIT_FULL_SYNC_STREAM;
 
@@ -108,18 +107,18 @@ public class GitSyncModule extends AbstractModule {
   @Singleton
   Map<EntityType, Microservice> getEntityTypeMicroserviceMap() {
     return ImmutableMap.<EntityType, Microservice>builder()
-        .put(EntityType.CONNECTORS, Microservice.CORE)
-        .put(EntityType.PIPELINES, Microservice.PMS)
-        .put(EntityType.FEATURE_FLAGS, Microservice.CF)
-        .put(EntityType.INPUT_SETS, Microservice.PMS)
-        .put(EntityType.TEMPLATE, Microservice.TEMPLATESERVICE)
+        .put(EntityType.CONNECTORS, CORE)
+        .put(EntityType.PIPELINES, PMS)
+        .put(EntityType.FEATURE_FLAGS, CF)
+        .put(EntityType.INPUT_SETS, PMS)
+        .put(EntityType.TEMPLATE, TEMPLATESERVICE)
         .build();
   }
 
   @Provides
   @Singleton
-  List<EntityType> getEntityProcessingOrder() {
-    return Arrays.asList(CONNECTORS, PIPELINES, INPUT_SETS, TEMPLATE, FEATURE_FLAGS);
+  List<Microservice> getMicroservicesProcessingOrder() {
+    return Arrays.asList(CORE, PMS, TEMPLATESERVICE, CF);
   }
 
   @Override

@@ -43,7 +43,8 @@ public class MigrateServicesToTimeScaleDB {
   private static final String insert_statement =
       "INSERT INTO CG_SERVICES (ID,NAME,ARTIFACT_TYPE,VERSION,ACCOUNT_ID,APP_ID,ARTIFACT_STREAM_IDS,CREATED_AT,LAST_UPDATED_AT,CREATED_BY,LAST_UPDATED_BY,DEPLOYMENT_TYPE) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
 
-  private static final String update_statement = "UPDATE CG_SERVICES SET NAME=? WHERE ID=?";
+  private static final String update_statement =
+      "UPDATE CG_SERVICES SET NAME=?, ARTIFACT_TYPE=?, VERSION=?, ACCOUNT_ID=?, APP_ID=?, ARTIFACT_STREAM_IDS=?, CREATED_AT=?, LAST_UPDATED_AT=?, CREATED_BY=?, LAST_UPDATED_BY=?, DEPLOYMENT_TYPE=? WHERE ID=?";
 
   private static final String query_statement = "SELECT * FROM CG_SERVICES WHERE ID=?";
 
@@ -144,7 +145,30 @@ public class MigrateServicesToTimeScaleDB {
 
   private void updateDataInTimeScaleDB(Service service, Connection connection, PreparedStatement updateStatement)
       throws SQLException {
-    log.info("Update operation is not supported");
+    updateStatement.setString(1, service.getName());
+    updateStatement.setString(2, service.getArtifactType().toString());
+    updateStatement.setLong(3, service.getVersion());
+    updateStatement.setString(4, service.getAccountId());
+    updateStatement.setString(5, service.getAppId());
+    insertArrayData(6, connection, updateStatement, service.getArtifactStreamIds());
+    updateStatement.setLong(7, service.getCreatedAt());
+    updateStatement.setLong(8, service.getLastUpdatedAt());
+
+    String created_by = null;
+    if (service.getCreatedBy() != null) {
+      created_by = service.getCreatedBy().getName();
+    }
+    updateStatement.setString(9, created_by);
+
+    String last_updated_by = null;
+    if (service.getLastUpdatedBy() != null) {
+      last_updated_by = service.getLastUpdatedBy().getName();
+    }
+    updateStatement.setString(10, last_updated_by);
+    updateStatement.setString(11, service.getDeploymentType().getDisplayName());
+    updateStatement.setString(12, service.getUuid());
+
+    updateStatement.execute();
   }
 
   private void insertArrayData(

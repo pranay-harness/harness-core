@@ -1,17 +1,6 @@
-Copyright 2021 Harness Inc.
+# PolyForm Free Trial License 1.0.0
 
-The Harness CD Community Plan is licensed under the Apache License, Version 2.0 (the "Apache License"). You may obtain a copy of the Apache License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-Additionally, this repo contains code belonging to Harness CD Enterprise Plan that is licensed under the Polyform Free Trial, Version 1.0 (the “Polyform FT License"). A copy of the Polyform FT License is provided below.
-
------------------------------------------------------------------
-Polyform Free Trial License, Version 1.0 
-
-Contributor: Harness Inc.
-
-Source Code: <https://github.com/wings-software/portal>
+<https://polyformproject.org/licenses/free-trial/1.0.0>
 
 ## Acceptance
 

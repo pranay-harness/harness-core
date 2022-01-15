@@ -12,6 +12,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
+import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 
@@ -45,4 +46,6 @@ public class EncryptedDataMigrationDTO implements EncryptedRecord {
   private String orgIdentifier;
   private String projectIdentifier;
   private String identifier;
+  private EncryptedMech encryptedMech;
+  private byte[] encryptedValueBytes;
 }

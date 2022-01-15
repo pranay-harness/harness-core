@@ -143,7 +143,8 @@ public class UserResource {
         ApiResponse(responseCode = "default", description = "Returns current logged in user info")
       })
   public ResponseDTO<UserInfo>
-  getUserInfo() {
+  getUserInfo(@Parameter(description = "Account Identifier", required = true) @NotNull @QueryParam(
+      NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier) {
     return ResponseDTO.newResponse(userInfoService.getCurrentUser());
   }
 
