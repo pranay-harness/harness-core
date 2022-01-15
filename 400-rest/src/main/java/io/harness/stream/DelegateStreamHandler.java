@@ -35,6 +35,7 @@ import com.google.common.io.CharStreams;
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;
+import lombok.extern.slf4j.Slf4j;
 import org.atmosphere.cache.UUIDBroadcasterCache;
 import org.atmosphere.config.service.AtmosphereHandlerService;
 import org.atmosphere.cpr.AtmosphereRequest;
@@ -48,6 +49,7 @@ import org.atmosphere.interceptor.AtmosphereResourceLifecycleInterceptor;
 /**
  * Created by peeyushaggarwal on 8/15/16.
  */
+@Slf4j
 @AtmosphereHandlerService(path = "/stream/delegate/{accountId}",
     interceptors = {AtmosphereResourceLifecycleInterceptor.class}, broadcasterCache = UUIDBroadcasterCache.class,
     broadcastFilters = {DelegateEventFilter.class})
@@ -72,7 +74,7 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
         try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
              AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
           String delegateConnectionId = req.getParameter("delegateConnectionId");
-          String delegateVersion = req.getHeader("Version");
+          String delegateVersion = req.getParameter("version");
 
           // These 2 will be sent by ECS delegate only
           String sequenceNum = req.getParameter("sequenceNum");
@@ -114,10 +116,11 @@ public class DelegateStreamHandler extends AtmosphereHandlerAdapter {
       List<String> pathSegments = SPLITTER.splitToList(req.getPathInfo());
       String accountId = pathSegments.get(1);
       String delegateId = req.getParameter("delegateId");
+
       try (AutoLogContext ignore1 = new AccountLogContext(accountId, OVERRIDE_ERROR);
            AutoLogContext ignore2 = new DelegateLogContext(delegateId, OVERRIDE_ERROR)) {
         String delegateConnectionId = req.getParameter("delegateConnectionId");
-        String delegateVersion = req.getHeader("Version");
+        String delegateVersion = req.getParameter("version");
 
         Delegate delegate = JsonUtils.asObject(CharStreams.toString(req.getReader()), Delegate.class);
         delegate.setUuid(delegateId);

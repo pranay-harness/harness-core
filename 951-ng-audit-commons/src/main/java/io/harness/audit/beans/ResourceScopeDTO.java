@@ -22,6 +22,7 @@ import io.harness.ng.core.ResourceScope;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Map;
 import javax.validation.constraints.Size;
 import lombok.AccessLevel;
@@ -36,11 +37,13 @@ import lombok.experimental.FieldNameConstants;
 @JsonInclude(NON_NULL)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @FieldNameConstants(innerTypeName = "ResourceScopeKeys")
+@Schema(name = "ResourceScope", description = "This has scope details for the resource defined in Harness.")
 public class ResourceScopeDTO {
-  String accountIdentifier;
-  String orgIdentifier;
-  String projectIdentifier;
-  @Size(max = 2) Map<String, String> labels;
+  @Schema(description = "Identifier of Account") String accountIdentifier;
+  @Schema(description = "Identifier of Organization") String orgIdentifier;
+  @Schema(description = "Identifier of Project") String projectIdentifier;
+
+  @Schema(description = "Additional information about the Resource Scope") @Size(max = 2) Map<String, String> labels;
 
   @JsonIgnore
   public boolean isOrgScoped() {

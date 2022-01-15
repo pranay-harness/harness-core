@@ -38,6 +38,22 @@ public class PipelineYamlDtoMapperTest extends CategoryTest {
       + "  identifier:: n1"
       + "  stages:\n"
       + "    - stage:\n";
+  String correctYamlWithAllowStages = "pipeline:\n"
+      + "  identifier: n1\n"
+      + "  orgIdentifier: n2\n"
+      + "  projectIdentifier: n3\n"
+      + "  allowStageExecutions: true\n"
+      + "  stages:\n"
+      + "    - stage:\n"
+      + "        identifier: s1";
+  String correctYamlWithDisallowStages = "pipeline:\n"
+      + "  identifier: n1\n"
+      + "  orgIdentifier: n2\n"
+      + "  projectIdentifier: n3\n"
+      + "  allowStageExecutions: false\n"
+      + "  stages:\n"
+      + "    - stage:\n"
+      + "        identifier: s1";
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
@@ -49,9 +65,25 @@ public class PipelineYamlDtoMapperTest extends CategoryTest {
     assertThat(pipelineInfoConfig.getOrgIdentifier()).isEqualTo("n2");
     assertThat(pipelineInfoConfig.getProjectIdentifier()).isEqualTo("n3");
     assertThat(pipelineInfoConfig.getStages()).hasSize(1);
+    assertThat(pipelineInfoConfig.isAllowStageExecutions()).isFalse();
 
     assertThatThrownBy(() -> PipelineYamlDtoMapper.toDto(PipelineEntity.builder().yaml(wrongYaml).build()))
         .isInstanceOf(InvalidRequestException.class);
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testToDtoForAllowStageExecutionsFlag() {
+    PipelineEntity pipelineEntity = PipelineEntity.builder().yaml(correctYamlWithAllowStages).build();
+    PipelineConfig pipelineConfig = PipelineYamlDtoMapper.toDto(pipelineEntity);
+    PipelineInfoConfig pipelineInfoConfig = pipelineConfig.getPipelineInfoConfig();
+    assertThat(pipelineInfoConfig.isAllowStageExecutions()).isTrue();
+
+    pipelineEntity = PipelineEntity.builder().yaml(correctYamlWithDisallowStages).build();
+    pipelineConfig = PipelineYamlDtoMapper.toDto(pipelineEntity);
+    pipelineInfoConfig = pipelineConfig.getPipelineInfoConfig();
+    assertThat(pipelineInfoConfig.isAllowStageExecutions()).isFalse();
   }
 
   @Test

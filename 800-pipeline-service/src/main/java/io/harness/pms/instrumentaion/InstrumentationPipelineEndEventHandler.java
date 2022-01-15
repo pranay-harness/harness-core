@@ -11,6 +11,8 @@ import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.ACC
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.ERROR_MESSAGES;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.EVENT_TYPES;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.EXECUTION_TIME;
+import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.FAILED_STEPS;
+import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.FAILED_STEP_TYPES;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.FAILURE_TYPES;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.IS_RERUN;
 import static io.harness.pms.instrumentaion.PipelineInstrumentationConstants.LEVEL;
@@ -40,6 +42,7 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.notification.NotificationInstrumentationHelper;
 import io.harness.pms.pipeline.observer.OrchestrationObserverUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -90,6 +93,16 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
                                  .map(StepType::getType)
                                  .filter(allSdkSteps::contains)
                                  .collect(Collectors.toList());
+    List<String> failedSteps = nodeExecutionList.stream()
+                                   .filter(o -> allSdkSteps.contains(o.getNode().getStepType().getType()))
+                                   .filter(o -> StatusUtils.brokeStatuses().contains(o.getStatus()))
+                                   .map(o -> o.getNode().getIdentifier())
+                                   .collect(Collectors.toList());
+    List<String> failedStepTypes = nodeExecutionList.stream()
+                                       .filter(o -> allSdkSteps.contains(o.getNode().getStepType().getType()))
+                                       .filter(o -> StatusUtils.brokeStatuses().contains(o.getStatus()))
+                                       .map(o -> o.getNode().getStepType().getType())
+                                       .collect(Collectors.toList());
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);
@@ -110,6 +123,8 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
     propertiesMap.put(IS_RERUN, pipelineExecutionSummaryEntity.getExecutionTriggerInfo().getIsRerun());
     propertiesMap.put(STAGE_COUNT, pipelineExecutionSummaryEntity.getLayoutNodeMap().size());
     propertiesMap.put(STEP_TYPES, new HashSet<>(stepTypes));
+    propertiesMap.put(FAILED_STEPS, failedSteps);
+    propertiesMap.put(FAILED_STEP_TYPES, failedStepTypes);
     propertiesMap.put(STEP_COUNT, stepTypes.size());
     propertiesMap.put(EXECUTION_TIME, getExecutionTimeInSeconds(pipelineExecutionSummaryEntity));
     propertiesMap.put(NOTIFICATION_RULES_COUNT, notificationRulesList.size());

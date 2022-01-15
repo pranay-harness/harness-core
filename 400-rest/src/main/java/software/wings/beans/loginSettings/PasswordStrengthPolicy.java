@@ -13,6 +13,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
@@ -20,11 +21,16 @@ import lombok.Data;
 @Builder
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
 @OwnedBy(HarnessTeam.PL)
+@Schema(description = "This has information about the password strength policy in Harness.")
 public class PasswordStrengthPolicy {
+  @Schema(description = "This value is true if the password strength policy is enabled. Otherwise, it is false.")
   private boolean enabled;
-  private int minNumberOfCharacters;
+  @Schema(description = "Minimum number of characters required in a password.") private int minNumberOfCharacters;
+  @Schema(description = "Minimum number of uppercase characters required in a password.")
   private int minNumberOfUppercaseCharacters;
+  @Schema(description = "Minimum number of lower characters required in a password.")
   private int minNumberOfLowercaseCharacters;
+  @Schema(description = "Minimum number of special characters required in a password.")
   private int minNumberOfSpecialCharacters;
-  private int minNumberOfDigits;
+  @Schema(description = "Minimum number of digits required in a password.") private int minNumberOfDigits;
 }

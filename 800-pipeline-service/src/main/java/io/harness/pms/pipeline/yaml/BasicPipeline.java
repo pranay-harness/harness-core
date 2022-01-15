@@ -44,4 +44,6 @@ public class BasicPipeline {
 
   String orgIdentifier;
   String projectIdentifier;
+
+  boolean allowStageExecutions;
 }

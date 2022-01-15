@@ -16,6 +16,7 @@ import io.harness.cvng.activity.services.api.ActivityService;
 import io.harness.cvng.beans.activity.ActivityStatusDTO;
 import io.harness.cvng.beans.activity.ActivityType;
 import io.harness.cvng.beans.activity.ActivityVerificationStatus;
+import io.harness.cvng.beans.job.Sensitivity;
 import io.harness.cvng.cdng.beans.CVNGStepParameter;
 import io.harness.cvng.cdng.beans.CVNGStepType;
 import io.harness.cvng.cdng.entities.CVNGStepTask;
@@ -51,6 +52,7 @@ import io.harness.pms.sdk.core.steps.io.PassThroughData;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepResponseBuilder;
+import io.harness.pms.yaml.ParameterField;
 import io.harness.tasks.ProgressData;
 import io.harness.tasks.ResponseData;
 
@@ -131,14 +133,16 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
         callbackId = callBackIdFromActivity(serviceEnvironmentParams, ambiance, stepParameters, monitoredServiceDTO);
       } else {
         String verificationJobInstanceId;
-        Activity activity = getDeploymentActivity(
+        DeploymentActivity activity = getDeploymentActivity(
             stepParameters, serviceEnvironmentParams, monitoredServiceDTO, ambiance, deploymentStartTime);
         if (isDemoEnabled(accountId, ambiance)) {
           VerificationJobInstance verificationJobInstance =
               getVerificationJobInstanceForDemo(AmbianceUtils.obtainCurrentLevel(ambiance).getIdentifier(),
                   stepParameters, serviceEnvironmentParams, monitoredServiceDTO, deploymentStartTime,
-                  isDev(ambiance) ? ActivityVerificationStatus.VERIFICATION_FAILED
-                                  : ActivityVerificationStatus.VERIFICATION_PASSED);
+                  shouldFailVerification(ambiance, stepParameters.getSensitivity())
+                      ? ActivityVerificationStatus.VERIFICATION_FAILED
+                      : ActivityVerificationStatus.VERIFICATION_PASSED);
+          activity.setDemoActivity(true);
           verificationJobInstanceId =
               verificationJobInstanceService.createDemoInstances(Arrays.asList(verificationJobInstance)).get(0);
         } else {
@@ -183,8 +187,9 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
           deploymentActivity.getVerificationStartTime().minus(Duration.ofMinutes(15)).toEpochMilli());
       deploymentActivity.setActivityStartTime(deploymentActivity.getActivityStartTime().minus(Duration.ofMinutes(15)));
       activityUuid = activityService.createActivityForDemo(deploymentActivity,
-          isDev(ambiance) ? ActivityVerificationStatus.VERIFICATION_FAILED
-                          : ActivityVerificationStatus.VERIFICATION_PASSED);
+          shouldFailVerification(ambiance, stepParameters.getSensitivity())
+              ? ActivityVerificationStatus.VERIFICATION_FAILED
+              : ActivityVerificationStatus.VERIFICATION_PASSED);
     } else {
       activityUuid = activityService.register(deploymentActivity);
     }
@@ -211,12 +216,15 @@ public class CVNGStep implements AsyncExecutable<CVNGStepParameter> {
 
   private boolean isDemoEnabled(String accountId, Ambiance ambiance) {
     String identifier = AmbianceUtils.obtainCurrentLevel(ambiance).getIdentifier();
-    return (identifier.endsWith("_dev") || identifier.endsWith("_prod"))
+    return (identifier.endsWith("_dev") || identifier.endsWith("_prod") || identifier.endsWith("_demo"))
         && featureFlagService.isFeatureFlagEnabled(accountId, "CVNG_VERIFY_STEP_DEMO");
   }
 
-  private boolean isDev(Ambiance ambiance) {
+  private boolean shouldFailVerification(Ambiance ambiance, ParameterField<String> sensitivity) {
     String identifier = AmbianceUtils.obtainCurrentLevel(ambiance).getIdentifier();
+    if (identifier.endsWith("_demo")) {
+      return Sensitivity.HIGH.getValue().equalsIgnoreCase(sensitivity.getValue());
+    }
     return identifier.endsWith("_dev");
   }
 

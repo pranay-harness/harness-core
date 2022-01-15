@@ -9,6 +9,7 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -30,5 +31,8 @@ import lombok.Data;
 @Schema(name = "AwsKmsCredentialSpecAssumeIAM",
     description = "Returns the Delegate Selectors used by this AWS KMS Secret Manager Connector.")
 public class AwsKmsCredentialSpecAssumeIAMDTO implements AwsKmsCredentialSpecDTO {
-  @NotNull @Size(min = 1, message = "Delegate Selectors cannot be empty") private Set<String> delegateSelectors;
+  @NotNull
+  @Size(min = 1, message = "Delegate Selectors cannot be empty.")
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS)
+  private Set<String> delegateSelectors;
 }
