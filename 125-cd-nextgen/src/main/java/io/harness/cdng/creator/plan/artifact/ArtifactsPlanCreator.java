@@ -24,6 +24,7 @@ import io.harness.cdng.artifact.steps.SidecarsStep;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.utilities.PrimaryArtifactsUtility;
+import io.harness.cdng.utilities.SideCarsListArtifactsUtility;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -39,6 +40,7 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
+import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
@@ -150,16 +152,47 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
           ctx.getCurrentField(), artifactList.getPrimary().getParams(), planCreationResponseMap);
     }
     if (EmptyPredicate.isNotEmpty(artifactList.getSidecars())) {
-      final String sideCarsPlanNodeId = "sidecars-" + artifactsId;
-      PlanCreationResponse sideCarsPlanCreationResponse = createPlanForSidecarsNode(sideCarsPlanNodeId, artifactList);
-      planCreationResponseMap.put(sideCarsPlanNodeId, sideCarsPlanCreationResponse);
+      addDependenciesForSideCarList(ctx.getCurrentField(),artifactsId,artifactList.getSidecars(),planCreationResponseMap);
     }
     return planCreationResponseMap;
   }
 
+  private String addDependenciesForSideCarList(YamlField artifactField, String artifactsId, Map<String, ArtifactInfo> sideCarsInfo, LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
+    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
+    YamlField sideCarsListYamlField =
+            SideCarsListArtifactsUtility.createSideCarsArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
+
+    Map<String, StepParameters> sideCarsParametersMap = sideCarsInfo.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), k -> k.getValue().getParams()));
+    String sideCarsListPlanNodeId = "sidecars-" + artifactsId;
+    Map<String, ByteString> metadataDependency =
+            prepareMetadataForSideCarListArtifactPlanCreator(sideCarsListPlanNodeId, sideCarsParametersMap);
+
+    Map<String, YamlField> dependenciesMap = new HashMap<>();
+    dependenciesMap.put(sideCarsListPlanNodeId, sideCarsListYamlField);
+    PlanCreationResponseBuilder primaryPlanCreationResponse = PlanCreationResponse.builder().dependencies(
+            DependenciesUtils.toDependenciesProto(dependenciesMap)
+                    .toBuilder()
+                    .putDependencyMetadata(sideCarsListPlanNodeId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
+                    .build());
+    if (yamlUpdates.getFqnToYamlCount() > 0) {
+      primaryPlanCreationResponse.yamlUpdates(yamlUpdates.build());
+    }
+    planCreationResponseMap.put(sideCarsListPlanNodeId, primaryPlanCreationResponse.build());
+    return sideCarsListPlanNodeId;
+
+  }
+
+  private Map<String, ByteString> prepareMetadataForSideCarListArtifactPlanCreator(String sideCarsListPlanNodeId, Map<String, StepParameters> sideCarsParametersMap) {
+    Map<String, ByteString> metadataDependency = new HashMap<>();
+    metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(sideCarsListPlanNodeId)));
+    metadataDependency.put(
+            PlanCreatorConstants.SIDECARS_PARAMETERS_MAP, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(sideCarsParametersMap)));
+    return metadataDependency;
+  }
+
   public String addDependenciesForPrimaryNode(YamlField artifactField, ArtifactStepParameters artifactStepParameters,
       LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
-    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder(); //.build()
+    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     YamlField primaryYamlField =
         PrimaryArtifactsUtility.createPrimaryArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
 

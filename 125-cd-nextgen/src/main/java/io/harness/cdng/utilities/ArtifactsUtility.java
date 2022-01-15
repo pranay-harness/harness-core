@@ -26,8 +26,7 @@ import lombok.experimental.UtilityClass;
 public class ArtifactsUtility {
   public JsonNode getArtifactsJsonNode() {
     String yamlField = "---\n"
-        + "primary:\n"
-        + "sidecars: []\n";
+        + "primary:\n";
     YamlField artifactsYamlField;
     try {
       String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);

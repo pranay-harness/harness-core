@@ -60,9 +60,9 @@ public class PrimaryArtifactsUtility {
     }
   }
 
-  private YamlField fetchPrimaryYamlFieldUnderArtifacts(YamlField stageOverride) {
+  private YamlField fetchPrimaryYamlFieldUnderArtifacts(YamlField artifacts) {
     return new YamlField(YamlTypes.PRIMARY_ARTIFACT,
         new YamlNode(
-            YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
+            YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), artifacts.getNode()));
   }
 }
