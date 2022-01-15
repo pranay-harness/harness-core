@@ -4269,6 +4269,8 @@ plain_artifacts = [
     "com.esotericsoftware:kryo:4.0.0",
     "com.esotericsoftware:minlog:1.3.0",
     "com.esotericsoftware:reflectasm:1.11.3",
+    "com.fasterxml.jackson.core:jackson-annotations:2.12.1",
+    "com.fasterxml.jackson.core:jackson-core:2.12.1",
     "com.fasterxml.jackson.core:jackson-databind:2.12.1",
     "com.fasterxml.jackson.dataformat:jackson-dataformat-cbor:2.9.10",
     "com.fasterxml.jackson.dataformat:jackson-dataformat-smile:2.9.10",
