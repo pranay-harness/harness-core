@@ -9,6 +9,7 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -29,10 +30,18 @@ import lombok.Data;
 @JsonTypeName(AwsKmsConstants.ASSUME_STS_ROLE)
 @ApiModel("AwsKmsCredentialSpecAssumeSTS")
 @Schema(name = "AwsKmsCredentialSpecAssumeSTS",
-    description = "Returns Delegate selectors, RoleArn and STS role duration used by AWS KMS Secret Manager.")
+    description = "Returns Delegate selectors, Role ARN and STS role duration used by AWS KMS Secret Manager.")
 public class AwsKmsCredentialSpecAssumeSTSDTO implements AwsKmsCredentialSpecDTO {
-  @NotNull @Size(min = 1, message = "Delegate Selector can not be empty") private Set<String> delegateSelectors;
-  @ApiModelProperty(dataType = "string") @NotNull private String roleArn;
-  @ApiModelProperty(dataType = "string") private String externalName;
-  private int assumeStsRoleDuration;
+  @NotNull
+  @Size(min = 1, message = "Delegate Selector cannot be empty.")
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS)
+  private Set<String> delegateSelectors;
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  @Schema(description = SecretManagerDescriptionConstants.ROLE_ARN)
+  private String roleArn;
+  @ApiModelProperty(dataType = "string")
+  @Schema(description = SecretManagerDescriptionConstants.EXTERNAL_NAME)
+  private String externalName;
+  @Schema(description = SecretManagerDescriptionConstants.ASSUME_STS_ROLE_DURATION) private int assumeStsRoleDuration;
 }

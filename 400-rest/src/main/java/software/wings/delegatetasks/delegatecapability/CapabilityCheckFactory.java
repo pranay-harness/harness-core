@@ -42,7 +42,9 @@ import software.wings.delegatetasks.validation.capabilitycheck.WinrmHostValidati
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Singleton
 @TargetModule(HarnessModule._930_DELEGATE_TASKS)
 @OwnedBy(HarnessTeam.DEL)
@@ -124,6 +126,7 @@ public class CapabilityCheckFactory {
       case CI_VM:
         return ciVmConnectionCapabilityCheck;
       case SELECTORS:
+        return noOpCapabilityCheck;
       default:
         return null;
     }

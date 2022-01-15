@@ -34,8 +34,4 @@ public class NodeProjectionUtils {
   public static final Set<String> fieldsForResume = Sets.newHashSet(NodeExecutionKeys.status,
       NodeExecutionKeys.ambiance, NodeExecutionKeys.planNode, NodeExecutionKeys.node,
       NodeExecutionKeys.executableResponses, NodeExecutionKeys.resolvedStepParameters, NodeExecutionKeys.mode);
-  public static final Set<String> fieldsForExpressionEngine =
-      Sets.newHashSet(NodeExecutionKeys.status, NodeExecutionKeys.ambiance, NodeExecutionKeys.planNode,
-          NodeExecutionKeys.node, NodeExecutionKeys.resolvedStepParameters, NodeExecutionKeys.mode,
-          NodeExecutionKeys.startTs, NodeExecutionKeys.endTs, NodeExecutionKeys.resolvedStepParameters);
 }

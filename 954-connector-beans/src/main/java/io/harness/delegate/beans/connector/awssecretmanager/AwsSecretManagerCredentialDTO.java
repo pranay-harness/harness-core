@@ -9,6 +9,7 @@ package io.harness.delegate.beans.connector.awssecretmanager;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -32,9 +33,13 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @ApiModel("AwsSecretManagerCredential")
 @JsonDeserialize(using = AwsSMCredentialDTODeserializer.class)
-@Schema(name = "AwsSecretManagerCredential", description = "This contains the credential type and config of the AWS SM")
+@Schema(name = "AwsSecretManagerCredential",
+    description = "This contains the credential type and configuration of the AWS Secret Manager.")
 public class AwsSecretManagerCredentialDTO {
-  @NotNull @JsonProperty("type") AwsSecretManagerCredentialType credentialType;
+  @NotNull
+  @JsonProperty("type")
+  @Schema(description = SecretManagerDescriptionConstants.AWS_CREDENTIAL)
+  AwsSecretManagerCredentialType credentialType;
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)

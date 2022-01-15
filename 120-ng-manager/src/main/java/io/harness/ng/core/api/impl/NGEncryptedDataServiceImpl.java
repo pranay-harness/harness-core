@@ -33,10 +33,12 @@ import io.harness.beans.SecretManagerConfig;
 import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
+import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptorsRegistry;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.NGAccess;
 import io.harness.ng.core.api.NGEncryptedDataService;
@@ -93,18 +95,20 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
   private final SecretsFileService secretsFileService;
   private final GlobalEncryptDecryptClient globalEncryptDecryptClient;
   private final NGConnectorSecretManagerService ngConnectorSecretManagerService;
+  private final LocalEncryptorHelper localEncryptorHelper;
 
   @Inject
   public NGEncryptedDataServiceImpl(NGEncryptedDataDao encryptedDataDao, KmsEncryptorsRegistry kmsEncryptorsRegistry,
       VaultEncryptorsRegistry vaultEncryptorsRegistry, SecretsFileService secretsFileService,
       SecretManagerClient secretManagerClient, GlobalEncryptDecryptClient globalEncryptDecryptClient,
-      NGConnectorSecretManagerService ngConnectorSecretManagerService) {
+      NGConnectorSecretManagerService ngConnectorSecretManagerService, LocalEncryptorHelper localEncryptorHelper) {
     this.encryptedDataDao = encryptedDataDao;
     this.kmsEncryptorsRegistry = kmsEncryptorsRegistry;
     this.vaultEncryptorsRegistry = vaultEncryptorsRegistry;
     this.secretsFileService = secretsFileService;
     this.globalEncryptDecryptClient = globalEncryptDecryptClient;
     this.ngConnectorSecretManagerService = ngConnectorSecretManagerService;
+    this.localEncryptorHelper = localEncryptorHelper;
   }
 
   @Override
@@ -194,8 +198,11 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
     SecretManagerType secretManagerType = secretManagerConfig.getType();
     EncryptedRecord encryptedRecord;
     if (KMS.equals(secretManagerType)) {
-      encryptedRecord = kmsEncryptorsRegistry.getKmsEncryptor(secretManagerConfig)
-                            .encryptSecret(encryptedData.getAccountIdentifier(), value, secretManagerConfig);
+      KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(secretManagerConfig);
+      if (localEncryptorHelper.isLocalEncryptor(kmsEncryptor)) {
+        localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+      }
+      encryptedRecord = kmsEncryptor.encryptSecret(encryptedData.getAccountIdentifier(), value, secretManagerConfig);
       validateEncryptedRecord(encryptedRecord);
     } else if (VAULT.equals(secretManagerType)) {
       encryptedRecord =
@@ -219,8 +226,12 @@ public class NGEncryptedDataServiceImpl implements NGEncryptedDataService {
       if (isEmpty(value)) {
         encryptedRecord = existingEncryptedData;
       } else {
-        encryptedRecord = kmsEncryptorsRegistry.getKmsEncryptor(secretManagerConfig)
-                              .encryptSecret(encryptedData.getAccountIdentifier(), value, secretManagerConfig);
+        KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(secretManagerConfig);
+        if (localEncryptorHelper.isLocalEncryptor(kmsEncryptor)) {
+          localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+        }
+
+        encryptedRecord = kmsEncryptor.encryptSecret(encryptedData.getAccountIdentifier(), value, secretManagerConfig);
         validateEncryptedRecord(encryptedRecord);
       }
 

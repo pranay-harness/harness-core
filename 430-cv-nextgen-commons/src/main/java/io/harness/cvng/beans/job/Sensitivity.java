@@ -8,13 +8,15 @@
 package io.harness.cvng.beans.job;
 
 public enum Sensitivity {
-  LOW(1),
-  MEDIUM(2),
-  HIGH(3);
+  LOW(1, "Low"),
+  MEDIUM(2, "Medium"),
+  HIGH(3, "High");
   private final int tolerance;
+  private String value;
 
-  Sensitivity(int tolerance) {
+  Sensitivity(int tolerance, String value) {
     this.tolerance = tolerance;
+    this.value = value;
   }
 
   public int getTolerance() {
@@ -39,5 +41,9 @@ public enum Sensitivity {
       default:
         throw new IllegalStateException("No enum mapping found for " + stringValue);
     }
+  }
+
+  public String getValue() {
+    return value;
   }
 }

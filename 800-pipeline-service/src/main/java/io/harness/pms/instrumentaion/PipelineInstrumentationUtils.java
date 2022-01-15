@@ -19,9 +19,12 @@ import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
@@ -57,15 +60,20 @@ public class PipelineInstrumentationUtils {
         .collect(Collectors.toList());
   }
 
-  public List<String> getErrorMessagesFromPipelineExecutionSummary(
+  public Set<String> getErrorMessagesFromPipelineExecutionSummary(
       PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity) {
     if (pipelineExecutionSummaryEntity.getFailureInfo() == null) {
-      return Collections.emptyList();
+      return Collections.emptySet();
     }
-    return pipelineExecutionSummaryEntity.getFailureInfo()
-        .getResponseMessages()
-        .stream()
-        .map(o -> o.getMessage())
-        .collect(Collectors.toList());
+    Set<String> errorMessages = new HashSet<>();
+    if (!StringUtils.isEmpty(pipelineExecutionSummaryEntity.getFailureInfo().getMessage())) {
+      errorMessages.add(pipelineExecutionSummaryEntity.getFailureInfo().getMessage());
+    }
+    errorMessages.addAll(pipelineExecutionSummaryEntity.getFailureInfo()
+                             .getResponseMessages()
+                             .stream()
+                             .map(o -> o.getMessage())
+                             .collect(Collectors.toList()));
+    return errorMessages;
   }
 }

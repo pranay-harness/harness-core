@@ -32,7 +32,6 @@ import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
-import io.harness.pms.execution.utils.NodeProjectionUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
@@ -63,7 +62,6 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
   private JexlEngine engine;
   private Ambiance ambiance;
   NodeExecution nodeExecution1;
-
   NodeExecution nodeExecution2;
   NodeExecution nodeExecution3;
   NodeExecution nodeExecution4;
@@ -140,46 +138,25 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
                          .previousId(nodeExecution7Id)
                          .build();
 
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution1.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution1);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution2.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution2);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution3.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution3);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution4.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution4);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution5.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution5);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution6.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution6);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution7.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution7);
-    when(nodeExecutionService.getWithFieldsIncluded(
-             nodeExecution8.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
-        .thenReturn(nodeExecution8);
+    when(nodeExecutionService.get(nodeExecution1.getUuid())).thenReturn(nodeExecution1);
+    when(nodeExecutionService.get(nodeExecution2.getUuid())).thenReturn(nodeExecution2);
+    when(nodeExecutionService.get(nodeExecution3.getUuid())).thenReturn(nodeExecution3);
+    when(nodeExecutionService.get(nodeExecution4.getUuid())).thenReturn(nodeExecution4);
+    when(nodeExecutionService.get(nodeExecution5.getUuid())).thenReturn(nodeExecution5);
+    when(nodeExecutionService.get(nodeExecution6.getUuid())).thenReturn(nodeExecution6);
+    when(nodeExecutionService.get(nodeExecution7.getUuid())).thenReturn(nodeExecution7);
+    when(nodeExecutionService.get(nodeExecution8.getUuid())).thenReturn(nodeExecution8);
 
     String planExecutionId = ambiance.getPlanExecutionId();
-    when(nodeExecutionService.fetchChildrenNodeExecutions(
-             planExecutionId, null, NodeProjectionUtils.fieldsForExpressionEngine))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, null))
         .thenReturn(Collections.singletonList(nodeExecution1));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(
-             planExecutionId, nodeExecution1.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution1.getUuid()))
         .thenReturn(asList(nodeExecution2, nodeExecution3));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(
-             planExecutionId, nodeExecution3.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution3.getUuid()))
         .thenReturn(asList(nodeExecution4, nodeExecution5));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(
-             planExecutionId, nodeExecution4.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution4.getUuid()))
         .thenReturn(Collections.singletonList(nodeExecution6));
-    when(nodeExecutionService.fetchChildrenNodeExecutions(
-             planExecutionId, nodeExecution6.getUuid(), NodeProjectionUtils.fieldsForExpressionEngine))
+    when(nodeExecutionService.fetchChildrenNodeExecutions(planExecutionId, nodeExecution6.getUuid()))
         .thenReturn(asList(nodeExecution7, nodeExecution8));
   }
 
@@ -241,8 +218,7 @@ public class NodeExecutionValueTest extends OrchestrationTestBase {
             .groupAliases(ImmutableMap.of("stage", "STAGE"))
             .build();
 
-    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution4.getUuid(), false,
-             NodeProjectionUtils.fieldsForExpressionEngine))
+    when(nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), nodeExecution4.getUuid(), false))
         .thenReturn(asList(nodeExecution8, nodeExecution7, nodeExecution6));
 
     Reflect.on(nodeExecution4).set(NodeExecutionKeys.status, Status.RUNNING);
