@@ -1,6 +1,7 @@
 xxxxxxxx
   applicationConnectors:
     - type: h2
+    
       port: 9080
       keyStorePath: keystore.jks
       keyStorePassword: password
