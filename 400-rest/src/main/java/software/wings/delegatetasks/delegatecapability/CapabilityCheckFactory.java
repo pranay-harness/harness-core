@@ -124,6 +124,7 @@ public class CapabilityCheckFactory {
       case CI_VM:
         return ciVmConnectionCapabilityCheck;
       case SELECTORS:
+        return noOpCapabilityCheck;
       default:
         return null;
     }
