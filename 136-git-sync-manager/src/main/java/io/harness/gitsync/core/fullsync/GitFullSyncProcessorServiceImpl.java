@@ -7,6 +7,7 @@
 
 package io.harness.gitsync.core.fullsync;
 
+import static io.harness.AuthorizationServiceHeader.GIT_SYNC_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
@@ -143,8 +144,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   public void performFullSync(GitFullSyncJob fullSyncJob) {
     log.info("Started full sync for the job {}", fullSyncJob.getMessageId());
     try {
-      SecurityContextBuilder.setContext(
-          new ServicePrincipal(AuthorizationServiceHeader.GIT_SYNC_SERVICE.getServiceId()));
+      SecurityContextBuilder.setContext(new ServicePrincipal(GIT_SYNC_SERVICE.getServiceId()));
       UpdateResult updateResult =
           fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
       if (updateResult.getModifiedCount() == 0L) {
