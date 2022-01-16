@@ -4448,7 +4448,7 @@ plain_artifacts = [
     "com.spotify:docker-client:8.16.0",
     "com.squareup.okhttp3:logging-interceptor:3.14.3",
     "com.squareup.okhttp3:okhttp-urlconnection:3.12.2",
-    "com.squareup.okhttp3:okhttp:3.14.9",
+    "com.squareup.okhttp3:okhttp:3.6.0",
     "com.squareup.okio:okio:1.17.2",
     "com.squareup.retrofit2:adapter-rxjava:2.7.2",
     "com.squareup.retrofit2:converter-gson:2.3.0",
@@ -5055,7 +5055,7 @@ maven_install(
         ),
         maven_test_artifact("com.github.tomakehurst:wiremock-jre8-standalone:2.27.2"),
         maven_test_artifact("com.icegreen:greenmail:1.5.0"),
-        maven_test_artifact("com.squareup.okhttp3:mockwebxxxxxxxx3.14.9"),
+        maven_test_artifact("com.squareup.okhttp3:mockwebxxxxxxxx3.6.0"),
         maven_test_artifact("de.bwaldvogel:mongo-java-server-core:1.34.0"),
         maven_test_artifact("de.bwaldvogel:mongo-java-server-memory-backend:1.34.0"),
         maven_test_artifact("de.bwaldvogel:mongo-java-xxxxxxxx1.34.0"),
@@ -5112,7 +5112,7 @@ maven_install(
     name = "batch",
     artifacts = [
         "com.fasterxml.jackson.core:jackson-databind:2.12.1",
-        "com.squareup.okhttp3:okhttp:3.14.9",
+        "com.squareup.okhttp3:okhttp:4.9.0",
     ],
     repositories = [
         "http://jfrogdev.dev.harness.io:80/artifactory/portal-maven",
