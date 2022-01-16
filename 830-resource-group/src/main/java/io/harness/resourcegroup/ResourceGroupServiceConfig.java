@@ -29,7 +29,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(PL)
 public class ResourceGroupServiceConfig {
   @JsonProperty("enableResourceGroup") boolean enableResourceGroup;
-  @JsonProperty("mongo") MongoConfig mongoConfig;
+  @JsonProperty("mongo") @ConfigSecret MongoConfig mongoConfig;
   @JsonProperty("resourceClients") @ConfigSecret ResourceClientConfigs resourceClientConfigs;
   @JsonProperty("redis") @ConfigSecret RedisConfig redisConfig;
   @JsonProperty("redisLockConfig") @ConfigSecret RedisConfig redisLockConfig;
