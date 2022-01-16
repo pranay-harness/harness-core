@@ -22,6 +22,5 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface ProjectRepository extends PagingAndSortingRepository<Project, String>, ProjectRepositoryCustom {
   Optional<Project> findByAccountIdentifierAndOrgIdentifierAndIdentifierAndDeletedNot(
       String accountIdentifier, String orgIdentifier, String identifier, boolean notDeleted);
-
-  Long countByAccountIdentifier(String accountIdentifier);
+  Long countByAccountIdentifierAndDeletedIsFalse(String accountIdentifier);
 }

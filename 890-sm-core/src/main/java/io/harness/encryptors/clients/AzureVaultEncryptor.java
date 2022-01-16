@@ -35,6 +35,7 @@ import com.google.inject.Singleton;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
+import com.microsoft.rest.RestException;
 import java.time.Duration;
 import java.util.HashMap;
 import javax.validation.executable.ValidateOnExecution;
@@ -66,8 +67,12 @@ public class AzureVaultEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "Encryption failed for secret " + name + " after " + NUM_OF_RETRIES + " retries";
-          throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
+          String message = "After " + NUM_OF_RETRIES + " tries, encryption for secret " + name + " failed.";
+          if (e instanceof RestException) {
+            throw(RestException) e;
+          } else {
+            throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
+          }
         }
         sleep(ofMillis(1000));
       }
@@ -87,8 +92,12 @@ public class AzureVaultEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "Encryption failed for secret " + name + " after " + NUM_OF_RETRIES + " retries";
-          throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
+          String message = "After " + NUM_OF_RETRIES + " tries, encryption for secret " + name + " failed.";
+          if (e instanceof RestException) {
+            throw(RestException) e;
+          } else {
+            throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
+          }
         }
         sleep(ofMillis(1000));
       }
@@ -108,7 +117,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "Encryption failed for secret " + name + " after " + NUM_OF_RETRIES + " retries";
+          String message = "After " + NUM_OF_RETRIES + " tries, encryption for secret " + name + " failed.";
           throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -136,8 +145,9 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     try {
       secretBundle = azureVaultClient.setSecret(setSecretRequest);
     } catch (Exception ex) {
-      String message = format("Failed to save secret in Azure Vault. Secret name: %s, Vault name: %s, accountId: %s",
-          fullSecretName, azureVaultConfig.getVaultName(), accountId);
+      String message =
+          format("The Secret could not be saved in Azure Vault. accountId: %s, Secret name: %s, Vault name: %s",
+              accountId, fullSecretName, azureVaultConfig.getVaultName());
       throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, ex, USER);
     }
     EncryptedRecordData newRecord = EncryptedRecordData.builder()
@@ -190,7 +200,7 @@ public class AzureVaultEncryptor implements VaultEncryptor {
         log.warn("decryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String message =
-              "Decryption for secret " + encryptedRecord.getName() + " failed after " + NUM_OF_RETRIES + " retries";
+              "After " + NUM_OF_RETRIES + " tries, decryption for secret " + encryptedRecord.getName() + " failed.";
           throw new SecretManagementDelegateException(AZURE_KEY_VAULT_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -203,8 +213,8 @@ public class AzureVaultEncryptor implements VaultEncryptor {
     try {
       createSecret(accountId, AzureVaultConfig.AZURE_VAULT_VALIDATION_URL, Boolean.TRUE.toString(), encryptionConfig);
     } catch (Exception exception) {
-      log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName());
-      return false;
+      log.error("Validation for Secret Manager/KMS failed: " + encryptionConfig.getName());
+      throw exception;
     }
     return true;
   }

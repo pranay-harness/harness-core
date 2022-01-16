@@ -260,7 +260,11 @@ public class AuthenticationSettingsResource {
           "groupMembershipAttr") String groupMembershipAttr,
       @Parameter(description = "Specify whether or not to enable authorization") @FormDataParam("authorizationEnabled")
       Boolean authorizationEnabled, @Parameter(description = "Logout URL") @FormDataParam("logoutUrl") String logoutUrl,
-      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier) {
+      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier,
+      @Parameter(description = "SAML provider type") @FormDataParam("samlProviderType") String samlProviderType,
+      @Parameter(description = "Optional SAML clientId for Azure SSO") @FormDataParam("clientId") String clientId,
+      @Parameter(description = "Optional SAML clientSecret reference string for Azure SSO") @FormDataParam(
+          "clientSecret") String clientSecret) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
     try {
@@ -268,8 +272,9 @@ public class AuthenticationSettingsResource {
           new BoundedInputStream(uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
       final MultipartBody.Part formData =
           MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
-      SSOConfig response = authenticationSettingsService.uploadSAMLMetadata(
-          accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier);
+      SSOConfig response =
+          authenticationSettingsService.uploadSAMLMetadata(accountId, formData, displayName, groupMembershipAttr,
+              authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId, clientSecret);
       return new RestResponse<>(response);
     } catch (Exception e) {
       throw new GeneralException("Error while creating new SAML Config", e);
@@ -297,7 +302,11 @@ public class AuthenticationSettingsResource {
           "groupMembershipAttr") String groupMembershipAttr,
       @Parameter(description = "Specify whether or not to enable authorization") @FormDataParam("authorizationEnabled")
       Boolean authorizationEnabled, @Parameter(description = "Logout URL") @FormDataParam("logoutUrl") String logoutUrl,
-      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier) {
+      @Parameter(description = "SAML metadata Identifier") @FormDataParam("entityIdentifier") String entityIdentifier,
+      @Parameter(description = "SAML provider type") @FormDataParam("samlProviderType") String samlProviderType,
+      @Parameter(description = "Optional SAML clientId for Azure SSO") @FormDataParam("clientId") String clientId,
+      @Parameter(description = "Optional SAML clientSecret reference string for Azure SSO") @FormDataParam(
+          "clientSecret") String clientSecret) {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, null, null), Resource.of(AUTHSETTING, null), EDIT_AUTHSETTING_PERMISSION);
     try {
@@ -307,8 +316,9 @@ public class AuthenticationSettingsResource {
             uploadedInputStream, mainConfiguration.getFileUploadLimits().getCommandUploadLimit()));
         formData = MultipartBody.Part.createFormData("file", null, RequestBody.create(MultipartBody.FORM, bytes));
       }
-      SSOConfig response = authenticationSettingsService.updateSAMLMetadata(
-          accountId, formData, displayName, groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier);
+      SSOConfig response =
+          authenticationSettingsService.updateSAMLMetadata(accountId, formData, displayName, groupMembershipAttr,
+              authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId, clientSecret);
       return new RestResponse<>(response);
     } catch (Exception e) {
       throw new GeneralException("Error while editing saml-config", e);

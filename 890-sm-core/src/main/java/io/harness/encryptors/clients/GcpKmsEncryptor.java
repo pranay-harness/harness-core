@@ -12,6 +12,7 @@ import static io.harness.data.encoding.EncodingUtils.decodeBase64;
 import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.GCP_KMS_OPERATION_ERROR;
+import static io.harness.exception.NestedExceptionUtils.hintWithExplanationException;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
@@ -24,7 +25,10 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.clients.AwsKmsEncryptor.KmsEncryptionKeyCacheKey;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HintException;
 import io.harness.exception.InvalidArgumentsException;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
@@ -96,8 +100,14 @@ public class GcpKmsEncryptor implements KmsEncryptor {
         log.warn("Encryption failed. Trial Number {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
           String reason = String.format("Encryption failed after %d retries", NUM_OF_RETRIES);
-          throw new DelegateRetryableException(
-              new SecretManagementDelegateException(GCP_KMS_OPERATION_ERROR, reason, USER));
+          if (e instanceof InvalidArgumentsException) {
+            throw hintWithExplanationException(HintException.HINT_GCP_ACCESS_DENIED,
+                ExplanationException.INVALID_PARAMETER,
+                new InvalidRequestException(e.getMessage(), GCP_KMS_OPERATION_ERROR, USER));
+          } else {
+            throw new DelegateRetryableException(
+                new SecretManagementDelegateException(GCP_KMS_OPERATION_ERROR, reason, USER));
+          }
         }
         sleep(Duration.ofMillis(1000));
       }
@@ -278,8 +288,8 @@ public class GcpKmsEncryptor implements KmsEncryptor {
     try {
       encryptSecret(gcpKmsConfig.getAccountId(), randomString, gcpKmsConfig);
     } catch (Exception e) {
-      log.error("Was not able to encrypt using given credentials. Please check your credentials and try again", e);
-      return false;
+      log.error("Could not encrypt using the credentials provided. Please check your credentials and try again.", e);
+      throw e;
     }
     log.info("Validating GCP KMS configuration End {}", encryptionConfig.getName());
     return true;

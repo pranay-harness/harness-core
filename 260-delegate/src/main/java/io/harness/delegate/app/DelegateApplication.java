@@ -113,6 +113,8 @@ public class DelegateApplication {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
+    log.info("versionCheckDisabled " + configuration.isVersionCheckDisabled());
+
     Injector injector = Guice.createInjector(new DelegateAgentModule(configuration));
     MessageService messageService = injector.getInstance(MessageService.class);
 

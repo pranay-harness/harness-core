@@ -61,7 +61,7 @@ public class ThirdPartyCallHandler implements Consumer<CallDetails> {
                                      .value(callDetails.getRequest().request().url().toString())
                                      .build());
 
-    if (callDetails.getResponse() != null) {
+    if (callDetails.getResponse() != null && callDetails.getResponse().body() != null) {
       cvngLogDTO.addFieldToResponse(
           callDetails.getResponse().code(), callDetails.getResponse().body(), ApiCallLogDTO.FieldType.JSON);
     }

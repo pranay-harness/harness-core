@@ -76,7 +76,8 @@ public interface AuthSettingsManagerClient {
       @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
       @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
       @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl,
-      @Part("entityIdentifier") RequestBody entityIdentifier);
+      @Part("entityIdentifier") RequestBody entityIdentifier, @Part("samlProviderType") RequestBody samlProviderType,
+      @Part("clientId") RequestBody clientId, @Part("clientSecret") RequestBody clientSecret);
 
   @Multipart
   @PUT(API_PREFIX + "sso/saml-idp-metadata-upload")
@@ -84,7 +85,8 @@ public interface AuthSettingsManagerClient {
       @Part MultipartBody.Part uploadedInputStream, @Part("displayName") RequestBody displayName,
       @Part("groupMembershipAttr") RequestBody groupMembershipAttr,
       @Part("authorizationEnabled") RequestBody authorizationEnabled, @Part("logoutUrl") RequestBody logoutUrl,
-      @Part("entityIdentifier") RequestBody entityIdentifier);
+      @Part("entityIdentifier") RequestBody entityIdentifier, @Part("samlProviderType") RequestBody samlProviderType,
+      @Part("clientId") RequestBody clientId, @Part("clientSecret") RequestBody clientSecret);
 
   @DELETE(API_PREFIX + "sso/delete-saml-idp-metadata")
   Call<RestResponse<SSOConfig>> deleteSAMLMetadata(@Query("accountId") String accountIdentifier);

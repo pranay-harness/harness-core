@@ -96,7 +96,6 @@ public class CVNGPartialYamlSchemaResource implements YamlSchemaResource {
 
   @POST
   @PublicApi // TODO: fix invalid credentials issue.
-  @Path("/get")
   @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
   public ResponseDTO<JsonNode> getStepYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,

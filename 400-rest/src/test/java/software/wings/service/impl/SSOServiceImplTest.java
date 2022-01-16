@@ -41,6 +41,7 @@ import software.wings.WingsBaseTest;
 import software.wings.beans.Account;
 import software.wings.beans.Event;
 import software.wings.beans.sso.OauthSettings;
+import software.wings.beans.sso.SAMLProviderType;
 import software.wings.security.authentication.SSOConfig;
 import software.wings.security.saml.SamlClientService;
 import software.wings.service.impl.security.auth.AuthHandler;
@@ -144,8 +145,8 @@ public class SSOServiceImplTest extends WingsBaseTest {
     doReturn("https://harness.onelogin.com").when(samlClient).getIdentityProviderUrl();
 
     // Upload SAML config and enable
-    ssoService.uploadSamlConfiguration(
-        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "", "");
+    ssoService.uploadSamlConfiguration(accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false,
+        "", "", SAMLProviderType.ONELOGIN.name(), anyString(), any());
     ssoService.setAuthenticationMechanism(accountId, SAML);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
@@ -180,8 +181,8 @@ public class SSOServiceImplTest extends WingsBaseTest {
     doReturn("https://harness.onelogin.com").when(samlClient).getIdentityProviderUrl();
 
     // Upload SAML config and enable
-    ssoService.uploadSamlConfiguration(
-        accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false, "", "");
+    ssoService.uploadSamlConfiguration(accountId, new ByteArrayInputStream("test data".getBytes()), "test", "", false,
+        "", "", SAMLProviderType.ONELOGIN.name(), anyString(), any());
     ssoService.setAuthenticationMechanism(accountId, SAML);
     account = accountService.get(account.getUuid());
     assertThat(account.getAuthenticationMechanism()).isEqualTo(SAML);
