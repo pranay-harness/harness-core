@@ -9,11 +9,9 @@ package io.harness.gitsync.core.fullsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-== == == == = import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-< < < < < < < < < Temporary merge branch 1 import io.harness.AuthorizationServiceHeader;
-import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.gitsync.GitPRCreateRequest;
@@ -28,7 +26,6 @@ import io.harness.gitsync.common.service.ScmOrchestratorService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.core.beans.GitFullSyncEntityInfo;
 import io.harness.gitsync.core.fullsync.beans.FullSyncFilesGroupedByMsvc;
-import io.harness.gitsync.core.fullsync.beans.GitFullSyncEntityProcessingResponse;
 import io.harness.gitsync.core.fullsync.entity.GitFullSyncJob;
 import io.harness.gitsync.core.fullsync.service.FullSyncJobService;
 import io.harness.ng.core.entitydetail.EntityDetailRestToProtoMapper;
