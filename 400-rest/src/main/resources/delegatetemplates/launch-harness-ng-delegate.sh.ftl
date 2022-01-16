@@ -27,6 +27,7 @@ docker run -d --restart unless-stopped --memory=${delegateXmx} --cpus=${delegate
 -e INIT_SCRIPT= \
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
+-e USE_CDN=${useCdn} \
 -e CDN_URL=${cdnUrl} \
 -e JRE_VERSION=${jreVersion} \
 -e HELM3_PATH= \

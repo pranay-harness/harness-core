@@ -120,13 +120,13 @@ if [ -f "$JRE_TAR_FILE" ]; then
 fi
 
 if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
-  echo "Downloading JRE packages..."
-  JVM_TAR_FILENAME=$(basename "$JVM_URL")
-  curl $MANAGER_PROXY_CURL -#kLO $JVM_URL
-  echo "Extracting JRE packages..."
-  rm -rf $JRE_DIR
-  tar xzf $JVM_TAR_FILENAME
-  rm -f $JVM_TAR_FILENAME
+echo "Downloading JRE packages..."
+JVM_TAR_FILENAME=$(basename "$JVM_URL")
+curl $MANAGER_PROXY_CURL -#kLO $JVM_URL
+echo "Extracting JRE packages..."
+rm -rf $JRE_DIR
+tar xzf $JVM_TAR_FILENAME
+rm -f $JVM_TAR_FILENAME
 fi
 
 if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
@@ -134,12 +134,12 @@ echo "No JRE available. Exiting."
 exit 1
 fi
 
+USE_CDN=${useCdn}
+
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=${watcherStorageUrl}
 REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/${watcherCheckLocation})
-export DEPLOY_MODE=${deployMode}
-
-if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
+if [ "$USE_CDN" = false ]; then
 REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 else
 REMOTE_WATCHER_URL=${remoteWatcherUrlCdn}/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
@@ -147,29 +147,30 @@ fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]; then
-  echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
+echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
 curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
-  WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
-  if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]; then
-    echo "The current version $WATCHER_CURRENT_VERSION is not the same as the expected remote version $REMOTE_WATCHER_VERSION"
-    echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
-    mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
-    cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
-    curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
-  fi
+WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
+if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]; then
+echo "The current version $WATCHER_CURRENT_VERSION is not the same as the expected remote version $REMOTE_WATCHER_VERSION"
+echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
+mkdir -p watcherBackup.$WATCHER_CURRENT_VERSION
+cp watcher.jar watcherBackup.$WATCHER_CURRENT_VERSION
+curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
+fi
 fi
 
+export DEPLOY_MODE=${deployMode}
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
-  echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=${delegateStorageUrl}
-  REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/${delegateCheckLocation})
-  REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
-  REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
+echo "Checking Delegate latest version..."
+DELEGATE_STORAGE_URL=${delegateStorageUrl}
+REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/${delegateCheckLocation})
+REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
+REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)
 
-  if [ ! -e delegate.jar ]; then
-    echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
+if [ ! -e delegate.jar ]; then
+echo "Downloading Delegate $REMOTE_DELEGATE_VERSION ..."
     curl $MANAGER_PROXY_CURL -#k $REMOTE_DELEGATE_URL -o delegate.jar
   else
     DELEGATE_CURRENT_VERSION=$(jar_app_version delegate.jar)

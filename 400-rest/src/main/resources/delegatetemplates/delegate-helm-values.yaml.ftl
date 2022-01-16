@@ -31,12 +31,13 @@ delegateDockerImage: ${delegateDockerImage}
 
 managerHostAndPort: ${managerHostAndPort}
 <#if isImmutable == "false">
-watcherStorageUrl: ${watcherStorageUrl}
-watcherCheckLocation: ${watcherCheckLocation}
-remoteWatcherUrlCdn: ${remoteWatcherUrlCdn}
-delegateStorageUrl: ${delegateStorageUrl}
-delegateCheckLocation: ${delegateCheckLocation}
-cdnUrl: ${cdnUrl}
-jreVersion: ${jreVersion}
+    watcherStorageUrl: ${watcherStorageUrl}
+    watcherCheckLocation: ${watcherCheckLocation}
+    remoteWatcherUrlCdn: ${remoteWatcherUrlCdn}
+    delegateStorageUrl: ${delegateStorageUrl}
+    delegateCheckLocation: ${delegateCheckLocation}
+    useCdn: ${useCdn}
+    cdnUrl: ${cdnUrl}
+    jreVersion: ${jreVersion}
 </#if>
 versionCheckDisabled: ${versionCheckDisabled}

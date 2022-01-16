@@ -84,7 +84,7 @@ spec:
           periodSeconds: 10
           failureThreshold: 2
         env:
-        - name: JAVA_OPTS
+          - name: JAVA_OPTS
           value: "-Xms64M"
         - name: ACCOUNT_ID
           value: ACCOUNT_ID
@@ -136,26 +136,28 @@ spec:
           value: ""
         - name: WATCHER_STORAGE_URL
           value: http://localhost:8888
-        - name: WATCHER_CHECK_LOCATION
-          value: watcherci.txt
-        - name: REMOTE_WATCHER_URL_CDN
-          value: http://localhost:9500/builds
-        - name: DELEGATE_STORAGE_URL
-          value: http://localhost:8888
-        - name: DELEGATE_CHECK_LOCATION
-          value: delegateci.txt
-        - name: HELM_DESIRED_VERSION
-          value: ""
-        - name: CDN_URL
-          value: http://localhost:9500
-        - name: JRE_VERSION
-          value: 1.8.0_242
-        - name: HELM3_PATH
-          value: ""
-        - name: HELM_PATH
-          value: ""
-        - name: KUSTOMIZE_PATH
-          value: ""
+          - name: WATCHER_CHECK_LOCATION
+            value: watcherci.txt
+          - name: REMOTE_WATCHER_URL_CDN
+            value: http://localhost:9500/builds
+          - name: DELEGATE_STORAGE_URL
+            value: http://localhost:8888
+          - name: DELEGATE_CHECK_LOCATION
+            value: delegateci.txt
+          - name: HELM_DESIRED_VERSION
+            value: ""
+          - name: USE_CDN
+            value: "false"
+          - name: CDN_URL
+            value: http://localhost:9500
+          - name: JRE_VERSION
+            value: 1.8.0_242
+          - name: HELM3_PATH
+            value: ""
+          - name: HELM_PATH
+            value: ""
+          - name: KUSTOMIZE_PATH
+            value: ""
         - name: KUBECTL_PATH
           value: ""
       restartPolicy: Always

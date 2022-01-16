@@ -29,6 +29,7 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
 -e CF_PLUGIN_HOME= \
+-e USE_CDN=${useCdn} \
 -e CDN_URL=${cdnUrl} \
 -e JRE_VERSION=${jreVersion} \
 -e VERSION_CHECK_DISABLED=${versionCheckDisabled} \

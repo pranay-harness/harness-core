@@ -152,26 +152,31 @@ if ! `grep localDiskPath config-delegate.yml > /dev/null`; then
   echo "localDiskPath: /tmp" >> config-delegate.yml
 fi
 if ! `grep maxCachedArtifacts config-delegate.yml > /dev/null`; then
-  echo "maxCachedArtifacts: 2" >> config-delegate.yml
+echo "maxCachedArtifacts: 2" >> config-delegate.yml
 fi
 if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
-  if [ "$DEPLOY_MODE" == "ONPREM" ]; then
-      echo "pollForTasks: true" >> config-delegate.yml
-  else
-      echo "pollForTasks: false" >> config-delegate.yml
-  fi
+if [ "$DEPLOY_MODE" == "ONPREM" ]; then
+echo "pollForTasks: true" >> config-delegate.yml
+else
+echo "pollForTasks: false" >> config-delegate.yml
+fi
 fi
 
-if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
-  echo "cdnUrl: ${cdnUrl}" >> config-delegate.yml
+if ! `grep useCdn config-delegate.yml > /dev/null`; then
+echo "useCdn: ${useCdn}" >> config-delegate.yml
 else
-  sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
+sed -i.bak "s|^useCdn:.*$|useCdn: ${useCdn}|" config-delegate.yml
+fi
+if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
+echo "cdnUrl: ${cdnUrl}" >> config-delegate.yml
+else
+sed -i.bak "s|^cdnUrl:.*$|cdnUrl: ${cdnUrl}|" config-delegate.yml
 fi
 
 <#if managerTarget??>
-if ! `grep managerTarget config-delegate.yml > /dev/null`; then
+  if ! `grep managerTarget config-delegate.yml > /dev/null`; then
   echo "managerTarget: ${managerTarget}" >> config-delegate.yml
-else
+  else
   sed -i.bak "s|^managerTarget:.*$|managerTarget: ${managerTarget}|" config-delegate.yml
 fi
 if ! `grep managerAuthority config-delegate.yml > /dev/null`; then

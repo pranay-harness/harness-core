@@ -17,6 +17,7 @@ services:
       - REMOTE_WATCHER_URL_CDN=http://localhost:9500/builds
       - DELEGATE_STORAGE_URL=http://localhost:8888
       - DELEGATE_CHECK_LOCATION=delegateci.txt
+      - USE_CDN=false
       - CDN_URL=http://localhost:9500
       - DEPLOY_MODE=KUBERNETES
       - DELEGATE_NAME=harness-delegate

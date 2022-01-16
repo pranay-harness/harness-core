@@ -1274,6 +1274,7 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("grpcServiceConnectorPort", String.valueOf(0));
       }
 
+      params.put("useCdn", String.valueOf(useCDN));
       params.put("cdnUrl", cdnConfig.getUrl());
 
       if (isNotBlank(templateParameters.getDelegateXmx())) {

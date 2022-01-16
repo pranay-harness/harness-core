@@ -237,6 +237,11 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   fi
 fi
 
+if ! `grep useCdn config-delegate.yml > /dev/null`; then
+  echo "useCdn: false" >> config-delegate.yml
+else
+  sed -i.bak "s|^useCdn:.*$|useCdn: false|" config-delegate.yml
+fi
 if ! `grep cdnUrl config-delegate.yml > /dev/null`; then
   echo "cdnUrl: http://localhost:9500" >> config-delegate.yml
 else

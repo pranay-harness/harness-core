@@ -26,8 +26,9 @@ function jar_app_version() {
   echo $VERSION
 }
 
+USE_CDN="${USE_CDN:-false}"
 JVM_URL_BASE_PATH=$DELEGATE_STORAGE_URL
-if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
+if [ "$USE_CDN" = true ]; then
   JVM_URL_BASE_PATH=$JVM_URL_BASE_PATH/public/shared
 fi
 
@@ -163,7 +164,7 @@ fi
 
 echo "Checking Watcher latest version..."
 REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/$WATCHER_CHECK_LOCATION)
-if [[ $DEPLOY_MODE != "KUBERNETES" ]]]; then
+if [ "$USE_CDN" = false ]; then
   REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 else
   REMOTE_WATCHER_URL=$REMOTE_WATCHER_URL_CDN/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
@@ -269,6 +270,12 @@ if ! `grep pollForTasks config-delegate.yml > /dev/null`; then
   else
       echo "pollForTasks: ${POLL_FOR_TASKS:-false}" >> config-delegate.yml
   fi
+fi
+
+if ! `grep useCdn config-delegate.yml > /dev/null`; then
+  echo "useCdn: $USE_CDN" >> config-delegate.yml
+else
+  sed -i.bak "s|^useCdn:.*$|useCdn: $USE_CDN|" config-delegate.yml
 fi
 
 if ! `grep cdnUrl config-delegate.yml > /dev/null`; then

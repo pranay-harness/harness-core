@@ -213,12 +213,12 @@ if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
   exit 1
 fi
 
+USE_CDN=false
+
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
 REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/watcherci.txt)
-export DEPLOY_MODE=KUBERNETES
-
-if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
+if [ "$USE_CDN" = false ]; then
     REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 else
     REMOTE_WATCHER_URL=http://localhost:9500/builds/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
@@ -239,6 +239,7 @@ else
   fi
 fi
 
+export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
   echo "Checking Delegate latest version..."

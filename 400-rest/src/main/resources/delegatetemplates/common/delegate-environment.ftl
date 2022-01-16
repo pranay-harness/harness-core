@@ -1,26 +1,28 @@
 <#macro mutable>
         - name: WATCHER_STORAGE_URL
           value: ${watcherStorageUrl}
-        - name: WATCHER_CHECK_LOCATION
-          value: ${watcherCheckLocation}
-        - name: REMOTE_WATCHER_URL_CDN
-          value: ${remoteWatcherUrlCdn}
-        - name: DELEGATE_STORAGE_URL
-          value: ${delegateStorageUrl}
-        - name: DELEGATE_CHECK_LOCATION
-          value: ${delegateCheckLocation}
-        - name: HELM_DESIRED_VERSION
-          value: ""
-        - name: CDN_URL
-          value: ${cdnUrl}
-        - name: JRE_VERSION
-          value: ${jreVersion}
-        - name: HELM3_PATH
-          value: ""
-        - name: HELM_PATH
-          value: ""
-        - name: KUSTOMIZE_PATH
-          value: ""
+    - name: WATCHER_CHECK_LOCATION
+    value: ${watcherCheckLocation}
+    - name: REMOTE_WATCHER_URL_CDN
+    value: ${remoteWatcherUrlCdn}
+    - name: DELEGATE_STORAGE_URL
+    value: ${delegateStorageUrl}
+    - name: DELEGATE_CHECK_LOCATION
+    value: ${delegateCheckLocation}
+    - name: HELM_DESIRED_VERSION
+    value: ""
+    - name: USE_CDN
+    value: "${useCdn}"
+    - name: CDN_URL
+    value: ${cdnUrl}
+    - name: JRE_VERSION
+    value: ${jreVersion}
+    - name: HELM3_PATH
+    value: ""
+    - name: HELM_PATH
+    value: ""
+    - name: KUSTOMIZE_PATH
+    value: ""
         - name: KUBECTL_PATH
           value: ""
 </#macro>

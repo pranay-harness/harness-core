@@ -65,26 +65,30 @@
         {
           "name": "WATCHER_STORAGE_URL",
           "value": "${watcherStorageUrl}"
-        },
-        {
-          "name": "REMOTE_WATCHER_URL_CDN",
-          "value": "${remoteWatcherUrlCdn}"
-        },
-        {
-          "name": "CF_PLUGIN_HOME",
-          "value": ""
-        },
-        {
-          "name": "CDN_URL",
-          "value": "${cdnUrl}"
-        },
-        {
-          "name": "JRE_VERSION",
-          "value": "${jreVersion}"
-        },
-        {
-          "name": "HELM3_PATH",
-          "value": ""
+},
+{
+"name": "REMOTE_WATCHER_URL_CDN",
+"value": "${remoteWatcherUrlCdn}"
+},
+{
+"name": "CF_PLUGIN_HOME",
+"value": ""
+},
+{
+"name": "USE_CDN",
+"value": "${useCdn}"
+},
+{
+"name": "CDN_URL",
+"value": "${cdnUrl}"
+},
+{
+"name": "JRE_VERSION",
+"value": "${jreVersion}"
+},
+{
+"name": "HELM3_PATH",
+"value": ""
         },
         {
           "name": "HELM_PATH",
