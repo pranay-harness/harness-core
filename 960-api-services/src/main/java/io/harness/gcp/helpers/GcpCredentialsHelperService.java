@@ -68,6 +68,6 @@ public class GcpCredentialsHelperService {
     return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(OAuth2Utils.getMetadataServerUrl())
         ? GoogleCredential.getApplicationDefault(
             GcpHttpTransportHelperService.getProxyConfiguredHttpTransport(), JacksonFactory.getDefaultInstance())
-        : GoogleCredential.getApplicationDefault();
+        : GoogleCredential.getApplicationDefault(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance());
   }
 }
