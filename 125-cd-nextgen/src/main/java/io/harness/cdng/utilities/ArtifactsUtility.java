@@ -26,8 +26,8 @@ import lombok.experimental.UtilityClass;
 public class ArtifactsUtility {
   public JsonNode getArtifactsJsonNode() {
     String yamlField = "---\n"
-            + "primary:\n"
-            + "sidecars: []\n";
+        + "primary:\n"
+        + "sidecars: []\n";
     YamlField artifactsYamlField;
     try {
       String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);
@@ -39,14 +39,14 @@ public class ArtifactsUtility {
   }
 
   public YamlField fetchArtifactYamlFieldAndSetYamlUpdates(
-          YamlField serviceField, Boolean isUseFromStage, YamlUpdates.Builder yamlUpdates) {
+      YamlField serviceField, Boolean isUseFromStage, YamlUpdates.Builder yamlUpdates) {
     if (isUseFromStage == false) {
       return serviceField.getNode()
-              .getField(YamlTypes.SERVICE_DEFINITION)
-              .getNode()
-              .getField(YamlTypes.SPEC)
-              .getNode()
-              .getField(YamlTypes.ARTIFACT_LIST_CONFIG);
+          .getField(YamlTypes.SERVICE_DEFINITION)
+          .getNode()
+          .getField(YamlTypes.SPEC)
+          .getNode()
+          .getField(YamlTypes.ARTIFACT_LIST_CONFIG);
     }
     YamlField stageOverrideField = serviceField.getNode().getField(YamlTypes.STAGE_OVERRIDES_CONFIG);
 
@@ -68,18 +68,18 @@ public class ArtifactsUtility {
       return yamlUpdates.putFqnToYaml(yamlField.getYamlPath(), YamlUtils.writeYamlString(yamlField));
     } catch (IOException e) {
       throw new YamlException(
-              "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
+          "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
     }
   }
 
   private YamlField fetchArtifactYamlFieldUnderStageOverride(YamlField stageOverride) {
     return new YamlField(YamlTypes.ARTIFACT_LIST_CONFIG,
-            new YamlNode(YamlTypes.ARTIFACT_LIST_CONFIG, ArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
+        new YamlNode(YamlTypes.ARTIFACT_LIST_CONFIG, ArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
   }
 
   private YamlField fetchOverridesYamlField(YamlField serviceField) {
     return new YamlField(YamlTypes.STAGE_OVERRIDES_CONFIG,
-            new YamlNode(YamlTypes.STAGE_OVERRIDES_CONFIG, StageOverridesUtility.getStageOverridesJsonNode(),
-                    serviceField.getNode()));
+        new YamlNode(YamlTypes.STAGE_OVERRIDES_CONFIG, StageOverridesUtility.getStageOverridesJsonNode(),
+            serviceField.getNode()));
   }
 }

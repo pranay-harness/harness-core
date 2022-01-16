@@ -72,39 +72,39 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     }
 
     ForkStepParameters stepParameters =
-            ForkStepParameters.builder()
-                    .parallelNodeIds(planNodes.values().stream().map(PlanNode::getUuid).collect(Collectors.toList()))
-                    .build();
+        ForkStepParameters.builder()
+            .parallelNodeIds(planNodes.values().stream().map(PlanNode::getUuid).collect(Collectors.toList()))
+            .build();
     PlanNode sidecarsNode =
-            PlanNode.builder()
-                    .uuid(sideCarsPlanNodeId)
-                    .stepType(SidecarsStep.STEP_TYPE)
-                    .name(PlanCreatorConstants.SIDECARS_NODE_NAME)
-                    .identifier(YamlTypes.SIDECARS_ARTIFACT_CONFIG)
-                    .stepParameters(stepParameters)
-                    .facilitatorObtainment(
-                            FacilitatorObtainment.newBuilder()
-                                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
-                                    .build())
-                    .skipExpressionChain(false)
-                    .build();
+        PlanNode.builder()
+            .uuid(sideCarsPlanNodeId)
+            .stepType(SidecarsStep.STEP_TYPE)
+            .name(PlanCreatorConstants.SIDECARS_NODE_NAME)
+            .identifier(YamlTypes.SIDECARS_ARTIFACT_CONFIG)
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                    .build())
+            .skipExpressionChain(false)
+            .build();
     planNodes.put(sidecarsNode.getUuid(), sidecarsNode);
     return PlanCreationResponse.builder().nodes(planNodes).build();
   }
 
   private PlanNode createPlanForArtifactNode(String identifier, ArtifactInfo artifactInfo) {
     return PlanNode.builder()
-            .uuid(UUIDGenerator.generateUuid())
-            .stepType(ArtifactStep.STEP_TYPE)
-            .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
-            .identifier(identifier)
-            .stepParameters(artifactInfo.getParams())
-            .facilitatorObtainment(
-                    FacilitatorObtainment.newBuilder()
-                            .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
-                            .build())
-            .skipExpressionChain(false)
-            .build();
+        .uuid(UUIDGenerator.generateUuid())
+        .stepType(ArtifactStep.STEP_TYPE)
+        .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
+        .identifier(identifier)
+        .stepParameters(artifactInfo.getParams())
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                .build())
+        .skipExpressionChain(false)
+        .build();
   }
 
   @Override
@@ -118,23 +118,23 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
   }
 
   public Map<String, ByteString> prepareMetadataForPrimaryArtifactPlanCreator(
-          String primaryId, ArtifactStepParameters params) {
+      String primaryId, ArtifactStepParameters params) {
     Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(primaryId)));
     metadataDependency.put(
-            PlanCreatorConstants.PRIMARY_STEP_PARAMETERS, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(params)));
+        PlanCreatorConstants.PRIMARY_STEP_PARAMETERS, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(params)));
     return metadataDependency;
   }
 
   @Override
   public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
-          PlanCreationContext ctx, ArtifactListConfig config) {
+      PlanCreationContext ctx, ArtifactListConfig config) {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
     String artifactsId = (String) kryoSerializer.asInflatedObject(
-            ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
+        ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
     ServiceConfig serviceConfig = (ServiceConfig) kryoSerializer.asInflatedObject(
-            ctx.getDependency().getMetadataMap().get(YamlTypes.SERVICE_CONFIG).toByteArray());
+        ctx.getDependency().getMetadataMap().get(YamlTypes.SERVICE_CONFIG).toByteArray());
 
     ArtifactListConfig artifactListConfig = serviceConfig.getServiceDefinition().getServiceSpec().getArtifacts();
     ArtifactListBuilder artifactListBuilder = new ArtifactListBuilder(artifactListConfig);
@@ -147,7 +147,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
 
     if (artifactList.getPrimary() != null) {
       String primaryPlanNodeId = addDependenciesForPrimaryNode(
-              ctx.getCurrentField(), artifactList.getPrimary().getParams(), planCreationResponseMap);
+          ctx.getCurrentField(), artifactList.getPrimary().getParams(), planCreationResponseMap);
     }
     if (EmptyPredicate.isNotEmpty(artifactList.getSidecars())) {
       final String sideCarsPlanNodeId = "sidecars-" + artifactsId;
@@ -158,22 +158,22 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
   }
 
   public String addDependenciesForPrimaryNode(YamlField artifactField, ArtifactStepParameters artifactStepParameters,
-                                              LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
+      LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
     YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     YamlField primaryYamlField =
-            PrimaryArtifactsUtility.createPrimaryArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
+        PrimaryArtifactsUtility.createPrimaryArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
 
     String primaryId = primaryYamlField.getNode().getUuid();
     Map<String, ByteString> metadataDependency =
-            prepareMetadataForPrimaryArtifactPlanCreator(primaryId, artifactStepParameters);
+        prepareMetadataForPrimaryArtifactPlanCreator(primaryId, artifactStepParameters);
 
     Map<String, YamlField> dependenciesMap = new HashMap<>();
     dependenciesMap.put(primaryId, primaryYamlField);
     PlanCreationResponseBuilder primaryPlanCreationResponse = PlanCreationResponse.builder().dependencies(
-            DependenciesUtils.toDependenciesProto(dependenciesMap)
-                    .toBuilder()
-                    .putDependencyMetadata(primaryId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
-                    .build());
+        DependenciesUtils.toDependenciesProto(dependenciesMap)
+            .toBuilder()
+            .putDependencyMetadata(primaryId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
+            .build());
     if (yamlUpdates.getFqnToYamlCount() > 0) {
       primaryPlanCreationResponse.yamlUpdates(yamlUpdates.build());
     }
@@ -183,23 +183,23 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
 
   @Override
   public PlanNode createPlanForParentNode(
-          PlanCreationContext ctx, ArtifactListConfig config, List<String> childrenNodeIds) {
+      PlanCreationContext ctx, ArtifactListConfig config, List<String> childrenNodeIds) {
     String artifactsId = (String) kryoSerializer.asInflatedObject(
-            ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
+        ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
 
     ForkStepParameters stepParameters = ForkStepParameters.builder().parallelNodeIds(childrenNodeIds).build();
     return PlanNode.builder()
-            .uuid(artifactsId)
-            .stepType(ArtifactsStep.STEP_TYPE)
-            .name(PlanCreatorConstants.ARTIFACTS_NODE_NAME)
-            .identifier(YamlTypes.ARTIFACT_LIST_CONFIG)
-            .stepParameters(stepParameters)
-            .facilitatorObtainment(
-                    FacilitatorObtainment.newBuilder()
-                            .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
-                            .build())
-            .skipExpressionChain(false)
-            .build();
+        .uuid(artifactsId)
+        .stepType(ArtifactsStep.STEP_TYPE)
+        .name(PlanCreatorConstants.ARTIFACTS_NODE_NAME)
+        .identifier(YamlTypes.ARTIFACT_LIST_CONFIG)
+        .stepParameters(stepParameters)
+        .facilitatorObtainment(
+            FacilitatorObtainment.newBuilder()
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
+                .build())
+        .skipExpressionChain(false)
+        .build();
   }
 
   @Value
@@ -224,8 +224,8 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
       PrimaryArtifact primarySpecWrapper = artifactListConfig.getPrimary();
       if (primarySpecWrapper != null) {
         this.primary = new ArtifactInfoBuilder(ArtifactStepParameters.builder()
-                .type(primarySpecWrapper.getSourceType())
-                .spec(primarySpecWrapper.getSpec()));
+                                                   .type(primarySpecWrapper.getSourceType())
+                                                   .spec(primarySpecWrapper.getSpec()));
       } else {
         this.primary = null;
       }
@@ -235,43 +235,43 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
         artifactListConfig.getSidecars().forEach(sc -> {
           SidecarArtifact sidecar = sc.getSidecar();
           this.sidecars.put(sidecar.getIdentifier(),
-                  new ArtifactInfoBuilder(ArtifactStepParameters.builder()
-                          .identifier(sidecar.getIdentifier())
-                          .type(sidecar.getSourceType())
-                          .spec(sidecar.getSpec())));
+              new ArtifactInfoBuilder(ArtifactStepParameters.builder()
+                                          .identifier(sidecar.getIdentifier())
+                                          .type(sidecar.getSourceType())
+                                          .spec(sidecar.getSpec())));
         });
       }
     }
 
     ArtifactList build() {
       return new ArtifactList(primary == null ? null : primary.build(),
-              sidecars == null
-                      ? null
-                      : sidecars.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
+          sidecars == null
+              ? null
+              : sidecars.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build())));
     }
 
     void addOverrideSets(ServiceConfig serviceConfig) {
       if (serviceConfig.getStageOverrides() == null
-              || ParameterField.isNull(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
+          || ParameterField.isNull(serviceConfig.getStageOverrides().getUseArtifactOverrideSets())) {
         return;
       }
 
       for (String useArtifactOverrideSet : serviceConfig.getStageOverrides().getUseArtifactOverrideSets().getValue()) {
         List<ArtifactOverrideSets> artifactOverrideSetsList =
-                serviceConfig.getServiceDefinition()
-                        .getServiceSpec()
-                        .getArtifactOverrideSets()
-                        .stream()
-                        .map(ArtifactOverrideSetWrapper::getOverrideSet)
-                        .filter(overrideSet -> overrideSet.getIdentifier().equals(useArtifactOverrideSet))
-                        .collect(Collectors.toList());
+            serviceConfig.getServiceDefinition()
+                .getServiceSpec()
+                .getArtifactOverrideSets()
+                .stream()
+                .map(ArtifactOverrideSetWrapper::getOverrideSet)
+                .filter(overrideSet -> overrideSet.getIdentifier().equals(useArtifactOverrideSet))
+                .collect(Collectors.toList());
         if (artifactOverrideSetsList.size() == 0) {
           throw new InvalidRequestException(
-                  String.format("Invalid identifier [%s] in artifact override sets", useArtifactOverrideSet));
+              String.format("Invalid identifier [%s] in artifact override sets", useArtifactOverrideSet));
         }
         if (artifactOverrideSetsList.size() > 1) {
           throw new InvalidRequestException(
-                  String.format("Duplicate identifier [%s] in artifact override sets", useArtifactOverrideSet));
+              String.format("Duplicate identifier [%s] in artifact override sets", useArtifactOverrideSet));
         }
 
         ArtifactListConfig artifactListConfig = artifactOverrideSetsList.get(0).getArtifacts();
@@ -288,7 +288,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     }
 
     private void addOverrides(
-            ArtifactListConfig artifactListConfig, BiConsumer<ArtifactStepParametersBuilder, ArtifactConfig> consumer) {
+        ArtifactListConfig artifactListConfig, BiConsumer<ArtifactStepParametersBuilder, ArtifactConfig> consumer) {
       PrimaryArtifact primarySpecWrapper = artifactListConfig.getPrimary();
       if (primarySpecWrapper != null) {
         if (primary == null) {
@@ -301,7 +301,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
         for (SidecarArtifactWrapper sidecarWrapper : artifactListConfig.getSidecars()) {
           SidecarArtifact sidecar = sidecarWrapper.getSidecar();
           ArtifactInfoBuilder artifactInfoBuilder = sidecars.computeIfAbsent(sidecar.getIdentifier(),
-                  identifier -> new ArtifactInfoBuilder(ArtifactStepParameters.builder().identifier(identifier)));
+              identifier -> new ArtifactInfoBuilder(ArtifactStepParameters.builder().identifier(identifier)));
           consumer.accept(artifactInfoBuilder.getBuilder(), sidecar.getSpec());
         }
       }

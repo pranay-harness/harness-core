@@ -41,102 +41,102 @@ import org.mockito.InjectMocks;
 
 @OwnedBy(HarnessTeam.CDC)
 public class ArtifactPlanCreatorTest extends CDNGTestBase {
-    @Inject @InjectMocks ArtifactsPlanCreator artifactsPlanCreator;
+  @Inject @InjectMocks ArtifactsPlanCreator artifactsPlanCreator;
 
-    @Test
-    @Owner(developers = PRASHANTSHARMA)
-    @Category(UnitTests.class)
-    public void testPrepareMetadataForPrimaryArtifactsPlanCreator() {
-        String uuid = UUIDGenerator.generateUuid();
-        ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
-        Map<String, ByteString> metadataDependency =
-                artifactsPlanCreator.prepareMetadataForPrimaryArtifactPlanCreator(uuid, artifactStepParameters);
-        assertThat(metadataDependency.size()).isEqualTo(2);
-        assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
-        assertThat(metadataDependency.containsKey(PlanCreatorConstants.PRIMARY_STEP_PARAMETERS)).isEqualTo(true);
-    }
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testPrepareMetadataForPrimaryArtifactsPlanCreator() {
+    String uuid = UUIDGenerator.generateUuid();
+    ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
+    Map<String, ByteString> metadataDependency =
+        artifactsPlanCreator.prepareMetadataForPrimaryArtifactPlanCreator(uuid, artifactStepParameters);
+    assertThat(metadataDependency.size()).isEqualTo(2);
+    assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
+    assertThat(metadataDependency.containsKey(PlanCreatorConstants.PRIMARY_STEP_PARAMETERS)).isEqualTo(true);
+  }
 
-    @Test
-    @Owner(developers = PRASHANTSHARMA)
-    @Category(UnitTests.class)
-    public void testGetFieldClass() {
-        assertThat(artifactsPlanCreator.getFieldClass()).isEqualTo(ArtifactListConfig.class);
-    }
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetFieldClass() {
+    assertThat(artifactsPlanCreator.getFieldClass()).isEqualTo(ArtifactListConfig.class);
+  }
 
-    @Test
-    @Owner(developers = PRASHANTSHARMA)
-    @Category(UnitTests.class)
-    public void testGetSupportedTypes() {
-        Map<String, Set<String>> supportedTypes = artifactsPlanCreator.getSupportedTypes();
-        assertThat(supportedTypes.containsKey(YamlTypes.ARTIFACT_LIST_CONFIG)).isEqualTo(true);
-        assertThat(supportedTypes.get(YamlTypes.ARTIFACT_LIST_CONFIG).size()).isEqualTo(1);
-        assertThat(supportedTypes.get(YamlTypes.ARTIFACT_LIST_CONFIG).contains(PlanCreatorUtils.ANY_TYPE)).isEqualTo(true);
-    }
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetSupportedTypes() {
+    Map<String, Set<String>> supportedTypes = artifactsPlanCreator.getSupportedTypes();
+    assertThat(supportedTypes.containsKey(YamlTypes.ARTIFACT_LIST_CONFIG)).isEqualTo(true);
+    assertThat(supportedTypes.get(YamlTypes.ARTIFACT_LIST_CONFIG).size()).isEqualTo(1);
+    assertThat(supportedTypes.get(YamlTypes.ARTIFACT_LIST_CONFIG).contains(PlanCreatorUtils.ANY_TYPE)).isEqualTo(true);
+  }
 
-    private void checkForPrimaryMetadataDependency(PlanCreationResponse planCreationResponse, String nodeUuid) {
-        assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
-        assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
-                .isEqualTo(2);
-        assertThat(
-                planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-                        YamlTypes.UUID))
-                .isEqualTo(true);
-        assertThat(
-                planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-                        PlanCreatorConstants.PRIMARY_STEP_PARAMETERS))
-                .isEqualTo(true);
-    }
-    @Test
-    @Owner(developers = PRASHANTSHARMA)
-    @Category(UnitTests.class)
-    public void testAddDependenciesForArtifactsHavingPrimaryYamlField() throws IOException {
-        LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+  private void checkForPrimaryMetadataDependency(PlanCreationResponse planCreationResponse, String nodeUuid) {
+    assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
+    assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
+        .isEqualTo(2);
+    assertThat(
+        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+            YamlTypes.UUID))
+        .isEqualTo(true);
+    assertThat(
+        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+            PlanCreatorConstants.PRIMARY_STEP_PARAMETERS))
+        .isEqualTo(true);
+  }
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForArtifactsHavingPrimaryYamlField() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        InputStream yamlFile =
-                classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_primary_yamlField.yml");
-        assertThat(yamlFile).isNotNull();
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile =
+        classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_primary_yamlField.yml");
+    assertThat(yamlFile).isNotNull();
 
-        String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
-        yaml = YamlUtils.injectUuid(yaml);
-        YamlField artifactField = YamlUtils.readTree(yaml);
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField artifactField = YamlUtils.readTree(yaml);
 
-        PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
-        ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
-        String nodeUuid = artifactsPlanCreator.addDependenciesForPrimaryNode(
-                ctx.getCurrentField(), artifactStepParameters, planCreationResponseMap);
-        assertThat(planCreationResponseMap.size()).isEqualTo(1);
-        assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
-        PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
-        assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("primary");
-        assertThat(planCreationResponse1.getYamlUpdates()).isNull();
-        checkForPrimaryMetadataDependency(planCreationResponse1, nodeUuid);
-    }
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
+    ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
+    String nodeUuid = artifactsPlanCreator.addDependenciesForPrimaryNode(
+        ctx.getCurrentField(), artifactStepParameters, planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("primary");
+    assertThat(planCreationResponse1.getYamlUpdates()).isNull();
+    checkForPrimaryMetadataDependency(planCreationResponse1, nodeUuid);
+  }
 
-    @Test
-    @Owner(developers = PRASHANTSHARMA)
-    @Category(UnitTests.class)
-    public void testAddDependenciesForArtifactsWithoutPrimaryYamlField() throws IOException {
-        LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForArtifactsWithoutPrimaryYamlField() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
-        ClassLoader classLoader = this.getClass().getClassLoader();
-        InputStream yamlFile =
-                classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_without_primary_yamlField.yml");
-        assertThat(yamlFile).isNotNull();
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile =
+        classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_without_primary_yamlField.yml");
+    assertThat(yamlFile).isNotNull();
 
-        String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
-        yaml = YamlUtils.injectUuid(yaml);
-        YamlField artifactField = YamlUtils.readTree(yaml);
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField artifactField = YamlUtils.readTree(yaml);
 
-        PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
-        ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
-        String nodeUuid = artifactsPlanCreator.addDependenciesForPrimaryNode(
-                ctx.getCurrentField(), artifactStepParameters, planCreationResponseMap);
-        assertThat(planCreationResponseMap.size()).isEqualTo(1);
-        assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
-        PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
-        assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("primary");
-        assertThat(planCreationResponse1.getYamlUpdates()).isNotNull();
-        checkForPrimaryMetadataDependency(planCreationResponse1, nodeUuid);
-    }
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
+    ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
+    String nodeUuid = artifactsPlanCreator.addDependenciesForPrimaryNode(
+        ctx.getCurrentField(), artifactStepParameters, planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("primary");
+    assertThat(planCreationResponse1.getYamlUpdates()).isNotNull();
+    checkForPrimaryMetadataDependency(planCreationResponse1, nodeUuid);
+  }
 }

@@ -24,45 +24,45 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
 public class PrimaryArtifactsUtility {
-    public JsonNode getArtifactsJsonNode() {
-        String yamlField = "---\n"
-                + "type: DockerRegistry\n"
-                + "spec:\n";
-        YamlField primaryYamlField;
-        try {
-            String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);
-            primaryYamlField = YamlUtils.readTree(yamlFieldWithUuid);
-        } catch (IOException e) {
-            throw new InvalidRequestException("Exception while creating primary field");
-        }
-        return primaryYamlField.getNode().getCurrJsonNode();
+  public JsonNode getArtifactsJsonNode() {
+    String yamlField = "---\n"
+        + "type: DockerRegistry\n"
+        + "spec:\n";
+    YamlField primaryYamlField;
+    try {
+      String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);
+      primaryYamlField = YamlUtils.readTree(yamlFieldWithUuid);
+    } catch (IOException e) {
+      throw new InvalidRequestException("Exception while creating primary field");
+    }
+    return primaryYamlField.getNode().getCurrJsonNode();
+  }
+
+  public YamlField createPrimaryArtifactYamlFieldAndSetYamlUpdate(
+      YamlField artifactField, YamlUpdates.Builder yamlUpdates) {
+    YamlField primaryYamlField = artifactField.getNode().getField(YamlTypes.PRIMARY_ARTIFACT);
+
+    if (primaryYamlField != null) {
+      return primaryYamlField;
     }
 
-    public YamlField createPrimaryArtifactYamlFieldAndSetYamlUpdate(
-            YamlField artifactField, YamlUpdates.Builder yamlUpdates) {
-        YamlField primaryYamlField = artifactField.getNode().getField(YamlTypes.PRIMARY_ARTIFACT);
+    primaryYamlField = createPrimaryYamlFieldUnderArtifacts(artifactField);
+    setYamlUpdate(primaryYamlField, yamlUpdates);
+    return primaryYamlField;
+  }
 
-        if (primaryYamlField != null) {
-            return primaryYamlField;
-        }
-
-        primaryYamlField = createPrimaryYamlFieldUnderArtifacts(artifactField);
-        setYamlUpdate(primaryYamlField, yamlUpdates);
-        return primaryYamlField;
+  private static YamlUpdates.Builder setYamlUpdate(YamlField yamlField, YamlUpdates.Builder yamlUpdates) {
+    try {
+      return yamlUpdates.putFqnToYaml(yamlField.getYamlPath(), YamlUtils.writeYamlString(yamlField));
+    } catch (IOException e) {
+      throw new YamlException(
+          "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
     }
+  }
 
-    private static YamlUpdates.Builder setYamlUpdate(YamlField yamlField, YamlUpdates.Builder yamlUpdates) {
-        try {
-            return yamlUpdates.putFqnToYaml(yamlField.getYamlPath(), YamlUtils.writeYamlString(yamlField));
-        } catch (IOException e) {
-            throw new YamlException(
-                    "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
-        }
-    }
-
-    private YamlField createPrimaryYamlFieldUnderArtifacts(YamlField stageOverride) {
-        return new YamlField(YamlTypes.PRIMARY_ARTIFACT,
-                new YamlNode(
-                        YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
-    }
+  private YamlField createPrimaryYamlFieldUnderArtifacts(YamlField stageOverride) {
+    return new YamlField(YamlTypes.PRIMARY_ARTIFACT,
+        new YamlNode(
+            YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
+  }
 }
