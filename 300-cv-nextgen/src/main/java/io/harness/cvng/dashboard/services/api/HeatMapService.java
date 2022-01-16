@@ -33,19 +33,6 @@ public interface HeatMapService {
       @NotNull CVMonitoringCategory category, @NotNull Instant timeStamp, double riskScore, long anomalousMetricsCount,
       long anomalousLogsCount);
 
-  Map<CVMonitoringCategory, SortedSet<HeatMapDTO>> getHeatMap(@NotNull String accountId, @NotNull String orgIdentifier,
-      @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier, @NotNull Instant startTime,
-      @NotNull Instant endTime);
-
-  CategoryRisksDTO getCategoryRiskScores(@NotNull String accountId, @NotNull String orgIdentifier,
-      @NotNull String projectIdentifier, String serviceIdentifier, String envIdentifier);
-
-  List<EnvServiceRiskDTO> getEnvServiceRiskScores(
-      @NotNull String accountId, @NotNull String orgIdentifier, @NotNull String projectIdentifier);
-
-  RiskSummaryPopoverDTO getRiskSummaryPopover(String accountId, String orgIdentifier, String projectIdentifier,
-      Instant endTime, String serviceIdentifier, CVMonitoringCategory category);
-
   Map<ServiceEnvKey, RiskData> getLatestHealthScore(@NonNull ProjectParams projectParams,
       @NonNull List<String> serviceIdentifiers, @NonNull List<String> envIdentifiers);
 
@@ -57,9 +44,6 @@ public interface HeatMapService {
 
   Map<ServiceEnvKey, RiskData> getLatestRiskScoreByServiceMap(
       ProjectParams projectParams, List<Pair<String, String>> serviceEnvIdentifiers);
-
-  List<RiskData> getLatestRiskScoreForLimitedServicesList(String accountId, String orgIdentifier,
-      String projectIdentifier, List<Pair<String, String>> serviceEnvIdentifiers);
 
   HistoricalTrend getOverAllHealthScore(ProjectParams projectParams, String serviceIdentifier,
       String environmentIdentifier, DurationDTO duration, Instant endTime);
