@@ -1,8 +1,8 @@
 /*
  * Copyright 2021 Harness Inc. All rights reserved.
- * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
  * that can be found in the licenses directory at the root of this repository, also available at
- * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
 package io.harness.cdng.creator.plan.service;
@@ -67,66 +67,66 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
   @Category(UnitTests.class)
   public void testValidateCreatePlanNodeForArtifacts() {
     DockerHubArtifactConfig primaryArtifact =
-        DockerHubArtifactConfig.builder().primaryArtifact(true).identifier("ARTIFACT1").build();
+            DockerHubArtifactConfig.builder().primaryArtifact(true).identifier("ARTIFACT1").build();
     DockerHubArtifactConfig sidecarArtifact =
-        DockerHubArtifactConfig.builder().primaryArtifact(false).identifier("ARTIFACT2").build();
+            DockerHubArtifactConfig.builder().primaryArtifact(false).identifier("ARTIFACT2").build();
     ArtifactListConfig artifactListConfig1 =
-        ArtifactListConfig.builder()
-            .primary(PrimaryArtifact.builder().spec(primaryArtifact).build())
-            .sidecar(SidecarArtifactWrapper.builder()
-                         .sidecar(SidecarArtifact.builder().spec(sidecarArtifact).build())
-                         .build())
-            .build();
+            ArtifactListConfig.builder()
+                    .primary(PrimaryArtifact.builder().spec(primaryArtifact).build())
+                    .sidecar(SidecarArtifactWrapper.builder()
+                            .sidecar(SidecarArtifact.builder().spec(sidecarArtifact).build())
+                            .build())
+                    .build();
 
     // Case1: having both primary and sidecars artifacts
     ServiceConfig serviceConfig1 =
-        ServiceConfig.builder()
-            .serviceDefinition(ServiceDefinition.builder()
-                                   .serviceSpec(KubernetesServiceSpec.builder().artifacts(artifactListConfig1).build())
-                                   .build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(ServiceDefinition.builder()
+                            .serviceSpec(KubernetesServiceSpec.builder().artifacts(artifactListConfig1).build())
+                            .build())
+                    .build();
     boolean result = servicePlanCreator.validateCreatePlanNodeForArtifacts(serviceConfig1);
     assertThat(result).isEqualTo(true);
 
     // Case2: having none primary and sidecars artifacts
     ServiceConfig serviceConfig2 =
-        ServiceConfig.builder()
-            .serviceDefinition(
-                ServiceDefinition.builder()
-                    .serviceSpec(
-                        KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
-                    .build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(
+                            ServiceDefinition.builder()
+                                    .serviceSpec(
+                                            KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
+                                    .build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(serviceConfig2);
     assertThat(result).isEqualTo(false);
 
     // Case3: having only sidecars artifacts
     ArtifactListConfig artifactListConfig3 =
-        ArtifactListConfig.builder()
-            .sidecar(SidecarArtifactWrapper.builder()
-                         .sidecar(SidecarArtifact.builder().spec(sidecarArtifact).build())
-                         .build())
-            .build();
+            ArtifactListConfig.builder()
+                    .sidecar(SidecarArtifactWrapper.builder()
+                            .sidecar(SidecarArtifact.builder().spec(sidecarArtifact).build())
+                            .build())
+                    .build();
 
     ServiceConfig serviceConfig3 =
-        ServiceConfig.builder()
-            .serviceDefinition(ServiceDefinition.builder()
-                                   .serviceSpec(KubernetesServiceSpec.builder().artifacts(artifactListConfig3).build())
-                                   .build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(ServiceDefinition.builder()
+                            .serviceSpec(KubernetesServiceSpec.builder().artifacts(artifactListConfig3).build())
+                            .build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(serviceConfig3);
     assertThat(result).isEqualTo(true);
 
     // Case4: having only primary artifacts
     ArtifactListConfig artifactListConfig4 =
-        ArtifactListConfig.builder().primary(PrimaryArtifact.builder().spec(primaryArtifact).build()).build();
+            ArtifactListConfig.builder().primary(PrimaryArtifact.builder().spec(primaryArtifact).build()).build();
 
     ServiceConfig serviceConfig4 =
-        ServiceConfig.builder()
-            .serviceDefinition(ServiceDefinition.builder()
-                                   .serviceSpec(KubernetesServiceSpec.builder().artifacts(artifactListConfig4).build())
-                                   .build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(ServiceDefinition.builder()
+                            .serviceSpec(KubernetesServiceSpec.builder().artifacts(artifactListConfig4).build())
+                            .build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(serviceConfig4);
     assertThat(result).isEqualTo(true);
 
@@ -134,53 +134,53 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
 
     // Case1: having both primary and sidecars artifacts
     ServiceConfig stageOverrideServiceConfig1 =
-        ServiceConfig.builder()
-            .serviceDefinition(
-                ServiceDefinition.builder()
-                    .serviceSpec(
-                        KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
-                    .build())
-            .stageOverrides(StageOverridesConfig.builder().artifacts(artifactListConfig1).build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(
+                            ServiceDefinition.builder()
+                                    .serviceSpec(
+                                            KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
+                                    .build())
+                    .stageOverrides(StageOverridesConfig.builder().artifacts(artifactListConfig1).build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(stageOverrideServiceConfig1);
     assertThat(result).isEqualTo(true);
 
     // Case2: having none primary and sidecars artifacts
     ServiceConfig stageOverrideServiceConfig2 =
-        ServiceConfig.builder()
-            .serviceDefinition(
-                ServiceDefinition.builder()
-                    .serviceSpec(
-                        KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
-                    .build())
-            .stageOverrides(StageOverridesConfig.builder().artifacts(ArtifactListConfig.builder().build()).build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(
+                            ServiceDefinition.builder()
+                                    .serviceSpec(
+                                            KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
+                                    .build())
+                    .stageOverrides(StageOverridesConfig.builder().artifacts(ArtifactListConfig.builder().build()).build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(stageOverrideServiceConfig2);
     assertThat(result).isEqualTo(false);
 
     // Case3: having only sidecars artifacts
     ServiceConfig stageOverrideServiceConfig3 =
-        ServiceConfig.builder()
-            .serviceDefinition(
-                ServiceDefinition.builder()
-                    .serviceSpec(
-                        KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
-                    .build())
-            .stageOverrides(StageOverridesConfig.builder().artifacts(artifactListConfig3).build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(
+                            ServiceDefinition.builder()
+                                    .serviceSpec(
+                                            KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
+                                    .build())
+                    .stageOverrides(StageOverridesConfig.builder().artifacts(artifactListConfig3).build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(stageOverrideServiceConfig3);
     assertThat(result).isEqualTo(true);
 
     // Case4: having only primary artifacts
     ServiceConfig stageOverrideServiceConfig4 =
-        ServiceConfig.builder()
-            .serviceDefinition(
-                ServiceDefinition.builder()
-                    .serviceSpec(
-                        KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
-                    .build())
-            .stageOverrides(StageOverridesConfig.builder().artifacts(artifactListConfig4).build())
-            .build();
+            ServiceConfig.builder()
+                    .serviceDefinition(
+                            ServiceDefinition.builder()
+                                    .serviceSpec(
+                                            KubernetesServiceSpec.builder().artifacts(ArtifactListConfig.builder().build()).build())
+                                    .build())
+                    .stageOverrides(StageOverridesConfig.builder().artifacts(artifactListConfig4).build())
+                    .build();
     result = servicePlanCreator.validateCreatePlanNodeForArtifacts(stageOverrideServiceConfig4);
     assertThat(result).isEqualTo(true);
   }
@@ -192,7 +192,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     String uuid = UUIDGenerator.generateUuid();
     ServiceConfig serviceConfig = ServiceConfig.builder().build();
     Map<String, ByteString> metadataDependency =
-        servicePlanCreator.prepareMetadataForArtifactsPlanCreator(uuid, serviceConfig);
+            servicePlanCreator.prepareMetadataForArtifactsPlanCreator(uuid, serviceConfig);
     assertThat(metadataDependency.size()).isEqualTo(2);
     assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
   }
@@ -217,15 +217,15 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
   private void checksForDependenciesForArtifact(PlanCreationResponse planCreationResponse, String nodeUuid) {
     assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
     assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
-        .isEqualTo(2);
+            .isEqualTo(2);
     assertThat(
-        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-            YamlTypes.UUID))
-        .isEqualTo(true);
+            planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+                    YamlTypes.UUID))
+            .isEqualTo(true);
     assertThat(
-        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-            YamlTypes.SERVICE_CONFIG))
-        .isEqualTo(true);
+            planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+                    YamlTypes.SERVICE_CONFIG))
+            .isEqualTo(true);
   }
   @Test
   @Owner(developers = PRASHANTSHARMA)
@@ -249,7 +249,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
     checksForDependenciesForArtifact(planCreationResponse1, nodeUuid);
     assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
-        .isEqualTo("serviceDefinition/spec/artifacts");
+            .isEqualTo("serviceDefinition/spec/artifacts");
     assertThat(planCreationResponse1.getYamlUpdates()).isNull();
   }
 
@@ -260,7 +260,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
     ServiceConfig actualServiceConfig =
-        ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
+            ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test2.yml");
     assertThat(yamlFile).isNotNull();
@@ -276,7 +276,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
     checksForDependenciesForArtifact(planCreationResponse1, nodeUuid);
     assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
-        .isEqualTo("stageOverrides/artifacts");
+            .isEqualTo("stageOverrides/artifacts");
     assertThat(planCreationResponse1.getYamlUpdates().getFqnToYamlCount()).isEqualTo(1);
   }
 
@@ -287,7 +287,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
 
     ServiceConfig actualServiceConfig =
-        ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
+            ServiceConfig.builder().useFromStage(ServiceUseFromStage.builder().stage("stage1").build()).build();
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile = classLoader.getResourceAsStream("cdng/plan/service_plan_creator_test3.yml");
     assertThat(yamlFile).isNotNull();
@@ -303,7 +303,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
     checksForDependenciesForArtifact(planCreationResponse1, nodeUuid);
     assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid))
-        .isEqualTo("stageOverrides/artifacts");
+            .isEqualTo("stageOverrides/artifacts");
 
     assertThat(planCreationResponse1.getYamlUpdates().getFqnToYamlCount()).isEqualTo(1);
   }

@@ -1,0 +1,8 @@
+sidecars:
+  - sidecar:
+      type: DockerRegistry
+      spec:
+        connectorRef: org.DockerConnectorForAutomationTest
+        imagePath: harness/todolist-sample
+        tag: "131"
+      identifier: sidecar1
