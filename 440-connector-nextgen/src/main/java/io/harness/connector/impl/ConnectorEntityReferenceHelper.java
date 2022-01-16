@@ -238,7 +238,7 @@ public class ConnectorEntityReferenceHelper {
               .build());
     } catch (Exception ex) {
       log.error("Error deleting the setup usages for the connector with the identifier {} in project {} in org {}",
-          identifier, projectIdentifier, orgIdentifier);
+          identifier, projectIdentifier, orgIdentifier, ex);
     }
   }
 }

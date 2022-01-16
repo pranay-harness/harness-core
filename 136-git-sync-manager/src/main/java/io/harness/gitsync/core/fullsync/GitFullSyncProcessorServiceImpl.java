@@ -9,10 +9,10 @@ package io.harness.gitsync.core.fullsync;
 
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.data.structure.CollectionUtils.emptyIfNull;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
+== == == == = import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import io.harness.AuthorizationServiceHeader;
+< < < < < < < < < Temporary merge branch 1 import io.harness.AuthorizationServiceHeader;
 import io.harness.EntityType;
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
@@ -56,6 +56,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   EntityDetailRestToProtoMapper entityDetailRestToProtoMapper;
   GitFullSyncEntityService gitFullSyncEntityService;
   FullSyncJobService fullSyncJobService;
+  ScmOrchestratorService scmOrchestratorService;
   List<Microservice> microservicesProcessingOrder;
 
   private static int MAX_RETRY_COUNT = 2;
@@ -144,27 +145,33 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
   @Override
   public void performFullSync(GitFullSyncJob fullSyncJob) {
     log.info("Started full sync for the job {}", fullSyncJob.getMessageId());
-    UpdateResult updateResult =
-        fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
-    if (updateResult.getModifiedCount() == 0L) {
-      log.info("There is no job to run for the id {}, maybe the other thread is running it", fullSyncJob.getUuid());
-    }
-    List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
-        gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
-    boolean processingFailed = false;
-    final List<FullSyncFilesGroupedByMsvc> fullSyncFilesGroupedByMsvcs =
-        sortTheFilesInTheProcessingOrder(allEntitiesToBeSynced);
-    for (FullSyncFilesGroupedByMsvc fullSyncFilesGroupedByMsvc : fullSyncFilesGroupedByMsvcs) {
-      log.info("Number of files is {} for the microservice {}",
-          emptyIfNull(fullSyncFilesGroupedByMsvc.getGitFullSyncEntityInfoList()).size(),
-          fullSyncFilesGroupedByMsvc.getMicroservice());
-      processingFailed = processFiles(
-          fullSyncFilesGroupedByMsvc.getMicroservice(), fullSyncFilesGroupedByMsvc.getGitFullSyncEntityInfoList());
-    }
+    try {
+      SecurityContextBuilder.setContext(
+          new ServicePrincipal(AuthorizationServiceHeader.GIT_SYNC_SERVICE.getServiceId()));
+      UpdateResult updateResult =
+          fullSyncJobService.markJobAsRunning(fullSyncJob.getAccountIdentifier(), fullSyncJob.getUuid());
+      if (updateResult.getModifiedCount() == 0L) {
+        log.info("There is no job to run for the id {}, maybe the other thread is running it", fullSyncJob.getUuid());
+      }
+      List<GitFullSyncEntityInfo> allEntitiesToBeSynced =
+          gitFullSyncEntityService.list(fullSyncJob.getAccountIdentifier(), fullSyncJob.getMessageId());
+      boolean processingFailed = false;
+      final List<FullSyncFilesGroupedByMsvc> fullSyncFilesGroupedByMsvcs =
+          sortTheFilesInTheProcessingOrder(allEntitiesToBeSynced);
+      for (FullSyncFilesGroupedByMsvc fullSyncFilesGroupedByMsvc : fullSyncFilesGroupedByMsvcs) {
+        log.info("Number of files is {} for the microservice {}",
+            emptyIfNull(fullSyncFilesGroupedByMsvc.getGitFullSyncEntityInfoList()).size(),
+            fullSyncFilesGroupedByMsvc.getMicroservice());
+        processingFailed = processFiles(
+            fullSyncFilesGroupedByMsvc.getMicroservice(), fullSyncFilesGroupedByMsvc.getGitFullSyncEntityInfoList());
+      }
 
-    updateTheStatusOfJob(processingFailed, fullSyncJob);
-    if (fullSyncJob.isCreatePullRequest()) {
-      createAPullRequest(fullSyncJob);
+      updateTheStatusOfJob(processingFailed, fullSyncJob);
+      if (fullSyncJob.isCreatePullRequest()) {
+        createAPullRequest(fullSyncJob);
+      }
+    } finally {
+      SecurityContextBuilder.unsetCompleteContext();
     }
     log.info("Completed full sync for the job {}", fullSyncJob.getMessageId());
   }
