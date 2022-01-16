@@ -7,6 +7,7 @@
 
 package io.harness.gcp.helpers;
 
+import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import io.harness.network.Http;
 import io.harness.serializer.JsonUtils;
 
@@ -19,6 +20,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.security.GeneralSecurityException;
 import java.util.Collections;
 import java.util.HashMap;
 import lombok.extern.slf4j.Slf4j;
@@ -30,30 +32,30 @@ public class GcpCredentialsHelperService {
   @Inject private GcpHttpTransportHelperService gcpHttpTransportHelperService;
 
   public GoogleCredential getGoogleCredentialWithDefaultHttpTransport(char[] serviceAccountKeyFileContent)
-      throws IOException {
+          throws IOException {
     return appendScopesIfRequired(GoogleCredential.fromStream(
-        IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset())));
+            IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset())));
   }
 
   public GoogleCredential getGoogleCredentialWithProxyConfiguredHttpTransport(char[] serviceAccountKeyFileContent)
-      throws IOException {
+          throws IOException {
     HttpTransport httpTransport = GcpHttpTransportHelperService.getProxyConfiguredHttpTransport();
     return appendScopesIfRequired(GoogleCredential.fromStream(
-        IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
-        JacksonFactory.getDefaultInstance()));
+            IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
+            JacksonFactory.getDefaultInstance()));
   }
 
   public static GoogleCredential getGoogleCredentialFromFile(char[] serviceAccountKeyFileContent) throws IOException {
     String tokenUri =
-        (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("token_uri");
+            (String) (JsonUtils.asObject(new String(serviceAccountKeyFileContent), HashMap.class)).get("token_uri");
     if (Http.getProxyHostName() != null && !Http.shouldUseNonProxy(tokenUri)) {
       HttpTransport httpTransport = GcpHttpTransportHelperService.getProxyConfiguredHttpTransport();
       return appendScopesIfRequired(GoogleCredential.fromStream(
-          IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
-          JacksonFactory.getDefaultInstance()));
+              IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset()), httpTransport,
+              JacksonFactory.getDefaultInstance()));
     } else {
       return appendScopesIfRequired(GoogleCredential.fromStream(
-          IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset())));
+              IOUtils.toInputStream(String.valueOf(serviceAccountKeyFileContent), Charset.defaultCharset())));
     }
   }
 
@@ -65,9 +67,14 @@ public class GcpCredentialsHelperService {
   }
 
   public static GoogleCredential getApplicationDefaultCredentials() throws IOException {
-    return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(OAuth2Utils.getMetadataServerUrl())
-        ? GoogleCredential.getApplicationDefault(
-            GcpHttpTransportHelperService.getProxyConfiguredHttpTransport(), JacksonFactory.getDefaultInstance())
-        : GoogleCredential.getApplicationDefault(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance());
+    try {
+      return Http.getProxyHostName() != null && !Http.shouldUseNonProxy(OAuth2Utils.getMetadataServerUrl())
+              ? GoogleCredential.getApplicationDefault(
+              GcpHttpTransportHelperService.getProxyConfiguredHttpTransport(), JacksonFactory.getDefaultInstance())
+              : GoogleCredential.getApplicationDefault(GoogleNetHttpTransport.newTrustedTransport(), JacksonFactory.getDefaultInstance());
+    } catch (GeneralSecurityException e) {
+      e.printStackTrace();
+    }
+    return null;
   }
 }
