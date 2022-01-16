@@ -10,6 +10,8 @@ package io.harness.cdng.creator.plan.manifest;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
+import io.harness.cdng.manifest.ManifestType;
+import io.harness.cdng.manifest.ManifestsListConfigWrapper;
 import io.harness.cdng.manifest.steps.ManifestStep;
 import io.harness.cdng.manifest.steps.ManifestStepParameters;
 import io.harness.cdng.manifest.steps.ManifestStepParameters.ManifestStepParametersBuilder;
@@ -23,19 +25,22 @@ import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
+import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.yaml.ParameterField;
+import io.harness.serializer.KryoSerializer;
 import io.harness.steps.fork.ForkStepParameters;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import com.google.inject.Inject;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,9 +51,34 @@ import lombok.experimental.FieldDefaults;
 import lombok.experimental.UtilityClass;
 
 @OwnedBy(HarnessTeam.CDC)
-@UtilityClass
-public class ManifestsPlanCreator {
-  public PlanCreationResponse createPlanForManifestsNode(ServiceConfig serviceConfig, String finalManifestsId) {
+public class ManifestsPlanCreator extends ChildrenPlanCreator<ManifestsListConfigWrapper> {
+  @Inject KryoSerializer kryoSerializer;
+
+  private PlanCreationResponse createPlanForManifestNode(String identifier, ManifestInfo manifestInfo) {
+    PlanNode manifestPlanNode =
+        PlanNode.builder()
+            .uuid(UUIDGenerator.generateUuid())
+            .stepType(ManifestStep.STEP_TYPE)
+            .name(PlanCreatorConstants.MANIFEST_NODE_NAME)
+            .identifier(identifier)
+            .stepParameters(manifestInfo.getParams())
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                    .build())
+            .skipExpressionChain(false)
+            .build();
+    return PlanCreationResponse.builder().planNode(manifestPlanNode).build();
+  }
+
+  @Override
+  public LinkedHashMap<String, PlanCreationResponse> createPlanForChildrenNodes(
+      PlanCreationContext ctx, ManifestsListConfigWrapper config) {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    ServiceConfig serviceConfig = (ServiceConfig) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(YamlTypes.SERVICE_CONFIG).toByteArray());
+
     List<ManifestConfigWrapper> manifestListConfig =
         serviceConfig.getServiceDefinition().getServiceSpec().getManifests();
     ManifestListBuilder manifestListBuilder = new ManifestListBuilder(manifestListConfig);
@@ -56,50 +86,45 @@ public class ManifestsPlanCreator {
     manifestListBuilder.addStageOverrides(serviceConfig);
     ManifestList manifestList = manifestListBuilder.build();
     if (EmptyPredicate.isEmpty(manifestList.getManifests())) {
-      return PlanCreationResponse.builder().build();
+      return planCreationResponseMap;
     }
 
-    List<PlanNode> planNodes = new ArrayList<>();
     for (Map.Entry<String, ManifestInfo> entry : manifestList.getManifests().entrySet()) {
-      planNodes.add(createPlanForManifestNode(entry.getKey(), entry.getValue()));
+      PlanCreationResponse response = createPlanForManifestNode(entry.getKey(), entry.getValue());
+      planCreationResponseMap.put(response.getPlanNode().getUuid(), response);
     }
 
-    ForkStepParameters stepParameters =
-        ForkStepParameters.builder()
-            .parallelNodeIds(planNodes.stream().map(PlanNode::getUuid).collect(Collectors.toList()))
-            .build();
-    PlanNode manifestsNode =
-        PlanNode.builder()
-            .uuid(finalManifestsId)
-            .stepType(ManifestsStep.STEP_TYPE)
-            .name(PlanCreatorConstants.MANIFESTS_NODE_NAME)
-            .identifier(YamlTypes.MANIFEST_LIST_CONFIG)
-            .stepParameters(stepParameters)
-            .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder()
-                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
-                    .build())
-            .skipExpressionChain(false)
-            .build();
-    planNodes.add(manifestsNode);
-    return PlanCreationResponse.builder()
-        .nodes(planNodes.stream().collect(Collectors.toMap(PlanNode::getUuid, Function.identity())))
-        .build();
+    return planCreationResponseMap;
   }
 
-  private PlanNode createPlanForManifestNode(String identifier, ManifestInfo manifestInfo) {
+  @Override
+  public PlanNode createPlanForParentNode(
+      PlanCreationContext ctx, ManifestsListConfigWrapper config, List<String> childrenNodeIds) {
+    String manifestsId = (String) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
+    ForkStepParameters stepParameters = ForkStepParameters.builder().parallelNodeIds(childrenNodeIds).build();
     return PlanNode.builder()
-        .uuid(UUIDGenerator.generateUuid())
-        .stepType(ManifestStep.STEP_TYPE)
-        .name(PlanCreatorConstants.MANIFEST_NODE_NAME)
-        .identifier(identifier)
-        .stepParameters(manifestInfo.getParams())
+        .uuid(manifestsId)
+        .stepType(ManifestsStep.STEP_TYPE)
+        .name(PlanCreatorConstants.MANIFESTS_NODE_NAME)
+        .identifier(YamlTypes.MANIFEST_LIST_CONFIG)
+        .stepParameters(stepParameters)
         .facilitatorObtainment(
             FacilitatorObtainment.newBuilder()
-                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.SYNC).build())
+                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
                 .build())
         .skipExpressionChain(false)
         .build();
+  }
+
+  @Override
+  public Class<ManifestsListConfigWrapper> getFieldClass() {
+    return ManifestsListConfigWrapper.class;
+  }
+
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap(YamlTypes.MANIFEST_LIST_CONFIG, Collections.singleton(PlanCreatorUtils.ANY_TYPE));
   }
 
   @Value

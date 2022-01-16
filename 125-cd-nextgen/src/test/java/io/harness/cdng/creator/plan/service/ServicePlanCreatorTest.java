@@ -192,7 +192,7 @@ public class ServicePlanCreatorTest extends CDNGTestBase {
     String uuid = UUIDGenerator.generateUuid();
     ServiceConfig serviceConfig = ServiceConfig.builder().build();
     Map<String, ByteString> metadataDependency =
-        servicePlanCreator.prepareMetadataForArtifactsPlanCreator(uuid, serviceConfig);
+        servicePlanCreator.prepareMetadataForWithNodeIdAndServiceConfig(uuid, serviceConfig);
     assertThat(metadataDependency.size()).isEqualTo(2);
     assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
   }

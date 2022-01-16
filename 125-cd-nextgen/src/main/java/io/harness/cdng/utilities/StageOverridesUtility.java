@@ -25,7 +25,7 @@ public class StageOverridesUtility {
         + "artifacts:\n"
         + "  primary:\n"
         + "  sidecars: []\n"
-        + "manifest: []\n"
+        + "manifests: []\n"
         + "variables: []\n";
     YamlField overrideYamlField;
     try {
