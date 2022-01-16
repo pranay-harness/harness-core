@@ -56,8 +56,9 @@ public class SideCarsListArtifactsUtility {
   public YamlField createIndividualSideCarsArtifactYamlFieldAndSetYamlUpdate(
           YamlField sideCarsYamlField, String sideCarIdentifier, Map<String, YamlNode> mapIdentifierWithYamlNode, YamlUpdates.Builder yamlUpdates) {
     if(mapIdentifierWithYamlNode.containsKey(sideCarIdentifier)){
-      return new YamlField(mapIdentifierWithYamlNode.get(sideCarIdentifier));
+      return new YamlField(mapIdentifierWithYamlNode.get(sideCarIdentifier)).getNode().getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
     }
+    //TODO: NEED TO ADD CORRECT PARENT NODE
     YamlField individualSideCarYamlField =  new YamlField("[2]",
             new YamlNode(
                     "[2]", SideCarsListArtifactsUtility.getIndividualSideCarsListJsonNode(sideCarIdentifier), sideCarsYamlField.getNode()));
