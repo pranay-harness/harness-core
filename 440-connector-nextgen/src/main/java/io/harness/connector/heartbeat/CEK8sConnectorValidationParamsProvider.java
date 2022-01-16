@@ -11,10 +11,10 @@ import io.harness.beans.IdentifierRef;
 import io.harness.connector.ConnectorInfoDTO;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.utils.CCMKubernetesConnectorHelper;
 import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.cek8s.CEKubernetesClusterConfigDTO;
 import io.harness.exception.InvalidRequestException;
-import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -22,7 +22,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 public class CEK8sConnectorValidationParamsProvider extends K8sConnectorValidationParamsProvider {
-  @Inject @Named("defaultConnectorService") ConnectorService connectorService;
+  @Inject @Named("defaultConnectorService") private ConnectorService connectorService;
 
   @Override
   public ConnectorValidationParams getConnectorValidationParams(ConnectorInfoDTO connectorInfoDTO, String connectorName,
@@ -43,8 +43,9 @@ public class CEK8sConnectorValidationParamsProvider extends K8sConnectorValidati
 
   private Optional<ConnectorInfoDTO> getReferencedConnectorConfig(@NotNull String scopedConnectorIdentifier,
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(
+    IdentifierRef connectorRef = CCMKubernetesConnectorHelper.getReferencedConnectorIdentifier(
         scopedConnectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+
     Optional<ConnectorResponseDTO> connectorResponseDTO = connectorService.get(connectorRef.getAccountIdentifier(),
         connectorRef.getOrgIdentifier(), connectorRef.getProjectIdentifier(), connectorRef.getIdentifier());
     return connectorResponseDTO.map(ConnectorResponseDTO::getConnector);

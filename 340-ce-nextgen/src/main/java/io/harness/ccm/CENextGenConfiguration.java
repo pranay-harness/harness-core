@@ -23,6 +23,8 @@ import io.harness.grpc.client.GrpcClientConfig;
 import io.harness.mongo.MongoConfig;
 import io.harness.remote.CEAzureSetupConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secret.ConfigSecret;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.timescaledb.TimeScaleDBConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -72,30 +74,32 @@ public class CENextGenConfiguration extends Configuration {
   public static final String ENFORCEMENT_CLIENT_PACKAGE = "io.harness.enforcement.client.resources";
 
   @JsonProperty("swagger") private SwaggerBundleConfiguration swaggerBundleConfiguration;
-  @Setter @JsonProperty("events-mongo") private MongoConfig eventsMongoConfig;
+  @Setter @JsonProperty("events-mongo") @ConfigSecret private MongoConfig eventsMongoConfig;
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerClientConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerClientConfig;
   @JsonProperty("grpcClient") private GrpcClientConfig grpcClientConfig;
   @JsonProperty(value = "enableAuth", defaultValue = "false") private boolean enableAuth;
-  @JsonProperty("ngManagerServiceSecret") private String ngManagerServiceSecret;
-  @JsonProperty("jwtAuthSecret") private String jwtAuthSecret;
-  @JsonProperty("jwtIdentityServiceSecret") private String jwtIdentityServiceSecret;
+  @JsonProperty("ngManagerServiceSecret") @ConfigSecret private String ngManagerServiceSecret;
+  @JsonProperty("jwtAuthSecret") @ConfigSecret private String jwtAuthSecret;
+  @JsonProperty("jwtIdentityServiceSecret") @ConfigSecret private String jwtIdentityServiceSecret;
   @JsonProperty("enforcementClientConfiguration") EnforcementClientConfiguration enforcementClientConfiguration;
 
   @JsonProperty(defaultValue = "KUBERNETES") private DeployMode deployMode = DeployMode.KUBERNETES;
   @JsonProperty(value = "featureFlagsEnabled", defaultValue = "") private String featureFlagsEnabled;
-  @JsonProperty("cfClientConfig") private CfClientConfig cfClientConfig;
+  @JsonProperty("cfClientConfig") @ConfigSecret private CfClientConfig cfClientConfig;
   @JsonProperty("featureFlagConfig") private FeatureFlagConfig featureFlagConfig;
-  @JsonProperty("eventsFramework") private EventsFrameworkConfiguration eventsFrameworkConfiguration;
-  @JsonProperty("timescaledb") private TimeScaleDBConfig timeScaleDBConfig;
+  @JsonProperty("eventsFramework") @ConfigSecret private EventsFrameworkConfiguration eventsFrameworkConfiguration;
+  @JsonProperty("timescaledb") @ConfigSecret private TimeScaleDBConfig timeScaleDBConfig;
 
   @JsonProperty(value = "gcpConfig") private GcpConfig gcpConfig;
-  @JsonProperty(value = "ceAzureSetupConfig") private CEAzureSetupConfig ceAzureSetupConfig;
-  @JsonProperty(value = "awsConfig") private AwsConfig awsConfig;
+  @JsonProperty(value = "ceAzureSetupConfig") @ConfigSecret private CEAzureSetupConfig ceAzureSetupConfig;
+  @JsonProperty(value = "awsConfig") @ConfigSecret private AwsConfig awsConfig;
 
   @JsonProperty(value = "hostname") private String hostname;
   @JsonProperty(value = "basePathPrefix") private String basePathPrefix;
+
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
 
   public SwaggerBundleConfiguration getSwaggerBundleConfiguration() {
     SwaggerBundleConfiguration defaultSwaggerConf = new SwaggerBundleConfiguration();

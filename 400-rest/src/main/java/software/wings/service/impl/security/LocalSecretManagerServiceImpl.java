@@ -19,8 +19,10 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.EncryptedData;
 import io.harness.beans.EncryptedData.EncryptedDataKeys;
 import io.harness.beans.SecretManagerConfig.SecretManagerConfigKeys;
+import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.exception.SecretManagementException;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.security.encryption.EncryptionType;
 
@@ -46,6 +48,7 @@ public class LocalSecretManagerServiceImpl extends AbstractSecretServiceImpl imp
   @Inject protected WingsPersistence wingsPersistence;
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private KmsEncryptorsRegistry kmsEncryptorsRegistry;
+  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @Override
   public LocalEncryptionConfig getEncryptionConfig(String accountId) {
@@ -86,8 +89,11 @@ public class LocalSecretManagerServiceImpl extends AbstractSecretServiceImpl imp
   public void validateLocalEncryptionConfig(String accountId, LocalEncryptionConfig localEncryptionConfig) {
     String randomString = generateUuid();
     try {
-      kmsEncryptorsRegistry.getKmsEncryptor(localEncryptionConfig)
-          .encryptSecret(accountId, randomString, localEncryptionConfig);
+      KmsEncryptor kmsEncryptor = kmsEncryptorsRegistry.getKmsEncryptor(localEncryptionConfig);
+      if (localEncryptorHelper.isLocalEncryptor(kmsEncryptor)) {
+        localEncryptorHelper.populateConfigForEncryption(localEncryptionConfig);
+      }
+      kmsEncryptor.encryptSecret(accountId, randomString, localEncryptionConfig);
     } catch (Exception e) {
       String message = "Contact Harness Support, not able to encrypt using the local secret manager.";
       throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, message, e, USER);

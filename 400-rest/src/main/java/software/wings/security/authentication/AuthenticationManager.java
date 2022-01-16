@@ -572,7 +572,6 @@ public class AuthenticationManager {
 
   public Response oauth2Redirect(final String provider) {
     OauthProviderType oauthProvider = OauthProviderType.valueOf(provider.toUpperCase());
-    oauthOptions.getRedirectURI(oauthProvider);
     String returnURI = oauthOptions.getRedirectURI(oauthProvider);
     try {
       return Response.seeOther(new URI(returnURI)).build();

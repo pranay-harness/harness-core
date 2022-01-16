@@ -73,7 +73,7 @@ public class PipelineExecutorTest extends CategoryTest {
   String pipelineBranch = null;
   String pipelineRepoId = null;
 
-  PipelineEntity pipelineEntity = PipelineEntity.builder().build();
+  PipelineEntity pipelineEntity = PipelineEntity.builder().allowStageExecutions(true).build();
   ExecutionTriggerInfo executionTriggerInfo = ExecutionTriggerInfo.newBuilder().build();
   ExecutionMetadata metadata = ExecutionMetadata.newBuilder().build();
   PlanExecutionMetadata planExecutionMetadata = PlanExecutionMetadata.builder().build();

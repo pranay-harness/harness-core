@@ -23,7 +23,6 @@ import io.harness.concurrent.HTimeLimiter;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
-import io.harness.exception.SecretManagementException;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
 import io.harness.security.encryption.EncryptedRecordData.EncryptedRecordDataBuilder;
@@ -203,9 +202,7 @@ public class AwsSecretsManagerEncryptor implements VaultEncryptor {
       // which means the connectivity to AWS Secrets Manger is ok.
     } catch (AWSSecretsManagerException e) {
       log.error("AWS_SECRETS_MANAGER_OPERATION_ERROR : validateSecretManagerConfiguration {}", e.getErrorMessage());
-      String message =
-          "Was not able to reach AWS Secrets Manager using given credentials. Please check your credentials and try again";
-      throw new SecretManagementException(AWS_SECRETS_MANAGER_OPERATION_ERROR, message, e, USER);
+      throw e;
     }
     log.info("Test connection to AWS Secrets Manager Succeeded for {}", secretsManagerConfig.getName());
     return true;

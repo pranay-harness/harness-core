@@ -32,9 +32,22 @@ public class HintException extends WingsException {
   public static final String HINT_AWS_ACCESS_DENIED = "Please ensure AWS credentials are valid";
   public static final String HINT_UNEXPECTED_ERROR = "Please reach out to harness support team";
   public static final String HINT_GCP_ACCESS_DENIED = "Please ensure GCP credentials are valid";
-  public static final String HINT_GCR_IMAGE_NAME = "Check if GCR image name is correct";
-  public static final String HINT_DOCKER_HUB_IMAGE_NAME = "Check if given Docker image is available in Docker registry";
+  public static final String HINT_GCR_IMAGE_NAME = "Verify that the GCR image name is valid.";
+  public static final String HINT_DOCKER_HUB_IMAGE_NAME =
+      "Check if the Docker image you are looking for is in the Docker registry.";
   public static final String HINT_DOCKER_HUB_ACCESS_DENIED = "Please ensure DockerHub credentials are valid";
+  public static final String HINT_AWS_SM_ACCESS_DENIED = "Please ensure AWS Secret Manager credentials are valid";
+  public static final String HINT_AWS_KMS_ACCESS_DENIED = "Please ensure AWS KMS secret key and accessKey are valid";
+  public static final String HINT_AWS_SM_KMS_KEY = "Please ensure the provided KMS key is valid";
+  public static final String HINT_AWS_SM_NEXTTOKEN = "Please ensure the provided NextToken value is valid";
+  public static final String HINT_AWS_SM_PARAMETERS_NAME = "Please ensure the provided name of parameter is valid";
+  public static final String HINT_AZURE_VAULT_SM_ACCESS_DENIED = "Please ensure Azure Vault credentials are valid";
+  public static final String HINT_AZURE_VAULT_FETCH_FAILED =
+      "Please ensure the client Id, Tenant Id, Subscription and Secret key is Valid.";
+  public static final String HINT_AZURE_VAULT_SM_CRUD_DENIED =
+      "Please ensure Azure Vault engine have valid permissions";
+  public static final String HINT_AZURE_VAULT_SM_SUBSCRIPTION_ID_ERROR = "Please ensure Subscription ID is valid";
+  public static final String HINT_HASHICORP_VAULT_SM_ACCESS_DENIED = "Please ensure Azure Vault credentials are valid";
   public static final String HINT_INVALID_TAG_REFER_LINK_GCR =
       "Please check if tag is available. Refer https://cloud.google.com/sdk/gcloud/reference/container/images/list-tags for more information";
   public static final String HINT_INVALID_IMAGE_REFER_LINK_GCR =

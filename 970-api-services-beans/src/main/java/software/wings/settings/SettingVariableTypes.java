@@ -288,6 +288,8 @@ public enum SettingVariableTypes {
 
   GIT_NG("Git Ng"),
 
+  SSO_SAML("SSO SAML"),
+
   GCP_SECRETS_MANAGER,
 
   TRIGGER;

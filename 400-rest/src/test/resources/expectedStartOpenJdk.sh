@@ -209,8 +209,8 @@ if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
 fi
 
 if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
-echo "No JRE available. Exiting."
-exit 1
+  echo "No JRE available. Exiting."
+  exit 1
 fi
 
 echo "Checking Watcher latest version..."
@@ -219,15 +219,15 @@ REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/watche
 export DEPLOY_MODE=KUBERNETES
 
 if [[ $DEPLOY_MODE == "KUBERNETES" ]]; then
-REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+    REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 else
-REMOTE_WATCHER_URL=http://localhost:9500/builds/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+    REMOTE_WATCHER_URL=http://localhost:9500/builds/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]; then
-echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
-curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
+  echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
+  curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
   if [[ $REMOTE_WATCHER_VERSION != $WATCHER_CURRENT_VERSION ]]; then

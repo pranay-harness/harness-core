@@ -21,6 +21,7 @@ import static io.harness.pcf.CfCommandUnitConstants.CheckExistingApps;
 import static io.harness.pcf.CfCommandUnitConstants.FetchCustomFiles;
 import static io.harness.pcf.CfCommandUnitConstants.FetchGitFiles;
 import static io.harness.pcf.CfCommandUnitConstants.PcfSetup;
+import static io.harness.pcf.CfCommandUnitConstants.VerifyManifests;
 import static io.harness.pcf.CfCommandUnitConstants.Wrapup;
 import static io.harness.pcf.model.PcfConstants.DEFAULT_PCF_TASK_TIMEOUT_MIN;
 import static io.harness.pcf.model.PcfConstants.INFRA_ROUTE;
@@ -979,6 +980,7 @@ public class PcfSetupState extends State {
     if (valuesInCustomSource) {
       canaryCommandUnits.add(new PcfDummyCommandUnit(FetchCustomFiles));
     }
+    canaryCommandUnits.add(new PcfDummyCommandUnit(VerifyManifests));
     canaryCommandUnits.add(new PcfDummyCommandUnit(CheckExistingApps));
     canaryCommandUnits.add(new PcfDummyCommandUnit(PcfSetup));
     canaryCommandUnits.add(new PcfDummyCommandUnit(Wrapup));

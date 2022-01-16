@@ -62,6 +62,7 @@ public class PlanExecutionResourceTest extends CategoryTest {
     String yaml = "pipeline:\n"
         + "  identifier: p1\n"
         + "  name: p1\n"
+        + "  allowStageExecutions: true\n"
         + "  stages:\n"
         + "  - stage:\n"
         + "      identifier: qaStage\n"
@@ -78,6 +79,7 @@ public class PlanExecutionResourceTest extends CategoryTest {
                  .identifier(PIPELINE_IDENTIFIER)
                  .name(PIPELINE_IDENTIFIER)
                  .yaml(yaml)
+                 .allowStageExecutions(true)
                  .build();
   }
 

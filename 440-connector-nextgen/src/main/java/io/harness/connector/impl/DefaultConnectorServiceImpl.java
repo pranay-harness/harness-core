@@ -774,10 +774,11 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
       }
       return validationFailureBuilder.build();
     } catch (WingsException wingsException) {
-      // handle flows which are registered to error handlng framework
+      log.error("An error occurred while validating the Connector ", wingsException);
+      // handle flows which are registered to error handling framework
       throw wingsException;
     } catch (Exception ex) {
-      log.info("Encountered Error while validating the connector {}",
+      log.error("An error occurred while validating the Connector {}",
           String.format(CONNECTOR_STRING, connectorInfo.getIdentifier(), accountIdentifier,
               connectorInfo.getOrgIdentifier(), connectorInfo.getProjectIdentifier()),
           ex);

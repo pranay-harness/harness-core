@@ -84,6 +84,7 @@ import io.harness.delegate.beans.FileMetadata;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.provision.TerragruntConstants;
 import io.harness.provision.TfVarSource;
 import io.harness.provision.TfVarSource.TfVarSourceType;
@@ -178,6 +179,7 @@ public abstract class TerragruntProvisionState extends State {
   @Inject protected SweepingOutputService sweepingOutputService;
   @Inject protected TerragruntStateHelper terragruntStateHelper;
   @Inject protected TerraformPlanHelper terraformPlanHelper;
+  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @FieldNameConstants.Include @Attributes(title = "Provisioner") @Getter @Setter String provisionerId;
 
@@ -248,6 +250,10 @@ public abstract class TerragruntProvisionState extends State {
         ? terragruntStateHelper.getSecretManagerContainingTfPlan(
             terragruntProvisioner.getSecretManagerId(), context.getAccountId())
         : null;
+
+    if (localEncryptorHelper.isLocalManagerConfig(secretManagerConfig)) {
+      localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+    }
 
     String path = context.renderExpression(terragruntProvisioner.getNormalizedPath());
     if (path == null) {
@@ -499,6 +505,14 @@ public abstract class TerragruntProvisionState extends State {
         ? terragruntStateHelper.getSecretManagerContainingTfPlan(
             terragruntProvisioner.getSecretManagerId(), context.getAccountId())
         : null;
+
+    if (localEncryptorHelper.isLocalManagerConfig(secretManagerConfig)) {
+      if (element.getEncryptedTfPlan() == null) {
+        localEncryptorHelper.populateConfigForEncryption(secretManagerConfig);
+      } else {
+        localEncryptorHelper.populateConfigForDecryption(element.getEncryptedTfPlan(), secretManagerConfig);
+      }
+    }
 
     ExecutionContextImpl executionContext = (ExecutionContextImpl) context;
     TerragruntProvisionParameters parameters =

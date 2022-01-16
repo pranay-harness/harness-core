@@ -80,4 +80,8 @@ public class ValidateSecretManagerConfigurationTask extends AbstractDelegateRunn
     boolean isConfigValid = kmsEncryptor.validateKmsConfiguration(encryptionConfig.getAccountId(), encryptionConfig);
     return ValidateSecretManagerConfigurationTaskResponse.builder().isConfigurationValid(isConfigValid).build();
   }
+
+  public boolean isSupportingErrorFramework() {
+    return true;
+  }
 }

@@ -9,8 +9,11 @@ package io.harness.delegate.exceptionhandler.handler;
 
 import static io.harness.eraro.ErrorCode.AWS_ACCESS_DENIED;
 import static io.harness.eraro.ErrorCode.AWS_CLUSTER_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.AWS_SERVICE_NOT_FOUND;
 import static io.harness.eraro.ErrorCode.IMAGE_NOT_FOUND;
+import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
+import static io.harness.exception.NestedExceptionUtils.hintWithExplanationException;
 import static io.harness.exception.WingsException.USER;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -40,6 +43,11 @@ import com.amazonaws.services.ecr.model.RepositoryNotFoundException;
 import com.amazonaws.services.ecs.model.AmazonECSException;
 import com.amazonaws.services.ecs.model.ClusterNotFoundException;
 import com.amazonaws.services.ecs.model.ServiceNotFoundException;
+import com.amazonaws.services.kms.model.AWSKMSException;
+import com.amazonaws.services.secretsmanager.model.AWSSecretsManagerException;
+import com.amazonaws.services.secretsmanager.model.DecryptionFailureException;
+import com.amazonaws.services.secretsmanager.model.EncryptionFailureException;
+import com.amazonaws.services.secretsmanager.model.InvalidNextTokenException;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Singleton;
 import java.util.Map;
@@ -124,8 +132,38 @@ public class AmazonServiceExceptionHandler implements ExceptionHandler {
         log.info("Nothing to update on stack" + ex.getMessage());
       }
       return new InvalidRequestException(ex.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
+    } else if (ex instanceof AWSSecretsManagerException) {
+      return handleAWSSmException(ex);
+    } else if (ex instanceof AWSKMSException) {
+      return handleAWSKMSException(ex);
     } else {
       return new InvalidRequestException(ex.getMessage(), AWS_SERVICE_NOT_FOUND, USER);
     }
+  }
+
+  private WingsException handleAWSSmException(Exception ex) {
+    if (ex instanceof DecryptionFailureException) {
+      return hintWithExplanationException(
+          HintException.HINT_AWS_SM_KMS_KEY, ExplanationException.AWS_SM_DECRYPTION_FAILURE, ex);
+    } else if (ex instanceof EncryptionFailureException) {
+      return hintWithExplanationException(
+          HintException.HINT_AWS_SM_KMS_KEY, ExplanationException.AWS_SM_ENCRYPTION_FAILURE, ex);
+    } else if (ex instanceof InvalidNextTokenException) {
+      return hintWithExplanationException(
+          HintException.HINT_AWS_SM_NEXTTOKEN, ExplanationException.AWS_SM_INVALID_TOKEN, ex);
+    } else if (ex instanceof com.amazonaws.services.secretsmanager.model.InvalidParameterException) {
+      return hintWithExplanationException(
+          HintException.HINT_AWS_SM_PARAMETERS_NAME, ExplanationException.AWS_SM_INVALID_PARAMETER_NAME, ex);
+    } else {
+      return hintWithExplanationException(HintException.HINT_AWS_SM_ACCESS_DENIED,
+          ExplanationException.INVALID_PARAMETER,
+          new InvalidRequestException(ex.getMessage(), AWS_SECRETS_MANAGER_OPERATION_ERROR, USER));
+    }
+  }
+
+  private WingsException handleAWSKMSException(Exception ex) {
+    return hintWithExplanationException(HintException.HINT_AWS_KMS_ACCESS_DENIED,
+        ExplanationException.INVALID_PARAMETER,
+        new InvalidRequestException(ex.getMessage(), KMS_OPERATION_ERROR, USER));
   }
 }

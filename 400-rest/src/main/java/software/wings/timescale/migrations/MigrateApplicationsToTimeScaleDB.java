@@ -40,7 +40,8 @@ public class MigrateApplicationsToTimeScaleDB {
   private static final String insert_statement =
       "INSERT INTO CG_APPLICATIONS (ID,NAME,ACCOUNT_ID,CREATED_AT,LAST_UPDATED_AT,CREATED_BY,LAST_UPDATED_BY) VALUES (?,?,?,?,?,?,?)";
 
-  private static final String update_statement = "UPDATE CG_APPLICATIONS SET NAME=? WHERE ID=?";
+  private static final String update_statement =
+      "UPDATE CG_APPLICATIONS SET NAME=?, ACCOUNT_ID=?, CREATED_AT=?, LAST_UPDATED_AT=?, CREATED_BY=?, LAST_UPDATED_BY=? WHERE ID=?";
 
   private static final String query_statement = "SELECT * FROM CG_APPLICATIONS WHERE ID=?";
 
@@ -134,6 +135,20 @@ public class MigrateApplicationsToTimeScaleDB {
 
   private void updateDataInTimeScaleDB(
       Application application, Connection connection, PreparedStatement updateStatement) throws SQLException {
-    log.info("Update operation is not supported");
+    updateStatement.setString(1, application.getName());
+    updateStatement.setString(2, application.getAccountId());
+    updateStatement.setLong(3, application.getCreatedAt());
+    updateStatement.setLong(4, application.getLastUpdatedAt());
+
+    String created_by = null;
+    if (application.getCreatedBy() != null) {
+      created_by = application.getCreatedBy().getName();
+    }
+    updateStatement.setString(4, created_by);
+    updateStatement.setString(
+        6, application.getLastUpdatedBy() != null ? application.getLastUpdatedBy().getName() : null);
+    updateStatement.setString(7, application.getAppId());
+
+    updateStatement.execute();
   }
 }

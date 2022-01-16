@@ -101,6 +101,7 @@ import io.harness.ng.core.account.OauthProviderType;
 import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.Subject;
 import io.harness.persistence.HIterator;
+import io.harness.persistence.HPersistence;
 import io.harness.reflection.ReflectionUtils;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.seeddata.SampleDataProviderService;
@@ -298,6 +299,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject @Named(EventsFrameworkConstants.ENTITY_CRUD) private Producer eventProducer;
   @Inject private RemoteObserverInformer remoteObserverInformer;
   @Inject private DelegateNgTokenService delegateNgTokenService;
+  @Inject private HPersistence persistence;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -980,8 +982,12 @@ public class AccountServiceImpl implements AccountService {
                     .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
                     .project("delegateConfiguration", true)
                     .get();
+      return account.getDelegateConfiguration();
     }
-    return account.getDelegateConfiguration();
+    return DelegateConfiguration.builder()
+        .accountVersion(true)
+        .delegateVersions(account.getDelegateConfiguration().getDelegateVersions())
+        .build();
   }
 
   @Override
@@ -1994,5 +2000,24 @@ public class AccountServiceImpl implements AccountService {
         // Nothing to do by default
     }
     return builder.build();
+  }
+
+  @Override
+  public boolean updateRingName(String accountId, String ringName) {
+    Account account = getFromCache(accountId);
+    if (account == null) {
+      log.warn("accountId={} doesn't exist", accountId);
+      return false;
+    }
+    UpdateOperations<Account> updateOperations = persistence.createUpdateOperations(Account.class);
+    updateOperations.set(AccountKeys.ringName, ringName);
+    UpdateResults updateResults =
+        persistence.update(persistence.createQuery(Account.class).filter(Mapper.ID_KEY, accountId), updateOperations);
+    if (updateResults != null && updateResults.getUpdatedCount() > 0) {
+      log.info("Successfully updated ring name to {} for accountId = {} ", ringName, accountId);
+      return true;
+    }
+    log.info("Failed to update ring name to {} for accountId = {} ", ringName, accountId);
+    return false;
   }
 }

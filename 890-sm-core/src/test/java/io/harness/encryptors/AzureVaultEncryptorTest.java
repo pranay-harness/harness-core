@@ -36,6 +36,7 @@ import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.models.KeyVaultErrorException;
 import com.microsoft.azure.keyvault.models.SecretBundle;
 import com.microsoft.azure.keyvault.requests.SetSecretRequest;
+import com.microsoft.rest.RestException;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.Before;
 import org.junit.Test;
@@ -109,7 +110,9 @@ public class AzureVaultEncryptorTest extends CategoryTest {
         .thenThrow(new KeyVaultErrorException("Dummy error", null));
     try {
       azureVaultEncryptor.createSecret(azureVaultConfig.getAccountId(), name, plainText, azureVaultConfig);
-      fail("Create secret should have thrown an error");
+      fail("An error occurred while creating the secret.");
+    } catch (RestException e) {
+      // this catch block is to satisfy the error handling framework
     } catch (SecretManagementDelegateException e) {
       assertThat(e.getCause()).isOfAnyClassIn(SecretManagementDelegateException.class);
     }
@@ -158,7 +161,9 @@ public class AzureVaultEncryptorTest extends CategoryTest {
         .thenThrow(new KeyVaultErrorException("Dummy error", null));
     try {
       azureVaultEncryptor.updateSecret(azureVaultConfig.getAccountId(), name, plainText, oldRecord, azureVaultConfig);
-      fail("Update secret should have thrown an error");
+      fail("An error occurred while updating the secret.");
+    } catch (RestException e) {
+      // this catch block is to satisfy the error handling framework
     } catch (SecretManagementDelegateException e) {
       assertThat(e.getCause()).isOfAnyClassIn(SecretManagementDelegateException.class);
     }

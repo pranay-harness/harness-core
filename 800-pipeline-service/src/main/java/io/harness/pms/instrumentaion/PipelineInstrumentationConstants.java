@@ -18,6 +18,8 @@ public class PipelineInstrumentationConstants {
   public static String LEVEL = "level";
   public static String STAGE_TYPES = "stage_types";
   public static String STEP_TYPES = "step_types";
+  public static String FAILED_STEPS = "failed_steps";
+  public static String FAILED_STEP_TYPES = "failed_step_types";
   public static String TRIGGER_TYPE = "trigger_type";
   public static String STATUS = "status";
   public static String IS_RERUN = "is_rerun";

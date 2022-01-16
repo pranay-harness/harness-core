@@ -18,6 +18,7 @@ import static io.harness.rule.OwnerRule.SAINATH;
 import static io.harness.rule.OwnerRule.TATHAGAT;
 import static io.harness.rule.OwnerRule.TMACARI;
 import static io.harness.rule.OwnerRule.UTKARSH;
+import static io.harness.rule.OwnerRule.VIKAS_M;
 import static io.harness.shell.AuthenticationScheme.SSH_KEY;
 
 import static software.wings.beans.SettingAttribute.Builder.aSettingAttribute;
@@ -30,6 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyListOf;
@@ -50,6 +52,7 @@ import io.harness.beans.EncryptedData;
 import io.harness.category.element.UnitTests;
 import io.harness.ccm.setup.service.support.intfc.AWSCEConfigValidationService;
 import io.harness.data.structure.UUIDGenerator;
+import io.harness.delegate.NoEligibleDelegatesInAccountException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -87,6 +90,7 @@ import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.delegatetasks.cv.DataCollectionException;
 import software.wings.delegatetasks.cv.RequestExecutor;
 import software.wings.dl.WingsPersistence;
+import software.wings.helpers.ext.mail.SmtpConfig;
 import software.wings.service.impl.analysis.APMDelegateService;
 import software.wings.service.impl.analysis.ElkConnector;
 import software.wings.service.impl.gcp.GcpHelperServiceManager;
@@ -107,6 +111,7 @@ import software.wings.service.intfc.newrelic.NewRelicService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.splunk.SplunkDelegateService;
 import software.wings.service.intfc.sumo.SumoDelegateService;
+import software.wings.settings.validation.ConnectivityValidationDelegateResponse;
 
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
@@ -117,7 +122,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
@@ -162,6 +169,7 @@ public class SettingValidationServiceTest extends WingsBaseTest {
   private SplunkDelegateService spySplunkDelegateService;
   private RequestExecutor spyRequestExecutor;
   private Query<SettingAttribute> spyQuery;
+  private static final String NG_SMTP_SETTINGS_PREFIX = "ngSmtpConfig-";
 
   @Rule public ExpectedException thrown = ExpectedException.none();
 
@@ -1184,5 +1192,64 @@ public class SettingValidationServiceTest extends WingsBaseTest {
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
     assertThat(delegateSelectors).containsExactlyInAnyOrder("aws-delegate", "gcp-delegate");
+  }
+
+  private SmtpConfig createSmtpConfig() {
+    return SmtpConfig.builder()
+        .host("HOST")
+        .port(0)
+        .fromAddress("fromAddress@harness.io")
+        .username("userName")
+        .accountId("AccountId")
+        .build();
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void testValidateConnectivitySmtpNg_withNgDelegateAvailable()
+      throws InterruptedException, IllegalAccessException {
+    DelegateService delegateService = mock(DelegateService.class);
+    FieldUtils.writeField(settingValidationService, "delegateService", delegateService, true);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(createSmtpConfig());
+    settingAttribute.setName(NG_SMTP_SETTINGS_PREFIX + "dummy");
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(null);
+    ConnectivityValidationDelegateResponse response =
+        ConnectivityValidationDelegateResponse.builder().valid(true).build();
+    when(delegateService.executeTask(any(DelegateTask.class))).thenReturn(response);
+    assertThat(settingValidationService.validateConnectivity(settingAttribute).isValid()).isEqualTo(true);
+    ArgumentCaptor<DelegateTask> taskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).executeTask(taskArgumentCaptor.capture());
+    DelegateTask delegateTask = taskArgumentCaptor.getValue();
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("ng", "true");
+    assertThat(delegateTask.getSetupAbstractions()).isEqualTo(setupAbstractions);
+  }
+
+  @Test
+  @Owner(developers = VIKAS_M)
+  @Category(UnitTests.class)
+  public void testValidateConnectivitySmtpNg_withNgDelegateUnAvailable()
+      throws InterruptedException, IllegalAccessException, InvalidRequestException {
+    DelegateService delegateService = mock(DelegateService.class);
+    FieldUtils.writeField(settingValidationService, "delegateService", delegateService, true);
+    SettingAttribute settingAttribute = new SettingAttribute();
+    settingAttribute.setValue(createSmtpConfig());
+    settingAttribute.setName(NG_SMTP_SETTINGS_PREFIX + "dummy");
+    when(secretManager.getEncryptionDetails(any(), any(), any())).thenReturn(null);
+    when(delegateService.executeTask(any(DelegateTask.class))).thenThrow(new NoEligibleDelegatesInAccountException());
+    try {
+      settingValidationService.validateConnectivity(settingAttribute);
+      fail("The delegate task executed should have thrown error.");
+    } catch (NoEligibleDelegatesInAccountException e) {
+      assertThat(e.getMessage()).isEqualTo("No eligible delegates to execute task");
+    }
+    ArgumentCaptor<DelegateTask> taskArgumentCaptor = ArgumentCaptor.forClass(DelegateTask.class);
+    verify(delegateService, times(1)).executeTask(taskArgumentCaptor.capture());
+    DelegateTask delegateTask = taskArgumentCaptor.getValue();
+    Map<String, String> setupAbstractions = new HashMap<>();
+    setupAbstractions.put("ng", "true");
+    assertThat(delegateTask.getSetupAbstractions()).isEqualTo(setupAbstractions);
   }
 }

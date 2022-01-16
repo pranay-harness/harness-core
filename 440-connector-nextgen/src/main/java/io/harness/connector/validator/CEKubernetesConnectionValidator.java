@@ -16,6 +16,7 @@ import io.harness.connector.ConnectivityStatus;
 import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.connector.services.ConnectorService;
+import io.harness.connector.utils.CCMKubernetesConnectorHelper;
 import io.harness.connector.validator.scmValidators.AbstractKubernetesConnectorValidator;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.connector.CEFeatures;
@@ -26,7 +27,6 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterConfigDT
 import io.harness.delegate.beans.connector.k8Connector.KubernetesConnectionTaskResponse;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.security.encryption.EncryptedDataDetail;
-import io.harness.utils.IdentifierRefHelper;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -89,7 +89,7 @@ public class CEKubernetesConnectionValidator extends AbstractKubernetesConnector
       T connectorConfig, String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     CEKubernetesClusterConfigDTO ceKubernetesClusterConfigDTO = (CEKubernetesClusterConfigDTO) connectorConfig;
 
-    final IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(
+    final IdentifierRef connectorRef = CCMKubernetesConnectorHelper.getReferencedConnectorIdentifier(
         ceKubernetesClusterConfigDTO.getConnectorRef(), accountIdentifier, orgIdentifier, projectIdentifier);
 
     Optional<ConnectorConfigDTO> kubernetesConnectorConfigDTO = getReferencedConnectorConfig(connectorRef);

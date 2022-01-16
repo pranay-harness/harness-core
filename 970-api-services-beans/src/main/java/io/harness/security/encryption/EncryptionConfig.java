@@ -10,6 +10,9 @@ package io.harness.security.encryption;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 
+import java.util.HashMap;
+import java.util.Map;
+
 @TargetModule(HarnessModule._980_COMMONS)
 public interface EncryptionConfig {
   /**
@@ -72,4 +75,15 @@ public interface EncryptionConfig {
    * Return true if this secret manager is associated with __GLOBAL_ACCOUNT_ID__ is of type KMS.
    */
   boolean isGlobalKms();
+
+  /**
+   * Get secret key, currently added for local encryption
+   */
+  default SecretKeyDTO getSecretKeySpec() {
+    throw new UnsupportedOperationException("Secret Key isn't supported for this type of encryption");
+  }
+
+  default Map<String, Boolean> getEncryptionFeatureFlagStatus() {
+    return new HashMap<>();
+  }
 }

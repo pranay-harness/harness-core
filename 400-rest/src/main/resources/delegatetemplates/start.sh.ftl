@@ -147,7 +147,7 @@ fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
 if [ ! -e watcher.jar ]; then
-echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
+  echo "Downloading Watcher $REMOTE_WATCHER_VERSION ..."
 curl $MANAGER_PROXY_CURL -#k $REMOTE_WATCHER_URL -o watcher.jar
 else
   WATCHER_CURRENT_VERSION=$(jar_app_version watcher.jar)
