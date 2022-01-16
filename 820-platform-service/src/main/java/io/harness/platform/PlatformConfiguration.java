@@ -17,6 +17,8 @@ import io.harness.platform.notification.NotificationServiceConfiguration;
 import io.harness.reflection.HarnessReflections;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroup.ResourceGroupServiceConfig;
+import io.harness.secret.ConfigSecret;
+import io.harness.secret.SecretsConfiguration;
 import io.harness.threading.ThreadPoolConfig;
 
 import ch.qos.logback.access.spi.IAccessEvent;
@@ -52,20 +54,28 @@ public class PlatformConfiguration extends Configuration {
   public static final String RESOURCEGROUP_PACKAGE = "io.harness.resourcegroup";
   public static final String ENFORCEMENT_PACKAGE = "io.harness.enforcement.client.resources";
 
-  @Setter @JsonProperty("notificationServiceConfig") private NotificationServiceConfiguration notificationServiceConfig;
+  @Setter
+  @JsonProperty("notificationServiceConfig")
+  @ConfigSecret
+  private NotificationServiceConfiguration notificationServiceConfig;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
   @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
-  @JsonProperty("resourceGroupServiceConfig") private ResourceGroupServiceConfig resoureGroupServiceConfig;
+  @JsonProperty("resourceGroupServiceConfig")
+  @ConfigSecret
+  private ResourceGroupServiceConfig resoureGroupServiceConfig;
 
   @JsonProperty("allowedOrigins") private List<String> allowedOrigins = Lists.newArrayList();
   @JsonProperty("managerClientConfig") private ServiceHttpClientConfig managerServiceConfig;
   @JsonProperty("ngManagerClientConfig") private ServiceHttpClientConfig ngManagerServiceConfig;
   @JsonProperty("rbacServiceConfig") private ServiceHttpClientConfig rbacServiceConfig;
-  @JsonProperty("secrets") private PlatformSecrets platformSecrets;
+  @JsonProperty("secrets") @ConfigSecret private PlatformSecrets platformSecrets;
   @JsonProperty(value = "enableAuth", defaultValue = "true") private boolean enableAuth;
   @JsonProperty(value = "environment", defaultValue = "dev") private String environment;
-  @JsonProperty(value = "accessControlClient") private AccessControlClientConfiguration accessControlClientConfig;
+  @JsonProperty(value = "accessControlClient")
+  @ConfigSecret
+  private AccessControlClientConfiguration accessControlClientConfig;
   @JsonProperty("enforcementClientConfiguration") private EnforcementClientConfiguration enforcementClientConfiguration;
+  @JsonProperty("secretsConfiguration") private SecretsConfiguration secretsConfiguration;
   @JsonProperty("hostname") String hostname;
   @JsonProperty("basePathPrefix") String basePathPrefix;
 

@@ -15,6 +15,7 @@ import io.harness.lock.DistributedLockImplementation;
 import io.harness.mongo.MongoConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -29,10 +30,12 @@ import lombok.experimental.FieldDefaults;
 public class ResourceGroupServiceConfig {
   @JsonProperty("enableResourceGroup") boolean enableResourceGroup;
   @JsonProperty("mongo") MongoConfig mongoConfig;
-  @JsonProperty("resourceClients") ResourceClientConfigs resourceClientConfigs;
-  @JsonProperty("redis") RedisConfig redisConfig;
-  @JsonProperty("redisLockConfig") RedisConfig redisLockConfig;
-  @JsonProperty("accessControlAdminClient") AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
+  @JsonProperty("resourceClients") @ConfigSecret ResourceClientConfigs resourceClientConfigs;
+  @JsonProperty("redis") @ConfigSecret RedisConfig redisConfig;
+  @JsonProperty("redisLockConfig") @ConfigSecret RedisConfig redisLockConfig;
+  @JsonProperty("accessControlAdminClient")
+  @ConfigSecret
+  AccessControlAdminClientConfiguration accessControlAdminClientConfiguration;
   @JsonProperty("auditClientConfig") ServiceHttpClientConfig auditClientConfig;
   @JsonProperty(value = "enableAudit") boolean enableAudit;
   @JsonProperty("distributedLockImplementation") DistributedLockImplementation distributedLockImplementation;

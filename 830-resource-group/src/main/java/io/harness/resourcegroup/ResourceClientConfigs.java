@@ -10,6 +10,7 @@ package io.harness.resourcegroup;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.secret.ConfigSecret;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AccessLevel;
@@ -22,17 +23,17 @@ import lombok.experimental.FieldDefaults;
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class ResourceClientConfigs {
-  @JsonProperty("ng-manager") ServiceConfig ngManager;
-  @JsonProperty("manager") ServiceConfig manager;
-  @JsonProperty("pipeline-service") ServiceConfig pipelineService;
-  @JsonProperty("resourceGroup") ServiceConfig resourceGroupService;
-  @JsonProperty("template-service") ServiceConfig templateService;
+  @JsonProperty("ng-manager") @ConfigSecret ServiceConfig ngManager;
+  @JsonProperty("manager") @ConfigSecret ServiceConfig manager;
+  @JsonProperty("pipeline-service") @ConfigSecret ServiceConfig pipelineService;
+  @JsonProperty("resourceGroup") @ConfigSecret ServiceConfig resourceGroupService;
+  @JsonProperty("template-service") @ConfigSecret ServiceConfig templateService;
 
   @Value
   @Builder
   @FieldDefaults(level = AccessLevel.PRIVATE)
   public static class ServiceConfig {
     String baseUrl;
-    String secret;
+    @ConfigSecret String secret;
   }
 }
