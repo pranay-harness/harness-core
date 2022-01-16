@@ -55,7 +55,6 @@ import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.StepPalleteModuleInfo;
-import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -120,8 +119,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getIdentifier());
 
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
-      PipelineEntity createdEntity =
-          pmsPipelineRepository.save(entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
+      PipelineEntity createdEntity = pmsPipelineRepository.save(entityWithUpdatedInfo);
       sendPipelineSaveTelemetryEvent(createdEntity, CREATING_PIPELINE);
       return createdEntity;
     } catch (DuplicateKeyException ex) {
@@ -196,7 +194,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags())
                                     .withIsEntityInvalid(false)
-                                    .withTemplateReference(pipelineEntity.getTemplateReference());
+                                    .withTemplateReference(pipelineEntity.getTemplateReference())
+                                    .withAllowStageExecutions(pipelineEntity.getAllowStageExecutions());
 
     return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
@@ -224,8 +223,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       PipelineEntity pipelineEntity, PipelineEntity oldEntity, ChangeType changeType) {
     try {
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
-      PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
-          entityWithUpdatedInfo, oldEntity, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
+      PipelineEntity updatedResult =
+          pmsPipelineRepository.updatePipelineYaml(entityWithUpdatedInfo, oldEntity, changeType);
 
       if (updatedResult == null) {
         throw new InvalidRequestException(format(
@@ -324,8 +323,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PipelineEntity pipelineEntityUpdated = existingPipeline.withYaml(invalidYaml)
                                                .withObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml))
                                                .withIsEntityInvalid(true);
-    pmsPipelineRepository.updatePipelineYaml(
-        pipelineEntityUpdated, existingPipeline, PipelineYamlDtoMapper.toDto(pipelineEntityUpdated), ChangeType.NONE);
+    pmsPipelineRepository.updatePipelineYaml(pipelineEntityUpdated, existingPipeline, ChangeType.NONE);
     return true;
   }
 
@@ -342,8 +340,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PipelineEntity existingEntity = optionalPipelineEntity.get();
     PipelineEntity withDeleted = existingEntity.withDeleted(true);
     try {
-      PipelineEntity deletedEntity =
-          pmsPipelineRepository.deletePipeline(withDeleted, PipelineYamlDtoMapper.toDto(withDeleted));
+      PipelineEntity deletedEntity = pmsPipelineRepository.deletePipeline(withDeleted);
       if (deletedEntity.getDeleted()) {
         return true;
       } else {
@@ -454,8 +451,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Page<PipelineEntity> pipelineEntities =
         pmsPipelineRepository.findAll(criteria, pageRequest, accountId, orgId, projectId, false);
     for (PipelineEntity pipelineEntity : pipelineEntities) {
-      pmsPipelineRepository.deletePipeline(
-          pipelineEntity.withDeleted(true), PipelineYamlDtoMapper.toDto(pipelineEntity.withDeleted(true)));
+      pmsPipelineRepository.deletePipeline(pipelineEntity.withDeleted(true));
     }
     return true;
   }

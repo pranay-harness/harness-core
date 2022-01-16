@@ -1354,6 +1354,9 @@ public class DelegateServiceImpl implements DelegateService {
         params.put("k8sPermissionsType", templateParameters.getK8sPermissionsType().name());
       }
 
+      boolean versionCheckEnabled = hasVersionCheckDisabled(templateParameters.getAccountId());
+      params.put("versionCheckDisabled", String.valueOf(versionCheckEnabled));
+
       if (isNotBlank(templateParameters.getDelegateTokenName())) {
         params.put("delegateTokenName", templateParameters.getDelegateTokenName());
       }
@@ -2978,6 +2981,11 @@ public class DelegateServiceImpl implements DelegateService {
           TelemetryOption.builder().sendForCommunity(true).build());
     }
     return delegateGroup;
+  }
+
+  private boolean hasVersionCheckDisabled(String accountId) {
+    return accountService.getAccountPrimaryDelegateVersion(accountId) != null
+        || featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId);
   }
 
   @Override

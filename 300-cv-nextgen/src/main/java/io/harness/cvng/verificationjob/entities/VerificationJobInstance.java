@@ -120,8 +120,7 @@ public final class VerificationJobInstance
 
   @Builder.Default
   @FdTtlIndex
-  private Date validUntil =
-      Date.from(OffsetDateTime.now().plus(CVConstants.VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION).toInstant());
+  private Date validUntil = Date.from(OffsetDateTime.now().plus(CVConstants.MAX_DATA_RETENTION_DURATION).toInstant());
 
   public static class VerificationJobInstanceBuilder {
     public VerificationJobInstanceBuilder deploymentStartTime(Instant deploymentStartTime) {

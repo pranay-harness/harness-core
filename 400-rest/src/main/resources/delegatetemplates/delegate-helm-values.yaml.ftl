@@ -40,3 +40,4 @@ useCdn: ${useCdn}
 cdnUrl: ${cdnUrl}
 jreVersion: ${jreVersion}
 </#if>
+versionCheckDisabled: ${versionCheckDisabled}

@@ -13,6 +13,7 @@ import static io.harness.delegate.beans.connector.awskmsconnector.AwsKmsCredenti
 import static io.harness.eraro.ErrorCode.INVALID_REQUEST;
 import static io.harness.exception.WingsException.USER;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.connector.DelegateSelectable;
@@ -47,15 +48,18 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(name = "AwsKmsConnector", description = "This contains AWS KMS SM connectors config details")
+@Schema(name = "AwsKmsConnector", description = "This has configuration details for the AWS KMS Secret Manager.")
 public class AwsKmsConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
   @Valid AwsKmsConnectorCredentialDTO credential;
-
-  @SecretReference @ApiModelProperty(dataType = "string") @NotNull SecretRefData kmsArn;
-  private String region;
-  private boolean isDefault;
+  @Schema(description = "ARN for AWS KMS.")
+  @SecretReference
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  SecretRefData kmsArn;
+  @Schema(description = "Region for AWS KMS.") private String region;
+  @Schema(description = SecretManagerDescriptionConstants.DEFAULT) private boolean isDefault;
   @JsonIgnore private boolean harnessManaged;
-  private Set<String> delegateSelectors;
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) private Set<String> delegateSelectors;
 
   @Builder
   public AwsKmsConnectorDTO(SecretRefData kmsArn, String region, AwsKmsConnectorCredentialDTO credential,

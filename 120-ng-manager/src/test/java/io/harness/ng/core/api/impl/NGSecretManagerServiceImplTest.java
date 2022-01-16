@@ -31,6 +31,7 @@ import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.connector.services.NGVaultService;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptorsRegistry;
+import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.ng.core.api.NGEncryptedDataService;
 import io.harness.rest.RestResponse;
 import io.harness.rule.Owner;
@@ -63,6 +64,7 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
   NGEncryptorService ngEncryptorService;
   NGVaultService ngVaultService;
   ConnectorService connectorService;
+  LocalEncryptorHelper localEncryptorHelper;
 
   private final String ACCOUNT_IDENTIFIER = "ACCOUNT_ID";
   private final String ORG_IDENTIFIER = "ACCOUNT_ID";
@@ -79,8 +81,9 @@ public class NGSecretManagerServiceImplTest extends CategoryTest {
     ngEncryptedDataService = mock(NGEncryptedDataService.class);
     ngEncryptorService = mock(NGEncryptorService.class);
     connectorService = mock(ConnectorService.class);
+    localEncryptorHelper = mock(LocalEncryptorHelper.class);
     ngSecretManagerService = new NGSecretManagerServiceImpl(secretManagerClient, ngConnectorSecretManagerService,
-        kmsEncryptorsRegistry, vaultEncryptorsRegistry, ngVaultService);
+        kmsEncryptorsRegistry, vaultEncryptorsRegistry, ngVaultService, localEncryptorHelper);
   }
 
   @Test

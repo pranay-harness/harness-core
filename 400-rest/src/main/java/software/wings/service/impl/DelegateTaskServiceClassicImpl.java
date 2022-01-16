@@ -50,6 +50,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
 import io.harness.beans.DelegateTask.DelegateTaskKeys;
+import io.harness.beans.FeatureName;
 import io.harness.capability.CapabilityRequirement;
 import io.harness.capability.CapabilitySubjectPermission;
 import io.harness.capability.CapabilityTaskSelectionDetails;
@@ -1111,6 +1112,10 @@ public class DelegateTaskServiceClassicImpl implements DelegateTaskServiceClassi
               .accountId(delegateTask.getAccountId())
               .build();
       delegateTaskService.handleResponse(delegateTask, taskQuery, response);
+      if (featureFlagService.isEnabled(
+              FeatureName.FAIL_WORKFLOW_IF_SECRET_DECRYPTION_FAILS, delegateTask.getAccountId())) {
+        throw exception;
+      }
       return null;
     }
   }

@@ -43,7 +43,6 @@ import static software.wings.service.impl.ArtifactStreamServiceImpl.addFilterToA
 import static software.wings.service.intfc.security.SecretManager.ENCRYPTED_FIELD_MASK;
 import static software.wings.settings.SettingVariableTypes.AMAZON_S3_HELM_REPO;
 import static software.wings.settings.SettingVariableTypes.GCS_HELM_REPO;
-import static software.wings.utils.UsageRestrictionsUtils.getAllAppAllEnvUsageRestrictions;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
@@ -1617,7 +1616,6 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withEnvId(GLOBAL_ENV_ID)
                                              .withName(WINDOWS_RUNTIME_PATH)
                                              .withValue(aStringValue().withValue(DEFAULT_WINDOWS_RUNTIME_PATH).build())
-                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                              .build();
     wingsPersistence.save(settingAttribute1);
 
@@ -1627,7 +1625,6 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withEnvId(GLOBAL_ENV_ID)
                                              .withName(RUNTIME_PATH)
                                              .withValue(aStringValue().withValue(DEFAULT_RUNTIME_PATH).build())
-                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                              .build();
     wingsPersistence.save(settingAttribute2);
 
@@ -1637,7 +1634,6 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withEnvId(GLOBAL_ENV_ID)
                                              .withName(STAGING_PATH)
                                              .withValue(aStringValue().withValue(DEFAULT_STAGING_PATH).build())
-                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                              .build();
     wingsPersistence.save(settingAttribute3);
 
@@ -1647,7 +1643,6 @@ public class SettingsServiceImpl implements SettingsService {
                                              .withEnvId(GLOBAL_ENV_ID)
                                              .withName(BACKUP_PATH)
                                              .withValue(aStringValue().withValue(DEFAULT_BACKUP_PATH).build())
-                                             .withUsageRestrictions(getAllAppAllEnvUsageRestrictions())
                                              .build();
     wingsPersistence.save(settingAttribute4);
 

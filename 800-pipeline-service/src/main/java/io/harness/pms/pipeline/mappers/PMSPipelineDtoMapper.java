@@ -65,6 +65,7 @@ public class PMSPipelineDtoMapper {
           .identifier(basicPipeline.getIdentifier())
           .description(basicPipeline.getDescription())
           .tags(TagMapper.convertToList(basicPipeline.getTags()))
+          .allowStageExecutions(basicPipeline.isAllowStageExecutions())
           .build();
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create pipeline entity due to " + e.getMessage());
@@ -107,6 +108,7 @@ public class PMSPipelineDtoMapper {
           .identifier(basicPipeline.getIdentifier())
           .description(basicPipeline.getDescription())
           .tags(TagMapper.convertToList(basicPipeline.getTags()))
+          .allowStageExecutions(basicPipeline.isAllowStageExecutions())
           .build();
     } catch (IOException e) {
       throw new InvalidRequestException("Cannot create pipeline entity due to " + e.getMessage());

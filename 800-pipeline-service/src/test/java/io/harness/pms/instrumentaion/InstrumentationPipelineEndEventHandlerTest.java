@@ -154,8 +154,8 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
     EnumSet<io.harness.pms.contracts.execution.failure.FailureType> returnedFailureTypes =
         (EnumSet<io.harness.pms.contracts.execution.failure.FailureType>) propertiesMap.get(
             PipelineInstrumentationConstants.FAILURE_TYPES);
-    List<String> returnedErrorMessages =
-        (List<String>) propertiesMap.get(PipelineInstrumentationConstants.ERROR_MESSAGES);
+    Set<String> returnedErrorMessages =
+        (Set<String>) propertiesMap.get(PipelineInstrumentationConstants.ERROR_MESSAGES);
     Set<String> returnedNotificationMethods =
         (Set<String>) propertiesMap.get(PipelineInstrumentationConstants.NOTIFICATION_METHODS);
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.LEVEL), StepCategory.PIPELINE);
@@ -166,7 +166,7 @@ public class InstrumentationPipelineEndEventHandlerTest extends CategoryTest {
     assertEquals(propertiesMap.get(PipelineInstrumentationConstants.ACCOUNT_NAME), "TestAccountName");
     assertEquals(returnedNotificationMethods, notificationMethods);
     assertTrue(returnedFailureTypes.contains(FailureType.AUTHENTICATION));
-    assertEquals(returnedErrorMessages.get(0), "message");
+    assertTrue(returnedErrorMessages.contains("message"));
 
     verify(telemetryReporter, times(1))
         .sendTrackEvent(eq(PipelineInstrumentationConstants.PIPELINE_NOTIFICATION), eq("admin@harness.io"),

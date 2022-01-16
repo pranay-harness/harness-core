@@ -127,7 +127,6 @@ public class CIYamlSchemaResource implements YamlSchemaResource {
   }
 
   @POST
-  @Path("/get")
   @ApiOperation(value = "Get step YAML schema", nickname = "getStepYamlSchema")
   public ResponseDTO<JsonNode> getStepYamlSchema(
       @NotNull @QueryParam(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,

@@ -11,6 +11,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,6 +22,11 @@ import lombok.Setter;
 @Data
 @Builder
 @AllArgsConstructor
+@Schema(description = "This contains the information about the Two Factor Admin Override in Harness.")
 public class TwoFactorAdminOverrideSettings {
-  @Getter @Setter private boolean adminOverrideTwoFactorEnabled;
+  @Getter
+  @Setter
+  @Schema(description =
+              "This value is true if Admin Override for Two Factor Authentication is enabled. Otherwise, it is false.")
+  private boolean adminOverrideTwoFactorEnabled;
 }

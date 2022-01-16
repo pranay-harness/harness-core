@@ -46,10 +46,11 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 @Slf4j
 @OwnedBy(HarnessTeam.DEL)
-public class DelegateAgentManagerClientFactory
-    implements Provider<io.harness.managerclient.DelegateAgentManagerClient> {
+public class DelegateAgentManagerClientFactory implements Provider<DelegateAgentManagerClient> {
   public static final ImmutableList<TrustManager> TRUST_ALL_CERTS =
-      ImmutableList.of(new io.harness.managerclient.DelegateAgentManagerClientX509TrustManager());
+      ImmutableList.of(new DelegateAgentManagerClientX509TrustManager());
+
+  private static boolean sendVersionHeader = true;
 
   @Inject private VersionInfoManager versionInfoManager;
   @Inject private KryoConverterFactory kryoConverterFactory;
@@ -57,13 +58,17 @@ public class DelegateAgentManagerClientFactory
   private String baseUrl;
   private TokenGenerator tokenGenerator;
 
+  public static void setSendVersionHeader(boolean send) {
+    sendVersionHeader = send;
+  }
+
   DelegateAgentManagerClientFactory(String baseUrl, TokenGenerator tokenGenerator) {
     this.baseUrl = baseUrl;
     this.tokenGenerator = tokenGenerator;
   }
 
   @Override
-  public io.harness.managerclient.DelegateAgentManagerClient get() {
+  public DelegateAgentManagerClient get() {
     ObjectMapper objectMapper = new ObjectMapper();
     objectMapper.registerModule(new Jdk8Module());
     objectMapper.registerModule(new GuavaModule());
@@ -74,7 +79,7 @@ public class DelegateAgentManagerClientFactory
                             .addConverterFactory(kryoConverterFactory)
                             .addConverterFactory(JacksonConverterFactory.create(objectMapper))
                             .build();
-    return retrofit.create(io.harness.managerclient.DelegateAgentManagerClient.class);
+    return retrofit.create(DelegateAgentManagerClient.class);
   }
 
   private OkHttpClient getSafeOkHttpClient() {
@@ -93,11 +98,14 @@ public class DelegateAgentManagerClientFactory
           .hostnameVerifier(new NoopHostnameVerifier())
           .connectionPool(Http.connectionPool)
           .retryOnConnectionFailure(true)
-          .addInterceptor(new io.harness.managerclient.DelegateAuthInterceptor(tokenGenerator))
+          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslContext.getSocketFactory(), (X509TrustManager) trustManagers[0])
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader(
                 "User-Agent", "delegate/" + versionInfoManager.getVersionInfo().getVersion());
+            if (sendVersionHeader) {
+              request.addHeader("Version", versionInfoManager.getVersionInfo().getVersion());
+            }
             return chain.proceed(request.build());
           })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))
@@ -151,11 +159,14 @@ public class DelegateAgentManagerClientFactory
       return Http.getOkHttpClientWithProxyAuthSetup()
           .connectionPool(new ConnectionPool())
           .retryOnConnectionFailure(true)
-          .addInterceptor(new io.harness.managerclient.DelegateAuthInterceptor(tokenGenerator))
+          .addInterceptor(new DelegateAuthInterceptor(tokenGenerator))
           .sslSocketFactory(sslSocketFactory, (X509TrustManager) TRUST_ALL_CERTS.get(0))
           .addInterceptor(chain -> {
             Builder request = chain.request().newBuilder().addHeader(
                 "User-Agent", "delegate/" + versionInfoManager.getVersionInfo().getVersion());
+            if (sendVersionHeader) {
+              request.addHeader("Version", versionInfoManager.getVersionInfo().getVersion());
+            }
             return chain.proceed(request.build());
           })
           .addInterceptor(chain -> FibonacciBackOff.executeForEver(() -> chain.proceed(chain.request())))

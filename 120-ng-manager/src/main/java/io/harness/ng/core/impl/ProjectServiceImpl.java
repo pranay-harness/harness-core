@@ -584,7 +584,7 @@ public class ProjectServiceImpl implements ProjectService {
 
   @Override
   public Long countProjects(String accountIdenifier) {
-    return projectRepository.countByAccountIdentifier(accountIdenifier);
+    return projectRepository.countByAccountIdentifierAndDeletedIsFalse(accountIdenifier);
   }
 
   private void validateCreateProjectRequest(String accountIdentifier, String orgIdentifier, ProjectDTO project) {
