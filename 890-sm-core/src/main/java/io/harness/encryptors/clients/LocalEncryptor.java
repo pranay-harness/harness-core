@@ -104,8 +104,8 @@ public class LocalEncryptor implements KmsEncryptor {
     try {
       encryptSecret(localEncryptionConfig.getAccountId(), randomString, localEncryptionConfig);
     } catch (Exception e) {
-      log.error("Was not able to encrypt using given credentials. Please check your credentials and try again", e);
-      return false;
+      log.error("Could not encrypt using the credentials provided. Please check your credentials and try again.", e);
+      throw e;
     }
     log.info("Validating Local KMS configuration End {}", encryptionConfig.getName());
     return true;

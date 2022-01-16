@@ -23,6 +23,7 @@ import io.harness.connector.services.NGVaultService;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptorsRegistry;
+import io.harness.exception.WingsException;
 import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.mappers.SecretManagerConfigMapper;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -119,11 +120,13 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
           default:
             String errorMessage = " Encryptor for validate reference task for encryption config"
                 + encryptionConfig.getName() + " not configured";
-            log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName() + errorMessage);
+            log.error("Validation for Secret Manager/KMS failed: " + encryptionConfig.getName() + errorMessage);
         }
+      } catch (WingsException wingsException) {
+        throw wingsException;
       } catch (Exception exception) {
-        log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName(), exception);
-        validationResult = false;
+        log.error("Validation for Secret Manager/KMS failed: " + encryptionConfig.getName(), exception);
+        throw exception;
       }
     }
     return validationResult;
@@ -168,8 +171,11 @@ public class NGSecretManagerServiceImpl implements NGSecretManagerService {
       if (validateNGSecretManager(accountIdentifier, secretManagerConfigDTO)) {
         connectivityStatus = ConnectivityStatus.SUCCESS;
       }
+    } catch (WingsException wingsException) {
+      throw wingsException;
     } catch (Exception exception) {
-      log.error("Error getting Connector. Validation false.", exception);
+      log.error("An error occurred when attempting to obtain a Connector. False validation.", exception);
+      throw exception;
     }
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
   }

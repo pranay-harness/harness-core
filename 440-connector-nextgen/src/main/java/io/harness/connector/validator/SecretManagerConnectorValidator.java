@@ -15,6 +15,7 @@ import io.harness.connector.ConnectorResponseDTO;
 import io.harness.connector.ConnectorValidationResult;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
 import io.harness.errorhandling.NGErrorHelper;
+import io.harness.exception.WingsException;
 import io.harness.ng.core.api.NGSecretManagerService;
 import io.harness.ng.core.dto.ErrorDetail;
 
@@ -37,6 +38,8 @@ public class SecretManagerConnectorValidator implements ConnectionValidator {
     long currentTime = System.currentTimeMillis();
     try {
       return ngSecretManagerService.validate(accountIdentifier, orgIdentifier, projectIdentifier, identifier);
+    } catch (WingsException wingsException) {
+      throw wingsException;
     } catch (Exception exception) {
       String errorMessage = exception.getMessage();
       return ConnectorValidationResult.builder()
