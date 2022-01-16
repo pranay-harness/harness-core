@@ -28,10 +28,10 @@ import org.springframework.data.annotation.TypeAlias;
 @SimpleVisitorHelper(helperClass = SidecarWrapperArtifactVisitorHelper.class)
 @TypeAlias("sidecarArtifactWrapper")
 public class SidecarsListWrapper implements Visitable {
-    List<SidecarArtifactWrapper> sidecars;
+  List<SidecarArtifactWrapper> sidecars;
 
-    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
-    public SidecarsListWrapper(List<SidecarArtifactWrapper> sidecars) {
-        this.sidecars = sidecars;
-    }
+  @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+  public SidecarsListWrapper(List<SidecarArtifactWrapper> sidecars) {
+    this.sidecars = sidecars;
+  }
 }

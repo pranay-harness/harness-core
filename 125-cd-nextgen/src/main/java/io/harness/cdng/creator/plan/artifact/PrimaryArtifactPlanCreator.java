@@ -33,39 +33,39 @@ import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
 public class PrimaryArtifactPlanCreator implements PartialPlanCreator<PrimaryArtifact> {
-    @Inject KryoSerializer kryoSerializer;
-    @Override
-    public Class<PrimaryArtifact> getFieldClass() {
-        return PrimaryArtifact.class;
-    }
+  @Inject KryoSerializer kryoSerializer;
+  @Override
+  public Class<PrimaryArtifact> getFieldClass() {
+    return PrimaryArtifact.class;
+  }
 
-    @Override
-    public Map<String, Set<String>> getSupportedTypes() {
-        return Collections.singletonMap(YamlTypes.PRIMARY_ARTIFACT,
-                new HashSet<>(Arrays.asList(ArtifactSourceConstants.DOCKER_REGISTRY_NAME, ArtifactSourceConstants.ECR_NAME,
-                        ArtifactSourceConstants.GCR_NAME)));
-    }
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap(YamlTypes.PRIMARY_ARTIFACT,
+        new HashSet<>(Arrays.asList(ArtifactSourceConstants.DOCKER_REGISTRY_NAME, ArtifactSourceConstants.ECR_NAME,
+            ArtifactSourceConstants.GCR_NAME)));
+  }
 
-    @Override
-    public PlanCreationResponse createPlanForField(PlanCreationContext ctx, PrimaryArtifact artifactInfo) {
-        String primaryId = (String) kryoSerializer.asInflatedObject(
-                ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
-        StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
-                ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.PRIMARY_STEP_PARAMETERS).toByteArray());
+  @Override
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, PrimaryArtifact artifactInfo) {
+    String primaryId = (String) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
+    StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.PRIMARY_STEP_PARAMETERS).toByteArray());
 
-        PlanNode artifactNode =
-                PlanNode.builder()
-                        .uuid(primaryId)
-                        .stepType(ArtifactStep.STEP_TYPE)
-                        .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
-                        .identifier(YamlTypes.PRIMARY_ARTIFACT)
-                        .stepParameters(stepParameters)
-                        .facilitatorObtainment(
-                                FacilitatorObtainment.newBuilder()
-                                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
-                                        .build())
-                        .skipExpressionChain(false)
-                        .build();
-        return PlanCreationResponse.builder().planNode(artifactNode).build();
-    }
+    PlanNode artifactNode =
+        PlanNode.builder()
+            .uuid(primaryId)
+            .stepType(ArtifactStep.STEP_TYPE)
+            .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
+            .identifier(YamlTypes.PRIMARY_ARTIFACT)
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .build())
+            .skipExpressionChain(false)
+            .build();
+    return PlanCreationResponse.builder().planNode(artifactNode).build();
+  }
 }

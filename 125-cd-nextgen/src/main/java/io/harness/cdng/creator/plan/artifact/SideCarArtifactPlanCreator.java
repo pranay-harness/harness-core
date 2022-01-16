@@ -7,7 +7,6 @@
 
 package io.harness.cdng.creator.plan.artifact;
 
-import com.google.inject.Inject;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
@@ -26,43 +25,44 @@ import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.serializer.KryoSerializer;
 
+import com.google.inject.Inject;
 import java.util.*;
 
 @OwnedBy(HarnessTeam.CDC)
 public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArtifactWrapper> {
-    @Inject KryoSerializer kryoSerializer;
-    @Override
-    public Class<SidecarArtifactWrapper> getFieldClass() {
-        return SidecarArtifactWrapper.class;
-    }
+  @Inject KryoSerializer kryoSerializer;
+  @Override
+  public Class<SidecarArtifactWrapper> getFieldClass() {
+    return SidecarArtifactWrapper.class;
+  }
 
-    @Override
-    public Map<String, Set<String>> getSupportedTypes() {
-        return Collections.singletonMap(YamlTypes.SIDECAR_ARTIFACT_CONFIG,
-                new HashSet<>(Arrays.asList(ArtifactSourceConstants.DOCKER_REGISTRY_NAME, ArtifactSourceConstants.ECR_NAME,
-                        ArtifactSourceConstants.GCR_NAME)));
-    }
+  @Override
+  public Map<String, Set<String>> getSupportedTypes() {
+    return Collections.singletonMap(YamlTypes.SIDECAR_ARTIFACT_CONFIG,
+        new HashSet<>(Arrays.asList(ArtifactSourceConstants.DOCKER_REGISTRY_NAME, ArtifactSourceConstants.ECR_NAME,
+            ArtifactSourceConstants.GCR_NAME)));
+  }
 
-    @Override
-    public PlanCreationResponse createPlanForField(PlanCreationContext ctx, SidecarArtifactWrapper artifactInfo) {
-        String sideCarArtifactId = (String) kryoSerializer.asInflatedObject(
-                ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
-        StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
-                ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
+  @Override
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, SidecarArtifactWrapper artifactInfo) {
+    String sideCarArtifactId = (String) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
+    StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
 
-        PlanNode artifactNode =
-                PlanNode.builder()
-                        .uuid(sideCarArtifactId)
-                        .stepType(ArtifactStep.STEP_TYPE)
-                        .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
-                        .identifier(ctx.getCurrentField().getNode().getIdentifier())
-                        .stepParameters(stepParameters)
-                        .facilitatorObtainment(
-                                FacilitatorObtainment.newBuilder()
-                                        .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
-                                        .build())
-                        .skipExpressionChain(false)
-                        .build();
-        return PlanCreationResponse.builder().planNode(artifactNode).build();
-    }
+    PlanNode artifactNode =
+        PlanNode.builder()
+            .uuid(sideCarArtifactId)
+            .stepType(ArtifactStep.STEP_TYPE)
+            .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
+            .identifier(ctx.getCurrentField().getNode().getIdentifier())
+            .stepParameters(stepParameters)
+            .facilitatorObtainment(
+                FacilitatorObtainment.newBuilder()
+                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
+                    .build())
+            .skipExpressionChain(false)
+            .build();
+    return PlanCreationResponse.builder().planNode(artifactNode).build();
+  }
 }
