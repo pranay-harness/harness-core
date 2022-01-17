@@ -106,6 +106,7 @@ import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
 import software.wings.service.intfc.UsageRestrictionsService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.instance.InstanceService;
@@ -173,6 +174,7 @@ public class EnvironmentServiceImpl implements EnvironmentService, DataProvider 
   @Inject private HarnessTagService harnessTagService;
   @Inject private ResourceLookupService resourceLookupService;
   @Inject private CVConfigurationService cvConfigurationService;
+  @Inject private UserGroupService userGroupService;
 
   private interface Keys {
     String EnvironmentType = "environmentType";
