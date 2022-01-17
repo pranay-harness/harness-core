@@ -21,7 +21,10 @@ import static org.springframework.data.mongodb.core.query.Criteria.where;
 import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.enforcement.client.services.EnforcementClientService;
+import io.harness.enforcement.constants.FeatureRestrictionName;
 import io.harness.exception.InvalidRequestException;
+import io.harness.exception.ngexception.NGTemplateException;
 import io.harness.filter.FilterType;
 import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
@@ -30,6 +33,7 @@ import io.harness.gitsync.interceptor.GitSyncBranchContext;
 import io.harness.ng.core.common.beans.NGTag.NGTagKeys;
 import io.harness.ng.core.mapper.TagMapper;
 import io.harness.ng.core.template.TemplateListType;
+import io.harness.repositories.NGTemplateRepository;
 import io.harness.springdata.SpringDataMongoUtils;
 import io.harness.template.TemplateFilterPropertiesDTO;
 import io.harness.template.entity.TemplateEntity;
@@ -44,6 +48,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -57,6 +62,44 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @OwnedBy(CDC)
 public class NGTemplateServiceHelper {
   private final FilterService filterService;
+  private final NGTemplateRepository templateRepository;
+  private final EnforcementClientService enforcementClientService;
+
+  public Optional<TemplateEntity> getOrThrowExceptionIfInvalid(String accountId, String orgIdentifier,
+      String projectIdentifier, String templateIdentifier, String versionLabel, boolean deleted) {
+    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
+    try {
+      Optional<TemplateEntity> optionalTemplate;
+      if (EmptyPredicate.isEmpty(versionLabel)) {
+        optionalTemplate =
+            templateRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
+                accountId, orgIdentifier, projectIdentifier, templateIdentifier, !deleted);
+        if (optionalTemplate.isPresent() && optionalTemplate.get().isEntityInvalid()) {
+          throw new NGTemplateException(
+              "Invalid Template yaml cannot be used. Please correct the template version yaml.");
+        }
+        return optionalTemplate;
+      }
+      optionalTemplate =
+          templateRepository
+              .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
+                  accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, !deleted);
+      if (optionalTemplate.isPresent() && optionalTemplate.get().isEntityInvalid()) {
+        throw new NGTemplateException(
+            "Invalid Template yaml cannot be used. Please correct the template version yaml.");
+      }
+      return optionalTemplate;
+    } catch (NGTemplateException e) {
+      throw new NGTemplateException(e.getMessage(), e);
+    } catch (Exception e) {
+      log.error(String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]",
+                    templateIdentifier, versionLabel),
+          e);
+      throw new InvalidRequestException(
+          String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]: %s",
+              templateIdentifier, versionLabel, e.getMessage()));
+    }
+  }
 
   public static void validatePresenceOfRequiredFields(Object... fields) {
     Lists.newArrayList(fields).forEach(field -> Objects.requireNonNull(field, "One of the required fields is null."));

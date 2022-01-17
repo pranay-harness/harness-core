@@ -194,7 +194,9 @@ public class TemplateMergeHelper {
           fqnList.add(FQNNode.builder().nodeType(NodeType.KEY).key(TEMPLATE_VERSION_LABEL).build());
           JsonNode versionLabelNode = (JsonNode) fqnToValueMap.get(FQN.builder().fqnList(fqnList).build());
           String versionLabel = "";
+          boolean isStableTemplate = false;
           if (versionLabelNode == null) {
+            isStableTemplate = true;
             Optional<TemplateEntity> templateEntity =
                 templateService.getOrThrowExceptionIfInvalid(templateIdentifierRef.getAccountIdentifier(),
                     templateIdentifierRef.getOrgIdentifier(), templateIdentifierRef.getProjectIdentifier(),
@@ -215,6 +217,7 @@ public class TemplateMergeHelper {
                   .templateIdentifier(templateIdentifierRef.getIdentifier())
                   .versionLabel(versionLabel)
                   .scope(templateIdentifierRef.getScope())
+                  .stableTemplate(isStableTemplate)
                   .build();
           templateReferenceSummaries.add(templateReferenceSummary);
         }

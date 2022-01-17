@@ -25,7 +25,6 @@ import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.exception.DuplicateFieldException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.ngexception.NGTemplateException;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
@@ -270,38 +269,8 @@ public class NGTemplateServiceImpl implements NGTemplateService {
   @Override
   public Optional<TemplateEntity> getOrThrowExceptionIfInvalid(String accountId, String orgIdentifier,
       String projectIdentifier, String templateIdentifier, String versionLabel, boolean deleted) {
-    enforcementClientService.checkAvailability(FeatureRestrictionName.TEMPLATE_SERVICE, accountId);
-    try {
-      Optional<TemplateEntity> optionalTemplate;
-      if (EmptyPredicate.isEmpty(versionLabel)) {
-        optionalTemplate =
-            templateRepository.findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndIsStableAndDeletedNot(
-                accountId, orgIdentifier, projectIdentifier, templateIdentifier, !deleted);
-        if (optionalTemplate.isPresent() && optionalTemplate.get().isEntityInvalid()) {
-          throw new NGTemplateException(
-              "Invalid Template yaml cannot be used. Please correct the template version yaml.");
-        }
-        return optionalTemplate;
-      }
-      optionalTemplate =
-          templateRepository
-              .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndIdentifierAndVersionLabelAndDeletedNot(
-                  accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, !deleted);
-      if (optionalTemplate.isPresent() && optionalTemplate.get().isEntityInvalid()) {
-        throw new NGTemplateException(
-            "Invalid Template yaml cannot be used. Please correct the template version yaml.");
-      }
-      return optionalTemplate;
-    } catch (NGTemplateException e) {
-      throw new NGTemplateException(e.getMessage(), e);
-    } catch (Exception e) {
-      log.error(String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]",
-                    templateIdentifier, versionLabel),
-          e);
-      throw new InvalidRequestException(
-          String.format("Error while retrieving template with identifier [%s] and versionLabel [%s]: %s",
-              templateIdentifier, versionLabel, e.getMessage()));
-    }
+    return templateServiceHelper.getOrThrowExceptionIfInvalid(
+        accountId, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel, deleted);
   }
 
   @Override

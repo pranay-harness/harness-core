@@ -24,6 +24,7 @@ import io.harness.delegate.beans.DelegateAsyncTaskResponse;
 import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.enforcement.client.EnforcementClientModule;
+import io.harness.entitysetupusageclient.EntitySetupUsageClientModule;
 import io.harness.exception.exceptionmanager.ExceptionModule;
 import io.harness.filter.FilterType;
 import io.harness.filter.FiltersModule;
@@ -123,6 +124,8 @@ public class TemplateServiceModule extends AbstractModule {
     install(new ProjectClientModule(this.templateServiceConfiguration.getNgManagerServiceHttpClientConfig(),
         this.templateServiceConfiguration.getNgManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId()));
     install(new OrganizationClientModule(this.templateServiceConfiguration.getNgManagerServiceHttpClientConfig(),
+        this.templateServiceConfiguration.getNgManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId()));
+    install(new EntitySetupUsageClientModule(this.templateServiceConfiguration.getNgManagerServiceHttpClientConfig(),
         this.templateServiceConfiguration.getNgManagerServiceSecret(), TEMPLATE_SERVICE.getServiceId()));
 
     install(new DelegateServiceDriverGrpcClientModule(templateServiceConfiguration.getManagerServiceSecret(),

@@ -22,4 +22,5 @@ public class TemplateReferenceSummary {
   String templateIdentifier;
   String versionLabel;
   Scope scope;
+  boolean stableTemplate;
 }
