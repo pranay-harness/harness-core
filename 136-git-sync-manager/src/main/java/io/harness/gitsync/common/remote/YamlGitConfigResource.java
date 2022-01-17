@@ -183,4 +183,20 @@ public class YamlGitConfigResource {
           NGCommonEntityConstants.ORG_KEY) String organizationIdentifier) {
     return gitEnabledHelper.getGitEnabledDTO(projectIdentifier, organizationIdentifier, accountIdentifier);
   }
+
+  @PUT
+  @Path("/disable")
+  @ApiOperation(value = "Disable git experience", nickname = "disableGitSync")
+  @Operation(operationId = "disableGitSync", summary = "Disable git experience for a scope",
+      responses =
+      {
+        @io.swagger.v3.oas.annotations.responses.
+        ApiResponse(description = "Status: true for success and false for failure")
+      })
+  public boolean
+  putGitExperience(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("organizationId") String orgIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotEmpty String accountId) {
+    return yamlGitConfigService.deleteAll(accountId, orgIdentifier, projectIdentifier);
+  }
 }

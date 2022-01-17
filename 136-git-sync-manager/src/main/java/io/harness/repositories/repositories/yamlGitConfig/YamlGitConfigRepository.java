@@ -41,4 +41,7 @@ public interface YamlGitConfigRepository extends CrudRepository<YamlGitConfig, S
 
   Optional<YamlGitConfig> findByAccountIdAndOrgIdentifierAndProjectIdentifierAndRepo(
       String accountId, String organizationIdentifier, String projectIdentifier, String repo);
+
+  Long deleteByAccountIdAndOrgIdentifierAndProjectIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

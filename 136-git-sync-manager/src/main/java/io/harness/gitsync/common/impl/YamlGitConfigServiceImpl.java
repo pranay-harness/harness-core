@@ -208,6 +208,13 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     return updateInternal(gitSyncConfig);
   }
 
+  @Override
+  public boolean deleteAll(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    return yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifier(
+               accountIdentifier, orgIdentifier, projectIdentifier)
+        > 0;
+  }
+
   private YamlGitConfigDTO updateInternal(YamlGitConfigDTO gitSyncConfigDTO) {
     validateTheGitConfigInput(gitSyncConfigDTO);
     Optional<YamlGitConfig> existingYamlGitConfigDTO =
