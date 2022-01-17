@@ -21,4 +21,6 @@ public interface GitSyncSettingsService {
   GitSyncSettingsDTO save(GitSyncSettingsDTO request);
 
   GitSyncSettingsDTO update(GitSyncSettingsDTO request);
+
+  void delete(String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

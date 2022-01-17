@@ -65,4 +65,10 @@ public class GitSyncSettingsServiceImpl implements GitSyncSettingsService {
     final GitSyncSettings updatedGitSyncSettings = gitSyncSettingsRepository.update(criteria, update);
     return GitSyncSettingsMapper.getDTOFromGitSyncSettings(updatedGitSyncSettings);
   }
+
+  @Override
+  public void delete(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    gitSyncSettingsRepository.deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+        accountIdentifier, orgIdentifier, projectIdentifier);
+  }
 }

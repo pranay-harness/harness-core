@@ -47,6 +47,7 @@ import io.harness.gitsync.common.events.GitSyncConfigSwitchType;
 import io.harness.gitsync.common.helper.GitSyncConnectorHelper;
 import io.harness.gitsync.common.remote.YamlGitConfigMapper;
 import io.harness.gitsync.common.service.GitBranchService;
+import io.harness.gitsync.common.service.GitSyncSettingsService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
@@ -93,6 +94,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   private final PersistentLocker persistentLocker;
   private final IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper;
   private final Producer setupUsageEventProducer;
+  private final GitSyncSettingsService gitSyncSettingsService;
 
   @Inject
   public YamlGitConfigServiceImpl(YamlGitConfigRepository yamlGitConfigRepository,
@@ -101,7 +103,8 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       ExecutorService executorService, GitBranchService gitBranchService, GitSyncConnectorHelper gitSyncConnectorHelper,
       WebhookEventService webhookEventService, PersistentLocker persistentLocker,
       IdentifierRefProtoDTOHelper identifierRefProtoDTOHelper,
-      @Named(EventsFrameworkConstants.SETUP_USAGE) Producer setupUsageEventProducer) {
+      @Named(EventsFrameworkConstants.SETUP_USAGE) Producer setupUsageEventProducer,
+      GitSyncSettingsService gitSyncSettingsService) {
     this.yamlGitConfigRepository = yamlGitConfigRepository;
     this.connectorService = connectorService;
     this.gitSyncConfigEventProducer = gitSyncConfigEventProducer;
@@ -112,6 +115,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     this.persistentLocker = persistentLocker;
     this.identifierRefProtoDTOHelper = identifierRefProtoDTOHelper;
     this.setupUsageEventProducer = setupUsageEventProducer;
+    this.gitSyncSettingsService = gitSyncSettingsService;
   }
 
   @Override
@@ -206,13 +210,6 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   public YamlGitConfigDTO update(YamlGitConfigDTO gitSyncConfig) {
     validatePresenceOfRequiredFields(gitSyncConfig.getAccountIdentifier(), gitSyncConfig.getIdentifier());
     return updateInternal(gitSyncConfig);
-  }
-
-  @Override
-  public boolean deleteAll(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
-    return yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifier(
-               accountIdentifier, orgIdentifier, projectIdentifier)
-        > 0;
   }
 
   private YamlGitConfigDTO updateInternal(YamlGitConfigDTO gitSyncConfigDTO) {
@@ -392,6 +389,17 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
   }
 
   @Override
+  public boolean deleteAll(String accountIdentifier, String orgIdentifier, String projectIdentifier) {
+    List<YamlGitConfigDTO> yamlGitConfigDTOS = list(projectIdentifier, orgIdentifier, accountIdentifier);
+    boolean isDeleted = yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifier(
+                            accountIdentifier, orgIdentifier, projectIdentifier)
+        > 0;
+    gitSyncSettingsService.delete(accountIdentifier, orgIdentifier, projectIdentifier);
+    deleteExistingSetupUsages(yamlGitConfigDTOS);
+    deleteBranches(yamlGitConfigDTOS);
+    return isDeleted;
+  }
+
   public Optional<ConnectorInfoDTO> getGitConnector(IdentifierRef identifierRef) {
     Optional<ConnectorResponseDTO> connectorDTO = connectorService.get(identifierRef.getAccountIdentifier(),
         identifierRef.getOrgIdentifier(), identifierRef.getProjectIdentifier(), identifierRef.getIdentifier());
@@ -536,6 +544,51 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       log.info(ENTITY_REFERENCE_LOG_PREFIX
               + "The entity reference was not created when the connector [{}] was set up from yamlGitConfig [{}]",
           gitSyncConfigDTO.getGitConnectorRef(), gitSyncConfigDTO.getIdentifier());
+    }
+  }
+
+  private void deleteExistingSetupUsages(List<YamlGitConfigDTO> yamlGitConfigDTOS) {
+    for (YamlGitConfigDTO gitSyncConfigDTO : yamlGitConfigDTOS) {
+      IdentifierRefProtoDTO yamlGitConfigReference = identifierRefProtoDTOHelper.createIdentifierRefProtoDTO(
+          gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getOrganizationIdentifier(),
+          gitSyncConfigDTO.getProjectIdentifier(), gitSyncConfigDTO.getIdentifier());
+
+      EntityDetailProtoDTO yamlGitConfigDetails = EntityDetailProtoDTO.newBuilder()
+                                                      .setIdentifierRef(yamlGitConfigReference)
+                                                      .setType(EntityTypeProtoEnum.GIT_REPOSITORIES)
+                                                      .setName(gitSyncConfigDTO.getName())
+                                                      .build();
+      EntitySetupUsageCreateV2DTO entityReferenceDTO =
+          EntitySetupUsageCreateV2DTO.newBuilder()
+              .setAccountIdentifier(gitSyncConfigDTO.getAccountIdentifier())
+              .setReferredByEntity(yamlGitConfigDetails)
+              .setDeleteOldReferredByRecords(true)
+              .build();
+
+      try {
+        setupUsageEventProducer.send(
+            Message.newBuilder()
+                .putAllMetadata(ImmutableMap.of("accountId", gitSyncConfigDTO.getAccountIdentifier(),
+                    EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.CONNECTORS.name(),
+                    EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
+                .setData(entityReferenceDTO.toByteString())
+                .build());
+      } catch (Exception ex) {
+        log.error(
+            "Error deleting the setup usages for the YamlGitConfigs with the identifier {} in project {} in org {}",
+            gitSyncConfigDTO.getIdentifier(), gitSyncConfigDTO.getProjectIdentifier(),
+            gitSyncConfigDTO.getOrganizationIdentifier());
+      }
+    }
+  }
+
+  private void deleteBranches(List<YamlGitConfigDTO> yamlGitConfigDTOS) {
+    for (YamlGitConfigDTO gitSyncConfigDTO : yamlGitConfigDTOS) {
+      List<YamlGitConfigDTO> yamlGitConfigDTOList =
+          getByAccountAndRepo(gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getRepo());
+      if (yamlGitConfigDTOList.size() == 0) {
+        gitBranchService.deleteAll(gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getAccountIdentifier());
+      }
     }
   }
 }

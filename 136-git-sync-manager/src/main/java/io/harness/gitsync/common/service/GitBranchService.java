@@ -40,4 +40,6 @@ public interface GitBranchService {
   boolean isBranchExists(String accountIdentifier, String repoURL, String branch, BranchSyncStatus branchSyncStatus);
 
   DeleteResult delete(String repoUrl, String branchName, String accountIdentifier);
+
+  DeleteResult deleteAll(String repoUrl, String accountIdentifier);
 }

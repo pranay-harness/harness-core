@@ -132,13 +132,16 @@ public class GitBranchServiceImpl implements GitBranchService {
         projectIdentifier, orgIdentifier, accountId, gitConnectorRef);
 
     for (String branchName : branches) {
-      GitBranch gitBranch = GitBranch.builder()
-                                .accountIdentifier(accountId)
-                                .branchName(branchName)
-                                .branchSyncStatus(BranchSyncStatus.UNSYNCED)
-                                .repoURL(GitUtils.convertToUrlWithGit(repoUrl))
-                                .build();
-      save(gitBranch);
+      GitBranch gitBranch = get(accountId, GitUtils.convertToUrlWithGit(repoUrl), branchName);
+      if (gitBranch == null) {
+        gitBranch = GitBranch.builder()
+                        .accountIdentifier(accountId)
+                        .branchName(branchName)
+                        .branchSyncStatus(BranchSyncStatus.UNSYNCED)
+                        .repoURL(GitUtils.convertToUrlWithGit(repoUrl))
+                        .build();
+        save(gitBranch);
+      }
     }
   }
 
@@ -213,6 +216,13 @@ public class GitBranchServiceImpl implements GitBranchService {
                                   .is(repoUrl)
                                   .and(GitBranchKeys.branchName)
                                   .is(branchName);
+    return gitBranchesRepository.delete(criteria);
+  }
+
+  @Override
+  public DeleteResult deleteAll(String repoUrl, String accountIdentifier) {
+    final Criteria criteria =
+        Criteria.where(GitBranchKeys.accountIdentifier).is(accountIdentifier).and(GitBranchKeys.repoURL).is(repoUrl);
     return gitBranchesRepository.delete(criteria);
   }
 }

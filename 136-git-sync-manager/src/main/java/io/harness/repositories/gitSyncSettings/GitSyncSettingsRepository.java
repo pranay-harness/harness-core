@@ -21,4 +21,6 @@ public interface GitSyncSettingsRepository
     extends CrudRepository<GitSyncSettings, String>, GitSyncSettingsCustomRepository {
   Optional<GitSyncSettings> findByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier);
+  void deleteByAccountIdentifierAndOrgIdentifierAndProjectIdentifier(
+      String accountIdentifier, String orgIdentifier, String projectIdentifier);
 }

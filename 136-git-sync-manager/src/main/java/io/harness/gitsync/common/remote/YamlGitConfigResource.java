@@ -106,6 +106,18 @@ public class YamlGitConfigResource {
   }
 
   @PUT
+  @Path("/disable")
+  @ApiOperation(value = "Disable git experience", nickname = "disableGitSync")
+  public boolean putGitExperience(
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectIdentifier,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("organizationId") String orgIdentifier,
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotEmpty String accountId) {
+    accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
+        Resource.of(ResourceTypes.PROJECT, projectIdentifier), EDIT_PROJECT_PERMISSION);
+    return yamlGitConfigService.deleteAll(accountId, orgIdentifier, projectIdentifier);
+  }
+
+  @PUT
   @ApiOperation(value = "Update Git Sync by id", nickname = "putGitSync")
   @Operation(operationId = "updateGitSyncConfig", summary = "Update existing Git Sync Config by Identifier",
       responses = { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "Updated Git Sync Config") })
@@ -184,19 +196,4 @@ public class YamlGitConfigResource {
     return gitEnabledHelper.getGitEnabledDTO(projectIdentifier, organizationIdentifier, accountIdentifier);
   }
 
-  @PUT
-  @Path("/disable")
-  @ApiOperation(value = "Disable git experience", nickname = "disableGitSync")
-  @Operation(operationId = "disableGitSync", summary = "Disable git experience for a scope",
-      responses =
-      {
-        @io.swagger.v3.oas.annotations.responses.
-        ApiResponse(description = "Status: true for success and false for failure")
-      })
-  public boolean
-  putGitExperience(@Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectIdentifier,
-      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("organizationId") String orgIdentifier,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotEmpty String accountId) {
-    return yamlGitConfigService.deleteAll(accountId, orgIdentifier, projectIdentifier);
-  }
 }
