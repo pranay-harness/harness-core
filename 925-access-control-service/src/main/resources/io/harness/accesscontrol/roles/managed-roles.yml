@@ -350,8 +350,6 @@ roles:
         - core_delegateconfiguration_view
         - core_serviceaccount_view
         - core_template_view
-        - core_governancePolicy_view
-        - core_governancePolicySets_view
         - chi_monitoredservice_view
         - chi_slo_view
       allowedScopeLevels:
@@ -375,8 +373,6 @@ roles:
         - core_resourcegroup_view
         - core_serviceaccount_view
         - core_template_view
-        - core_governancePolicy_view
-        - core_governancePolicySets_view
         - chi_monitoredservice_view
         - chi_slo_view
         - ff_environment_edit
