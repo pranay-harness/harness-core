@@ -237,6 +237,7 @@ public class ExecutionInterruptManager {
       case MARK_FAILED:
       case MARK_SUCCESS:
       case ROLLBACK:
+      case ROLLBACK_PROVISIONER_AFTER_PHASES:
       case END_EXECUTION:
       case ROLLBACK_DONE:
         noop();
@@ -265,6 +266,7 @@ public class ExecutionInterruptManager {
         case RETRY:
         case IGNORE:
         case ROLLBACK:
+        case ROLLBACK_PROVISIONER_AFTER_PHASES:
         case ABORT:
         case MARK_EXPIRED:
         case RESUME_ALL:

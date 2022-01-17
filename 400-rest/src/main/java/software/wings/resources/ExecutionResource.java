@@ -377,7 +377,9 @@ public class ExecutionResource {
       @PathParam("workflowExecutionId") String workflowExecutionId, ExecutionInterrupt executionInterrupt) {
     executionInterrupt.setAppId(appId);
     executionInterrupt.setExecutionUuid(workflowExecutionId);
-    if (ExecutionInterruptType.ROLLBACK.equals(executionInterrupt.getExecutionInterruptType())) {
+    if (ExecutionInterruptType.ROLLBACK.equals(executionInterrupt.getExecutionInterruptType())
+        || ExecutionInterruptType.ROLLBACK_PROVISIONER_AFTER_PHASES.equals(
+            executionInterrupt.getExecutionInterruptType())) {
       deploymentAuthHandler.authorizeRollback(appId, workflowExecutionId);
     } else {
       deploymentAuthHandler.authorize(appId, workflowExecutionId);
