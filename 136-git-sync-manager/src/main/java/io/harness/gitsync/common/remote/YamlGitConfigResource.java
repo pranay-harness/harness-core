@@ -36,6 +36,7 @@ import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
+import io.harness.security.annotations.InternalApi;
 
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
@@ -107,6 +108,7 @@ public class YamlGitConfigResource {
 
   @PUT
   @Path("/disable")
+  @InternalApi
   @ApiOperation(value = "Disable git experience", nickname = "disableGitSync")
   public boolean putGitExperience(
       @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectIdentifier,
