@@ -355,11 +355,12 @@ public class SamlBasedAuthHandler implements AuthHandler {
         final String accessToken = this.getAccessTokenForAzure(
             tenantId, samlSettings.getClientId(), String.valueOf(samlSettings.getClientSecret()));
 
-        try {
-          userGroups.addAll(this.getUsersGroupResource(accessToken, tenantId, azureUserId));
-        } catch (IOException ioExc) {
-          log.error("Getting azure user groups failed in case of more than 150 groups", ioExc);
-          throw new WingsException("Getting azure user groups failed in case of more than 150 groups");
+        if (isNotEmpty(accessToken)) {
+          try {
+            userGroups.addAll(this.getUsersGroupResource(accessToken, tenantId, azureUserId));
+          } catch (IOException ioExc) {
+            log.error("Getting azure user groups failed in case of more than 150 groups", ioExc);
+          }
         }
       }
     }
@@ -426,7 +427,7 @@ public class SamlBasedAuthHandler implements AuthHandler {
       return jsonObject.getString(ACCESS_TOKEN);
     } catch (Exception ex) {
       log.error("Getting azure access token failed", ex);
-      throw new WingsException("Failed to get access token for azure");
+      return null;
     }
   }
 
