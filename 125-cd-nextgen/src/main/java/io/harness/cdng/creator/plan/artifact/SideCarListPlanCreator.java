@@ -23,6 +23,7 @@ import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
+import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
@@ -34,40 +35,19 @@ import io.harness.steps.fork.ForkStepParameters;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
-import java.util.*;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @OwnedBy(HarnessTeam.CDC)
 public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrapper> {
   @Inject KryoSerializer kryoSerializer;
-
-  //  private PlanCreationResponse createPlanForSidecarsNode(String sideCarsPlanNodeId, ArtifactList artifactList) {
-  //    Map<String, PlanNode> planNodes = new HashMap<>();
-  //    for (Map.Entry<String, ArtifactInfo> entry : artifactList.getSidecars().entrySet()) {
-  //      PlanNode sideCarPlanNode = createPlanForArtifactNode(entry.getKey(), entry.getValue());
-  //      planNodes.put(sideCarPlanNode.getUuid(), sideCarPlanNode);
-  //    }
-  //
-  //    ForkStepParameters stepParameters =
-  //        ForkStepParameters.builder()
-  //            .parallelNodeIds(planNodes.values().stream().map(PlanNode::getUuid).collect(Collectors.toList()))
-  //            .build();
-  //    PlanNode sidecarsNode =
-  //        PlanNode.builder()
-  //            .uuid(sideCarsPlanNodeId)
-  //            .stepType(SidecarsStep.STEP_TYPE)
-  //            .name(PlanCreatorConstants.SIDECARS_NODE_NAME)
-  //            .identifier(YamlTypes.SIDECARS_ARTIFACT_CONFIG)
-  //            .stepParameters(stepParameters)
-  //            .facilitatorObtainment(
-  //                FacilitatorObtainment.newBuilder()
-  //                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
-  //                    .build())
-  //            .skipExpressionChain(false)
-  //            .build();
-  //    planNodes.put(sidecarsNode.getUuid(), sidecarsNode);
-  //    return PlanCreationResponse.builder().nodes(planNodes).build();
-  //  }
 
   @Override
   public Class<SidecarsListWrapper> getFieldClass() {
@@ -115,7 +95,7 @@ public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrap
 
     Map<String, YamlField> dependenciesMap = new HashMap<>();
     dependenciesMap.put(individualSideCarPlanNodeId, individualSideCar);
-    PlanCreationResponse.PlanCreationResponseBuilder individualSideCarPlanResponse =
+    PlanCreationResponseBuilder individualSideCarPlanResponse =
         PlanCreationResponse.builder().dependencies(
             DependenciesUtils.toDependenciesProto(dependenciesMap)
                 .toBuilder()

@@ -16,18 +16,15 @@ import io.harness.cdng.artifact.bean.yaml.ArtifactOverrideSets;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifactWrapper;
-import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.steps.ArtifactStepParameters.ArtifactStepParametersBuilder;
 import io.harness.cdng.artifact.steps.ArtifactsStep;
-import io.harness.cdng.artifact.steps.SidecarsStep;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.service.beans.ServiceConfig;
 import io.harness.cdng.utilities.PrimaryArtifactsUtility;
 import io.harness.cdng.utilities.SideCarsListArtifactsUtility;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -65,49 +62,6 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.CDC)
 public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig> {
   @Inject KryoSerializer kryoSerializer;
-
-  private PlanCreationResponse createPlanForSidecarsNode(String sideCarsPlanNodeId, ArtifactList artifactList) {
-    Map<String, PlanNode> planNodes = new HashMap<>();
-    for (Map.Entry<String, ArtifactInfo> entry : artifactList.getSidecars().entrySet()) {
-      PlanNode sideCarPlanNode = createPlanForArtifactNode(entry.getKey(), entry.getValue());
-      planNodes.put(sideCarPlanNode.getUuid(), sideCarPlanNode);
-    }
-
-    ForkStepParameters stepParameters =
-        ForkStepParameters.builder()
-            .parallelNodeIds(planNodes.values().stream().map(PlanNode::getUuid).collect(Collectors.toList()))
-            .build();
-    PlanNode sidecarsNode =
-        PlanNode.builder()
-            .uuid(sideCarsPlanNodeId)
-            .stepType(SidecarsStep.STEP_TYPE)
-            .name(PlanCreatorConstants.SIDECARS_NODE_NAME)
-            .identifier(YamlTypes.SIDECARS_ARTIFACT_CONFIG)
-            .stepParameters(stepParameters)
-            .facilitatorObtainment(
-                FacilitatorObtainment.newBuilder()
-                    .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.CHILDREN).build())
-                    .build())
-            .skipExpressionChain(false)
-            .build();
-    planNodes.put(sidecarsNode.getUuid(), sidecarsNode);
-    return PlanCreationResponse.builder().nodes(planNodes).build();
-  }
-
-  private PlanNode createPlanForArtifactNode(String identifier, ArtifactInfo artifactInfo) {
-    return PlanNode.builder()
-        .uuid(UUIDGenerator.generateUuid())
-        .stepType(ArtifactStep.STEP_TYPE)
-        .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
-        .identifier(identifier)
-        .stepParameters(artifactInfo.getParams())
-        .facilitatorObtainment(
-            FacilitatorObtainment.newBuilder()
-                .setType(FacilitatorType.newBuilder().setType(OrchestrationFacilitatorType.TASK).build())
-                .build())
-        .skipExpressionChain(false)
-        .build();
-  }
 
   @Override
   public Class<ArtifactListConfig> getFieldClass() {

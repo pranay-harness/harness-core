@@ -10,15 +10,12 @@ package io.harness.cdng.artifact.bean.yaml;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.artifact.SidecarWrapperArtifactVisitorHelper;
-import io.harness.walktree.beans.VisitableChildren;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
 import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
-import io.swagger.annotations.ApiModelProperty;
 import java.util.List;
 import lombok.Builder;
-import lombok.Getter;
 import lombok.Value;
 import org.springframework.data.annotation.TypeAlias;
 

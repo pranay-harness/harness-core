@@ -96,7 +96,9 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
 import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.outbox.DelegateOutboxEventHandler;
+import io.harness.delegate.service.impl.DelegateRingServiceImpl;
 import io.harness.delegate.service.impl.DelegateUpgraderServiceImpl;
+import io.harness.delegate.service.intfc.DelegateRingService;
 import io.harness.delegate.service.intfc.DelegateUpgraderService;
 import io.harness.encryptors.CustomEncryptor;
 import io.harness.encryptors.Encryptors;
@@ -998,6 +1000,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(EntityVersionService.class).to(EntityVersionServiceImpl.class);
     bind(PluginService.class).to(PluginServiceImpl.class);
     bind(CommandService.class).to(CommandServiceImpl.class);
+    bind(DelegateRingService.class).to(DelegateRingServiceImpl.class);
     bind(DelegateUpgraderService.class).to(DelegateUpgraderServiceImpl.class);
     bind(DelegateService.class).to(DelegateServiceImpl.class);
     bind(DelegateScopeService.class).to(DelegateScopeServiceImpl.class);

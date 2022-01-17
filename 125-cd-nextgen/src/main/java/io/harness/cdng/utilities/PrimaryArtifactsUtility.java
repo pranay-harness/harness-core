@@ -1,12 +1,13 @@
 /*
- * Copyright 2022 Harness Inc. All rights reserved.
- * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Shield 1.0.0 license
  * that can be found in the licenses directory at the root of this repository, also available at
- * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
  */
 
 package io.harness.cdng.utilities;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
@@ -16,10 +17,9 @@ import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
-
-import com.fasterxml.jackson.databind.JsonNode;
-import java.io.IOException;
 import lombok.experimental.UtilityClass;
+
+import java.io.IOException;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 @UtilityClass
@@ -46,7 +46,7 @@ public class PrimaryArtifactsUtility {
       return primaryYamlField;
     }
 
-    primaryYamlField = fetchPrimaryYamlFieldUnderArtifacts(artifactField);
+    primaryYamlField = createPrimaryYamlFieldUnderArtifacts(artifactField);
     setYamlUpdate(primaryYamlField, yamlUpdates);
     return primaryYamlField;
   }
@@ -60,8 +60,9 @@ public class PrimaryArtifactsUtility {
     }
   }
 
-  private YamlField fetchPrimaryYamlFieldUnderArtifacts(YamlField artifacts) {
+  private YamlField createPrimaryYamlFieldUnderArtifacts(YamlField stageOverride) {
     return new YamlField(YamlTypes.PRIMARY_ARTIFACT,
-        new YamlNode(YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), artifacts.getNode()));
+        new YamlNode(
+            YamlTypes.PRIMARY_ARTIFACT, PrimaryArtifactsUtility.getArtifactsJsonNode(), stageOverride.getNode()));
   }
 }

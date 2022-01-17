@@ -6,7 +6,6 @@ proto_library(
     name = "953_events_api_proto",
     srcs = ["deployment_event.proto"],
     visibility = ["//visibility:public"],
-    deps = ["//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity:970_ng_commons_proto"],
 )
 
 go_proto_library(
@@ -14,7 +13,6 @@ go_proto_library(
     importpath = "github.com/wings-software/portal/953-events-api/src/main/proto/io/harness/eventsframework/schemas/deployment",
     proto = ":953_events_api_proto",
     visibility = ["//visibility:public"],
-    deps = ["//970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity"],
 )
 
 go_library(

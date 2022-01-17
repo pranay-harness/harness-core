@@ -9,13 +9,10 @@ package io.harness.cdng.creator.plan.artifact;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
-import io.harness.cdng.artifact.bean.yaml.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.visitor.YamlTypes;
-import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -28,7 +25,12 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
-import java.util.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @OwnedBy(HarnessTeam.CDC)
 public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArtifact> {
