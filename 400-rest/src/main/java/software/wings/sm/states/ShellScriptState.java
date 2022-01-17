@@ -587,6 +587,9 @@ public class ShellScriptState extends State implements SweepingOutputStateMixin 
   @Override
   @SchemaIgnore
   public List<String> getPatternsForRequiredContextElementType() {
+    if (executeOnDelegate) {
+      return null;
+    }
     List<String> patterns = new LinkedList<>();
     if (templateVariables != null) {
       patterns = templateVariables.stream().map(variable -> variable.getValue()).collect(Collectors.toList());
