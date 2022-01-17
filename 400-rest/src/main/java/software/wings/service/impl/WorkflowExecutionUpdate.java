@@ -404,15 +404,7 @@ public class WorkflowExecutionUpdate implements StateMachineExecutionCallback {
     if (application == null) {
       return;
     }
-    PipelineSummary summary = execution.getPipelineSummary();
-    if (summary == null) {
-      return;
-    }
     switch (eventType) {
-      case PIPELINE_START:
-        break;
-      case PIPELINE_END:
-        break;
       case PIPELINE_CONTINUE:
         deliverPipelineResume(application, execution, statusUpdateInfo);
         break;
