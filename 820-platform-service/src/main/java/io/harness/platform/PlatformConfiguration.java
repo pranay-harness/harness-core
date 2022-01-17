@@ -59,7 +59,7 @@ public class PlatformConfiguration extends Configuration {
   @ConfigSecret
   private NotificationServiceConfiguration notificationServiceConfig;
   @JsonProperty("commonPoolConfig") private ThreadPoolConfig commonPoolConfig;
-  @JsonProperty("auditServiceConfig") private AuditServiceConfiguration auditServiceConfig;
+  @JsonProperty("auditServiceConfig") @ConfigSecret private AuditServiceConfiguration auditServiceConfig;
   @JsonProperty("resourceGroupServiceConfig")
   @ConfigSecret
   private ResourceGroupServiceConfig resoureGroupServiceConfig;
