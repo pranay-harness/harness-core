@@ -295,15 +295,16 @@ public class NGTriggerResource {
 
   @GET
   @Operation(operationId = "getTriggerDetails",
-      summary = "Gets the list of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier.",
+      summary =
+          "Gets the trigger details for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier.",
       responses =
       {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "default",
             description =
-                "Returns the list of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier.")
+                "Returns the trigger details of triggers for accountIdentifier, orgIdentifier, projectIdentifier, targetIdentifier, triggerIdentifier.")
       })
   @Path("{triggerIdentifier}/details")
-  @ApiOperation(value = "Gets Triggers list for target", nickname = "getTriggerDetails")
+  @ApiOperation(value = "Gets Trigger details for pipeline and trigger identifier, ", nickname = "getTriggerDetails")
   @NGAccessControlCheck(resourceType = "PIPELINE", permission = PipelineRbacPermissions.PIPELINE_VIEW)
   public ResponseDTO<NGTriggerDetailsResponseDTO>
   getTriggerDetails(
