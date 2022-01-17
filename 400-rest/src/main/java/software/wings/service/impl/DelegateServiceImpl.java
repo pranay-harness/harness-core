@@ -1221,12 +1221,13 @@ public class DelegateServiceImpl implements DelegateService {
           new BigInteger(1, templateParameters.getAccountId().substring(0, 6).getBytes(StandardCharsets.UTF_8)))
                                 .replaceFirst("^0+(?!$)", "");
 
+      String accountId = templateParameters.getAccountId();
       final boolean isCiEnabled = isCiEnabled(templateParameters);
       ImmutableMap.Builder<String, String> params =
           ImmutableMap.<String, String>builder()
-              .put("delegateDockerImage", getDelegateDockerImage(templateParameters.getAccountId()))
-              .put("upgraderDockerImage", getUpgraderDockerImage(templateParameters.getAccountId()))
-              .put("accountId", templateParameters.getAccountId())
+              .put("delegateDockerImage", getDelegateDockerImage(accountId))
+              .put("upgraderDockerImage", getUpgraderDockerImage(accountId))
+              .put("accountId", accountId)
               .put("accountSecret", getAccountSecret(templateParameters, useNgToken))
               .put("hexkey", hexkey)
               .put(UPGRADE_VERSION, latestVersion)
@@ -1242,7 +1243,7 @@ public class DelegateServiceImpl implements DelegateService {
               .put("kubectlVersion", mainConfiguration.getKubectlVersion())
               .put("scmVersion", mainConfiguration.getScmVersion())
               .put("delegateGrpcServicePort", String.valueOf(delegateGrpcConfig.getPort()))
-              .put("kubernetesAccountLabel", getAccountIdentifier(templateParameters.getAccountId()));
+              .put("kubernetesAccountLabel", getAccountIdentifier(accountId));
 
       if (mainConfiguration.getDeployMode() == DeployMode.KUBERNETES_ONPREM) {
         params.put("managerTarget", mainConfiguration.getGrpcOnpremDelegateClientConfig().getTarget());
