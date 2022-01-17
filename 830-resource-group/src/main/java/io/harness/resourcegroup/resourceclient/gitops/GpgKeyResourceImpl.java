@@ -1,5 +1,8 @@
 package io.harness.resourcegroup.resourceclient.gitops;
 
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
+
 import io.harness.beans.Scope;
 import io.harness.beans.ScopeLevel;
 import io.harness.eventsframework.consumer.Message;
@@ -7,9 +10,11 @@ import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,7 +27,7 @@ public class GpgKeyResourceImpl implements Resource {
 
   @Override
   public Set<ScopeLevel> getValidScopeLevels() {
-    return EnumSet.of(ScopeLevel.PROJECT);
+    return EnumSet.of(ScopeLevel.ACCOUNT, ScopeLevel.ORGANIZATION, ScopeLevel.PROJECT);
   }
 
   @Override
@@ -41,7 +46,9 @@ public class GpgKeyResourceImpl implements Resource {
   }
 
   @Override
-  public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(ValidatorType.DYNAMIC);
+  public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES),
+        ScopeLevel.ORGANIZATION, EnumSet.of(BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES), ScopeLevel.PROJECT,
+        EnumSet.of(BY_RESOURCE_TYPE));
   }
 }

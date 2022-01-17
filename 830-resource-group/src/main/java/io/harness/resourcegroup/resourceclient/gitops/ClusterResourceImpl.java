@@ -1,5 +1,8 @@
 package io.harness.resourcegroup.resourceclient.gitops;
 
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE;
+import static io.harness.resourcegroup.beans.ValidatorType.BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES;
+
 import static org.apache.commons.lang3.StringUtils.stripToNull;
 
 import io.harness.beans.Scope;
@@ -11,10 +14,12 @@ import io.harness.resourcegroup.beans.ValidatorType;
 import io.harness.resourcegroup.framework.service.Resource;
 import io.harness.resourcegroup.framework.service.ResourceInfo;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Singleton;
 import com.google.protobuf.InvalidProtocolBufferException;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -30,7 +35,7 @@ public class ClusterResourceImpl implements Resource {
 
   @Override
   public Set<ScopeLevel> getValidScopeLevels() {
-    return EnumSet.of(ScopeLevel.PROJECT);
+    return EnumSet.of(ScopeLevel.ACCOUNT, ScopeLevel.ORGANIZATION, ScopeLevel.PROJECT);
   }
 
   @Override
@@ -64,7 +69,9 @@ public class ClusterResourceImpl implements Resource {
   }
 
   @Override
-  public EnumSet<ValidatorType> getSelectorKind() {
-    return EnumSet.of(ValidatorType.DYNAMIC);
+  public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
+    return ImmutableMap.of(ScopeLevel.ACCOUNT, EnumSet.of(BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES),
+        ScopeLevel.ORGANIZATION, EnumSet.of(BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES), ScopeLevel.PROJECT,
+        EnumSet.of(BY_RESOURCE_TYPE));
   }
 }
