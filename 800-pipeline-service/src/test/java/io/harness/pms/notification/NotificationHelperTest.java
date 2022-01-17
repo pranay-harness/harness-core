@@ -47,10 +47,12 @@ import io.harness.pms.contracts.plan.ExecutionMetadata;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.expression.PmsEngineExpressionService;
+import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
@@ -138,6 +140,9 @@ public class NotificationHelperTest extends CategoryTest {
 
   String notificationRulesString =
       "{\"__recast\":\"java.util.ArrayList\",\"__encodedValue\":[{\"__recast\":\"io.harness.notification.bean.NotificationRules\",\"name\":\"N2\",\"enabled\":true,\"pipelineEvents\":[{\"__recast\":\"io.harness.notification.bean.PipelineEvent\",\"type\":\"ALL_EVENTS\",\"forStages\":null},{\"__recast\":\"io.harness.notification.bean.PipelineEvent\",\"type\":\"STAGE_FAILED\",\"forStages\":[\"stage1\"]}],\"notificationChannelWrapper\":{\"__recast\":\"parameterField\",\"__encodedValue\":{\"__recast\":\"io.harness.pms.yaml.ParameterDocumentField\",\"expressionValue\":null,\"expression\":false,\"valueDoc\":{\"__recast\":\"io.harness.pms.yaml.ParameterFieldValueWrapper\",\"value\":{\"__recast\":\"io.harness.notification.bean.NotificationChannelWrapper\",\"type\":\"Email\",\"notificationChannel\":{\"__recast\":\"io.harness.notification.channelDetails.PmsEmailChannel\",\"userGroups\":[],\"recipients\":[\"admin@harness.io\",\"test@harness.io\"]}}},\"valueClass\":\"io.harness.notification.bean.NotificationChannelWrapper\",\"typeString\":false,\"skipAutoEvaluation\":false,\"jsonResponseField\":false,\"responseField\":null}}}]}";
+  Map<String, Object> notificationRulesMap =
+      RecastOrchestrationUtils.toMap(RecastOrchestrationUtils.fromJson(notificationRulesString));
+
   @Before
   public void setup() {
     notificationClient = mock(NotificationClientImpl.class);
@@ -222,7 +227,7 @@ public class NotificationHelperTest extends CategoryTest {
         .thenReturn(Optional.of(PlanExecutionMetadata.builder().yaml(emailNotificationYaml).build()));
     ArgumentCaptor<NotificationChannel> notificationChannelArgumentCaptor =
         ArgumentCaptor.forClass(NotificationChannel.class);
-    doReturn(notificationRulesString).when(pmsEngineExpressionService).resolve(eq(ambiance), any(), eq(true));
+    doReturn(notificationRulesMap).when(pmsEngineExpressionService).resolve(eq(ambiance), any(), eq(true));
 
     notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_SUCCESS, nodeExecution, 1L);
     verify(notificationClient, times(1)).sendNotificationAsync(notificationChannelArgumentCaptor.capture());
@@ -253,7 +258,7 @@ public class NotificationHelperTest extends CategoryTest {
         .thenReturn(PlanExecution.builder().status(Status.SUCCEEDED).startTs(0L).endTs(0L).build());
     when(planExecutionMetadataService.findByPlanExecutionId(anyString()))
         .thenReturn(Optional.of(PlanExecutionMetadata.builder().yaml(allEventsYaml).build()));
-    doReturn(notificationRulesString).when(pmsEngineExpressionService).resolve(eq(ambiance), any(), eq(true));
+    doReturn(notificationRulesMap).when(pmsEngineExpressionService).resolve(eq(ambiance), any(), eq(true));
     for (int idx = 0; idx < pipelineEventTypeList.size(); idx++) {
       notificationHelper.sendNotification(ambiance, pipelineEventTypeList.get(idx), nodeExecution, 1L);
       verify(notificationClient, times(idx + 1)).sendNotificationAsync(any());
