@@ -341,11 +341,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   @Inject @Named("systemExecutor") private ExecutorService systemExecutor;
   @Inject @Named("taskPollExecutor") private ExecutorService taskPollExecutor;
   @Inject @Named("asyncExecutor") private ExecutorService asyncExecutor;
+  @Inject @Named("syncExecutor") private ExecutorService syncExecutor;
   @Inject @Named("artifactExecutor") private ExecutorService artifactExecutor;
   @Inject @Named("timeoutExecutor") private ExecutorService timeoutEnforcement;
   @Inject @Named("grpcServiceExecutor") private ExecutorService grpcServiceExecutor;
   @Inject @Named("taskProgressExecutor") private ExecutorService taskProgressExecutor;
-  @Inject private ExecutorService syncExecutor;
 
   @Inject private SignalService signalService;
   @Inject private MessageService messageService;
@@ -489,7 +489,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
         log.info("Delegate process started");
         if (delegateConfiguration.isGrpcServiceEnabled()) {
           restartableServiceManager.start();
-          Runtime.getRuntime().addShutdownHook(new Thread(() -> restartableServiceManager.stop()));
         }
       }
 
@@ -970,7 +969,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     if (delegateConfiguration.isGrpcServiceEnabled() && acquireTasks.get() && !restartableServiceManager.isRunning()) {
       grpcServiceExecutor.submit(() -> {
         restartableServiceManager.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> restartableServiceManager.stop()));
       });
     }
   }
@@ -1295,26 +1293,37 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void shutdownExecutors() throws InterruptedException {
     log.info("Initiating delegate shutdown");
-    final long shutdownStart = clock.millis();
-    if (perpetualTaskWorker != null) {
-      log.info("Stopping perpetual task workers");
-      perpetualTaskWorker.stop();
-    }
     acquireTasks.set(false);
+
+    final long shutdownStart = clock.millis();
     log.info("Stopping executors");
     artifactExecutor.shutdown();
     asyncExecutor.shutdown();
     syncExecutor.shutdown();
     taskPollExecutor.shutdown();
+
     final boolean terminatedArtifact = artifactExecutor.awaitTermination(10, TimeUnit.MINUTES);
     final boolean terminatedAsync = asyncExecutor.awaitTermination(10, TimeUnit.MINUTES);
     final boolean terminatedSync = syncExecutor.awaitTermination(10, TimeUnit.MINUTES);
     final boolean terminatedPoll = taskPollExecutor.awaitTermination(10, TimeUnit.MINUTES);
 
     log.info(
-        "Executors terminated after {}min. All tasks completed? Artifact [{}], Async [{}], Sync [{}], Polling [{}]",
-        Duration.ofMillis(clock.millis() - shutdownStart).toMinutes(), terminatedArtifact, terminatedAsync,
+        "Executors terminated after {}s. All tasks completed? Artifact [{}], Async [{}], Sync [{}], Polling [{}]",
+        Duration.ofMillis(clock.millis() - shutdownStart).toMillis() * 1000, terminatedArtifact, terminatedAsync,
         terminatedSync, terminatedPoll);
+
+    if (perpetualTaskWorker != null) {
+      log.info("Stopping perpetual task workers");
+      perpetualTaskWorker.stop();
+    }
+
+    if(restartableServiceManager != null) {
+      restartableServiceManager.stop();
+    }
+
+    if (chronicleEventTailer != null) {
+      chronicleEventTailer.stopAsync().awaitTerminated();
+    }
   }
 
   private void handleStopAcquiringMessage(String sender) {
@@ -1408,7 +1417,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   private void startChroniqleQueueMonitor() {
     if (chronicleEventTailer != null) {
       chronicleEventTailer.startAsync().awaitRunning();
-      Runtime.getRuntime().addShutdownHook(new Thread(() -> chronicleEventTailer.stopAsync().awaitTerminated()));
     }
   }
 

@@ -79,7 +79,7 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
   @Override
   public void run(final DelegateAgentConfig delegateAgentConfig, final Environment environment) throws Exception {
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(10, 40, 1, TimeUnit.SECONDS,
-        new ThreadFactoryBuilder().setNameFormat("sync-task-%d").setPriority(Thread.NORM_PRIORITY).build()));
+        new ThreadFactoryBuilder().setNameFormat("other-%d").setPriority(Thread.NORM_PRIORITY).build()));
 
     final Injector injector = Guice.createInjector(new DelegateAgentModule(configuration));
 
