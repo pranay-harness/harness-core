@@ -197,5 +197,4 @@ public class YamlGitConfigResource {
           NGCommonEntityConstants.ORG_KEY) String organizationIdentifier) {
     return gitEnabledHelper.getGitEnabledDTO(projectIdentifier, organizationIdentifier, accountIdentifier);
   }
-
 }
