@@ -299,10 +299,8 @@ public class HarnessResourceGroupResource {
     if (isNotEmpty(resourceGroupDTO.getResourceSelectors())) {
       resourceGroupDTO.getResourceSelectors().forEach(resourceSelector -> {
         if (resourceSelector instanceof ResourceSelectorByScope) {
-          if (!resourceGroupDTO.getScope().equals(((ResourceSelectorByScope) resourceSelector).getScope())) {
-            throw new InvalidRequestException(
-                "Resource Selector by scope cannot be provided for custom resource groups.");
-          }
+          throw new InvalidRequestException(
+              "Resource Selector by scope cannot be provided for custom resource groups.");
         }
       });
     }
