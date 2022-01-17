@@ -48,8 +48,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -201,20 +203,26 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                   deploymentTimeSeriesAnalysisFilter.filterByHostName(),
                   deploymentTimeSeriesAnalysisFilter.isAnomalous()))
           .forEach(transactionMetricHostData -> {
-            TransactionMetricInfo transactionMetricInfo =
-                TransactionMetricInfo.builder()
-                    .transactionMetric(createTransactionMetric(transactionMetricHostData))
-                    .connectorName(connectorName)
-                    .dataSourceType(dataSourceType)
-                    .build();
+            Map<Risk, Integer> nodeCountByRiskStatusMap = new HashMap<>();
             SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodeDataSet = new TreeSet();
             transactionMetricHostData.getHostData()
                 .stream()
                 .filter(hostData
                     -> filterHostData(hostData, deploymentTimeSeriesAnalysisFilter.getHostName(),
                         deploymentTimeSeriesAnalysisFilter.isAnomalous()))
-                .forEach(hostData -> nodeDataSet.add(hostData));
-            transactionMetricInfo.setNodes(nodeDataSet);
+                .forEach(hostData -> {
+                  nodeDataSet.add(hostData);
+                  Risk risk = hostData.getRisk();
+                  nodeCountByRiskStatusMap.put(risk, nodeCountByRiskStatusMap.getOrDefault(risk, 0) + 1);
+                });
+            TransactionMetricInfo transactionMetricInfo =
+                TransactionMetricInfo.builder()
+                    .transactionMetric(createTransactionMetric(transactionMetricHostData))
+                    .connectorName(connectorName)
+                    .dataSourceType(dataSourceType)
+                    .nodes(nodeDataSet)
+                    .nodeCountByRiskStatusMap(nodeCountByRiskStatusMap)
+                    .build();
             if (isNotEmpty(nodeDataSet)) {
               transactionMetricInfoSet.add(transactionMetricInfo);
             }
