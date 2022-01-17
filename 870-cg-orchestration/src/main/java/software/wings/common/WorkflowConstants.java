@@ -7,11 +7,11 @@
 
 package software.wings.common;
 
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+
 import io.harness.annotations.dev.OwnedBy;
 
 import java.util.regex.Pattern;
-
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 @OwnedBy(CDC)
 public interface WorkflowConstants {

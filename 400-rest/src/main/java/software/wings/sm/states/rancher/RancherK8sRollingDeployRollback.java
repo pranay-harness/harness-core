@@ -15,7 +15,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.context.ContextElementType;
 
-import software.wings.sm.StateType;
 import software.wings.sm.states.k8s.K8sRollingDeployRollback;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

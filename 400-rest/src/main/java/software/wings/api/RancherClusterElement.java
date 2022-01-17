@@ -28,10 +28,10 @@ import lombok.Setter;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(CDP)
 @TargetModule(_957_CG_BEANS)
-@Setter
 @Getter
-@AllArgsConstructor
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class RancherClusterElement implements ContextElement {
   private String uuid;
   private String clusterName;

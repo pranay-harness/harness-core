@@ -92,8 +92,8 @@ public class RancherKubernetesInfrastructure
 
   @Override
   public Set<String> getSupportedExpressions() {
-    return ImmutableSet.of(RancherKubernetesInfrastructure.RancherKubernetesInfrastructureKeys.namespace,
-        RancherKubernetesInfrastructure.RancherKubernetesInfrastructureKeys.releaseName);
+    return ImmutableSet.of(
+        RancherKubernetesInfrastructureKeys.namespace, RancherKubernetesInfrastructureKeys.releaseName);
   }
 
   @Override

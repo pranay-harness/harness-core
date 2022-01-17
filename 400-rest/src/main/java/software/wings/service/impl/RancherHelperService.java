@@ -10,6 +10,7 @@ package software.wings.service.impl;
 import static io.harness.exception.WingsException.USER;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
+import static software.wings.sm.states.HttpState.HttpStateExecutionResponse;
 
 import io.harness.beans.Cd1SetupFields;
 import io.harness.beans.DelegateTask;
@@ -28,7 +29,6 @@ import software.wings.beans.RancherConfig;
 import software.wings.beans.TaskType;
 import software.wings.service.intfc.DelegateService;
 import software.wings.service.intfc.security.SecretManager;
-import software.wings.sm.states.HttpState;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -85,7 +85,7 @@ public class RancherHelperService {
     DelegateResponseData notifyResponseData;
     try {
       notifyResponseData = delegateService.executeTask(delegateTask);
-      validateRancherDelegateResponse((HttpState.HttpStateExecutionResponse) notifyResponseData);
+      validateRancherDelegateResponse((HttpStateExecutionResponse) notifyResponseData);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new InvalidRequestException(e.getMessage(), USER);
@@ -95,8 +95,7 @@ public class RancherHelperService {
     return true;
   }
 
-  private void validateRancherDelegateResponse(HttpState.HttpStateExecutionResponse delegateResponseData)
-      throws JoseException {
+  private void validateRancherDelegateResponse(HttpStateExecutionResponse delegateResponseData) throws JoseException {
     if (!(delegateResponseData.getExecutionStatus() == ExecutionStatus.SUCCESS
             && delegateResponseData.getHttpResponseCode() == 200)) {
       String errorMessage = "";

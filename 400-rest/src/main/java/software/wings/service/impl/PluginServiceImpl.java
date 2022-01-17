@@ -454,14 +454,14 @@ public class PluginServiceImpl implements PluginService {
                        .build());
     if (featureFlagService.isEnabled(FeatureName.RANCHER_SUPPORT, accountId)) {
       pluginList.add(anAccountPlugin()
-              .withSettingClass(RancherConfig.class)
-              .withAccountId(accountId)
-              .withIsEnabled(true)
-              .withDisplayName("Rancher")
-              .withType("RANCHER")
-              .withPluginCategories(asList(CloudProvider))
-              .withUiSchema(readUiSchema("RANCHER"))
-              .build());
+                         .withSettingClass(RancherConfig.class)
+                         .withAccountId(accountId)
+                         .withIsEnabled(true)
+                         .withDisplayName("Rancher")
+                         .withType("RANCHER")
+                         .withPluginCategories(asList(CloudProvider))
+                         .withUiSchema(readUiSchema("RANCHER"))
+                         .build());
     }
     return pluginList;
   }

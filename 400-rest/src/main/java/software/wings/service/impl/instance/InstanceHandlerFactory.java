@@ -7,22 +7,24 @@
 
 package software.wings.service.impl.instance;
 
-import com.google.common.collect.Sets;
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.exception.WingsException.EVERYBODY;
+import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.beans.AmiDeploymentType.SPOTINST;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.exception.UnexpectedException;
+
 import software.wings.beans.AwsAmiInfrastructureMapping;
 import software.wings.beans.InfrastructureMapping;
 import software.wings.beans.InfrastructureMappingType;
 import software.wings.utils.Utils;
 
+import com.google.common.collect.Sets;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.Set;
-
-import static io.harness.exception.WingsException.EVERYBODY;
-import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.beans.AmiDeploymentType.SPOTINST;
 
 @Singleton
 @TargetModule(HarnessModule._441_CG_INSTANCE_SYNC)

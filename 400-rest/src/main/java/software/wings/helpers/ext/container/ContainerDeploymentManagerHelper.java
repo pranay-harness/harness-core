@@ -7,8 +7,14 @@
 
 package software.wings.helpers.ext.container;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.validation.Validator.notNullCheck;
+
+import static software.wings.api.InstanceElement.Builder.anInstanceElement;
+import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
+import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -18,10 +24,24 @@ import io.harness.container.ContainerInfo.Status;
 import io.harness.context.ContextElementType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.security.encryption.EncryptedDataDetail;
-import org.mongodb.morphia.Key;
+
 import software.wings.annotation.EncryptableSetting;
-import software.wings.api.*;
-import software.wings.beans.*;
+import software.wings.api.HostElement;
+import software.wings.api.InstanceElement;
+import software.wings.api.PhaseElement;
+import software.wings.api.RancherClusterElement;
+import software.wings.api.ServiceElement;
+import software.wings.api.ServiceTemplateElement;
+import software.wings.beans.AzureKubernetesCluster;
+import software.wings.beans.AzureKubernetesInfrastructureMapping;
+import software.wings.beans.ContainerInfrastructureMapping;
+import software.wings.beans.DirectKubernetesInfrastructureMapping;
+import software.wings.beans.EcsInfrastructureMapping;
+import software.wings.beans.GcpKubernetesCluster;
+import software.wings.beans.GcpKubernetesInfrastructureMapping;
+import software.wings.beans.RancherKubernetesInfrastructureMapping;
+import software.wings.beans.ServiceTemplate;
+import software.wings.beans.SettingAttribute;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.helpers.ext.azure.AzureHelperService;
 import software.wings.helpers.ext.ecr.EcrClassicService;
@@ -39,15 +59,11 @@ import software.wings.sm.ExecutionContext;
 import software.wings.sm.InstanceStatusSummary;
 import software.wings.sm.WorkflowStandardParams;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
-
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-import static io.harness.validation.Validator.notNullCheck;
-import static software.wings.api.InstanceElement.Builder.anInstanceElement;
-import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
-import static software.wings.sm.InstanceStatusSummary.InstanceStatusSummaryBuilder.anInstanceStatusSummary;
+import org.mongodb.morphia.Key;
 
 /**
  * Created by anubhaw on 4/6/18.
@@ -176,7 +192,8 @@ public class ContainerDeploymentManagerHelper {
     String cloudProviderName = null;
 
     if (containerInfraMapping instanceof RancherKubernetesInfrastructureMapping) {
-      RancherKubernetesInfrastructureMapping rancherInfra = (RancherKubernetesInfrastructureMapping) containerInfraMapping;
+      RancherKubernetesInfrastructureMapping rancherInfra =
+          (RancherKubernetesInfrastructureMapping) containerInfraMapping;
       settingAttribute = settingsService.get(rancherInfra.getComputeProviderSettingId());
       namespace = rancherInfra.getNamespace();
 

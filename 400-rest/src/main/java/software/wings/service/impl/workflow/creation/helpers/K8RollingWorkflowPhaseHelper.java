@@ -14,9 +14,6 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
-import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING;
-import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK;
-import static software.wings.sm.StateType.RANCHER_RESOLVE;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;

@@ -19,14 +19,21 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.InvalidArgumentsException;
-
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+
 import software.wings.infra.RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry;
+import software.wings.sm.states.rancher.RancherResolveState;
 
 import com.google.inject.Inject;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -36,7 +43,6 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.NotImplementedException;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jose4j.lang.JoseException;
-import software.wings.sm.states.rancher.RancherResolveState;
 
 @Slf4j
 @OwnedBy(CDP)
@@ -94,9 +100,7 @@ public class RancherResolveClustersTask extends AbstractDelegateRunnableTask {
 
     if (CollectionUtils.isEmpty(filteredClusters)) {
       logCallback.saveExecutionLog("No eligible cluster found after filtering", LogLevel.ERROR);
-      return RancherResolveClustersResponse.builder()
-          .executionStatus(ExecutionStatus.FAILED)
-          .build();
+      return RancherResolveClustersResponse.builder().executionStatus(ExecutionStatus.FAILED).build();
     }
 
     logCallback.saveExecutionLog(

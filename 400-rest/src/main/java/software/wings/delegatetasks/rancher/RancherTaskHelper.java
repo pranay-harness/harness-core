@@ -8,6 +8,7 @@
 package software.wings.delegatetasks.rancher;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.k8s.model.KubernetesConfig.KubernetesConfigBuilder;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
@@ -105,7 +106,7 @@ public class RancherTaskHelper {
       final List<EncryptedDataDetail> encryptedDataDetails, final String clusterName, final String namespace)
       throws IOException {
     encryptionService.decrypt(rancherConfig, encryptedDataDetails, false);
-    KubernetesConfig.KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder().namespace(namespace);
+    KubernetesConfigBuilder kubernetesConfigBuilder = KubernetesConfig.builder().namespace(namespace);
 
     RancherClusterDataResponse rancherClusterData = resolveRancherClusters(rancherConfig, encryptedDataDetails);
     RancherClusterDataResponse.ClusterData clusterData = rancherClusterData.getData()

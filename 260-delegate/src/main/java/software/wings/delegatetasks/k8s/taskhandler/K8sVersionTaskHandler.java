@@ -7,7 +7,8 @@
 
 package software.wings.delegatetasks.k8s.taskhandler;
 
-import com.google.inject.Inject;
+import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.k8s.apiclient.ApiClientFactoryImpl;
@@ -15,12 +16,7 @@ import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.AutoLogContext;
 import io.harness.logging.CommandExecutionStatus;
-import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.ApiException;
-import io.kubernetes.client.openapi.apis.VersionApi;
-import io.kubernetes.client.openapi.models.VersionInfo;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
 import software.wings.beans.KubernetesClusterConfig;
 import software.wings.delegatetasks.k8s.logging.K8sVersionLogContext;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
@@ -29,9 +25,14 @@ import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
 import software.wings.helpers.ext.k8s.response.K8sVersionResponse;
 
+import com.google.inject.Inject;
+import io.kubernetes.client.openapi.ApiClient;
+import io.kubernetes.client.openapi.ApiException;
+import io.kubernetes.client.openapi.apis.VersionApi;
+import io.kubernetes.client.openapi.models.VersionInfo;
 import java.util.Objects;
-
-import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_ERROR;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @NoArgsConstructor
 @Slf4j
@@ -52,15 +53,16 @@ public class K8sVersionTaskHandler extends K8sTaskHandler {
     VersionInfo versionInfo = getK8sVersionInfo(k8sTaskParameters.getK8sClusterConfig());
     K8sVersionResponse k8sVersionResponse = k8sVersionResponseBuilder(versionInfo);
 
-    boolean isCloudCostEnabled =
-        Objects.nonNull(kubernetesClusterConfig) &&
-            kubernetesClusterConfig.getCcmConfig() != null &&
-            kubernetesClusterConfig.getCcmConfig().isCloudCostEnabled();
+    boolean isCloudCostEnabled = Objects.nonNull(kubernetesClusterConfig)
+        && kubernetesClusterConfig.getCcmConfig() != null
+        && kubernetesClusterConfig.getCcmConfig().isCloudCostEnabled();
 
-    try (AutoLogContext ignore = new K8sVersionLogContext(k8sTaskParameters.getK8sClusterConfig().getCloudProvider().getType(),
-        k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
-        isCloudCostEnabled, OVERRIDE_ERROR);) {
-      log.info("[cloudProvider={}, version={}, ccEnabled={}]", k8sTaskParameters.getK8sClusterConfig().getCloudProvider().getType(),
+    try (AutoLogContext ignore =
+             new K8sVersionLogContext(k8sTaskParameters.getK8sClusterConfig().getCloudProvider().getType(),
+                 k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
+                 isCloudCostEnabled, OVERRIDE_ERROR);) {
+      log.info("[cloudProvider={}, version={}, ccEnabled={}]",
+          k8sTaskParameters.getK8sClusterConfig().getCloudProvider().getType(),
           k8sVersionResponse.getServerMajorVersion() + ":" + k8sVersionResponse.getServerMinorVersion(),
           isCloudCostEnabled);
     }
@@ -89,8 +91,8 @@ public class K8sVersionTaskHandler extends K8sTaskHandler {
   }
 
   public static KubernetesClusterConfig getKubernetesConfig(K8sTaskParameters k8sTaskParameters) {
-    return k8sTaskParameters.getK8sClusterConfig().getCloudProvider() instanceof KubernetesClusterConfig ?
-            (KubernetesClusterConfig) k8sTaskParameters.getK8sClusterConfig().getCloudProvider() :
-            null;
+    return k8sTaskParameters.getK8sClusterConfig().getCloudProvider() instanceof KubernetesClusterConfig
+        ? (KubernetesClusterConfig) k8sTaskParameters.getK8sClusterConfig().getCloudProvider()
+        : null;
   }
 }

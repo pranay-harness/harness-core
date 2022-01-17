@@ -18,7 +18,11 @@ import software.wings.api.ExecutionDataValue;
 import software.wings.sm.StateExecutionData;
 
 import java.util.Map;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 @Data
 @Builder

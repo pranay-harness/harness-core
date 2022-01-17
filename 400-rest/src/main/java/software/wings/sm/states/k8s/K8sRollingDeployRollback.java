@@ -7,9 +7,17 @@
 
 package software.wings.sm.states.k8s;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.github.reinert.jjschema.Attributes;
-import com.google.inject.Inject;
+import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.beans.ExecutionStatus.SKIPPED;
+import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
+import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
+
+import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
+import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
+
+import static java.util.Collections.emptyList;
+
 import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -24,8 +32,7 @@ import io.harness.ff.FeatureFlagService;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.tasks.ResponseData;
-import lombok.Getter;
-import lombok.Setter;
+
 import software.wings.api.k8s.K8sContextElement;
 import software.wings.api.k8s.K8sHelmDeploymentElement;
 import software.wings.api.k8s.K8sStateExecutionData;
@@ -38,28 +45,30 @@ import software.wings.helpers.ext.container.ContainerDeploymentManagerHelper;
 import software.wings.helpers.ext.k8s.request.K8sRollingDeployRollbackTaskParameters;
 import software.wings.helpers.ext.k8s.request.K8sTaskParameters;
 import software.wings.helpers.ext.k8s.response.K8sTaskExecutionResponse;
-import software.wings.service.intfc.*;
+import software.wings.service.intfc.ActivityService;
+import software.wings.service.intfc.AppService;
+import software.wings.service.intfc.ApplicationManifestService;
+import software.wings.service.intfc.ConfigService;
+import software.wings.service.intfc.DelegateService;
+import software.wings.service.intfc.InfrastructureMappingService;
+import software.wings.service.intfc.ServiceTemplateService;
+import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.sm.ExecutionContext;
 import software.wings.sm.ExecutionResponse;
-import software.wings.sm.StateType;
 import software.wings.sm.WorkflowStandardParams;
 import software.wings.sm.states.utils.StateTimeoutUtils;
 import software.wings.stencils.DefaultValue;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.reinert.jjschema.Attributes;
+import com.google.inject.Inject;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-
-import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.beans.ExecutionStatus.SKIPPED;
-import static io.harness.beans.FeatureName.NEW_KUBECTL_VERSION;
-import static io.harness.beans.FeatureName.PRUNE_KUBERNETES_RESOURCES;
-import static java.util.Collections.emptyList;
-import static software.wings.sm.StateExecutionData.StateExecutionDataBuilder.aStateExecutionData;
-import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
+import lombok.Getter;
+import lombok.Setter;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 @TargetModule(_870_CG_ORCHESTRATION)

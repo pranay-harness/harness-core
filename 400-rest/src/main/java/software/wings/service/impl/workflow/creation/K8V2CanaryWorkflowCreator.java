@@ -28,7 +28,11 @@ import software.wings.beans.Workflow;
 import software.wings.beans.WorkflowPhase;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
 import software.wings.service.impl.workflow.WorkflowServiceTemplateHelper;
-import software.wings.service.impl.workflow.creation.helpers.*;
+import software.wings.service.impl.workflow.creation.helpers.K8CanaryWorkflowPhaseHelper;
+import software.wings.service.impl.workflow.creation.helpers.K8RollingWorkflowPhaseHelper;
+import software.wings.service.impl.workflow.creation.helpers.RancherK8CanaryWorkflowPhaseHelper;
+import software.wings.service.impl.workflow.creation.helpers.RancherK8RollingWorkflowPhaseHelper;
+import software.wings.service.impl.workflow.creation.helpers.WorkflowPhaseHelper;
 import software.wings.service.intfc.InfrastructureDefinitionService;
 
 import com.google.inject.Inject;
@@ -129,8 +133,7 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
   }
 
   private void updateRollingWorkflowHelper(String accountId, String infraDefinitionId) {
-    if (infrastructureDefinitionService
-            .getInfraDefById(accountId, infraDefinitionId)
+    if (infrastructureDefinitionService.getInfraDefById(accountId, infraDefinitionId)
             .getInfrastructure()
             .getInfrastructureType()
             .equals(RANCHER_INFRA_TYPE)) {
@@ -139,8 +142,7 @@ public class K8V2CanaryWorkflowCreator extends WorkflowCreator {
   }
 
   private void updateCanaryWorkflowHelper(String accountId, String infraDefinitionId) {
-    if (infrastructureDefinitionService
-            .getInfraDefById(accountId, infraDefinitionId)
+    if (infrastructureDefinitionService.getInfraDefById(accountId, infraDefinitionId)
             .getInfrastructure()
             .getInfrastructureType()
             .equals(RANCHER_INFRA_TYPE)) {

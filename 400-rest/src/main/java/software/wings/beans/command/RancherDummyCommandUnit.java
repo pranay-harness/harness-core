@@ -7,11 +7,11 @@
 
 package software.wings.beans.command;
 
-import io.harness.logging.CommandExecutionStatus;
-import org.apache.commons.lang3.NotImplementedException;
-
-import static software.wings.beans.command.CommandUnitType.K8S_DUMMY;
 import static software.wings.beans.command.CommandUnitType.RANCHER_DUMMY;
+
+import io.harness.logging.CommandExecutionStatus;
+
+import org.apache.commons.lang3.NotImplementedException;
 
 public class RancherDummyCommandUnit extends AbstractCommandUnit {
   public RancherDummyCommandUnit(String name) {

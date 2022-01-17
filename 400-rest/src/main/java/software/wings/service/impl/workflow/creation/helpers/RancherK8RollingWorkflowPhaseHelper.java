@@ -7,18 +7,15 @@
 
 package software.wings.service.impl.workflow.creation.helpers;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 
-import static io.harness.k8s.model.K8sExpressions.canaryWorkloadExpression;
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK;
 import static software.wings.sm.StateType.RANCHER_RESOLVE;
 
-import com.google.common.collect.ImmutableMap;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
