@@ -25,7 +25,6 @@ import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -55,7 +54,7 @@ public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArt
         ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
 
     String identifier = (String) kryoSerializer.asInflatedObject(
-            ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.IDENTIFIER).toByteArray());
+        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.IDENTIFIER).toByteArray());
 
     PlanNode artifactNode =
         PlanNode.builder()

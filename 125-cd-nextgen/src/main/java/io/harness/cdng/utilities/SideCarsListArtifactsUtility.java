@@ -28,10 +28,12 @@ import lombok.experimental.UtilityClass;
 public class SideCarsListArtifactsUtility {
   public JsonNode getSideCarsListJsonNode() {
     String yamlField = "---\n"
-            + "- sidecar:\n"
-            + "      spec:\n"
-            + "      type: DockerRegistry\n"
-            + "      identifier: \"" + "abc" + "\"\n";
+        + "- sidecar:\n"
+        + "      spec:\n"
+        + "      type: DockerRegistry\n"
+        + "      identifier: \""
+        + "abc"
+        + "\"\n";
     YamlField sideCarsYamlField;
     try {
       String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);

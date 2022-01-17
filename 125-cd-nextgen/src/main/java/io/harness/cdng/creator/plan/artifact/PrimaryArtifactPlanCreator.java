@@ -7,7 +7,6 @@
 
 package io.harness.cdng.creator.plan.artifact;
 
-import com.google.inject.Inject;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
@@ -25,6 +24,7 @@ import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.serializer.KryoSerializer;
 
+import com.google.inject.Inject;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;

@@ -7,14 +7,9 @@
 
 package io.harness.cdng.yaml;
 
-import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
+import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
+import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+
 import io.harness.EntityType;
 import io.harness.ModuleType;
 import io.harness.account.AccountClient;
@@ -40,8 +35,15 @@ import io.harness.yaml.schema.beans.SwaggerDefinitionsMetaInfo;
 import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 import io.harness.yaml.schema.beans.YamlSchemaWithDetails;
 import io.harness.yaml.utils.YamlSchemaUtils;
-import lombok.extern.slf4j.Slf4j;
 
+import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedSet;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,9 +51,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static io.harness.yaml.schema.beans.SchemaConstants.DEFINITIONS_NODE;
-import static io.harness.yaml.schema.beans.SchemaConstants.PROPERTIES_NODE;
+import lombok.extern.slf4j.Slf4j;
 
 @OwnedBy(HarnessTeam.CDP)
 @Slf4j
