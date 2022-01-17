@@ -2484,6 +2484,8 @@ public class DelegateServiceImpl implements DelegateService {
       log.warn("Delegate instance {} doesn't exist for {}, nothing to remove", request.getHostName(),
           request.getDelegateId());
     }
+    delegateConnectionDao.list(accountId, request.getDelegateId())
+        .forEach(connection -> delegateDisconnected(accountId, request.getDelegateId(), connection.getUuid()));
   }
 
   @VisibleForTesting
@@ -2871,6 +2873,7 @@ public class DelegateServiceImpl implements DelegateService {
 
   @Override
   public void delegateDisconnected(String accountId, String delegateId, String delegateConnectionId) {
+    log.info("Delegate connection {} disconnected for delegate {}", delegateConnectionId, delegateId);
     delegateConnectionDao.delegateDisconnected(accountId, delegateConnectionId);
     subject.fireInform(DelegateObxxxxxxxx:onDisconnected, accountId, delegateId);
     remoteObserverInformer.sendEvent(

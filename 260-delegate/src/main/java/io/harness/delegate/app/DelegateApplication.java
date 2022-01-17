@@ -28,7 +28,9 @@ import io.harness.delegate.configuration.DelegateConfiguration;
 import io.harness.delegate.message.MessageService;
 import io.harness.delegate.service.DelegateAgentService;
 import io.harness.event.client.EventPublisher;
+import io.harness.event.client.impl.tailer.ChronicleEventTailer;
 import io.harness.grpc.pingpong.PingPongClient;
+import io.harness.grpc.util.RestartableServiceManager;
 import io.harness.serializer.YamlUtils;
 import io.harness.threading.ExecutorModule;
 import io.harness.threading.ThreadPool;
@@ -131,7 +133,6 @@ public class DelegateApplication {
     if (!ImmutableSet.of("ONPREM", "KUBERNETES_ONPREM").contains(System.getenv().get(DEPLOY_MODE))) {
       injector.getInstance(PingPongClient.class).startAsync();
     }
-    Runtime.getRuntime().addShutdownHook(new Thread(() -> injector.getInstance(PingPongClient.class).stopAsync()));
     DelegateAgentService delegateService = injector.getInstance(DelegateAgentService.class);
     delegateService.run(watched);
 
@@ -143,6 +144,21 @@ public class DelegateApplication {
       messageService.closeChannel(DELEGATE, processId);
       messageService.closeData(DELEGATE_DASH + processId);
       log.info("Message service has been closed.");
+
+      final RestartableServiceManager grpcService = injector.getInstance(RestartableServiceManager.class);
+      if (grpcService != null) {
+        grpcService.stop();
+      }
+
+      final PingPongClient pingPongClient = injector.getInstance(PingPongClient.class);
+      if (pingPongClient != null) {
+        pingPongClient.stopAsync();
+      }
+
+      final ChronicleEventTailer chronicleEventTailer = injector.getInstance(ChronicleEventTailer.class);
+      if (chronicleEventTailer != null) {
+        chronicleEventTailer.stopAsync().awaitTerminated();
+      }
 
       injector.getInstance(ExecutorService.class).shutdown();
       injector.getInstance(EventPublisher.class).shutdown();
