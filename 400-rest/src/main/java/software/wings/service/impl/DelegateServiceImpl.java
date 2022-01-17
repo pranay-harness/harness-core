@@ -121,7 +121,6 @@ import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.beans.executioncapability.SelectorCapability;
 import io.harness.delegate.events.DelegateGroupDeleteEvent;
 import io.harness.delegate.events.DelegateGroupUpsertEvent;
-import io.harness.delegate.service.intfc.DelegateRingService;
 import io.harness.delegate.task.DelegateLogContext;
 import io.harness.delegate.utils.DelegateEntityOwnerHelper;
 import io.harness.environment.SystemEnvironment;
@@ -401,7 +400,6 @@ public class DelegateServiceImpl implements DelegateService {
   @Inject private DelegateNgTokenService delegateNgTokenService;
   @Inject private RemoteObserverInformer remoteObserverInformer;
   @Inject private DelegateMetricsService delegateMetricsService;
-  @Inject private DelegateRingService delegateRingService;
 
   private LoadingCache<String, String> delegateVersionCache = CacheBuilder.newBuilder()
                                                                   .maximumSize(10000)
@@ -1224,8 +1222,8 @@ public class DelegateServiceImpl implements DelegateService {
       final boolean isCiEnabled = isCiEnabled(templateParameters);
       ImmutableMap.Builder<String, String> params =
           ImmutableMap.<String, String>builder()
-              .put("delegateDockerImage", getDelegateDockerImage(templateParameters.getAccountId()))
-              .put("upgraderDockerImage", getUpgraderDockerImage(templateParameters.getAccountId()))
+              .put("delegateDockerImage", getDelegateDockerImage())
+              .put("upgraderDockerImage", getUpgraderDockerImage())
               .put("accountId", templateParameters.getAccountId())
               .put("accountSecret", getAccountSecret(templateParameters, useNgToken))
               .put("hexkey", hexkey)
@@ -1412,21 +1410,17 @@ public class DelegateServiceImpl implements DelegateService {
   }
 
   @VisibleForTesting
-  protected String getDelegateDockerImage(String accountId) {
+  protected String getDelegateDockerImage() {
     if (isNotBlank(mainConfiguration.getPortal().getDelegateDockerImage())) {
       return mainConfiguration.getPortal().getDelegateDockerImage();
-    } else if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId)) {
-      return delegateRingService.getDelegateImageTag(accountId);
     }
     return "harness/delegate:latest";
   }
 
   @VisibleForTesting
-  protected String getUpgraderDockerImage(String accountId) {
+  protected String getUpgraderDockerImage() {
     if (isNotBlank(mainConfiguration.getPortal().getUpgraderDockerImage())) {
       return mainConfiguration.getPortal().getUpgraderDockerImage();
-    } else if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId)) {
-      return delegateRingService.getUpgraderImageTag(accountId);
     }
     return "harness/upgrader:latest";
   }
