@@ -14,6 +14,7 @@ import io.harness.cdng.artifact.steps.SidecarsStep;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.utilities.SideCarsListArtifactsUtility;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.Dependency;
@@ -108,9 +109,9 @@ public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrap
         SideCarsListArtifactsUtility.createIndividualSideCarsArtifactYamlFieldAndSetYamlUpdate(
             sideCarsYamlField, identifier, mapIdentifierWithYamlNode, yamlUpdates);
 
-    String individualSideCarPlanNodeId = individualSideCar.getNode().getUuid();
+    String individualSideCarPlanNodeId = UUIDGenerator.generateUuid();
     Map<String, ByteString> metadataDependency =
-        prepareMetadataForIndividualSideCarListArtifactPlanCreator(individualSideCarPlanNodeId, stepParameters);
+        prepareMetadataForIndividualSideCarListArtifactPlanCreator(individualSideCarPlanNodeId, stepParameters,identifier);
 
     Map<String, YamlField> dependenciesMap = new HashMap<>();
     dependenciesMap.put(individualSideCarPlanNodeId, individualSideCar);
@@ -128,12 +129,14 @@ public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrap
   }
 
   private Map<String, ByteString> prepareMetadataForIndividualSideCarListArtifactPlanCreator(
-      String individualSideCarPlanNodeId, StepParameters stepParameters) {
+          String individualSideCarPlanNodeId, StepParameters stepParameters, String identifier) {
     Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(
         YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(individualSideCarPlanNodeId)));
     metadataDependency.put(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP,
         ByteString.copyFrom(kryoSerializer.asDeflatedBytes(stepParameters)));
+    metadataDependency.put(PlanCreatorConstants.IDENTIFIER,
+            ByteString.copyFrom(kryoSerializer.asDeflatedBytes(identifier)));
     return metadataDependency;
   }
 

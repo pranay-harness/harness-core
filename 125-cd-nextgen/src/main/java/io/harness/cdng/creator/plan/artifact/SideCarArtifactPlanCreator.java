@@ -10,10 +10,12 @@ package io.harness.cdng.creator.plan.artifact;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.PrimaryArtifact;
+import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifactWrapper;
 import io.harness.cdng.artifact.steps.ArtifactStep;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
@@ -29,11 +31,11 @@ import com.google.inject.Inject;
 import java.util.*;
 
 @OwnedBy(HarnessTeam.CDC)
-public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArtifactWrapper> {
+public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArtifact> {
   @Inject KryoSerializer kryoSerializer;
   @Override
-  public Class<SidecarArtifactWrapper> getFieldClass() {
-    return SidecarArtifactWrapper.class;
+  public Class<SidecarArtifact> getFieldClass() {
+    return SidecarArtifact.class;
   }
 
   @Override
@@ -44,18 +46,21 @@ public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArt
   }
 
   @Override
-  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, SidecarArtifactWrapper artifactInfo) {
+  public PlanCreationResponse createPlanForField(PlanCreationContext ctx, SidecarArtifact artifactInfo) {
     String sideCarArtifactId = (String) kryoSerializer.asInflatedObject(
         ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
     StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
         ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
+
+    String identifier = (String) kryoSerializer.asInflatedObject(
+            ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.IDENTIFIER).toByteArray());
 
     PlanNode artifactNode =
         PlanNode.builder()
             .uuid(sideCarArtifactId)
             .stepType(ArtifactStep.STEP_TYPE)
             .name(PlanCreatorConstants.ARTIFACT_NODE_NAME)
-            .identifier(ctx.getCurrentField().getNode().getIdentifier())
+            .identifier(identifier)
             .stepParameters(stepParameters)
             .facilitatorObtainment(
                 FacilitatorObtainment.newBuilder()
@@ -63,6 +68,7 @@ public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArt
                     .build())
             .skipExpressionChain(false)
             .build();
+
     return PlanCreationResponse.builder().planNode(artifactNode).build();
   }
 }

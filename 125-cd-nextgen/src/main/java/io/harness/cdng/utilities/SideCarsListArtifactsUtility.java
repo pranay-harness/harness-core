@@ -10,6 +10,7 @@ package io.harness.cdng.utilities;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
 import io.harness.pms.contracts.plan.YamlUpdates;
@@ -26,7 +27,11 @@ import lombok.experimental.UtilityClass;
 @UtilityClass
 public class SideCarsListArtifactsUtility {
   public JsonNode getSideCarsListJsonNode() {
-    String yamlField = "---\n";
+    String yamlField = "---\n"
+            + "- sidecar:\n"
+            + "      spec:\n"
+            + "      type: DockerRegistry\n"
+            + "      identifier: \"" + "abc" + "\"\n";
     YamlField sideCarsYamlField;
     try {
       String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);
@@ -40,6 +45,7 @@ public class SideCarsListArtifactsUtility {
   public JsonNode getIndividualSideCarsListJsonNode(String identifier) {
     String yamlField = "---\n"
         + "- sidecar:\n"
+        + "      spec:\n"
         + "      type: DockerRegistry\n"
         + "      identifier: \"" + identifier + "\"\n";
     YamlField sideCarsYamlField;
@@ -59,19 +65,15 @@ public class SideCarsListArtifactsUtility {
           .getNode()
           .getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
     }
-    // TODO: NEED TO ADD CORRECT PARENT NODE
-    YamlField individualSideCarYamlField = new YamlField("[2]",
-        new YamlNode("[2]", SideCarsListArtifactsUtility.getIndividualSideCarsListJsonNode(sideCarIdentifier),
-            sideCarsYamlField.getNode()));
-    setYamlUpdate(sideCarsYamlField, yamlUpdates);
-    return individualSideCarYamlField;
+
+    return sideCarsYamlField.getNode().asArray().get(0).getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
   }
 
   public YamlField createSideCarsArtifactYamlFieldAndSetYamlUpdate(
       YamlField artifactField, YamlUpdates.Builder yamlUpdates) {
     YamlField sideCarsYamlField = artifactField.getNode().getField(YamlTypes.SIDECARS_ARTIFACT_CONFIG);
 
-    if (sideCarsYamlField != null) {
+    if (sideCarsYamlField != null && EmptyPredicate.isNotEmpty(sideCarsYamlField.getNode().asArray())) {
       return sideCarsYamlField;
     }
 
