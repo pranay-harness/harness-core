@@ -8,7 +8,6 @@
 package io.harness.cdng.creator.plan.steps;
 
 import io.harness.cdng.k8s.K8sRollingRollbackStepNode;
-import io.harness.cdng.k8s.K8sRollingStepNode;
 import io.harness.executions.steps.StepSpecTypeConstants;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
