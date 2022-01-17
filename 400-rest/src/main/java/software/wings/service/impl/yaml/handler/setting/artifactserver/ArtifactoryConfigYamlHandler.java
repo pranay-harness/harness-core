@@ -45,6 +45,7 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
                     .username(artifactoryConfig.getUsername())
                     .password(encryptedPassword)
                     .delegateSelectors(getDelegateSelectors(artifactoryConfig.getDelegateSelectors()))
+                    .skipValidation(artifactoryConfig.isSkipValidation())
                     .build();
     toYaml(yaml, settingAttribute, appId);
     return yaml;
@@ -63,6 +64,7 @@ public class ArtifactoryConfigYamlHandler extends ArtifactServerYamlHandler<Yaml
                                    .encryptedPassword(yaml.getPassword())
                                    .username(yaml.getUsername())
                                    .delegateSelectors(getDelegateSelectors(yaml.getDelegateSelectors()))
+                                   .skipValidation(yaml.isSkipValidation())
                                    .build();
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, config);
   }
