@@ -101,7 +101,7 @@ public class LocalEncryptionConfig extends SecretManagerConfig {
   }
 
   @Override
-  public SecretKeyDTO getSecretKeySpec() {
+  public SecretKeyDTO fetchSecretKeySpec() {
     return secretKey;
   }
 

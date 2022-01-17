@@ -79,7 +79,7 @@ public interface EncryptionConfig {
   /**
    * Get secret key, currently added for local encryption
    */
-  default SecretKeyDTO getSecretKeySpec() {
+  default SecretKeyDTO fetchSecretKeySpec() {
     throw new UnsupportedOperationException("Secret Key isn't supported for this type of encryption");
   }
 

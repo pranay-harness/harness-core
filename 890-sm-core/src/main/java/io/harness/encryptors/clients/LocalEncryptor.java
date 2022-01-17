@@ -46,9 +46,9 @@ public class LocalEncryptor implements KmsEncryptor {
   public EncryptedRecord encryptSecret(String accountId, String value, EncryptionConfig encryptionConfig) {
     if (Boolean.TRUE.equals(
             encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_AWS_ENCRYPTION_SDK_MODE.name()))) {
-      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.getSecretKeySpec());
+      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.fetchSecretKeySpec());
       return EncryptedRecordData.builder()
-          .encryptionKey(encryptionConfig.getSecretKeySpec().getUuid())
+          .encryptionKey(encryptionConfig.fetchSecretKeySpec().getUuid())
           .encryptedValueBytes(awsEncryptedSecret)
           .encryptedMech(EncryptedMech.AWS_ENCRYPTION_SDK_CRYPTO)
           .build();
@@ -56,14 +56,14 @@ public class LocalEncryptor implements KmsEncryptor {
     final char[] localJavaEncryptedSecret = getLocalJavaEncryptedSecret(accountId, value);
     if (Boolean.TRUE.equals(
             encryptionConfig.getEncryptionFeatureFlagStatus().get(FeatureName.LOCAL_MULTI_CRYPTO_MODE.name()))) {
-      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.getSecretKeySpec());
+      final byte[] awsEncryptedSecret = getAwsEncryptedSecret(accountId, value, encryptionConfig.fetchSecretKeySpec());
       return EncryptedRecordData.builder()
           .encryptionKey(accountId)
           .encryptedValue(localJavaEncryptedSecret)
           .encryptedMech(EncryptedMech.MULTI_CRYPTO)
           .additionalMetadata(
               AdditionalMetadata.builder()
-                  .value(AdditionalMetadata.SECRET_KEY_UUID_KEY, encryptionConfig.getSecretKeySpec().getUuid())
+                  .value(AdditionalMetadata.SECRET_KEY_UUID_KEY, encryptionConfig.fetchSecretKeySpec().getUuid())
                   .value(AdditionalMetadata.AWS_ENCRYPTED_SECRET, awsEncryptedSecret)
                   .build())
           .build();
@@ -93,7 +93,7 @@ public class LocalEncryptor implements KmsEncryptor {
       return getLocalJavaDecryptedSecret(encryptedRecord);
     }
 
-    return getAwsDecryptedSecret(accountId, encryptedSecret, encryptionConfig.getSecretKeySpec()).toCharArray();
+    return getAwsDecryptedSecret(accountId, encryptedSecret, encryptionConfig.fetchSecretKeySpec()).toCharArray();
   }
 
   @Override
