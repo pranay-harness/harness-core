@@ -19,14 +19,21 @@ import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
+import io.harness.secret.SecretSanitizerThreadLocal;
+import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import software.wings.service.intfc.security.EncryptionService;
+
 import com.google.inject.Inject;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ManifestDelegateConfigHelper {
   @Inject private GitDecryptionHelper gitDecryptionHelper;
   @Inject private SecretDecryptionService decryptionService;
+  @Inject private EncryptionService encryptionService;
 
   public void decryptManifestDelegateConfig(ManifestDelegateConfig manifestDelegateConfig) {
     if (manifestDelegateConfig == null) {
@@ -39,12 +46,26 @@ public class ManifestDelegateConfigHelper {
         GitStoreDelegateConfig gitStoreDelegateConfig = (GitStoreDelegateConfig) storeDelegateConfig;
         GitConfigDTO gitConfigDTO = ScmConnectorMapper.toGitConfigDTO(gitStoreDelegateConfig.getGitConfigDTO());
         gitDecryptionHelper.decryptGitConfig(gitConfigDTO, gitStoreDelegateConfig.getEncryptedDataDetails());
+        if (isNotEmpty(gitStoreDelegateConfig.getEncryptedDataDetails())) {
+          Set<String> secrets = new HashSet<>();
+          for (EncryptedDataDetail encryptedDataDetail : gitStoreDelegateConfig.getEncryptedDataDetails()) {
+            secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+          }
+          SecretSanitizerThreadLocal.addAll(secrets);
+        }
         break;
 
       case HTTP_HELM:
         HttpHelmStoreDelegateConfig httpHelmStoreConfig = (HttpHelmStoreDelegateConfig) storeDelegateConfig;
         for (DecryptableEntity entity : httpHelmStoreConfig.getHttpHelmConnector().getDecryptableEntities()) {
           decryptionService.decrypt(entity, httpHelmStoreConfig.getEncryptedDataDetails());
+        }
+        if (isNotEmpty(httpHelmStoreConfig.getEncryptedDataDetails())) {
+          Set<String> secrets = new HashSet<>();
+          for (EncryptedDataDetail encryptedDataDetail : httpHelmStoreConfig.getEncryptedDataDetails()) {
+            secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+          }
+          SecretSanitizerThreadLocal.addAll(secrets);
         }
         break;
 
@@ -56,6 +77,13 @@ public class ManifestDelegateConfigHelper {
             decryptionService.decrypt(decryptableEntity, s3HelmStoreConfig.getEncryptedDataDetails());
           }
         }
+        if (isNotEmpty(s3HelmStoreConfig.getEncryptedDataDetails())) {
+          Set<String> secrets = new HashSet<>();
+          for (EncryptedDataDetail encryptedDataDetail : s3HelmStoreConfig.getEncryptedDataDetails()) {
+            secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+          }
+          SecretSanitizerThreadLocal.addAll(secrets);
+        }
         break;
 
       case GCS_HELM:
@@ -66,6 +94,13 @@ public class ManifestDelegateConfigHelper {
           for (DecryptableEntity decryptableEntity : gcsDecryptableEntityList) {
             decryptionService.decrypt(decryptableEntity, gcsHelmStoreDelegateConfig.getEncryptedDataDetails());
           }
+        }
+        if (isNotEmpty(gcsHelmStoreDelegateConfig.getEncryptedDataDetails())) {
+          Set<String> secrets = new HashSet<>();
+          for (EncryptedDataDetail encryptedDataDetail : gcsHelmStoreDelegateConfig.getEncryptedDataDetails()) {
+            secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+          }
+          SecretSanitizerThreadLocal.addAll(secrets);
         }
         break;
 

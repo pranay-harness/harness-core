@@ -155,6 +155,8 @@ import io.harness.serializer.YamlUtils;
 import io.harness.shell.SshSessionConfig;
 import io.harness.yaml.BooleanPatchedRepresenter;
 
+import software.wings.delegatetasks.ExceptionMessageSanitizer;
+
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -2409,20 +2411,20 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (YamlException e) {
-      log.error("Failure in fetching files from git", e);
-      executionLogCallback.saveExecutionLog(
-          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
-          CommandExecutionStatus.FAILURE);
+      log.error("Failure in fetching files from git", ExceptionMessageSanitizer.sanitizeException(e));
+      executionLogCallback.saveExecutionLog("Failed to download manifest files from git. "
+              + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
+          ERROR, CommandExecutionStatus.FAILURE);
 
       throw new KubernetesTaskException(
           format("Failed while trying to fetch files from git connector: '%s' in manifest with identifier: %s",
               gitStoreDelegateConfig.getConnectorName(), gitStoreDelegateConfig.getManifestId()),
           e.getCause());
     } catch (Exception e) {
-      log.error("Failure in fetching files from git", e);
-      executionLogCallback.saveExecutionLog(
-          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(e), ERROR,
-          CommandExecutionStatus.FAILURE);
+      log.error("Failure in fetching files from git", ExceptionMessageSanitizer.sanitizeException(e));
+      executionLogCallback.saveExecutionLog("Failed to download manifest files from git. "
+              + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
+          ERROR, CommandExecutionStatus.FAILURE);
 
       throw new KubernetesTaskException(
           format("Failed while trying to fetch files from git connector: '%s' in manifest with identifier: %s",
@@ -2487,14 +2489,16 @@ public class K8sTaskHelperBase {
     } catch (HelmClientException e) {
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
-      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
+      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
+          ERROR, CommandExecutionStatus.FAILURE);
 
       throw new HelmClientRuntimeException(e);
     } catch (Exception e) {
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
-      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(e), ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(errorMsg, e, HelmCliCommandType.FETCH);
+      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
+          ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(errorMsg, ExceptionMessageSanitizer.sanitizeException(e), HelmCliCommandType.FETCH);
     }
 
     return true;
@@ -2507,11 +2511,11 @@ public class K8sTaskHelperBase {
       kubernetesContainerService.validateMasterUrl(kubernetesConfig);
       return ConnectorValidationResult.builder().status(ConnectivityStatus.SUCCESS).build();
     } catch (UrlNotProvidedException ex) {
-      throw NestedExceptionUtils.hintWithExplanationException(
-          K8sExceptionConstants.PROVIDE_MASTER_URL_HINT, K8sExceptionConstants.PROVIDE_MASTER_URL_EXPLANATION, ex);
+      throw NestedExceptionUtils.hintWithExplanationException(K8sExceptionConstants.PROVIDE_MASTER_URL_HINT,
+          K8sExceptionConstants.PROVIDE_MASTER_URL_EXPLANATION, ExceptionMessageSanitizer.sanitizeException(ex));
     } catch (UrlNotReachableException ex) {
-      throw NestedExceptionUtils.hintWithExplanationException(
-          K8sExceptionConstants.INCORRECT_MASTER_URL_HINT, K8sExceptionConstants.INCORRECT_MASTER_URL_EXPLANATION, ex);
+      throw NestedExceptionUtils.hintWithExplanationException(K8sExceptionConstants.INCORRECT_MASTER_URL_HINT,
+          K8sExceptionConstants.INCORRECT_MASTER_URL_EXPLANATION, ExceptionMessageSanitizer.sanitizeException(ex));
     }
   }
 
@@ -2568,8 +2572,8 @@ public class K8sTaskHelperBase {
             .build();
       }
     } catch (Exception ex) {
-      log.info("Exception while validating kubernetes credentials", ex);
-      return createConnectivityFailureValidationResult(ex);
+      log.info("Exception while validating kubernetes credentials", ExceptionMessageSanitizer.sanitizeException(ex));
+      return createConnectivityFailureValidationResult(ExceptionMessageSanitizer.sanitizeException(ex));
     }
     return ConnectorValidationResult.builder().status(connectivityStatus).build();
   }
