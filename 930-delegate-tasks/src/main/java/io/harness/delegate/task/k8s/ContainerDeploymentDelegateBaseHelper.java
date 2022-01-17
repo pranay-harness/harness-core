@@ -32,8 +32,11 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.k8s.KubernetesContainerService;
 import io.harness.k8s.model.KubernetesConfig;
 import io.harness.logging.LogCallback;
+import io.harness.secret.SecretSanitizerThreadLocal;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
+
+import software.wings.service.intfc.security.EncryptionService;
 
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
@@ -43,8 +46,10 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import java.io.File;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
@@ -60,6 +65,7 @@ public class ContainerDeploymentDelegateBaseHelper {
   @Inject private K8sYamlToDelegateDTOMapper k8sYamlToDelegateDTOMapper;
   @Inject private SecretDecryptionService secretDecryptionService;
   @Inject private GkeClusterHelper gkeClusterHelper;
+  @Inject private EncryptionService encryptionService;
 
   public static final LoadingCache<String, Object> lockObjects =
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
@@ -127,6 +133,9 @@ public class ContainerDeploymentDelegateBaseHelper {
   private char[] getGcpServiceAccountKeyFileContent(GcpConnectorCredentialDTO gcpCredentials) {
     if (gcpCredentials.getGcpCredentialType() == MANUAL_CREDENTIALS) {
       GcpManualDetailsDTO gcpCredentialSpecDTO = (GcpManualDetailsDTO) gcpCredentials.getConfig();
+      Set<String> secrets = new HashSet<>();
+      secrets.add(String.valueOf(gcpCredentialSpecDTO.getSecretKeyRef().getDecryptedValue()));
+      SecretSanitizerThreadLocal.addAll(secrets);
       return gcpCredentialSpecDTO.getSecretKeyRef().getDecryptedValue();
     }
     return null;
@@ -156,6 +165,13 @@ public class ContainerDeploymentDelegateBaseHelper {
           (KubernetesClusterDetailsDTO) clusterConfigDTO.getCredential().getConfig();
       KubernetesAuthCredentialDTO authCredentialDTO = clusterDetailsDTO.getAuth().getCredentials();
       secretDecryptionService.decrypt(authCredentialDTO, encryptedDataDetails);
+      if (isNotEmpty(encryptedDataDetails)) {
+        Set<String> secrets = new HashSet<>();
+        for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+          secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+        }
+        SecretSanitizerThreadLocal.addAll(secrets);
+      }
     }
   }
 
@@ -163,6 +179,13 @@ public class ContainerDeploymentDelegateBaseHelper {
     if (gcpConnectorDTO.getCredential().getGcpCredentialType() == MANUAL_CREDENTIALS) {
       GcpManualDetailsDTO gcpCredentialSpecDTO = (GcpManualDetailsDTO) gcpConnectorDTO.getCredential().getConfig();
       secretDecryptionService.decrypt(gcpCredentialSpecDTO, encryptedDataDetails);
+      if (isNotEmpty(encryptedDataDetails)) {
+        Set<String> secrets = new HashSet<>();
+        for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetails) {
+          secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
+        }
+        SecretSanitizerThreadLocal.addAll(secrets);
+      }
     }
   }
 
