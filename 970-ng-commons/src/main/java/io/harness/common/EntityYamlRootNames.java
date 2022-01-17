@@ -32,6 +32,7 @@ public class EntityYamlRootNames {
   public static String INPUT_SET = "inputSet";
   public static String OVERLAY_INPUT_SET = "overlayInputSet";
   public static String CV_CONFIG = "cvConfig";
+  public static String CV_VERIFY = "cvVerify";
   public static String DELEGATE = "delegate";
   public static String DELEGATE_CONFIGURATION = "delegateConfigurations";
   public static String CV_VERIFICATION_JOB = "cvVerificationJob";
