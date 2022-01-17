@@ -35,7 +35,6 @@ import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1ReplicaSet;
 import io.kubernetes.client.openapi.models.V1StatefulSet;
 import io.kubernetes.client.openapi.models.V1beta1CronJob;
-import io.kubernetes.client.util.ModelMapper;
 import io.kubernetes.client.util.Yaml;
 import java.time.Instant;
 import java.util.List;
