@@ -30,6 +30,7 @@ import io.harness.logging.MdcContextSetter;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.security.PrincipalContextData;
+import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
 
@@ -86,7 +87,7 @@ public class HarnessToGitPushInfoGrpcService extends HarnessToGitPushInfoService
 
   private void setPrincipal(FileInfo request) {
     final io.harness.security.dto.Principal principal = getPrincipal(request);
-    GlobalContextManager.upsertGlobalContextRecord(PrincipalContextData.builder().principal(principal).build());
+    GlobalContextManager.upsertGlobalContextRecord(SourcePrincipalContextData.builder().principal(principal).build());
   }
 
   private io.harness.security.dto.Principal getPrincipal(FileInfo request) {
