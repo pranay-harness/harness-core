@@ -91,7 +91,7 @@ public class AbortAllInterruptHandler extends InterruptPropagatorHandler impleme
   @Override
   public Interrupt handleInterruptForNodeExecution(Interrupt interrupt, String nodeExecutionId) {
     try (AutoLogContext ignore = interrupt.autoLogContext()) {
-      log.info("Stating to handle interrupt for Node Execution");
+      log.info("Starting to handle interrupt for Node Execution");
       return handleChildNodes(interrupt, nodeExecutionId);
     }
   }
@@ -99,7 +99,7 @@ public class AbortAllInterruptHandler extends InterruptPropagatorHandler impleme
   @Override
   public Interrupt handleInterrupt(@NonNull @Valid Interrupt interrupt) {
     try (AutoLogContext ignore = interrupt.autoLogContext()) {
-      log.info("Stating to handle interrupt for Plan Execution");
+      log.info("Starting to handle interrupt for Plan Execution");
       return handleAllNodes(interrupt);
     }
   }
