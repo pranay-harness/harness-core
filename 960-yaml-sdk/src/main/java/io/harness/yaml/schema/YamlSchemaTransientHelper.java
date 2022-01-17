@@ -46,6 +46,19 @@ public class YamlSchemaTransientHelper {
       add(EntityType.TEMPLATE);
       add(EntityType.SERVICENOW_APPROVAL_STEP);
       add(EntityType.JIRA_APPROVAL_STEP);
+      add(EntityType.RUN_STEP);
+      add(EntityType.RUN_TEST);
+      add(EntityType.PLUGIN);
+      add(EntityType.RESTORE_CACHE_GCS);
+      add(EntityType.RESTORE_CACHE_S3);
+      add(EntityType.SAVE_CACHE_GCS);
+      add(EntityType.SAVE_CACHE_S3);
+      add(EntityType.ARTIFACTORY_UPLOAD);
+      add(EntityType.GCS_UPLOAD);
+      add(EntityType.S3_UPLOAD);
+      add(EntityType.BUILD_AND_PUSH_GCR);
+      add(EntityType.BUILD_AND_PUSH_ECR);
+      add(EntityType.BUILD_AND_PUSH_DOCKER_REGISTRY);
     }
   };
 

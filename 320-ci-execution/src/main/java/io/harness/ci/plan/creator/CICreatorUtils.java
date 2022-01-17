@@ -18,9 +18,13 @@ import lombok.experimental.UtilityClass;
 @OwnedBy(HarnessTeam.CI)
 public class CICreatorUtils {
   public Set<String> getSupportedSteps() {
-    return Sets.newHashSet("SaveCacheS3", "Test", "RunTests", "SaveCache", "liteEngineTask", "GitClone",
-        "BuildAndPushGCR", "BuildAndPushECR", "BuildAndPushDockerRegistry", "Cleanup", "Plugin", "PublishArtifacts",
-        "RestoreCacheGCS", "RestoreCacheS3", "RestoreCache", "SaveCacheGCS", "Run", "S3Upload", "GCSUpload",
-        "ArtifactoryUpload");
+    // These are internal steps does not need to be in V2
+    return Sets.newHashSet("Test", "SaveCache", "liteEngineTask", "GitClone", "Cleanup", "PublishArtifacts");
+  }
+
+  public Set<String> getSupportedStepsV2() {
+    return Sets.newHashSet("Run", "SaveCacheS3", "RunTests", "BuildAndPushGCR", "BuildAndPushECR",
+        "BuildAndPushDockerRegistry", "Plugin", "RestoreCacheGCS", "RestoreCacheS3", "SaveCacheGCS", "S3Upload",
+        "GCSUpload", "ArtifactoryUpload");
   }
 }

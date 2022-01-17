@@ -42,6 +42,20 @@ public interface EntityTypeConstants {
   String JIRA_UPDATE = "JiraUpdate";
   String SHELL_SCRIPT = "ShellScript";
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
+  String RUN_STEP = "Run";
+  String RUN_TEST = "RunTests";
+  String PLUGIN = "Plugin";
+  String RESTORE_CACHE_GCS = "RestoreCacheGCS";
+  String RESTORE_CACHE_S3 = "RestoreCacheS3";
+  String SAVE_CACHE_GCS = "SaveCacheGCS";
+  String SAVE_CACHE_S3 = "SaveCacheS3";
+  String ARTIFACTORY_UPLOAD = "ArtifactoryUpload";
+  String GCS_UPLOAD = "GCSUpload";
+  String S3_UPLOAD = "S3Upload";
+
+  String BUILD_AND_PUSH_GCR = "BuildAndPushGCR";
+  String BUILD_AND_PUSH_ECR = "BuildAndPushECR";
+  String BUILD_AND_PUSH_DOCKER_REGISTRY = "BuildAndPushDockerRegistry";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
   String JIRA_APPROVAL = "JiraApproval";
 }

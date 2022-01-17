@@ -113,7 +113,41 @@ public enum EntityType {
       ModuleType.CF, EntityTypeConstants.FEATURE_FLAGS, IdentifierRef.class, EntityYamlRootNames.FEATURE_FLAGS),
   @JsonProperty(EntityTypeConstants.SERVICENOW_APPROVAL)
   SERVICENOW_APPROVAL_STEP(ModuleType.CD, EntityTypeConstants.SERVICENOW_APPROVAL, IdentifierRef.class,
-      EntityYamlRootNames.SERVICENOW_APPROVAL);
+      EntityYamlRootNames.SERVICENOW_APPROVAL),
+  @JsonProperty(EntityTypeConstants.RUN_STEP)
+  RUN_STEP(ModuleType.CI, EntityTypeConstants.RUN_STEP, IdentifierRef.class, EntityYamlRootNames.RUN_STEP),
+  @JsonProperty(EntityTypeConstants.RUN_TEST)
+  RUN_TEST(ModuleType.CI, EntityTypeConstants.RUN_TEST, IdentifierRef.class, EntityYamlRootNames.RUN_TEST),
+  @JsonProperty(EntityTypeConstants.PLUGIN)
+  PLUGIN(ModuleType.CI, EntityTypeConstants.PLUGIN, IdentifierRef.class, EntityYamlRootNames.PLUGIN),
+  @JsonProperty(EntityTypeConstants.RESTORE_CACHE_GCS)
+  RESTORE_CACHE_GCS(
+      ModuleType.CI, EntityTypeConstants.RESTORE_CACHE_GCS, IdentifierRef.class, EntityYamlRootNames.RESTORE_CACHE_GCS),
+  @JsonProperty(EntityTypeConstants.RESTORE_CACHE_S3)
+  RESTORE_CACHE_S3(
+      ModuleType.CI, EntityTypeConstants.RESTORE_CACHE_S3, IdentifierRef.class, EntityYamlRootNames.RESTORE_CACHE_S3),
+  @JsonProperty(EntityTypeConstants.SAVE_CACHE_GCS)
+  SAVE_CACHE_GCS(
+      ModuleType.CI, EntityTypeConstants.SAVE_CACHE_GCS, IdentifierRef.class, EntityYamlRootNames.SAVE_CACHE_GCS),
+  @JsonProperty(EntityTypeConstants.SAVE_CACHE_S3)
+  SAVE_CACHE_S3(
+      ModuleType.CI, EntityTypeConstants.SAVE_CACHE_S3, IdentifierRef.class, EntityYamlRootNames.SAVE_CACHE_S3),
+  @JsonProperty(EntityTypeConstants.ARTIFACTORY_UPLOAD)
+  ARTIFACTORY_UPLOAD(ModuleType.CI, EntityTypeConstants.ARTIFACTORY_UPLOAD, IdentifierRef.class,
+      EntityYamlRootNames.ARTIFACTORY_UPLOAD),
+  @JsonProperty(EntityTypeConstants.GCS_UPLOAD)
+  GCS_UPLOAD(ModuleType.CI, EntityTypeConstants.GCS_UPLOAD, IdentifierRef.class, EntityYamlRootNames.GCS_UPLOAD),
+  @JsonProperty(EntityTypeConstants.S3_UPLOAD)
+  S3_UPLOAD(ModuleType.CI, EntityTypeConstants.S3_UPLOAD, IdentifierRef.class, EntityYamlRootNames.S3_UPLOAD),
+  @JsonProperty(EntityTypeConstants.BUILD_AND_PUSH_GCR)
+  BUILD_AND_PUSH_GCR(ModuleType.CI, EntityTypeConstants.BUILD_AND_PUSH_GCR, IdentifierRef.class,
+      EntityYamlRootNames.BUILD_AND_PUSH_GCR),
+  @JsonProperty(EntityTypeConstants.BUILD_AND_PUSH_ECR)
+  BUILD_AND_PUSH_ECR(ModuleType.CI, EntityTypeConstants.BUILD_AND_PUSH_ECR, IdentifierRef.class,
+      EntityYamlRootNames.BUILD_AND_PUSH_ECR),
+  @JsonProperty(EntityTypeConstants.BUILD_AND_PUSH_DOCKER_REGISTRY)
+  BUILD_AND_PUSH_DOCKER_REGISTRY(ModuleType.CI, EntityTypeConstants.BUILD_AND_PUSH_DOCKER_REGISTRY, IdentifierRef.class,
+      EntityYamlRootNames.BUILD_AND_PUSH_DOCKER_REGISTRY);
 
   private final ModuleType moduleType;
   String yamlName;

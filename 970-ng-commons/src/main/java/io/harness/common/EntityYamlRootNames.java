@@ -54,4 +54,18 @@ public class EntityYamlRootNames {
   public static String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
   public static String JIRA_APPROVAL = "JiraApproval";
+  public static String RUN_STEP = "Run";
+  public static String RUN_TEST = "RunTests";
+  public static String PLUGIN = "Plugin";
+  public static String RESTORE_CACHE_GCS = "RestoreCacheGCS";
+  public static String RESTORE_CACHE_S3 = "RestoreCacheS3";
+  public static String SAVE_CACHE_GCS = "SaveCacheGCS";
+  public static String SAVE_CACHE_S3 = "SaveCacheS3";
+  public static String ARTIFACTORY_UPLOAD = "ArtifactoryUpload";
+  public static String GCS_UPLOAD = "GCSUpload";
+  public static String S3_UPLOAD = "S3Upload";
+
+  public static String BUILD_AND_PUSH_GCR = "BuildAndPushGCR";
+  public static String BUILD_AND_PUSH_ECR = "BuildAndPushECR";
+  public static String BUILD_AND_PUSH_DOCKER_REGISTRY = "BuildAndPushDockerRegistry";
 }
