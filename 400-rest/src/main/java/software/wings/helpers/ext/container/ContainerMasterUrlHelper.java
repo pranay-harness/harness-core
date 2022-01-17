@@ -7,25 +7,17 @@
 
 package software.wings.helpers.ext.container;
 
-import static io.harness.annotations.dev.HarnessTeam.CDP;
-import static io.harness.exception.WingsException.USER;
-
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.delegate.beans.TaskData;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.InvalidRequestException;
-
-import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.ContainerInfrastructureMapping;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.Environment;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.KubernetesClusterConfig;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.SyncTaskContext;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import software.wings.beans.*;
 import software.wings.delegatetasks.DelegateProxyFactory;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.MasterUrlFetchTaskParameter;
@@ -33,9 +25,8 @@ import software.wings.service.intfc.ContainerService;
 import software.wings.service.intfc.EnvironmentService;
 import software.wings.service.intfc.InfrastructureMappingService;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import lombok.extern.slf4j.Slf4j;
+import static io.harness.annotations.dev.HarnessTeam.CDP;
+import static io.harness.exception.WingsException.USER;
 
 @Singleton
 @Slf4j
@@ -72,6 +63,10 @@ public class ContainerMasterUrlHelper {
 
   public String fetchMasterUrl(
       ContainerServiceParams containerServiceParams, ContainerInfrastructureMapping infraMapping) {
+    if (infraMapping instanceof RancherKubernetesInfrastructureMapping) {
+      return StringUtils.EMPTY;
+    }
+
     if (infraMapping instanceof DirectKubernetesInfrastructureMapping) {
       final SettingAttribute settingAttribute = containerServiceParams.getSettingAttribute();
       if (settingAttribute.getValue() instanceof KubernetesClusterConfig) {

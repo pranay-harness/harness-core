@@ -151,6 +151,7 @@ public class ActivityServiceImpl implements ActivityService {
     if (activity.getCommandUnitType() != null) {
       switch (activity.getCommandUnitType()) {
         case KUBERNETES:
+        case RANCHER:
         case PCF_SETUP:
         case PCF_RESIZE:
         case PCF_PLUGIN:

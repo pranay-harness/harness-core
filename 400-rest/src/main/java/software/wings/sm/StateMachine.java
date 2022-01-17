@@ -7,21 +7,8 @@
 
 package software.wings.sm;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-import static io.harness.beans.OrchestrationWorkflowType.BUILD;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
-
-import static software.wings.sm.ExpressionProcessor.EXPRESSION_PREFIX;
-import static software.wings.sm.ExpressionProcessor.EXPRESSION_SUFFIX;
-import static software.wings.sm.ExpressionProcessor.SUBFIELD_ACCESS;
-import static software.wings.sm.StateType.REPEAT;
-import static software.wings.sm.Transition.Builder.aTransition;
-import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
-
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toList;
-
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import io.harness.annotation.HarnessEntity;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -41,16 +28,17 @@ import io.harness.mongo.index.MongoIndex;
 import io.harness.persistence.CreatedAtAware;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
-
-import software.wings.beans.ExecutionStrategy;
-import software.wings.beans.Graph;
-import software.wings.beans.GraphLink;
-import software.wings.beans.GraphNode;
-import software.wings.beans.OrchestrationWorkflow;
-import software.wings.beans.Pipeline;
-import software.wings.beans.PipelineStage;
+import lombok.Data;
+import lombok.experimental.FieldNameConstants;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.PostLoad;
+import org.mongodb.morphia.annotations.Transient;
+import software.wings.beans.*;
 import software.wings.beans.PipelineStage.PipelineStageElement;
-import software.wings.beans.Workflow;
 import software.wings.beans.entityinterface.ApplicationAccess;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.common.WorkflowConstants;
@@ -62,26 +50,20 @@ import software.wings.sm.states.RepeatState;
 import software.wings.sm.states.SubWorkflowState;
 import software.wings.sm.states.mixin.SweepingOutputStateMixin;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 import javax.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.experimental.FieldNameConstants;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.PostLoad;
-import org.mongodb.morphia.annotations.Transient;
+import java.util.*;
+import java.util.Map.Entry;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.beans.OrchestrationWorkflowType.BUILD;
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static software.wings.sm.ExpressionProcessor.*;
+import static software.wings.sm.StateType.REPEAT;
+import static software.wings.sm.Transition.Builder.aTransition;
+import static software.wings.sm.states.RepeatState.Builder.aRepeatState;
 
 /**
  * Describes a StateMachine.

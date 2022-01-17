@@ -7,9 +7,9 @@
 
 package io.harness.context;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
 import io.harness.annotations.dev.OwnedBy;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 /**
  * Describes what type of element is being repeated on.
@@ -151,5 +151,7 @@ public enum ContextElementType {
 
   HELM_CHART,
 
-  MANIFEST_VARIABLE
+  MANIFEST_VARIABLE,
+
+  RANCHER_K8S_CLUSTER_CRITERIA
 }

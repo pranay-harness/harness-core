@@ -14,6 +14,9 @@ import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING;
 import static software.wings.sm.StateType.K8S_DEPLOYMENT_ROLLING_ROLLBACK;
+import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING;
+import static software.wings.sm.StateType.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK;
+import static software.wings.sm.StateType.RANCHER_RESOLVE;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -64,11 +67,11 @@ public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
         .build();
   }
 
-  private PhaseStep getRollingVerifyPhaseStep() {
+  protected PhaseStep getRollingVerifyPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, "Verify").build();
   }
 
-  private PhaseStep getRollingWrapUpPhaseStep() {
+  protected PhaseStep getRollingWrapUpPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP).build();
   }
 
@@ -88,7 +91,7 @@ public class K8RollingWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
         .build();
   }
 
-  private PhaseStep getRollingRollbackWrapUpPhaseStep() {
+  protected PhaseStep getRollingRollbackWrapUpPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
         .withPhaseStepNameForRollback(WorkflowServiceHelper.WRAP_UP)
         .withRollback(true)

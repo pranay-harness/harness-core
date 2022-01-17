@@ -99,7 +99,10 @@ public enum InfrastructureMappingType implements InfrastructureMappingDescriptor
       Lists.newArrayList(DeploymentType.CUSTOM)),
 
   AZURE_WEBAPP(AzureWebAppInfrastructureMapping.class, "AZURE_WEBAPP", StencilCategory.OTHERS, 14,
-      Lists.newArrayList(DeploymentType.AZURE_WEBAPP));
+      Lists.newArrayList(DeploymentType.AZURE_WEBAPP)),
+
+  RANCHER_KUBERNETES(RancherKubernetesInfrastructureMapping.class, "RANCHER_KUBERNETES", StencilCategory.OTHERS, 15,
+      Lists.newArrayList(DeploymentType.KUBERNETES));
 
   private static final String stencilsPath = "/templates/inframapping/";
   private static final String uiSchemaSuffix = "-InfraMappingUISchema.json";

@@ -25,6 +25,7 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
+import static software.wings.beans.InfrastructureType.RANCHER_KUBERNETES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -53,7 +54,8 @@ import java.util.Set;
       @JsonSubTypes.Type(value = PcfInfraStructure.class, name = PCF_INFRASTRUCTURE),
       @JsonSubTypes.Type(value = PhysicalInfra.class, name = PHYSICAL_INFRA),
       @JsonSubTypes.Type(value = PhysicalInfraWinrm.class, name = PHYSICAL_INFRA_WINRM),
-      @JsonSubTypes.Type(value = CustomInfrastructure.class, name = CUSTOM_INFRASTRUCTURE)
+      @JsonSubTypes.Type(value = CustomInfrastructure.class, name = CUSTOM_INFRASTRUCTURE),
+      @JsonSubTypes.Type(value = RancherKubernetesInfrastructure.class, name = RANCHER_KUBERNETES)
 })
 @OwnedBy(CDC)
 @TargetModule(_957_CG_BEANS)

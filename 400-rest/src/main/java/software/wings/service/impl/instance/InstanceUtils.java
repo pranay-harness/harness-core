@@ -42,6 +42,7 @@ public class InstanceUtils {
   public InstanceType getInstanceType(String infraMappingType) {
     InstanceType instanceType;
     if (InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infraMappingType)
+        || InfrastructureMappingType.RANCHER_KUBERNETES.name().equals(infraMappingType)
         || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infraMappingType)
         || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infraMappingType)) {
       instanceType = InstanceType.KUBERNETES_CONTAINER_INSTANCE;

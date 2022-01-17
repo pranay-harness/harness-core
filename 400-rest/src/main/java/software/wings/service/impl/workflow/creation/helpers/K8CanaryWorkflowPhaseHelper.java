@@ -13,8 +13,7 @@ import static io.harness.k8s.model.K8sExpressions.canaryWorkloadExpression;
 
 import static software.wings.beans.PhaseStep.PhaseStepBuilder.aPhaseStep;
 import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
-import static software.wings.sm.StateType.K8S_CANARY_DEPLOY;
-import static software.wings.sm.StateType.K8S_DELETE;
+import static software.wings.sm.StateType.*;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
@@ -28,6 +27,7 @@ import software.wings.service.impl.workflow.WorkflowServiceHelper;
 
 import com.google.common.collect.ImmutableMap;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 @OwnedBy(CDC)
@@ -51,7 +51,7 @@ public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
   }
 
   // Steps for Canary
-  private PhaseStep getCanaryDeployPhaseStep() {
+  protected PhaseStep getCanaryDeployPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.DEPLOY)
         .addStep(GraphNode.builder()
                      .id(generateUuid())
@@ -69,7 +69,7 @@ public class K8CanaryWorkflowPhaseHelper extends K8AbstractWorkflowHelper {
     return aPhaseStep(K8S_PHASE_STEP, "Verify").build();
   }
 
-  private PhaseStep getCanaryWrapUpPhaseStep() {
+  protected PhaseStep getCanaryWrapUpPhaseStep() {
     return aPhaseStep(K8S_PHASE_STEP, WorkflowServiceHelper.WRAP_UP)
         .addStep(GraphNode.builder()
                      .id(generateUuid())

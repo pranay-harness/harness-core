@@ -83,26 +83,9 @@ import software.wings.api.artifact.ServiceArtifactVariableElements;
 import software.wings.api.helm.HelmReleaseInfoElement;
 import software.wings.api.instancedetails.InstanceApiResponse;
 import software.wings.api.instancedetails.InstanceInfoVariables;
-import software.wings.beans.Activity;
+import software.wings.beans.*;
 import software.wings.beans.Activity.ActivityBuilder;
-import software.wings.beans.Application;
-import software.wings.beans.ArtifactVariable;
-import software.wings.beans.AzureKubernetesInfrastructureMapping;
-import software.wings.beans.CustomInfrastructureMapping;
-import software.wings.beans.DeploymentExecutionContext;
-import software.wings.beans.DirectKubernetesInfrastructureMapping;
-import software.wings.beans.Environment;
-import software.wings.beans.ErrorStrategy;
-import software.wings.beans.GcpKubernetesInfrastructureMapping;
-import software.wings.beans.InfraMappingSweepingOutput;
-import software.wings.beans.InfrastructureMapping;
-import software.wings.beans.NameValuePair;
-import software.wings.beans.PcfInfrastructureMapping;
-import software.wings.beans.ServiceTemplate;
-import software.wings.beans.ServiceVariable;
 import software.wings.beans.ServiceVariable.Type;
-import software.wings.beans.SettingAttribute;
-import software.wings.beans.Variable;
 import software.wings.beans.appmanifest.HelmChart;
 import software.wings.beans.artifact.Artifact;
 import software.wings.beans.artifact.ArtifactStream;
@@ -1257,6 +1240,8 @@ public class ExecutionContextImpl implements DeploymentExecutionContext {
         namespace = ((AzureKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
       } else if (infrastructureMapping instanceof DirectKubernetesInfrastructureMapping) {
         namespace = ((DirectKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
+      } else if (infrastructureMapping instanceof RancherKubernetesInfrastructureMapping) {
+        namespace = ((RancherKubernetesInfrastructureMapping) infrastructureMapping).getNamespace();
       } else {
         unhandled(infrastructureMapping.getInfraMappingType());
       }

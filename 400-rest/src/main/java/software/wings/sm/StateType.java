@@ -11,76 +11,23 @@ import static io.harness.annotations.dev.HarnessModule._870_CG_ORCHESTRATION;
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import static software.wings.beans.InfrastructureMappingType.AWS_ECS;
-import static software.wings.beans.PhaseStepType.AMI_AUTOSCALING_GROUP_SETUP;
-import static software.wings.beans.PhaseStepType.AMI_DEPLOY_AUTOSCALING_GROUP;
-import static software.wings.beans.PhaseStepType.AMI_SWITCH_AUTOSCALING_GROUP_ROUTES;
-import static software.wings.beans.PhaseStepType.CLUSTER_SETUP;
-import static software.wings.beans.PhaseStepType.CONTAINER_DEPLOY;
-import static software.wings.beans.PhaseStepType.CONTAINER_SETUP;
-import static software.wings.beans.PhaseStepType.CUSTOM_DEPLOYMENT_PHASE_STEP;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWSCODEDEPLOY;
-import static software.wings.beans.PhaseStepType.DEPLOY_AWS_LAMBDA;
+import static software.wings.beans.PhaseStepType.*;
 import static software.wings.beans.PhaseStepType.DEPLOY_SERVICE;
 import static software.wings.beans.PhaseStepType.DISABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.ECS_UPDATE_LISTENER_BG;
-import static software.wings.beans.PhaseStepType.ECS_UPDATE_ROUTE_53_DNS_WEIGHT;
 import static software.wings.beans.PhaseStepType.ENABLE_SERVICE;
-import static software.wings.beans.PhaseStepType.INFRASTRUCTURE_NODE;
-import static software.wings.beans.PhaseStepType.K8S_PHASE_STEP;
-import static software.wings.beans.PhaseStepType.POST_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.PRE_DEPLOYMENT;
-import static software.wings.beans.PhaseStepType.PROVISION_INFRASTRUCTURE;
 import static software.wings.beans.PhaseStepType.ROUTE_UPDATE;
-import static software.wings.beans.PhaseStepType.SELECT_NODE;
-import static software.wings.beans.PhaseStepType.START_SERVICE;
 import static software.wings.beans.PhaseStepType.STOP_SERVICE;
 import static software.wings.beans.PhaseStepType.WRAP_UP;
-import static software.wings.common.ProvisionerConstants.DESTROY_TERRAGRUNT_NAME;
-import static software.wings.common.ProvisionerConstants.DE_PROVISION_CLOUD_FORMATION;
-import static software.wings.common.ProvisionerConstants.PROVISION_CLOUD_FORMATION;
+import static software.wings.common.ProvisionerConstants.*;
 import static software.wings.common.ProvisionerConstants.PROVISION_SHELL_SCRIPT;
-import static software.wings.common.ProvisionerConstants.PROVISION_TERRAGRUNT_NAME;
 import static software.wings.common.ProvisionerConstants.ROLLBACK_CLOUD_FORMATION;
 import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAFORM_NAME;
-import static software.wings.common.ProvisionerConstants.ROLLBACK_TERRAGRUNT_NAME;
 import static software.wings.service.impl.aws.model.AwsConstants.AMI_SETUP_COMMAND_NAME;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ARTIFACT_COLLECTION_STEP;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_CODE_DEPLOY;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.AWS_LAMBDA;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_ROUTE53_DNS_WEIGHTS;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_SWAP_TARGET_GROUPS;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ECS_SWAP_TARGET_GROUPS_ROLLBACK;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.KUBERNETES_SERVICE_SETUP;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_AMI_CLUSTER;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_CODE_DEPLOY;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_AWS_LAMBDA;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_ECS_ROUTE53_DNS_WEIGHTS;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.ROLLBACK_KUBERNETES_SETUP;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.SPOTINST_ALB_SHIFT_LISTENER_UPDATE;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_AUTOSCALING_GROUP;
-import static software.wings.service.impl.workflow.WorkflowServiceHelper.UPGRADE_AUTOSCALING_GROUP_ROUTE;
-import static software.wings.sm.StateTypeScope.COMMON;
-import static software.wings.sm.StateTypeScope.NONE;
-import static software.wings.sm.StateTypeScope.ORCHESTRATION_STENCILS;
-import static software.wings.sm.StateTypeScope.PIPELINE_STENCILS;
+import static software.wings.service.impl.workflow.WorkflowServiceHelper.*;
+import static software.wings.sm.StateTypeScope.*;
 import static software.wings.sm.states.k8s.K8sApplyState.K8S_APPLY_STATE;
 import static software.wings.sm.states.k8s.K8sTrafficSplitState.K8S_TRAFFIC_SPLIT_STATE_NAME;
-import static software.wings.stencils.StencilCategory.AZURE_VMSS;
-import static software.wings.stencils.StencilCategory.AZURE_WEBAPP;
-import static software.wings.stencils.StencilCategory.CLOUD;
-import static software.wings.stencils.StencilCategory.COLLABORATION;
-import static software.wings.stencils.StencilCategory.COLLECTIONS;
-import static software.wings.stencils.StencilCategory.COMMANDS;
-import static software.wings.stencils.StencilCategory.CONTROLS;
-import static software.wings.stencils.StencilCategory.ECS;
-import static software.wings.stencils.StencilCategory.ENVIRONMENTS;
-import static software.wings.stencils.StencilCategory.FLOW_CONTROLS;
-import static software.wings.stencils.StencilCategory.KUBERNETES;
-import static software.wings.stencils.StencilCategory.OTHERS;
-import static software.wings.stencils.StencilCategory.PROVISIONERS;
-import static software.wings.stencils.StencilCategory.SPOTINST;
-import static software.wings.stencils.StencilCategory.VERIFICATIONS;
+import static software.wings.stencils.StencilCategory.*;
 
 import static com.google.common.base.CaseFormat.UPPER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
@@ -106,97 +53,8 @@ import software.wings.common.WorkflowConstants;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.impl.aws.model.AwsConstants;
 import software.wings.service.impl.workflow.WorkflowServiceHelper;
-import software.wings.sm.states.APMVerificationState;
-import software.wings.sm.states.AppDynamicsState;
-import software.wings.sm.states.ApprovalResumeState;
-import software.wings.sm.states.ApprovalState;
-import software.wings.sm.states.ArtifactCheckState;
-import software.wings.sm.states.ArtifactCollectionState;
-import software.wings.sm.states.AwsAmiRollbackSwitchRoutesState;
-import software.wings.sm.states.AwsAmiRollbackTrafficShiftAlbSwitchRoutesState;
-import software.wings.sm.states.AwsAmiServiceDeployState;
-import software.wings.sm.states.AwsAmiServiceRollback;
-import software.wings.sm.states.AwsAmiServiceSetup;
-import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbDeployState;
-import software.wings.sm.states.AwsAmiServiceTrafficShiftAlbSetup;
-import software.wings.sm.states.AwsAmiSwitchRoutesState;
-import software.wings.sm.states.AwsAmiTrafficShiftAlbSwitchRoutesState;
-import software.wings.sm.states.AwsCodeDeployRollback;
-import software.wings.sm.states.AwsCodeDeployState;
-import software.wings.sm.states.AwsLambdaRollback;
-import software.wings.sm.states.AwsLambdaState;
-import software.wings.sm.states.AwsNodeSelectState;
-import software.wings.sm.states.AzureNodeSelectState;
-import software.wings.sm.states.BambooState;
-import software.wings.sm.states.BarrierState;
-import software.wings.sm.states.BugsnagState;
-import software.wings.sm.states.CVNGState;
-import software.wings.sm.states.CloudWatchState;
-import software.wings.sm.states.CommandState;
-import software.wings.sm.states.CustomLogVerificationState;
-import software.wings.sm.states.DatadogLogState;
-import software.wings.sm.states.DatadogState;
-import software.wings.sm.states.DcNodeSelectState;
-import software.wings.sm.states.DynatraceState;
-import software.wings.sm.states.EcsBGRollbackRoute53DNSWeightState;
-import software.wings.sm.states.EcsBGUpdateListnerRollbackState;
-import software.wings.sm.states.EcsBGUpdateListnerState;
-import software.wings.sm.states.EcsBGUpdateRoute53DNSWeightState;
-import software.wings.sm.states.EcsBlueGreenServiceSetup;
-import software.wings.sm.states.EcsBlueGreenServiceSetupRoute53DNS;
-import software.wings.sm.states.EcsDaemonServiceSetup;
-import software.wings.sm.states.EcsRunTaskDeploy;
-import software.wings.sm.states.EcsServiceDeploy;
-import software.wings.sm.states.EcsServiceRollback;
-import software.wings.sm.states.EcsServiceSetup;
-import software.wings.sm.states.EcsSetupRollback;
-import software.wings.sm.states.EcsSteadyStateCheck;
-import software.wings.sm.states.ElasticLoadBalancerState;
-import software.wings.sm.states.ElkAnalysisState;
-import software.wings.sm.states.EmailState;
-import software.wings.sm.states.EnvLoopResumeState;
-import software.wings.sm.states.EnvLoopState;
-import software.wings.sm.states.EnvResumeState;
-import software.wings.sm.states.EnvState;
-import software.wings.sm.states.ForkState;
-import software.wings.sm.states.GcbState;
-import software.wings.sm.states.GcpClusterSetup;
-import software.wings.sm.states.HelmDeployState;
-import software.wings.sm.states.HelmRollbackState;
-import software.wings.sm.states.HttpState;
-import software.wings.sm.states.InstanaState;
-import software.wings.sm.states.JenkinsState;
-import software.wings.sm.states.KubernetesDeploy;
-import software.wings.sm.states.KubernetesDeployRollback;
-import software.wings.sm.states.KubernetesSetup;
-import software.wings.sm.states.KubernetesSetupRollback;
-import software.wings.sm.states.KubernetesSteadyStateCheck;
-import software.wings.sm.states.KubernetesSwapServiceSelectors;
-import software.wings.sm.states.LogzAnalysisState;
-import software.wings.sm.states.NewRelicDeploymentMarkerState;
-import software.wings.sm.states.NewRelicState;
-import software.wings.sm.states.PauseState;
-import software.wings.sm.states.PhaseStepSubWorkflow;
-import software.wings.sm.states.PhaseSubWorkflow;
-import software.wings.sm.states.PrometheusState;
-import software.wings.sm.states.RepeatState;
-import software.wings.sm.states.ResourceConstraintState;
-import software.wings.sm.states.RollingNodeSelectState;
-import software.wings.sm.states.ScalyrState;
-import software.wings.sm.states.ShellScriptState;
-import software.wings.sm.states.SplunkV2State;
-import software.wings.sm.states.StackDriverLogState;
-import software.wings.sm.states.StackDriverState;
-import software.wings.sm.states.StagingOriginalExecution;
-import software.wings.sm.states.SubWorkflowState;
-import software.wings.sm.states.SumoLogicAnalysisState;
-import software.wings.sm.states.TemplatizedSecretManagerState;
-import software.wings.sm.states.WaitState;
-import software.wings.sm.states.azure.AzureVMSSDeployState;
-import software.wings.sm.states.azure.AzureVMSSRollbackState;
-import software.wings.sm.states.azure.AzureVMSSSetupState;
-import software.wings.sm.states.azure.AzureVMSSSwitchRoutesRollbackState;
-import software.wings.sm.states.azure.AzureVMSSSwitchRoutesState;
+import software.wings.sm.states.*;
+import software.wings.sm.states.azure.*;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotRollback;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotSetup;
 import software.wings.sm.states.azure.appservices.AzureWebAppSlotShiftTraffic;
@@ -204,43 +62,14 @@ import software.wings.sm.states.azure.appservices.AzureWebAppSlotSwap;
 import software.wings.sm.states.collaboration.JiraCreateUpdate;
 import software.wings.sm.states.collaboration.ServiceNowCreateUpdateState;
 import software.wings.sm.states.customdeployment.InstanceFetchState;
-import software.wings.sm.states.k8s.K8sApplyState;
-import software.wings.sm.states.k8s.K8sBlueGreenDeploy;
-import software.wings.sm.states.k8s.K8sCanaryDeploy;
-import software.wings.sm.states.k8s.K8sDelete;
-import software.wings.sm.states.k8s.K8sRollingDeploy;
-import software.wings.sm.states.k8s.K8sRollingDeployRollback;
-import software.wings.sm.states.k8s.K8sScale;
-import software.wings.sm.states.k8s.K8sTrafficSplitState;
-import software.wings.sm.states.pcf.MapRouteState;
-import software.wings.sm.states.pcf.PcfDeployState;
-import software.wings.sm.states.pcf.PcfPluginState;
-import software.wings.sm.states.pcf.PcfRollbackState;
-import software.wings.sm.states.pcf.PcfSetupState;
-import software.wings.sm.states.pcf.PcfSwitchBlueGreenRoutes;
-import software.wings.sm.states.pcf.UnmapRouteState;
-import software.wings.sm.states.provision.ARMProvisionState;
-import software.wings.sm.states.provision.ARMRollbackState;
-import software.wings.sm.states.provision.ApplyTerraformProvisionState;
-import software.wings.sm.states.provision.ApplyTerraformState;
-import software.wings.sm.states.provision.CloudFormationCreateStackState;
-import software.wings.sm.states.provision.CloudFormationDeleteStackState;
-import software.wings.sm.states.provision.CloudFormationRollbackStackState;
-import software.wings.sm.states.provision.DestroyTerraformProvisionState;
-import software.wings.sm.states.provision.ShellScriptProvisionState;
-import software.wings.sm.states.provision.TerraformRollbackState;
-import software.wings.sm.states.provision.TerragruntApplyState;
-import software.wings.sm.states.provision.TerragruntDestroyState;
-import software.wings.sm.states.provision.TerragruntRollbackState;
-import software.wings.sm.states.spotinst.SpotInstDeployState;
-import software.wings.sm.states.spotinst.SpotInstListenerUpdateRollbackState;
-import software.wings.sm.states.spotinst.SpotInstListenerUpdateState;
-import software.wings.sm.states.spotinst.SpotInstRollbackState;
-import software.wings.sm.states.spotinst.SpotInstServiceSetup;
-import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbDeployState;
-import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbRollbackSwitchRoutesState;
-import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSetupState;
-import software.wings.sm.states.spotinst.SpotinstTrafficShiftAlbSwitchRoutesState;
+import software.wings.sm.states.k8s.*;
+import software.wings.sm.states.pcf.*;
+import software.wings.sm.states.provision.*;
+import software.wings.sm.states.rancher.RancherK8sCanaryDeploy;
+import software.wings.sm.states.rancher.RancherK8sRollingDeploy;
+import software.wings.sm.states.rancher.RancherK8sRollingDeployRollback;
+import software.wings.sm.states.rancher.RancherResolveState;
+import software.wings.sm.states.spotinst.*;
 import software.wings.stencils.OverridingStencil;
 import software.wings.stencils.StencilCategory;
 
@@ -838,6 +667,23 @@ public enum StateType implements StateTypeDescriptor {
       Lists.newArrayList(InfrastructureMappingType.DIRECT_KUBERNETES, InfrastructureMappingType.GCP_KUBERNETES,
           InfrastructureMappingType.AZURE_KUBERNETES),
       asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_RESOLVE(RancherResolveState.class, KUBERNETES, 30, WorkflowConstants.RANCHER_RESOLVE_CLUSTERS,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_K8S_DEPLOYMENT_ROLLING(RancherK8sRollingDeploy.class, KUBERNETES, 31,
+      WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_K8S_CANARY_DEPLOY(RancherK8sCanaryDeploy.class, KUBERNETES, 32, WorkflowConstants.RANCHER_K8S_CANARY_DEPLOY,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_K8S_DELETE(K8sDelete.class, KUBERNETES, 38, WorkflowConstants.RANCHER_K8S_DELETE,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
+
+  RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK(RancherK8sRollingDeployRollback.class, KUBERNETES, 39,
+      WorkflowConstants.RANCHER_K8S_DEPLOYMENT_ROLLING_ROLLBACK,
+      Lists.newArrayList(InfrastructureMappingType.RANCHER_KUBERNETES), asList(K8S_PHASE_STEP), ORCHESTRATION_STENCILS),
 
   JIRA_CREATE_UPDATE(JiraCreateUpdate.class, COLLABORATION, 1, "Jira",
       asList(PRE_DEPLOYMENT, POST_DEPLOYMENT, START_SERVICE, STOP_SERVICE, DEPLOY_SERVICE, ENABLE_SERVICE,

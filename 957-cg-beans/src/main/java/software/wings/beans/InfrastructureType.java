@@ -36,4 +36,5 @@ public class InfrastructureType {
   public static final String AZURE_WEBAPP = "AZURE_WEBAPP";
   public static final String PDC = "PDC";
   public static final String CUSTOM_INFRASTRUCTURE = "CUSTOM";
+  public static final String RANCHER_KUBERNETES = "RANCHER_KUBERNETES";
 }

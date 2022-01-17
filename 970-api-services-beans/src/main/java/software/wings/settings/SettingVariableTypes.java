@@ -148,6 +148,10 @@ public enum SettingVariableTypes {
    * Tanzu Application Services
    */
   PCF("Tanzu Application Services"),
+  /**
+   * Rancher
+   */
+  RANCHER("Rancher"),
 
   /**
    * Direct connection setting variable types.

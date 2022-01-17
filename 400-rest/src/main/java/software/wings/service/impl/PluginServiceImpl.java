@@ -51,6 +51,7 @@ import software.wings.beans.NewRelicConfig;
 import software.wings.beans.PcfConfig;
 import software.wings.beans.PhysicalDataCenterConfig;
 import software.wings.beans.PrometheusConfig;
+import software.wings.beans.RancherConfig;
 import software.wings.beans.ScalyrConfig;
 import software.wings.beans.ServiceNowConfig;
 import software.wings.beans.SftpConfig;
@@ -451,6 +452,17 @@ public class PluginServiceImpl implements PluginService {
                        .withPluginCategories(asList(AzureArtifacts))
                        .withUiSchema(readUiSchema(SettingVariableTypes.AZURE_ARTIFACTS_PAT.name()))
                        .build());
+    if (featureFlagService.isEnabled(FeatureName.RANCHER_SUPPORT, accountId)) {
+      pluginList.add(anAccountPlugin()
+              .withSettingClass(RancherConfig.class)
+              .withAccountId(accountId)
+              .withIsEnabled(true)
+              .withDisplayName("Rancher")
+              .withType("RANCHER")
+              .withPluginCategories(asList(CloudProvider))
+              .withUiSchema(readUiSchema("RANCHER"))
+              .build());
+    }
     return pluginList;
   }
 

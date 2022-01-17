@@ -63,6 +63,7 @@ public enum CommandUnitType implements CommandUnitDescriptor {
   DOWNLOAD_ARTIFACT(
       DownloadArtifactCommandUnit.class, "Download Artifact", StencilCategory.SCRIPTS, DEFAULT_DISPLAY_ORDER),
   K8S_DUMMY(K8sDummyCommandUnit.class, "K8s Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
+  RANCHER_DUMMY(RancherDummyCommandUnit.class, "Rancher Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),
   SPOTINST_DUMMY(
       SpotinstDummyCommandUnit.class, "Spotinst Command Unit", StencilCategory.SPOTINST, DEFAULT_DISPLAY_ORDER),
   HELM_DUMMY(HelmDummyCommandUnit.class, "Helm Command Unit", StencilCategory.CONTAINERS, DEFAULT_DISPLAY_ORDER),

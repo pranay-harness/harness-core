@@ -11,20 +11,19 @@
 
 package software.wings.common;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
-
-import io.harness.annotations.dev.OwnedBy;
-import io.harness.context.ContextElementType;
-
-import software.wings.sm.ExecutionContext;
-import software.wings.sm.ExpressionProcessor;
-import software.wings.sm.ExpressionProcessorFactory;
-
 import com.google.common.collect.Lists;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import io.harness.annotations.dev.OwnedBy;
+import io.harness.context.ContextElementType;
+import software.wings.sm.ExecutionContext;
+import software.wings.sm.ExpressionProcessor;
+import software.wings.sm.ExpressionProcessorFactory;
+
 import java.util.List;
+
+import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 /**
  * A factory for creating WingsExpressionProcessor objects.
@@ -65,6 +64,11 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
       return processor;
     }
 
+    processor = new RancherK8sClusterProcessor(context);
+    if (processor.matches(expression)) {
+      return processor;
+    }
+
     return null;
   }
 
@@ -84,6 +88,8 @@ public class WingsExpressionProcessorFactory implements ExpressionProcessorFacto
         return InstanceExpressionProcessor.DEFAULT_EXPRESSION;
       case AWS_LAMBDA_FUNCTION:
         return AwsLambdaFunctionProcessor.DEFAULT_EXPRESSION;
+      case RANCHER_K8S_CLUSTER_CRITERIA:
+        return RancherK8sClusterProcessor.DEFAULT_EXPRESSION;
       default:
         return "";
     }

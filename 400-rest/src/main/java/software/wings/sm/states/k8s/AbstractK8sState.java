@@ -152,6 +152,7 @@ import software.wings.utils.ApplicationManifestUtils;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import com.mongodb.DuplicateKeyException;
 import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -572,10 +573,18 @@ public abstract class AbstractK8sState extends State implements K8sStateExecutor
   }
 
   public void saveK8sElement(ExecutionContext context, K8sElement k8sElement) {
-    sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
-                                   .name("k8s")
-                                   .output(kryoSerializer.asDeflatedBytes(k8sElement))
-                                   .build());
+    try {
+      sweepingOutputService.save(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)
+                                     .name("k8s")
+                                     .output(kryoSerializer.asDeflatedBytes(k8sElement))
+                                     .build());
+    } catch (InvalidRequestException e) {
+      if (e.getCause() instanceof DuplicateKeyException) {
+        log.warn("Skipping writing K8sElement to Sweeping Output as it might've been already written");
+      } else {
+        throw e;
+      }
+    }
   }
 
   public ExecutionResponse queueK8sDelegateTask(ExecutionContext context, K8sTaskParameters k8sTaskParameters,
