@@ -9,6 +9,7 @@ package io.harness.helm;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.exception.WingsException.USER;
 import static io.harness.helm.HelmConstants.DEFAULT_HELM_COMMAND_TIMEOUT;
 import static io.harness.helm.HelmConstants.DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS;
 import static io.harness.helm.HelmConstants.HELM_COMMAND_FLAG_PLACEHOLDER;
@@ -23,6 +24,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.HelmClientException;
+import io.harness.exception.HelmClientRuntimeException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.logging.CommandExecutionStatus;
@@ -47,6 +51,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -70,8 +75,7 @@ public class HelmClientImpl implements HelmClient {
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
   @Override
-  public HelmCliResponse install(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public HelmCliResponse install(HelmCommandData helmCommandData) throws Exception {
     String keyValueOverrides = constructValueOverrideFile(helmCommandData.getYamlFiles());
     String chartReference = getChartReference(helmCommandData.isRepoConfigNull(), helmCommandData.getChartName(),
         helmCommandData.getChartVersion(), helmCommandData.getChartUrl(), helmCommandData.getWorkingDir());
@@ -88,13 +92,14 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(installCommand, helmCommandData.getLogCallback());
     installCommand = applyKubeConfigToCommand(installCommand, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to install helm chart. Executed command: ";
 
-    return executeHelmCLICommand(installCommand);
+    return fetchCliResponseWithExceptionHandling(
+        installCommand, commandType, errorMessagePrefix, null, DEFAULT_HELM_COMMAND_TIMEOUT);
   }
 
   @Override
-  public HelmCliResponse upgrade(HelmCommandData helmCommandData)
-      throws IOException, ExecutionException, TimeoutException, InterruptedException {
+  public HelmCliResponse upgrade(HelmCommandData helmCommandData) throws Exception {
     String keyValueOverrides = constructValueOverrideFile(helmCommandData.getYamlFiles());
     String chartReference = getChartReference(helmCommandData.isRepoConfigNull(), helmCommandData.getChartName(),
         helmCommandData.getChartVersion(), helmCommandData.getChartUrl(), helmCommandData.getWorkingDir());
@@ -110,13 +115,14 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(upgradeCommand, helmCommandData.getLogCallback());
     upgradeCommand = applyKubeConfigToCommand(upgradeCommand, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to upgrade helm chart. Executed command: ";
 
-    return executeHelmCLICommand(upgradeCommand);
+    return fetchCliResponseWithExceptionHandling(
+        upgradeCommand, commandType, errorMessagePrefix, null, DEFAULT_HELM_COMMAND_TIMEOUT);
   }
 
   @Override
-  public HelmCliResponse rollback(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCliResponse rollback(HelmCommandData helmCommandData) throws Exception {
     String kubeConfigLocation = Optional.ofNullable(helmCommandData.getKubeConfigLocation()).orElse("");
     HelmCliCommandType commandType = HelmCliCommandType.ROLLBACK;
 
@@ -128,13 +134,14 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to rollback helm chart. Executed command: ";
 
-    return executeHelmCLICommand(command);
+    return fetchCliResponseWithExceptionHandling(
+        command, commandType, errorMessagePrefix, null, DEFAULT_HELM_COMMAND_TIMEOUT);
   }
 
   @Override
-  public HelmCliResponse releaseHistory(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCliResponse releaseHistory(HelmCommandData helmCommandData) throws Exception {
     String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     String releaseName = helmCommandData.getReleaseName();
     HelmCliCommandType commandType = HelmCliCommandType.RELEASE_HISTORY;
@@ -147,13 +154,14 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(releaseHistory, helmCommandData.getLogCallback());
     releaseHistory = applyKubeConfigToCommand(releaseHistory, kubeConfigLocation);
+    String errorMessagePrefix = "Failed in release history step. Executed command: ";
 
-    return executeHelmCLICommand(releaseHistory);
+    return fetchCliResponseWithExceptionHandling(
+        releaseHistory, commandType, errorMessagePrefix, null, DEFAULT_HELM_COMMAND_TIMEOUT);
   }
 
   @Override
-  public HelmCliResponse listReleases(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCliResponse listReleases(HelmCommandData helmCommandData) throws Exception {
     String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.LIST_RELEASE;
 
@@ -164,17 +172,18 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(listRelease, helmCommandData.getLogCallback());
     listRelease = applyKubeConfigToCommand(listRelease, kubeConfigLocation);
+    String errorMessagePrefix = "Failed in list releases step. Executed command: ";
 
     try (LogOutputStream errorStream = helmCommandData.getLogCallback() != null
             ? new ErrorActivityOutputStream(helmCommandData.getLogCallback())
             : new LogErrorStream()) {
-      return executeHelmCLICommand(listRelease, errorStream);
+      return fetchCliResponseWithExceptionHandling(
+          listRelease, commandType, errorMessagePrefix, errorStream, DEFAULT_HELM_COMMAND_TIMEOUT);
     }
   }
 
   @Override
-  public HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData) throws Exception {
     String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.VERSION;
     String command = getHelmCommandTemplateWithHelmPath(commandType, null);
@@ -183,13 +192,13 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
-
-    return executeHelmCLICommand(command, DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS);
+    String errorMessagePrefix = "Failed in helm version command. ";
+    return fetchCliResponseWithExceptionHandling(
+        command, commandType, errorMessagePrefix, null, DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS);
   }
 
   @Override
-  public HelmCliResponse addPublicRepo(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCliResponse addPublicRepo(HelmCommandData helmCommandData) throws Exception {
     String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     HelmCliCommandType commandType = HelmCliCommandType.REPO_ADD;
 
@@ -201,8 +210,10 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to add helm repo. ";
 
-    return executeHelmCLICommand(command);
+    return fetchCliResponseWithExceptionHandling(
+        command, commandType, errorMessagePrefix, null, DEFAULT_HELM_COMMAND_TIMEOUT);
   }
 
   @Override
@@ -236,8 +247,7 @@ public class HelmClientImpl implements HelmClient {
   }
 
   @Override
-  public HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData) throws Exception {
     String kubeConfigLocation = helmCommandData.getKubeConfigLocation();
     /*
     In Helm3, release ledger is purged by default unlike helm2
@@ -251,8 +261,10 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to delete helm release. ";
 
-    return executeHelmCLICommand(command);
+    return fetchCliResponseWithExceptionHandling(
+        command, commandType, errorMessagePrefix, null, DEFAULT_HELM_COMMAND_TIMEOUT);
   }
 
   /*
@@ -274,7 +286,7 @@ public class HelmClientImpl implements HelmClient {
 
   @Override
   public HelmCliResponse renderChart(HelmCommandData helmCommandData, String chartLocation, String namespace,
-      List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+      List<String> valuesOverrides) throws Exception {
     String kubeConfigLocation = Optional.ofNullable(helmCommandData.getKubeConfigLocation()).orElse("");
     String keyValueOverrides = constructValueOverrideFile(valuesOverrides);
 
@@ -289,11 +301,13 @@ public class HelmClientImpl implements HelmClient {
         helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(command, helmCommandData.getLogCallback());
     command = applyKubeConfigToCommand(command, kubeConfigLocation);
+    String errorMessagePrefix = "Failed to render helm chart. ";
 
     try (LogOutputStream errorStream = helmCommandData.getLogCallback() != null
             ? new ErrorActivityOutputStream(helmCommandData.getLogCallback())
             : new LogErrorStream()) {
-      return executeHelmCLICommand(command, errorStream);
+      return fetchCliResponseWithExceptionHandling(
+          command, commandType, errorMessagePrefix, errorStream, DEFAULT_HELM_COMMAND_TIMEOUT);
     }
   }
 
@@ -360,7 +374,22 @@ public class HelmClientImpl implements HelmClient {
 
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
-    return HelmCliResponse.builder().commandExecutionStatus(status).output(processResult.outputUTF8()).build();
+
+    String streamInput = "";
+    if (errorStream != null) {
+      if (errorStream instanceof LogErrorStream) {
+        streamInput = ((LogErrorStream) errorStream).getInput();
+      }
+
+      if (errorStream instanceof ErrorActivityOutputStream) {
+        streamInput = ((ErrorActivityOutputStream) errorStream).getInput();
+      }
+    }
+
+    return HelmCliResponse.builder()
+        .commandExecutionStatus(status)
+        .output(streamInput + processResult.outputUTF8())
+        .build();
   }
 
   private String getNamespaceFlag(String namespace) {
@@ -443,22 +472,49 @@ public class HelmClientImpl implements HelmClient {
 
   @Override
   public String getHelmPath(HelmVersion helmVersion) {
-    return helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
+    return k8sGlobalConfigService.getHelmPath(helmVersion);
+  }
+
+  public HelmCliResponse fetchCliResponseWithExceptionHandling(String command, HelmCliCommandType commandType,
+      String errorMessagePrefix, OutputStream errorStream, long timeoutInMillis) {
+    try {
+      HelmCliResponse helmCliResponse = executeHelmCLICommand(command, timeoutInMillis, errorStream);
+
+      if (helmCliResponse.getCommandExecutionStatus() != SUCCESS) {
+        // if helm hist fails due to 'release not found' -- then we don't fail/ throw exception
+        // (because for first time deployment, release history cmd fails with release not found)
+        if (commandType == HelmCliCommandType.RELEASE_HISTORY
+            && (helmCliResponse.getOutput().contains("not found") && helmCliResponse.getOutput().contains("release"))) {
+          return helmCliResponse;
+        }
+        throw new HelmClientRuntimeException(new HelmClientException(
+            errorMessagePrefix + command + ". " + helmCliResponse.getOutput(), USER, commandType));
+      }
+      return helmCliResponse;
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new HelmClientRuntimeException(new HelmClientException(ExceptionUtils.getMessage(e), USER, commandType));
+    } catch (Exception e) {
+      throw new HelmClientRuntimeException(new HelmClientException(ExceptionUtils.getMessage(e), USER, commandType));
+    }
   }
 
   @RequiredArgsConstructor
   static class ErrorActivityOutputStream extends LogOutputStream {
     @NonNull private final LogCallback logCallback;
-
+    @Getter private String input;
     @Override
     protected void processLine(String s) {
+      input = s;
       logCallback.saveExecutionLog(s, ERROR);
     }
   }
 
   static class LogErrorStream extends LogOutputStream {
+    @Getter private String input;
     @Override
     protected void processLine(String s) {
+      input = s;
       log.error(s);
     }
   }

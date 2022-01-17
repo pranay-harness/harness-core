@@ -60,7 +60,7 @@ public interface HelmDeployServiceNG {
    * @return the helm release history command response
    */
   HelmCommandResponseNG renderHelmChart(HelmCommandRequestNG helmCommandRequest, String namespace, String chartLocation,
-      List<String> valueOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
+      List<String> valueOverrides) throws Exception;
 
   HelmCommandResponseNG ensureHelm3Installed(HelmCommandRequestNG commandRequest);
 

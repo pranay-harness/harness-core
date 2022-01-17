@@ -22,6 +22,7 @@ public class HelmClientRuntimeException extends RuntimeException {
   @Getter final HelmClientException helmClientException;
 
   public HelmClientRuntimeException(@NotNull HelmClientException helmClientException) {
+    super(ExceptionUtils.getMessage(helmClientException));
     this.helmClientException = helmClientException;
   }
 }

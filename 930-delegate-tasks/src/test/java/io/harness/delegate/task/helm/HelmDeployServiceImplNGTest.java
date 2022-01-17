@@ -68,6 +68,7 @@ import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.exception.HelmNGException;
 import io.harness.delegate.service.ExecutionConfigOverrideFromFileOnDelegate;
 import io.harness.delegate.task.git.ScmFetchFilesHelperNG;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
@@ -251,7 +252,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     assertThatThrownBy(()
                            -> spyHelmDeployService.prepareRepoAndCharts(
                                helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()))
-        .hasMessageContaining("Failed to download manifest files from GCS_HELM repo");
+        .extracting(exc -> ((HelmClientRuntimeException) exc).getHelmClientException().getMessage())
+        .isEqualTo("Failed to download manifest files from GCS_HELM repo. ");
   }
 
   @Test
@@ -418,9 +420,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     GeneralException exception = new GeneralException("Something went wrong");
     when(helmClient.install(any())).thenThrow(exception);
 
-    HelmCommandResponseNG helmCommandResponseNG = spyHelmDeployService.deploy(helmInstallCommandRequestNG);
-    assertThat(helmCommandResponseNG.getOutput()).contains("Wings Exception:");
-    // assertThatThrownBy(() -> spyHelmDeployService.deploy(helmInstallCommandRequestNG)).isEqualTo(exception);
+    assertThatThrownBy(() -> spyHelmDeployService.deploy(helmInstallCommandRequestNG))
+        .isInstanceOf(HelmNGException.class);
   }
 
   @Test
@@ -431,10 +432,9 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     doReturn(Collections.emptyList()).when(spyHelmDeployService).printHelmChartKubernetesResources(any());
     InterruptedException e = new InterruptedException();
     when(helmClient.install(any())).thenThrow(e);
-    HelmCommandResponseNG helmCommandResponseNG = spyHelmDeployService.deploy(helmInstallCommandRequestNG);
 
-    assertThat(helmCommandResponseNG.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(helmCommandResponseNG.getOutput()).contains("Exception in deploying helm chart:");
+    assertThatThrownBy(() -> spyHelmDeployService.deploy(helmInstallCommandRequestNG))
+        .isInstanceOf(HelmNGException.class);
   }
 
   @Test
@@ -451,9 +451,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
 
     HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
 
-    HelmCommandResponseNG helmCommandResponseNG = spyHelmDeployService.deploy(helmInstallCommandRequestNG);
-    assertThat(helmCommandResponseNG.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(helmCommandResponseNG.getOutput()).contains("Timed out");
+    assertThatThrownBy(() -> spyHelmDeployService.deploy(helmInstallCommandRequestNG))
+        .isInstanceOf(HelmNGException.class);
   }
 
   @Test
@@ -461,6 +460,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testDeployUpgrade() throws Exception {
     initForDeploy();
+    doReturn(Collections.emptyList()).when(spyHelmDeployService).printHelmChartKubernetesResources(any());
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
     helmCliListReleasesResponse.setOutput(HelmTestConstants.LIST_RELEASE_V2);
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
@@ -469,10 +469,10 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
     when(helmClient.upgrade(any())).thenReturn(helmCliResponse);
     when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.renderChart(any(), anyString(), anyString(), anyList())).thenReturn(helmCliResponse);
 
     ArgumentCaptor<io.harness.helm.HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
-    HelmCommandResponseNG helmCommandResponse = spyHelmDeployService.deploy(helmInstallCommandRequestNG);
-    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
+    assertThatCode(() -> spyHelmDeployService.deploy(helmInstallCommandRequestNG)).doesNotThrowAnyException();
     verify(helmClient).upgrade(argumentCaptor.capture());
   }
 
@@ -550,11 +550,11 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(helmClient)
         .deleteHelmRelease(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG));
 
-    assertThatCode(() -> helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequestNG, logCallback))
-        .doesNotThrowAnyException();
+    assertThatThrownBy(() -> helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequestNG, logCallback))
+        .isInstanceOf(IOException.class);
   }
 
-  private void initForRollback() throws InterruptedException, IOException, TimeoutException {
+  private void initForRollback() throws Exception {
     doReturn(helmCliResponse).when(helmClient).rollback(any());
   }
 
@@ -602,8 +602,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .saveReleaseHistory(any(), eq(helmRollbackCommandRequestNG.getReleaseName()), anyString(), anyBoolean());
 
-    assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
-        .hasMessageContaining("Unable to find release");
+    assertThatCode(() -> helmDeployService.rollback(helmRollbackCommandRequestNG)).doesNotThrowAnyException();
 
     // K8SteadyStateCheckEnabled true -- valid releaseHistory
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -622,9 +621,9 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     // K8SteadyStateCheckEnabled true -- failed release
     releaseHistory.setReleaseStatus(Release.Status.Failed);
 
-    assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 2))
-        .hasMessageContaining(
-            "Invalid status for release with number 2. Expected 'Succeeded' status, actual status is 'Failed'");
+    HelmCommandResponseNG responseNG = executeRollbackWithReleaseHistory(releaseHistory, 2);
+    assertThat(responseNG.getOutput())
+        .contains("Invalid status for release with number 2. Expected 'Succeeded' status, actual status is 'Failed'");
   }
 
   @Test
@@ -642,16 +641,6 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     HelmCommandResponseNG helmCommandResponse = helmDeployService.rollback(helmRollbackCommandRequestNG);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
     assertThat(helmCommandResponse.getOutput()).contains("Timed out");
-  }
-
-  @Test
-  @Owner(developers = ACHYUTH)
-  @Category(UnitTests.class)
-  public void testRollbackWingsException() throws Exception {
-    GeneralException exception = new GeneralException("Something went wrong");
-    doThrow(exception).when(helmClient).rollback(any(HelmCommandData.class));
-
-    assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG)).isEqualTo(exception);
   }
 
   @Test
@@ -736,8 +725,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfInstalled()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfInstalled() throws Exception {
     setFakeTimeLimiter();
 
     helmInstallCommandRequestNG.setHelmVersion(V2);
@@ -755,8 +743,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfNotInstalled()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfNotInstalled() throws Exception {
     setFakeTimeLimiter();
 
     when(helmClient.getClientAndServerVersion(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG)))
@@ -769,8 +756,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfV3Installed()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfV3Installed() throws Exception {
     setFakeTimeLimiter();
 
     when(helmClient.getClientAndServerVersion(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG)))
@@ -786,8 +772,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfClusterUnreachable()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfClusterUnreachable() throws Exception {
     setFakeTimeLimiter();
 
     when(helmClient.getClientAndServerVersion(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG)))
@@ -800,7 +785,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testReleaseHistory() throws InterruptedException, IOException, TimeoutException {
+  public void testReleaseHistory() throws Exception {
     shouldListReleaseHistoryV2();
     shouldListReleaseHistoryV3();
     shouldNotThrowExceptionInReleaseHist();
@@ -821,7 +806,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     assertThat(str).contains("abc/xyz");
   }
 
-  private void shouldListReleaseHistoryV2() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseHistoryV2() throws Exception {
     HelmReleaseHistoryCommandRequestNG request = HelmReleaseHistoryCommandRequestNG.builder()
                                                      .manifestDelegateConfig(helmChartManifestDelegateConfig.build())
                                                      .build();
@@ -845,7 +830,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
             "chartmuseum-2.3.1", "chartmuseum-2.3.2", "chartmuseum-2.3.3", "chartmuseum-2.3.4", "chartmuseum-2.3.5"));
   }
 
-  private void shouldListReleaseHistoryV3() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseHistoryV3() throws Exception {
     HelmReleaseHistoryCommandRequestNG request = HelmReleaseHistoryCommandRequestNG.builder()
                                                      .manifestDelegateConfig(helmChartManifestDelegateConfig.build())
                                                      .build();
@@ -868,7 +853,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .hasSameElementsAs(asList("zetcd-0.1.4", "zetcd-0.1.9", "zetcd-0.2.9", "chartmuseum-2.7.0"));
   }
 
-  private void shouldNotThrowExceptionInReleaseHist() throws InterruptedException, IOException, TimeoutException {
+  private void shouldNotThrowExceptionInReleaseHist() throws Exception {
     HelmReleaseHistoryCommandRequestNG request = HelmReleaseHistoryCommandRequestNG.builder()
                                                      .manifestDelegateConfig(helmChartManifestDelegateConfig.build())
                                                      .build();
@@ -886,13 +871,13 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testListRelease() throws InterruptedException, TimeoutException, IOException {
+  public void testListRelease() throws Exception {
     shouldListReleaseV2();
     shouldListReleaseV3();
     shouldNotThrowExceptionInListRelease();
   }
 
-  private void shouldListReleaseV2() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseV2() throws Exception {
     helmInstallCommandRequestNG.setHelmVersion(V2);
 
     when(helmClient.listReleases(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG)))
@@ -913,7 +898,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .hasSameElementsAs(asList("default"));
   }
 
-  private void shouldListReleaseV3() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseV3() throws Exception {
     when(helmClient.listReleases(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG)))
         .thenReturn(HelmCliResponse.builder()
                         .commandExecutionStatus(SUCCESS)
@@ -933,7 +918,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .hasSameElementsAs(asList("default", "harness", "default"));
   }
 
-  private void shouldNotThrowExceptionInListRelease() throws InterruptedException, IOException, TimeoutException {
+  private void shouldNotThrowExceptionInListRelease() throws Exception {
     when(helmClient.listReleases(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG)))
         .thenThrow(new InterruptedException());
 

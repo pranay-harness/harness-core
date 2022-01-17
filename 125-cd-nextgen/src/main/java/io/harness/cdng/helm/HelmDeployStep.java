@@ -26,18 +26,16 @@ import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.instancesync.mapper.K8sContainerToHelmServiceInstanceInfoMapper;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
+import io.harness.delegate.exception.HelmNGException;
 import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
-import io.harness.delegate.task.helm.HelmListReleaseResponseNG;
-import io.harness.delegate.task.helm.HelmReleaseHistoryCmdResponseNG;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.plancreator.steps.common.rollback.TaskChainExecutableWithRollbackAndRbac;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
-import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -116,33 +114,23 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
         (NativeHelmExecutionPassThroughData) passThroughData;
 
     HelmCmdExecResponseNG helmCmdExecResponseNG;
-    try {
-      helmCmdExecResponseNG = (HelmCmdExecResponseNG) responseDataSupplier.get();
-    } catch (Exception e) {
-      log.error("Error while processing Helm Task response: {}", e.getMessage(), e);
-      return nativeHelmStepHelper.handleTaskException(ambiance, nativeHelmExecutionPassThroughData, e);
-    }
-
-    if (helmCmdExecResponseNG.getHelmCommandResponse() instanceof HelmReleaseHistoryCmdResponseNG) {
-      // this means helm hist has failed
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmCmdExecResponseNG.getErrorMessage()).build())
-          .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
-          .build();
-    }
-
-    if (helmCmdExecResponseNG.getHelmCommandResponse() instanceof HelmListReleaseResponseNG) {
-      // this means list releases has failed
-      return StepResponse.builder()
-          .status(Status.FAILED)
-          .failureInfo(FailureInfo.newBuilder().setErrorMessage(helmCmdExecResponseNG.getErrorMessage()).build())
-          .unitProgressList(helmCmdExecResponseNG.getCommandUnitsProgress().getUnitProgresses())
-          .build();
-    }
 
     NativeHelmDeployOutcomeBuilder nativeHelmDeployOutcomeBuilder = NativeHelmDeployOutcome.builder();
     NativeHelmDeployOutcome nativeHelmDeployOutcome;
+
+    try {
+      helmCmdExecResponseNG = (HelmCmdExecResponseNG) responseDataSupplier.get();
+    } catch (Exception e) {
+      Exception ex = (Exception) e.getCause();
+      nativeHelmDeployOutcomeBuilder.prevReleaseVersion(((HelmNGException) ex).getPrevReleaseVersion());
+      nativeHelmDeployOutcomeBuilder.newReleaseVersion(((HelmNGException) ex).getPrevReleaseVersion() + 1);
+      executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_DEPLOY_OUTCOME,
+          nativeHelmDeployOutcomeBuilder.build(), StepOutcomeGroup.STEP.name());
+      Exception exc = (Exception) ex.getCause();
+      log.error("Error while processing Helm Task response: {}", exc.getMessage(), exc);
+
+      return nativeHelmStepHelper.handleTaskException(ambiance, nativeHelmExecutionPassThroughData, e);
+    }
 
     HelmInstallCmdResponseNG helmInstallCmdResponseNG =
         (HelmInstallCmdResponseNG) helmCmdExecResponseNG.getHelmCommandResponse();

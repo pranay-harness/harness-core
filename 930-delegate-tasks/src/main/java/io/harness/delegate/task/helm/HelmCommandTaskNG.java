@@ -11,20 +11,30 @@ import static io.harness.data.structure.UUIDGenerator.convertBase64UuidToCanonic
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
 import static io.harness.filesystem.FileIo.waitForDirectoryToBeAccessibleOutOfProcess;
+import static io.harness.logging.CommandExecutionStatus.FAILURE;
 
 import static java.lang.String.format;
 
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.delegate.beans.DelegateResponseData;
 import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.DelegateTaskResponse;
+import io.harness.delegate.beans.logstreaming.CommandUnitProgress;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
+import io.harness.delegate.exception.HelmNGException;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ManifestDelegateConfigHelper;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.ExplanationException;
+import io.harness.exception.HelmClientException;
+import io.harness.exception.HelmClientRuntimeException;
+import io.harness.exception.HintException;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -32,6 +42,8 @@ import io.harness.logging.LogLevel;
 
 import com.google.inject.Inject;
 import java.nio.file.Paths;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +70,11 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
   public HelmCommandTaskNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 
   @Override
@@ -108,16 +125,14 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
           throw new UnsupportedOperationException("Operation not supported");
       }
     } catch (Exception ex) {
-      String errorMsg = ex.getMessage();
+      String errorMsg = ex.getCause().getMessage();
+
       helmCommandRequestNG.getLogCallback().saveExecutionLog(
           errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
       log.error(format("Exception in processing helm task [%s]", helmCommandRequestNG.toString()), ex);
-      return HelmCmdExecResponseNG.builder()
-          .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .errorMessage("Exception in processing helm task: " + errorMsg)
-          .commandUnitsProgress(
-              UnitProgressDataMapper.toUnitProgressData(helmCommandRequestNG.getCommandUnitsProgress()))
-          .build();
+      closeOpenCommandUnits(helmCommandRequestNG.getCommandUnitsProgress(), getLogStreamingTaskClient(), ex);
+      throw new TaskNGDataException(
+          UnitProgressDataMapper.toUnitProgressData(helmCommandRequestNG.getCommandUnitsProgress()), ex);
     }
 
     helmCommandRequestNG.getLogCallback().saveExecutionLog(
@@ -185,5 +200,41 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
       default:
         return "Unsupported operation";
     }
+  }
+
+  private void closeOpenCommandUnits(
+      CommandUnitsProgress commandUnitsProgress, ILogStreamingTaskClient logStreamingTaskClient, Throwable throwable) {
+    try {
+      LinkedHashMap<String, CommandUnitProgress> commandUnitProgressMap =
+          commandUnitsProgress.getCommandUnitProgressMap();
+      if (EmptyPredicate.isNotEmpty(commandUnitProgressMap)) {
+        for (Map.Entry<String, CommandUnitProgress> entry : commandUnitProgressMap.entrySet()) {
+          String commandUnitName = entry.getKey();
+          CommandUnitProgress progress = entry.getValue();
+          if (CommandExecutionStatus.RUNNING == progress.getStatus()) {
+            LogCallback logCallback =
+                new NGDelegateLogCallback(logStreamingTaskClient, commandUnitName, false, commandUnitsProgress);
+            logCallback.saveExecutionLog(
+                String.format(
+                    "Failed: [%s].", ExceptionUtils.getMessage(getFirstNonHintOrExplanationThrowable(throwable))),
+                LogLevel.ERROR, FAILURE);
+          }
+        }
+      }
+    } catch (Exception ex) {
+      log.error("Exception while closing command units", ex);
+    }
+  }
+
+  private Throwable getFirstNonHintOrExplanationThrowable(Throwable throwable) {
+    if (throwable.getCause() == null) {
+      return throwable;
+    }
+
+    if (!(throwable instanceof HintException || throwable instanceof ExplanationException)) {
+      return throwable;
+    }
+
+    return getFirstNonHintOrExplanationThrowable(throwable.getCause());
   }
 }

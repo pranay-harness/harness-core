@@ -209,6 +209,7 @@ import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.command.CommandExecutionResult;
 import io.harness.delegate.exception.DelegateRetryableException;
+import io.harness.delegate.exception.HelmNGException;
 import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.artifacts.ArtifactSourceType;
 import io.harness.delegate.task.artifacts.ArtifactTaskType;
@@ -1090,5 +1091,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AzureKubernetesClusterDTO.class, 543468);
     kryo.register(AzureResourceProvider.class, 543469);
     kryo.register(AzureOperationName.class, 543470);
+    kryo.register(HelmNGException.class, 543471);
   }
 }

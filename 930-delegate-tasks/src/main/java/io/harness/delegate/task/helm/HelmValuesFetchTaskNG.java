@@ -22,9 +22,12 @@ import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
 import io.harness.delegate.beans.logstreaming.UnitProgressDataMapper;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
+import io.harness.exception.ExceptionUtils;
+import io.harness.exception.HelmClientRuntimeException;
 import io.harness.k8s.K8sCommandUnitConstants;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
@@ -42,6 +45,11 @@ public class HelmValuesFetchTaskNG extends AbstractDelegateRunnableTask {
   public HelmValuesFetchTaskNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
+  }
+
+  @Override
+  public boolean isSupportingErrorFramework() {
+    return true;
   }
 
   @Override
@@ -74,12 +82,12 @@ public class HelmValuesFetchTaskNG extends AbstractDelegateRunnableTask {
           .valuesFileContent(valuesFileContent)
           .build();
     } catch (Exception e) {
-      log.error("HelmValuesFetchTaskNG execution failed with exception ", e);
-      return HelmValuesFetchResponse.builder()
-          .commandExecutionStatus(FAILURE)
-          .unitProgressData(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
-          .errorMessage("Execution failed with Exception: " + e.getMessage())
-          .build();
+      // TODO: IMPORTANT! Verify if this doesn't adversely affect K8s steps
+      String exceptionMsg = e.getMessage() == null ? ExceptionUtils.getMessage(e) : e.getMessage();
+      String msg = "HelmValuesFetchTaskNG execution failed with exception " + exceptionMsg;
+      log.error(msg, e);
+      logCallback.saveExecutionLog(msg, INFO, FAILURE);
+      throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), e);
     }
   }
 }

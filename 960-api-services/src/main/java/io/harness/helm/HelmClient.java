@@ -36,8 +36,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse install(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException;
+  HelmCliResponse install(HelmCommandData helmCommandData) throws Exception;
 
   /**
    * Upgrade helm command response.
@@ -49,8 +48,7 @@ public interface HelmClient {
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse upgrade(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException, ExecutionException;
+  HelmCliResponse upgrade(HelmCommandData helmCommandData) throws Exception;
 
   /**
    * Rollback helm command response.
@@ -61,10 +59,9 @@ public interface HelmClient {
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse rollback(HelmCommandData helmCommandData) throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse rollback(HelmCommandData helmCommandData) throws Exception;
 
-  HelmCliResponse releaseHistory(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse releaseHistory(HelmCommandData helmCommandData) throws Exception;
 
   /**
    * List releases helm cli response.
@@ -75,8 +72,7 @@ public interface HelmClient {
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse listReleases(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse listReleases(HelmCommandData helmCommandData) throws Exception;
 
   /**
    * Gets client and server version.
@@ -87,17 +83,14 @@ public interface HelmClient {
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData) throws Exception;
 
-  HelmCliResponse addPublicRepo(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse addPublicRepo(HelmCommandData helmCommandData) throws Exception;
 
   HelmCliResponse getHelmRepoList(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData)
-      throws InterruptedException, TimeoutException, IOException;
+  HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData) throws Exception;
 
   HelmCliResponse repoUpdate(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
@@ -122,7 +115,7 @@ public interface HelmClient {
    * @throws ExecutionException   the execution exception
    */
   HelmCliResponse renderChart(HelmCommandData helmCommandData, String chartLocation, String namespace,
-      List<String> valuesOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException;
+      List<String> valuesOverrides) throws Exception;
 
   String getHelmPath(HelmVersion helmVersion);
 }

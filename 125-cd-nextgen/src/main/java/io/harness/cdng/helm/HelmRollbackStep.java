@@ -15,12 +15,14 @@ import io.harness.cdng.helm.NativeHelmRollbackOutcome.NativeHelmRollbackOutcomeB
 import io.harness.cdng.helm.beans.NativeHelmExecutionPassThroughData;
 import io.harness.cdng.helm.rollback.HelmRollbackStepParams;
 import io.harness.cdng.infra.beans.InfrastructureOutcome;
+import io.harness.cdng.instance.info.InstanceInfoService;
 import io.harness.cdng.manifest.steps.ManifestsOutcome;
 import io.harness.cdng.manifest.yaml.HelmChartManifestOutcome;
 import io.harness.cdng.manifest.yaml.ManifestOutcome;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.container.ContainerInfo;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.delegate.beans.instancesync.mapper.K8sContainerToHelmServiceInstanceInfoMapper;
 import io.harness.delegate.beans.logstreaming.CommandUnitsProgress;
 import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
@@ -66,6 +68,7 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
   @Inject NativeHelmStepHelper nativeHelmStepHelper;
   @Inject private OutcomeService outcomeService;
   @Inject private ExecutionSweepingOutputService executionSweepingOutputService;
+  @Inject private InstanceInfoService instanceInfoService;
   @Inject private StepHelper stepHelper;
   @Inject CDFeatureFlagHelper cdFeatureFlagHelper;
 
@@ -112,6 +115,10 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
       nativeHelmRollbackOutcomeBuilder.containerInfoList(containerInfoList);
       NativeHelmRollbackOutcome nativeHelmRollbackOutcome = nativeHelmRollbackOutcomeBuilder.build();
 
+      StepOutcome stepOutcome = instanceInfoService.saveServerInstancesIntoSweepingOutput(ambiance,
+          K8sContainerToHelmServiceInstanceInfoMapper.toServerInstanceInfoList(
+              response.getContainerInfoList(), response.getHelmChartInfo(), response.getHelmVersion()));
+
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_ROLLBACK_OUTCOME,
           nativeHelmRollbackOutcome, StepOutcomeGroup.STEP.name());
       stepResponse = stepResponseBuilder.status(Status.SUCCEEDED)
@@ -119,6 +126,7 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
                                           .name(OutcomeExpressionConstants.OUTPUT)
                                           .outcome(nativeHelmRollbackOutcome)
                                           .build())
+                         .stepOutcome(stepOutcome)
                          .build();
     }
 

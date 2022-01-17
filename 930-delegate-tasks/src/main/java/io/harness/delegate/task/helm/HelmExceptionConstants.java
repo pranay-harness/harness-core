@@ -30,9 +30,16 @@ public class HelmExceptionConstants {
     public static final String DEFAULT_HINT_REPO_ADD =
         "Make sure that the repo can be added using the helm cli \"repo add\" command";
 
-    public static final String HINT_NO_CHART_FOUND = "Provide an existing helm chart";
+    public static final String HINT_NO_CHART_FOUND = "Provide an existing helm chart and/or valid chart path";
     public static final String HINT_NO_CHART_VERSION_FOUND = "Provide existing helm chart version";
     public static final String HINT_CHART_VERSION_IMPROPER_CONSTRAINT = "Provide existing and valid helm chart version";
+    public static final String HINT_INVALID_VALUE_TYPE =
+        "Could not validate value type. Please provide valid type of values.";
+    public static final String DEFAULT_HINT_HELM_INSTALL =
+        "Make sure that the helm chart can be installed successfully using the helm cli.";
+    public static final String DEFAULT_HINT_HELM_HIST = "Helm history cmd has failed";
+    public static final String DEFAULT_HINT_HELM_LIST_RELEASE = "Helm List releases cmd has failed";
+    public static final String HINT_UNKNOWN_COMMAND_FLAG = "Helm incorrect command flag";
 
     public Hints() {
       throw new UnsupportedOperationException("not supported");
@@ -48,12 +55,19 @@ public class HelmExceptionConstants {
         "Protocol is not http/https. Could not find protocol handler.";
     public static final String DEFAULT_EXPLAIN_REPO_ADD = "Unable to add helm repo using the \"helm repo add command\"";
 
-    public static final String EXPLAIN_NO_CHART_FOUND = "Provided chart name doesn't exist in in the chart repository";
+    public static final String EXPLAIN_NO_CHART_FOUND =
+        "Provided chart name doesn't exist in in the chart repository or chart path is incorrect";
     public static final String EXPLAIN_NO_CHART_VERSION_FOUND =
         "Provided chart version doesn't exist in in the chart repository";
     public static final String EXPLAIN_CHART_VERSION_IMPROPER_CONSTRAINT =
         "Provided chart version doesn't match helm expected version format (e.x. https://semver.org/)";
-
+    public static final String EXPLAIN_INVALID_VALUE_TYPE =
+        "Given helm chart contains invalid type values. Please provide correct type values within the release manifest.";
+    public static final String EXPLAIN_UNKNOWN_COMMAND_FLAG =
+        "Provided Command flag is incorrect or invalid. Please check.";
+    public static final String DEFAULT_EXPLAIN_HELM_INSTALL = "Unable to install helm chart.";
+    public static final String DEFAULT_EXPLAIN_HELM_HIST = "Unable to execute release history cmd";
+    public static final String DEFAULT_EXPLAIN_LIST_RELEASE = "Unable to execute list release cmd";
     public Explanations() {
       throw new UnsupportedOperationException("not supported");
     }
@@ -68,6 +82,8 @@ public class HelmExceptionConstants {
     public static final String NO_CHART_FOUND = "no chart name found";
     public static final String NO_CHART_VERSION_FOUND = "no chart version found";
     public static final String CHART_VERSION_IMPROPER_CONSTRAINT = "improper constraint";
+    public static final String INVALID_VALUE_TYPE = "error validating data";
+    public static final String UNKNOWN_COMMAND_FLAG = "unknown flag";
 
     public HelmCliErrorMessages() {
       throw new UnsupportedOperationException("not supported");

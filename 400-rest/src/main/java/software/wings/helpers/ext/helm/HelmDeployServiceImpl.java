@@ -503,9 +503,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private List<KubernetesResource> getKubernetesResourcesFromHelmChart(
-      HelmCommandRequest commandRequest, String namespace, String chartLocation, List<String> valueOverrides)
-      throws InterruptedException, ExecutionException, TimeoutException, IOException {
+  private List<KubernetesResource> getKubernetesResourcesFromHelmChart(HelmCommandRequest commandRequest,
+      String namespace, String chartLocation, List<String> valueOverrides) throws Exception {
     log.debug("Getting K8S resources from Helm chart, namespace: {}, chartLocation: {}", namespace, chartLocation);
 
     HelmCommandResponse commandResponse = renderHelmChart(commandRequest, namespace, chartLocation, valueOverrides);
@@ -679,8 +678,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   }
 
   @Override
-  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest)
-      throws InterruptedException, TimeoutException, IOException {
+  public HelmCommandResponse addPublicRepo(HelmCommandRequest commandRequest) throws Exception {
     LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
 
     executionLogCallback.saveExecutionLog(
@@ -717,7 +715,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
   @Override
   public HelmCommandResponse renderHelmChart(HelmCommandRequest commandRequest, String namespace, String chartLocation,
-      List<String> valueOverrides) throws InterruptedException, TimeoutException, IOException, ExecutionException {
+      List<String> valueOverrides) throws Exception {
     LogCallback executionLogCallback = commandRequest.getExecutionLogCallback();
 
     log.debug("Rendering Helm chart, namespace: {}, chartLocation: {}", namespace, chartLocation);
@@ -1006,8 +1004,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     }
   }
 
-  private void addRepoForCommand(HelmCommandRequest helmCommandRequest)
-      throws InterruptedException, IOException, TimeoutException {
+  private void addRepoForCommand(HelmCommandRequest helmCommandRequest) throws Exception {
     LogCallback executionLogCallback = helmCommandRequest.getExecutionLogCallback();
 
     if (helmCommandRequest.getHelmCommandType() != HelmCommandType.INSTALL) {

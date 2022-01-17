@@ -134,7 +134,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import org.junit.Before;
@@ -209,7 +208,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testDeployInstall() throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public void testDeployInstall() throws Exception {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
     helmCliResponse.setCommandExecutionStatus(SUCCESS);
@@ -323,7 +322,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testDeployUpgrade() throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public void testDeployUpgrade() throws Exception {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(SUCCESS);
     helmCliListReleasesResponse.setOutput(HelmTestConstants.LIST_RELEASE_V2);
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
@@ -410,8 +409,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testAddYamlValuesFromGitRepo()
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public void testAddYamlValuesFromGitRepo() throws Exception {
     helmInstallCommandRequest.setGitConfig(GitConfig.builder().build());
     helmInstallCommandRequest.setGitFileConfig(gitFileConfig);
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
@@ -435,8 +433,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testAddYamlValuesFromGitRepoWithVariableYamlFiles()
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public void testAddYamlValuesFromGitRepoWithVariableYamlFiles() throws Exception {
     helmInstallCommandRequest.setGitConfig(GitConfig.builder().build());
     helmInstallCommandRequest.setGitFileConfig(gitFileConfig);
     helmInstallCommandRequest.setVariableOverridesYamlFiles(asList(HelmTestConstants.GIT_FILE_CONTENT_3_KEY));
@@ -462,8 +459,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test(expected = WingsException.class)
   @Owner(developers = ANSHUL)
   @Category(UnitTests.class)
-  public void testAddValuesYamlFromGitRepoWithException()
-      throws InterruptedException, TimeoutException, IOException, ExecutionException {
+  public void testAddValuesYamlFromGitRepoWithException() throws Exception {
     helmInstallCommandRequest.setGitConfig(GitConfig.builder().build());
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
 
@@ -556,13 +552,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testReleaseHistory() throws InterruptedException, IOException, TimeoutException {
+  public void testReleaseHistory() throws Exception {
     shouldListReleaseHistoryV2();
     shouldListReleaseHistoryV3();
     shouldNotThrowExceptionInReleaseHist();
   }
 
-  private void shouldListReleaseHistoryV2() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseHistoryV2() throws Exception {
     HelmReleaseHistoryCommandRequest request = HelmReleaseHistoryCommandRequest.builder().build();
 
     when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request)))
@@ -583,7 +579,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
             "chartmuseum-2.3.1", "chartmuseum-2.3.2", "chartmuseum-2.3.3", "chartmuseum-2.3.4", "chartmuseum-2.3.5"));
   }
 
-  private void shouldListReleaseHistoryV3() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseHistoryV3() throws Exception {
     HelmReleaseHistoryCommandRequest request = HelmReleaseHistoryCommandRequest.builder().build();
 
     when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request)))
@@ -603,7 +599,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         .hasSameElementsAs(asList("zetcd-0.1.4", "zetcd-0.1.9", "zetcd-0.2.9", "chartmuseum-2.7.0"));
   }
 
-  private void shouldNotThrowExceptionInReleaseHist() throws InterruptedException, IOException, TimeoutException {
+  private void shouldNotThrowExceptionInReleaseHist() throws Exception {
     HelmReleaseHistoryCommandRequest request = HelmReleaseHistoryCommandRequest.builder().build();
 
     when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request)))
@@ -619,13 +615,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testListRelease() throws InterruptedException, TimeoutException, IOException {
+  public void testListRelease() throws Exception {
     shouldListReleaseV2();
     shouldListReleaseV3();
     shouldNotThrowExceptionInListRelease();
   }
 
-  private void shouldListReleaseV2() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseV2() throws Exception {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
     when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request)))
@@ -646,7 +642,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         .hasSameElementsAs(asList("default"));
   }
 
-  private void shouldListReleaseV3() throws InterruptedException, IOException, TimeoutException {
+  private void shouldListReleaseV3() throws Exception {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
     when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request)))
@@ -668,7 +664,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
         .hasSameElementsAs(asList("default", "harness", "default"));
   }
 
-  private void shouldNotThrowExceptionInListRelease() throws InterruptedException, IOException, TimeoutException {
+  private void shouldNotThrowExceptionInListRelease() throws Exception {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
     when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request)))
@@ -684,8 +680,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfInstalled()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfInstalled() throws Exception {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
@@ -702,8 +697,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfNotInstalled()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfNotInstalled() throws Exception {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
@@ -717,8 +711,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfV3Installed()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfV3Installed() throws Exception {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
@@ -735,8 +728,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testEnsureHelmCliAndTillerInstalledIfClusterUnreachable()
-      throws InterruptedException, IOException, TimeoutException {
+  public void testEnsureHelmCliAndTillerInstalledIfClusterUnreachable() throws Exception {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
@@ -750,7 +742,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testAddRepoIfAlreadyAddedV2() throws InterruptedException, IOException, TimeoutException {
+  public void testAddRepoIfAlreadyAddedV2() throws Exception {
     HelmCommandRequest request =
         HelmInstallCommandRequest.builder()
             .executionLogCallback(executionLogCallback)
@@ -769,7 +761,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testAddRepoIfAlreadyAddedV3() throws InterruptedException, IOException, TimeoutException {
+  public void testAddRepoIfAlreadyAddedV3() throws Exception {
     HelmCommandRequest request =
         HelmInstallCommandRequest.builder()
             .executionLogCallback(executionLogCallback)
@@ -788,7 +780,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testAddNewRepo() throws InterruptedException, IOException, TimeoutException {
+  public void testAddNewRepo() throws Exception {
     HelmCommandRequest request = HelmInstallCommandRequest.builder()
                                      .executionLogCallback(executionLogCallback)
                                      .chartSpecification(HelmChartSpecification.builder().chartUrl("abc.com").build())
@@ -809,7 +801,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testAddNewRepoIfNotReachable() throws InterruptedException, IOException, TimeoutException {
+  public void testAddNewRepoIfNotReachable() throws Exception {
     HelmCommandRequest request = HelmInstallCommandRequest.builder()
                                      .executionLogCallback(executionLogCallback)
                                      .chartSpecification(HelmChartSpecification.builder().chartUrl("abc.com").build())
@@ -826,7 +818,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testAddNewRepoIfRepoListFails() throws InterruptedException, IOException, TimeoutException {
+  public void testAddNewRepoIfRepoListFails() throws Exception {
     HelmCommandRequest request = HelmInstallCommandRequest.builder()
                                      .executionLogCallback(executionLogCallback)
                                      .chartSpecification(HelmChartSpecification.builder().chartUrl("abc.com").build())
@@ -923,7 +915,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testDeployWithInvalidChartSpec() throws IOException, TimeoutException, InterruptedException {
+  public void testDeployWithInvalidChartSpec() throws Exception {
     when(helmCommandHelper.isValidChartSpecification(any())).thenReturn(false);
     when(helmClient.listReleases(any())).thenReturn(HelmCliResponse.builder().commandExecutionStatus(SUCCESS).build());
     when(helmClient.releaseHistory(any()))
@@ -954,7 +946,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
-  public void testRollback() throws InterruptedException, IOException, TimeoutException {
+  public void testRollback() throws Exception {
     setFakeTimeLimiter();
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder()
                                              .containerServiceParams(ContainerServiceParams.builder().build())
@@ -1253,7 +1245,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Test
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
-  public void testDeleteAndPurgeHelmReleaseName() throws InterruptedException, IOException, TimeoutException {
+  public void testDeleteAndPurgeHelmReleaseName() throws Exception {
     HelmInstallCommandRequest helmInstallCommandRequest = HelmInstallCommandRequest.builder().build();
     HelmCliResponse helmCliResponse = HelmCliResponse.builder().build();
     doReturn(helmCliResponse)
