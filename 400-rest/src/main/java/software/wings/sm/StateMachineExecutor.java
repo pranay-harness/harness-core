@@ -69,6 +69,7 @@ import io.harness.annotations.dev.BreakDependencyOn;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
+import io.harness.beans.EventType;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
@@ -119,6 +120,7 @@ import software.wings.dl.WingsPersistence;
 import software.wings.exception.StateExecutionInstanceUpdateException;
 import software.wings.exception.StateMachineIssueException;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
+import software.wings.service.impl.WorkflowExecutionUpdate;
 import software.wings.service.impl.workflow.WorkflowNotificationDetails;
 import software.wings.service.impl.workflow.WorkflowNotificationHelper;
 import software.wings.service.intfc.AlertService;
@@ -222,6 +224,7 @@ public class StateMachineExecutor implements StateInspectionListener {
   @Inject private PipelineConfig pipelineConfig;
   @Inject private KryoSerializer kryoSerializer;
   @Inject private RemoteObserverInformer remoteObserverInformer;
+  @Inject private WorkflowExecutionUpdate workflowExecutionUpdate;
   /**
    * Execute.
    *
@@ -960,6 +963,11 @@ public class StateMachineExecutor implements StateInspectionListener {
                 .name(context.getWorkflowExecutionName())
                 .build();
         openAnAlert(context, manualInterventionNeededAlert);
+        StateStatusUpdateInfo arg =
+            StateStatusUpdateInfo.buildFromStateExecutionInstance(stateExecutionInstance, false);
+        WorkflowExecution workflowExecution =
+            workflowExecutionService.getWorkflowExecution(context.getAppId(), context.getWorkflowExecutionId());
+        workflowExecutionUpdate.publish(workflowExecution, arg, EventType.PIPELINE_PAUSE);
         sendManualInterventionNeededNotification(context, stateExecutionInstance.getExpiryTs());
         break;
       }
