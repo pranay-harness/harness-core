@@ -37,21 +37,18 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
    * Updates all the fields in the stage graph from nodeExecutions.
    * @param planExecutionId
    */
-  public void updateStageOfIdentityType(String planExecutionId) {
+  public void updateStageOfIdentityType(String planExecutionId,Update update) {
     List<NodeExecution> nodeExecutions = nodeExecutionService.fetchStageExecutions(planExecutionId);
-    Update update = new Update();
 
     // This is done inorder to reduce the load while updating stageInfo. Here we will update only the status.
     for (NodeExecution nodeExecution : nodeExecutions) {
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
               + nodeExecution.getNode().getUuid() + ".status",
           ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
+      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
+                      + nodeExecution.getNode().getUuid() + ".endTs",
+             nodeExecution.getEndTs());
     }
-
-    Criteria criteria =
-        Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
-    Query query = new Query(criteria);
-    pmsExecutionSummaryRepository.update(query, update);
   }
 
   @Override
@@ -122,21 +119,22 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
   }
 
   private void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
+    Update update = new Update();
     if (OrchestrationUtils.isStageNode(nodeExecution)
         || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       // This condition is for retry execution graph generation.
       if (nodeExecution.getNode().getNodeType() == NodeType.IDENTITY_PLAN_NODE
           && StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
-        updateStageOfIdentityType(planExecutionId);
-        return;
+        updateStageOfIdentityType(planExecutionId,update);
       }
+  else {
+        ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
+      }
+        Criteria criteria =
+                Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
+        Query query = new Query(criteria);
+        pmsExecutionSummaryRepository.update(query, update);
 
-      Update update = new Update();
-      ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
-      Criteria criteria =
-          Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
-      Query query = new Query(criteria);
-      pmsExecutionSummaryRepository.update(query, update);
     }
   }
 
