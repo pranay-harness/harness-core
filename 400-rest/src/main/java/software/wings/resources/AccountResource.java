@@ -492,6 +492,7 @@ public class AccountResource {
   @Path("{accountId}/addSubdomainUrl")
   public RestResponse<Boolean> addSubdomainUrl(
       @PathParam("accountId") @NotEmpty String accountId, @NotNull SubdomainUrl subdomainUrl) {
+    System.out.println();
     String userId = UserThreadLocal.get().getUuid();
     return new RestResponse<>(accountService.addSubdomainUrl(userId, accountId, subdomainUrl));
   }
