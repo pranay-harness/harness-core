@@ -3981,6 +3981,8 @@ public class DelegateServiceImpl implements DelegateService {
   }
   private String getDelegateXmx(String delegateType) {
     // TODO: ARPIT remove this community and null check once new delegate and watcher goes in prod.
-    return (delegateType.equals(DOCKER) || DeployVariant.isCommunity(deployVersion)) ? "-Xmx512m" : "-Xmx1536m";
+    return (DeployVariant.isCommunity(deployVersion) || (delegateType != null && (delegateType.equals(DOCKER))))
+        ? "-Xmx512m"
+        : "-Xmx1536m";
   }
 }
