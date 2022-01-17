@@ -20,8 +20,8 @@ import io.harness.rule.Owner;
 import io.harness.rule.OwnerRule;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
@@ -31,10 +31,10 @@ public class ExceptionMessageSanitizerTest extends CategoryTest {
   @Test
   @Owner(developers = OwnerRule.NAMAN_TALAYCHA)
   @Category(UnitTests.class)
-  public void testExceptionMessageSanitizer() {
+  public void testExceptionMessageSanitizer() throws Exception {
     IOException ex1 = new IOException("hello there is an error");
     Exception ex = new Exception("hello error", ex1);
-    Set<String> secrets = new HashSet<>();
+    List<String> secrets = new ArrayList<>();
     secrets.add("error");
     secrets.add("hello");
     ExceptionMessageSanitizer.sanitizeException(ex, secrets);

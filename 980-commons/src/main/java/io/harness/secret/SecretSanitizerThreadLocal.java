@@ -7,7 +7,6 @@
 
 package io.harness.secret;
 
-import java.util.HashSet;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
 
@@ -21,13 +20,6 @@ public class SecretSanitizerThreadLocal {
    */
   public static void set(final Set<String> secrets) {
     triggeredByThreadLocal.set(secrets);
-  }
-
-  public static void addAll(final Set<String> secrets) {
-    if (triggeredByThreadLocal.get() == null) {
-      triggeredByThreadLocal.set(new HashSet<>());
-    }
-    triggeredByThreadLocal.get().addAll(secrets);
   }
 
   /**

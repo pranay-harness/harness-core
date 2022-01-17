@@ -48,8 +48,6 @@ import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.helm.HelmCliCommandType;
 import io.harness.k8s.model.HelmVersion;
-import io.harness.secret.SecretSanitizerThreadLocal;
-import io.harness.security.encryption.EncryptedDataDetail;
 
 import software.wings.annotation.EncryptableSetting;
 import software.wings.beans.appmanifest.HelmChart;
@@ -59,7 +57,6 @@ import software.wings.beans.settings.helm.AmazonS3HelmRepoConfig;
 import software.wings.beans.settings.helm.GCSHelmRepoConfig;
 import software.wings.beans.settings.helm.HelmRepoConfig;
 import software.wings.beans.settings.helm.HttpHelmRepoConfig;
-import software.wings.delegatetasks.ExceptionMessageSanitizer;
 import software.wings.helpers.ext.chartmuseum.ChartMuseumClient;
 import software.wings.helpers.ext.helm.request.HelmChartCollectionParams;
 import software.wings.helpers.ext.helm.request.HelmChartConfigParams;
@@ -136,26 +133,11 @@ public class HelmTaskHelper {
     encryptionService.decrypt(
         helmChartConfigParams.getHelmRepoConfig(), helmChartConfigParams.getEncryptedDataDetails(), false);
 
-    Set<String> secrets = new HashSet<>();
-
-    if (isNotEmpty(helmChartConfigParams.getEncryptedDataDetails())) {
-      for (EncryptedDataDetail encryptedDataDetail : helmChartConfigParams.getEncryptedDataDetails()) {
-        secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
-      }
-    }
-
     SettingValue connectorConfig = helmChartConfigParams.getConnectorConfig();
     if (connectorConfig != null) {
       encryptionService.decrypt(
           (EncryptableSetting) connectorConfig, helmChartConfigParams.getConnectorEncryptedDataDetails(), false);
     }
-
-    if (isNotEmpty(helmChartConfigParams.getConnectorEncryptedDataDetails())) {
-      for (EncryptedDataDetail encryptedDataDetail : helmChartConfigParams.getConnectorEncryptedDataDetails()) {
-        secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
-      }
-    }
-    SecretSanitizerThreadLocal.addAll(secrets);
   }
 
   public void downloadChartFiles(HelmChartConfigParams helmChartConfigParams, String destinationDirectory,
@@ -208,7 +190,7 @@ public class HelmTaskHelper {
               Paths.get(workingDirectory, helmChartConfigParams.getChartName(), CHARTS_YAML_KEY).toString())
                                                     .getVersion());
         } catch (Exception e) {
-          log.info("Unable to fetch chart version", ExceptionMessageSanitizer.sanitizeException(e));
+          log.info("Unable to fetch chart version", e);
         }
       }
 
@@ -235,8 +217,8 @@ public class HelmTaskHelper {
             valuesYamlContents.add(fileContent);
           } catch (Exception ex) {
             String msg = format("Required values yaml file with path %s not found", filePath);
-            log.error(msg, ExceptionMessageSanitizer.sanitizeException(ex));
-            throw new InvalidArgumentsException(msg, ExceptionMessageSanitizer.sanitizeException(ex), USER);
+            log.error(msg, ex);
+            throw new InvalidArgumentsException(msg, ex, USER);
           }
           mapK8sValuesLocationToContents.put(key, valuesYamlContents);
         });
@@ -249,9 +231,9 @@ public class HelmTaskHelper {
 
       return mapK8sValuesLocationToContents;
     } catch (InvalidArgumentsException ex) {
-      throw ExceptionMessageSanitizer.sanitizeException(ex);
+      throw ex;
     } catch (Exception ex) {
-      log.info("values yaml file not found", ExceptionMessageSanitizer.sanitizeException(ex));
+      log.info("values yaml file not found", ex);
       return null;
     } finally {
       cleanup(workingDirectory);
@@ -539,8 +521,7 @@ public class HelmTaskHelper {
     try {
       FileUtils.forceDelete(new File(tempDir));
     } catch (IOException ie) {
-      log.error(
-          "Deletion of charts folder failed due to : {}", ExceptionMessageSanitizer.sanitizeException(ie).getMessage());
+      log.error("Deletion of charts folder failed due to : {}", ie.getMessage());
     }
   }
 
@@ -644,8 +625,7 @@ public class HelmTaskHelper {
       }
       return sb.toString();
     } catch (IOException e) {
-      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER,
-          ExceptionMessageSanitizer.sanitizeException(e), helmCliCommandType);
+      throw new HelmClientException(format("[IO exception] %s", errorMessage), USER, e, helmCliCommandType);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new HelmClientException(format("[Interrupted] %s", errorMessage), USER, e, helmCliCommandType);

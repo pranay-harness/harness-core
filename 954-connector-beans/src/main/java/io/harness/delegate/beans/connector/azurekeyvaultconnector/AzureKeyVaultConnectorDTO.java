@@ -12,6 +12,7 @@ import static io.harness.azure.AzureEnvironmentType.AZURE;
 
 import static com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.azure.AzureEnvironmentType;
 import io.harness.beans.DecryptableEntity;
@@ -43,17 +44,28 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(Include.NON_NULL)
-@Schema(name = "AzureKeyVaultConnector", description = "Returns Azure KeyVault Secret Manager configuration")
+@Schema(name = "AzureKeyVaultConnector",
+    description = "Returns configuration details for the Azure Key Vault Secret Manager.")
 public class AzureKeyVaultConnectorDTO extends ConnectorConfigDTO implements DelegateSelectable {
-  @NotNull private String clientId;
-  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
-  @NotNull private String tenantId;
-  @NotNull private String vaultName;
-  @NotNull private String subscription;
-  private boolean isDefault;
+  @Schema(description = "Application ID of the Azure App.") @NotNull private String clientId;
+  @SecretReference
+  @ApiModelProperty(dataType = "string")
+  @NotNull
+  @Schema(description = "This is the Harness text secret with the Azure authentication key as its value.")
+  private SecretRefData secretKey;
+  @NotNull
+  @Schema(description = "The Azure Active Directory (AAD) directory ID where you created your application.")
+  private String tenantId;
+  @NotNull
+  @Schema(description = "The Azure Active Directory (AAD) directory ID where you created your application.")
+  private String vaultName;
+  @NotNull @Schema(description = "Azure Subscription ID.") private String subscription;
+  @Schema(description = SecretManagerDescriptionConstants.DEFAULT) private boolean isDefault;
 
-  @Builder.Default private AzureEnvironmentType azureEnvironmentType = AZURE;
-  private Set<String> delegateSelectors;
+  @Builder.Default
+  @Schema(description = "This specifies the Azure Environment type, which is AZURE by default.")
+  private AzureEnvironmentType azureEnvironmentType = AZURE;
+  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) private Set<String> delegateSelectors;
 
   @Override
   public List<DecryptableEntity> getDecryptableEntities() {

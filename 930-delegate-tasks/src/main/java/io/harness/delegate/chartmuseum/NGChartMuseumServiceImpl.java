@@ -24,11 +24,7 @@ import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.StoreDelegateConfig;
 import io.harness.utils.FieldWithPlainTextOrSecretValueHelper;
 
-import software.wings.delegatetasks.ExceptionMessageSanitizer;
-
 import com.google.inject.Inject;
-import java.util.HashSet;
-import java.util.Set;
 
 @OwnedBy(CDP)
 public class NGChartMuseumServiceImpl implements NGChartMuseumService {
@@ -68,21 +64,9 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
                 format("Credentials type %s are not supported", awsConnector.getCredential().getAwsCredentialType()));
         }
 
-        try {
-          return clientHelper.startS3ChartMuseumServer(s3StoreDelegateConfig.getBucketName(),
-              s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
-              secretKey, irsa, s3StoreDelegateConfig.isUseLatestChartMuseumVersion());
-        } catch (Exception ex) {
-          Set<String> secrets = new HashSet<>();
-          if (secretKey != null) {
-            secrets.add(String.valueOf(secretKey));
-          }
-          if (accessKey != null) {
-            secrets.add(String.valueOf(accessKey));
-          }
-          ExceptionMessageSanitizer.sanitizeException(ex, secrets);
-          throw ex;
-        }
+        return clientHelper.startS3ChartMuseumServer(s3StoreDelegateConfig.getBucketName(),
+            s3StoreDelegateConfig.getFolderPath(), s3StoreDelegateConfig.getRegion(), inheritFromDelegate, accessKey,
+            secretKey, irsa, s3StoreDelegateConfig.isUseLatestChartMuseumVersion());
 
       case GCS_HELM:
         GcsHelmStoreDelegateConfig gcsHelmStoreDelegateConfig = (GcsHelmStoreDelegateConfig) storeDelegateConfig;
@@ -94,18 +78,9 @@ public class NGChartMuseumServiceImpl implements NGChartMuseumService {
           serviceAccountKey = manualCredentials.getSecretKeyRef().getDecryptedValue();
         }
 
-        try {
-          return clientHelper.startGCSChartMuseumServer(gcsHelmStoreDelegateConfig.getBucketName(),
-              gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory,
-              gcsHelmStoreDelegateConfig.isUseLatestChartMuseumVersion());
-        } catch (Exception ex) {
-          Set<String> secrets = new HashSet<>();
-          secrets.add(String.valueOf(serviceAccountKey));
-          if (serviceAccountKey != null) {
-            ExceptionMessageSanitizer.sanitizeException(ex, secrets);
-          }
-          throw ex;
-        }
+        return clientHelper.startGCSChartMuseumServer(gcsHelmStoreDelegateConfig.getBucketName(),
+            gcsHelmStoreDelegateConfig.getFolderPath(), serviceAccountKey, resourceDirectory,
+            gcsHelmStoreDelegateConfig.isUseLatestChartMuseumVersion());
 
       default:
         throw new UnsupportedOperationException(

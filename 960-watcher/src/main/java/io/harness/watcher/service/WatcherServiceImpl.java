@@ -20,6 +20,7 @@ import static io.harness.delegate.message.MessageConstants.DELEGATE_MIGRATE;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESTART_NEEDED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_RESUME;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SELF_DESTRUCT;
+import static io.harness.delegate.message.MessageConstants.DELEGATE_SEND_VERSION_HEADER;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_PENDING;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_SHUTDOWN_STARTED;
 import static io.harness.delegate.message.MessageConstants.DELEGATE_STARTED;
@@ -189,6 +190,7 @@ public class WatcherServiceImpl implements WatcherService {
   private final SecureRandom random = new SecureRandom();
 
   private static final boolean multiVersion;
+  private static boolean accountVersion;
 
   static {
     String deployMode = System.getenv().get("DEPLOY_MODE");
@@ -638,10 +640,16 @@ public class WatcherServiceImpl implements WatcherService {
 
               if (multiVersion) {
                 if (!expectedVersions.contains(delegateVersion) && !shutdownPending) {
+                  messageService.writeMessageToChannel(
+                      DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
                   log.info("Delegate version {} ({}) is not a published version. Future requests will go to primary.",
                       delegateVersion, delegateProcess);
                   drainingNeededList.add(delegateProcess);
                 }
+              }
+              if (accountVersion) {
+                messageService.writeMessageToChannel(
+                    DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
               }
 
               if (newDelegate) {
@@ -965,6 +973,9 @@ public class WatcherServiceImpl implements WatcherService {
         if (config != null && config.getAction() == SELF_DESTRUCT) {
           selfDestruct();
         }
+        if (config != null && config.isAccountVersion()) {
+          accountVersion = true;
+        }
 
         return config != null ? config.getDelegateVersions() : null;
       } else {
@@ -1005,8 +1016,9 @@ public class WatcherServiceImpl implements WatcherService {
     }
 
     // Get patched version
-    final String patchVersion = substringAfter(version, "-");
-    final String updatedVersion = version.contains("-") ? substringBefore(version, "-") : version;
+    final String patchVersion = !accountVersion ? substringAfter(version, "-") : "";
+    final String updatedVersion =
+        !accountVersion ? (version.contains("-") ? substringBefore(version, "-") : version) : "";
     RestResponse<DelegateScripts> restResponse = null;
     if (!delegateNg) {
       log.info(format("Calling getDelegateScripts with version %s and patch %s", updatedVersion, patchVersion));

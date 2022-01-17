@@ -32,7 +32,7 @@ import org.junit.experimental.categories.Category;
 public class GitFullSyncConfigServiceImplTest extends GitSyncTestBase {
   public static final String YAML_GIT_CONFIG = "yamlGitConfig";
   public static final String BRANCH = "branch";
-  public static final String MESSAGE = "message";
+  public static final String PR_TITLE = "pr title";
   public static final String BASE_BRANCH = "baseBranch";
   public static final String ACCOUNT = "account";
   public static final String ORG = "org";
@@ -50,7 +50,7 @@ public class GitFullSyncConfigServiceImplTest extends GitSyncTestBase {
                                                                   .repoIdentifier(YAML_GIT_CONFIG)
                                                                   .createPullRequest(true)
                                                                   .branch(BRANCH)
-                                                                  .message(MESSAGE)
+                                                                  .prTitle(PR_TITLE)
                                                                   .baseBranch(BASE_BRANCH)
                                                                   .build();
 

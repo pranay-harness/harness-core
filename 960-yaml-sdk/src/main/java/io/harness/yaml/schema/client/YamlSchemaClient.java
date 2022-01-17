@@ -37,7 +37,7 @@ public interface YamlSchemaClient {
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope,
       @Body YamlSchemaDetailsWrapper yamlSchemaDetailsWrapper);
-  @POST("partial-yaml-schema/get")
+  @POST("partial-yaml-schema")
   Call<ResponseDTO<JsonNode>> getStepSchema(@Query(NGCommonEntityConstants.ACCOUNT_KEY) String accountIdentifier,
       @Query(NGCommonEntityConstants.PROJECT_KEY) String projectIdentifier,
       @Query(NGCommonEntityConstants.ORG_KEY) String orgIdentifier, @Query("scope") Scope scope,
