@@ -32,24 +32,8 @@ public class SideCarsListArtifactsUtility {
         + "      spec:\n"
         + "      type: DockerRegistry\n"
         + "      identifier: \""
-        + "abc"
+        + "dummyIdentifier"
         + "\"\n";
-    YamlField sideCarsYamlField;
-    try {
-      String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);
-      sideCarsYamlField = YamlUtils.readTree(yamlFieldWithUuid);
-    } catch (IOException e) {
-      throw new InvalidRequestException("Exception while creating primary field");
-    }
-    return sideCarsYamlField.getNode().getCurrJsonNode();
-  }
-
-  public JsonNode getIndividualSideCarsListJsonNode(String identifier) {
-    String yamlField = "---\n"
-        + "- sidecar:\n"
-        + "      spec:\n"
-        + "      type: DockerRegistry\n"
-        + "      identifier: \"" + identifier + "\"\n";
     YamlField sideCarsYamlField;
     try {
       String yamlFieldWithUuid = YamlUtils.injectUuid(yamlField);

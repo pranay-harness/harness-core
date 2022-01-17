@@ -25,16 +25,15 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
+import io.harness.polling.bean.artifact.ArtifactInfo;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
+
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
@@ -86,6 +85,21 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
             PlanCreatorConstants.PRIMARY_STEP_PARAMETERS))
         .isEqualTo(true);
   }
+
+  private void checkForSidecarsMetadataDependency(PlanCreationResponse planCreationResponse, String nodeUuid) {
+    assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
+    assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
+            .isEqualTo(2);
+    assertThat(
+            planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+                    YamlTypes.UUID))
+            .isEqualTo(true);
+    assertThat(
+            planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+                    PlanCreatorConstants.SIDECARS_PARAMETERS_MAP))
+            .isEqualTo(true);
+  }
+
   @Test
   @Owner(developers = PRASHANTSHARMA)
   @Category(UnitTests.class)
@@ -138,5 +152,86 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
     assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("primary");
     assertThat(planCreationResponse1.getYamlUpdates()).isNotNull();
     checkForPrimaryMetadataDependency(planCreationResponse1, nodeUuid);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForSidecarsListsHavingEmptySideCarYamlField() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile =
+            classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_empty_sidecar_yamlField.yml");
+    assertThat(yamlFile).isNotNull();
+
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField artifactField = YamlUtils.readTree(yaml);
+
+    Map<String, ArtifactsPlanCreator.ArtifactInfo> sidecarArtifactInfo = new HashMap<>();
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
+    String nodeUuid = artifactsPlanCreator.addDependenciesForSideCarList(
+            ctx.getCurrentField(),artifactField.getNode().getUuid(),sidecarArtifactInfo,planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("sidecars");
+    assertThat(planCreationResponse1.getYamlUpdates()).isNotNull();
+    checkForSidecarsMetadataDependency(planCreationResponse1, nodeUuid);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForSidecarsListsWithoutSideCarYamlField() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile =
+            classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_primary_yamlField.yml");
+    assertThat(yamlFile).isNotNull();
+
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField artifactField = YamlUtils.readTree(yaml);
+
+    Map<String, ArtifactsPlanCreator.ArtifactInfo> sidecarArtifactInfo = new HashMap<>();
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
+    String nodeUuid = artifactsPlanCreator.addDependenciesForSideCarList(
+            ctx.getCurrentField(),artifactField.getNode().getUuid(),sidecarArtifactInfo,planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("sidecars");
+    assertThat(planCreationResponse1.getYamlUpdates()).isNotNull();
+    checkForSidecarsMetadataDependency(planCreationResponse1, nodeUuid);
+  }
+
+  @Test
+  @Owner(developers = PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testAddDependenciesForSidecarsListsWithSideCarYamlField() throws IOException {
+    LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
+
+    ClassLoader classLoader = this.getClass().getClassLoader();
+    InputStream yamlFile =
+            classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_sidecars_yamlField.yml");
+    assertThat(yamlFile).isNotNull();
+
+    String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
+    yaml = YamlUtils.injectUuid(yaml);
+    YamlField artifactField = YamlUtils.readTree(yaml);
+
+    Map<String, ArtifactsPlanCreator.ArtifactInfo> sidecarArtifactInfo = new HashMap<>();
+    PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
+    String nodeUuid = artifactsPlanCreator.addDependenciesForSideCarList(
+            ctx.getCurrentField(),artifactField.getNode().getUuid(),sidecarArtifactInfo,planCreationResponseMap);
+    assertThat(planCreationResponseMap.size()).isEqualTo(1);
+    assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
+    PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
+    assertThat(planCreationResponse1.getDependencies().getDependenciesMap().get(nodeUuid)).isEqualTo("sidecars");
+    assertThat(planCreationResponse1.getYamlUpdates()).isNull();
+    checkForSidecarsMetadataDependency(planCreationResponse1, nodeUuid);
   }
 }

@@ -112,7 +112,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     return planCreationResponseMap;
   }
 
-  private String addDependenciesForSideCarList(YamlField artifactField, String artifactsId,
+  public String addDependenciesForSideCarList(YamlField artifactField, String artifactsId,
       Map<String, ArtifactInfo> sideCarsInfo, LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
     YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     YamlField sideCarsListYamlField =
@@ -300,7 +300,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
   }
 
   @Value
-  private static class ArtifactInfo {
+  public static class ArtifactInfo {
     ArtifactStepParameters params;
   }
 
