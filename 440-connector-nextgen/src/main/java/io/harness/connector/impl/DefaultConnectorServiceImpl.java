@@ -539,7 +539,7 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
                             .and(ConnectorKeys.identifier)
                             .is(connectorDTO.getConnectorInfo().getIdentifier());
 
-    Update update = Update.update(ConnectorKeys.filePath, newFilePath);
+    Update update = new Update().set(ConnectorKeys.filePath, newFilePath);
     return getResponse(accountIdentifier, connectorDTO.getConnectorInfo().getOrgIdentifier(),
         connectorDTO.getConnectorInfo().getProjectIdentifier(), connectorRepository.update(criteria, update));
   }
