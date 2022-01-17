@@ -13,7 +13,7 @@ http_archive(
     url = "http://jfrogdev.dev.harness.io:80/artifactory/bazel-buildtools-github/archive/refs/tags/4.0.1.zip",
 )
 
-# Download the Go rules
+# Download Go rules
 http_archive(
     name = "io_bazel_rules_go",
     sha256 = "7904dbecbaffd068651916dce77ff3437679f9d20e1a7956bff43826e7645fcc",
