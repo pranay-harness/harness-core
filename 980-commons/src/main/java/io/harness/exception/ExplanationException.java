@@ -38,6 +38,19 @@ public class ExplanationException extends WingsException {
       "Failed to fetch artifact metadata using connector %s with given credentials.";
   public static String COMMAND_TRIED_FOR_ARTIFACT = "Commands tried %s but no metadata was returned";
   public static String ILLEGAL_IMAGE_FORMAT = "Provided image path [%s] does not satisfy ECR image path format";
+  public static String AWS_SM_DECRYPTION_FAILURE =
+      "Secrets Manager is unable to decrypt the protected secret text using the given KMS key.";
+  public static String AWS_SM_ENCRYPTION_FAILURE =
+      "Secrets Manager is unable to encrypt the protected secret content using the given KMS key.";
+  public static String AWS_SM_INVALID_TOKEN = "The NextToken value provided is invalid.";
+  public static String AWS_SM_INVALID_PARAMETER_NAME = "The name of one or more parameters provided is incorrect.";
+  public static String AZURE_SM_VAULT_ENGINE_PERMISSION =
+      "The selected azure vault engine do not have apt permissions.";
+  public static String AZURE_SM_VAULT_ENGINE_FETCH_ERROR_SUBSCRIPTION_ID =
+      "The Subscription ID used is either malformed or Invalid.";
+  public static String AZURE_SM_VAULT_ENGINE_FETCH_ERROR =
+      "One or more of Client Id, Subscription, Tenant ID and Secret key is/are invalid.";
+  public static String INVALID_PARAMETER = "The credentials provided are incorrect.";
 
   // GIT
   public static String INVALID_GIT_REPO = "Provided repo url is invalid.";

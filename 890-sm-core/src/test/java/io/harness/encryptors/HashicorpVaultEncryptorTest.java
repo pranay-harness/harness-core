@@ -129,7 +129,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
       hashicorpVaultEncryptor.createSecret(vaultConfig.getAccountId(), name, plainText, vaultConfig);
       fail("Create Secret should fail");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("encryption failed after 3 retries for vault secret " + name);
+      assertThat(e.getMessage()).isEqualTo("After 3 tries, encryption for vault secret " + name + " failed.");
     }
   }
 
@@ -194,7 +194,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
       hashicorpVaultEncryptor.updateSecret(vaultConfig.getAccountId(), name, plainText, oldRecord, vaultConfig);
       fail("Update Secret should fail");
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("encryption failed after 3 retries for vault secret " + name);
+      assertThat(e.getMessage()).isEqualTo("After 3 tries, encryption for vault secret " + name + " failed.");
     }
   }
 
@@ -237,7 +237,7 @@ public class HashicorpVaultEncryptorTest extends CategoryTest {
     try {
       hashicorpVaultEncryptor.renameSecret(vaultConfig.getAccountId(), name, oldRecord, vaultConfig);
     } catch (SecretManagementDelegateException e) {
-      assertThat(e.getMessage()).isEqualTo("encryption failed after 3 retries for vault secret " + name);
+      assertThat(e.getMessage()).isEqualTo("After 3 tries, encryption for vault secret " + name + " failed.");
     }
   }
 

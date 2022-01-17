@@ -13,7 +13,6 @@ import static io.harness.gitsync.core.beans.GitFullSyncEntityInfo.SyncStatus.QUE
 
 import io.harness.Microservice;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.beans.gitsync.GitPRCreateRequest;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.eventsframework.schemas.entity.EntityScopeInfo;
 import io.harness.exception.InvalidRequestException;
@@ -78,8 +77,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       int fileNumber = entitiesForFullSync == null ? 0 : emptyIfNull(entitiesForFullSync.getFileChangesList()).size();
       log.info("Saving {} files for the microservice {}", fileNumber, microservice);
       emptyIfNull(entitiesForFullSync.getFileChangesList()).forEach(entityForFullSync -> {
-        saveFullSyncEntityInfo(
-            gitConfigScope, messageId, microservice, entityForFullSync, fullSyncEventRequest.getBranch());
+        saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync,
+            fullSyncEventRequest.getBranch(), fullSyncEventRequest.getRootFolder());
       });
     }
     if (fullSyncEventRequest.getIsNewBranch()) {
@@ -89,9 +88,6 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     if (gitFullSyncJob == null) {
       log.info("The job is not created for the message id {}, as a job with id already exists", messageId);
       return;
-    }
-    if (fullSyncEventRequest.getCreatePr()) {
-      createAPullRequest(fullSyncEventRequest);
     }
   }
 
@@ -105,6 +101,10 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
                                      .syncStatus(QUEUED.name())
                                      .messageId(messageId)
                                      .retryCount(0)
+                                     .createPullRequest(fullSyncEventRequest.getCreatePr())
+                                     .targetBranch(fullSyncEventRequest.getTargetBranch())
+                                     .branch(fullSyncEventRequest.getBranch())
+                                     .prTitle(fullSyncEventRequest.getPrTitle())
                                      .build();
     try {
       return fullSyncJobService.save(fullSyncJob);
@@ -114,29 +114,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     return null;
   }
 
-  private void createAPullRequest(FullSyncEventRequest fullSyncEventRequest) {
-    final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
-    String projectIdentifier = gitConfigScope.getProjectId().getValue();
-    String orgIdentifier = gitConfigScope.getOrgId().getValue();
-    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(
-        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
-    String title = "Full Sync for the project {}" + gitConfigScope.getProjectId();
-    GitPRCreateRequest createPRRequest = GitPRCreateRequest.builder()
-                                             .accountIdentifier(gitConfigScope.getAccountId())
-                                             .orgIdentifier(orgIdentifier)
-                                             .projectIdentifier(projectIdentifier)
-                                             .yamlGitConfigRef(gitConfigScope.getIdentifier())
-                                             .title(title)
-                                             .sourceBranch(fullSyncEventRequest.getBranch())
-                                             .targetBranch(fullSyncEventRequest.getTargetBranch())
-                                             .build();
-    scmOrchestratorService.processScmRequestUsingConnectorSettings(scmClientFacilitatorService
-        -> scmClientFacilitatorService.createPullRequest(createPRRequest),
-        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), yamlGitConfigDTO.getGitConnectorRef());
-  }
-
   private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
-      FileChange entityForFullSync, String branchName) {
+      FileChange entityForFullSync, String branchName, String rootFolder) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())
@@ -149,6 +128,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
             .syncStatus(QUEUED.name())
             .yamlGitConfigId(entityScopeInfo.getIdentifier())
             .branchName(branchName)
+            .rootFolder(rootFolder)
             .retryCount(0)
             .build();
     gitFullSyncEntityService.save(gitFullSyncEntityInfo);

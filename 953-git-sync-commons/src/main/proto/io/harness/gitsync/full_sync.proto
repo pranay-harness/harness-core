@@ -63,4 +63,6 @@ message FullSyncEventRequest {
   string target_branch = 4;
   bool isNewBranch = 5;
   string baseBranch = 6;
+  string prTitle = 7;
+  string rootFolder = 8;
 }
