@@ -7,8 +7,7 @@
 
 package software.wings.service;
 
-import static io.harness.rule.OwnerRule.AGORODETKI;
-import static io.harness.rule.OwnerRule.PRABU;
+import static io.harness.rule.OwnerRule.*;
 
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
@@ -109,6 +108,30 @@ public class GovernanceConfigServiceImplTest extends WingsBaseTest {
     JsonNode actual = JsonUtils.toJsonNode(savedGovernanceConfig);
     JsonNode expected = JsonUtils.readResourceFile("governance/governance_config_expected.json", JsonNode.class);
     assertThat(actual).hasToString(expected.toString());
+  }
+
+  @Test
+  @Owner(developers = SHIVAM)
+  @Category(UnitTests.class)
+  public void shouldOverrideTheExpiresValue() {
+    GovernanceConfig governanceConfig =
+        JsonUtils.readResourceFile("governance/governance_config.json", GovernanceConfig.class);
+
+    GovernanceConfig savedGovernanceConfig =
+        governanceConfigService.upsert(governanceConfig.getAccountId(), governanceConfig);
+    savedGovernanceConfig.setUuid("GOVERNANCE_CONFIG_ID");
+    boolean expires = false;
+    for (TimeRangeBasedFreezeConfig entry : savedGovernanceConfig.getTimeRangeBasedFreezeConfigs()) {
+      expires = entry.getTimeRange().isExpires();
+      entry.setTimeRange(new TimeRange(entry.getTimeRange().getFrom(), entry.getTimeRange().getTo(),
+          entry.getTimeRange().getTimeZone(), entry.getTimeRange().isDurationBased(),
+          entry.getTimeRange().getDuration(), entry.getTimeRange().getEndTime(),
+          entry.getTimeRange().getFreezeOccurrence(), true));
+    }
+    savedGovernanceConfig = governanceConfigService.upsert(savedGovernanceConfig.getAccountId(), savedGovernanceConfig);
+    for (TimeRangeBasedFreezeConfig entry : savedGovernanceConfig.getTimeRangeBasedFreezeConfigs()) {
+      assertThat(entry.getTimeRange().isExpires()).isEqualTo(expires);
+    }
   }
 
   @Test
