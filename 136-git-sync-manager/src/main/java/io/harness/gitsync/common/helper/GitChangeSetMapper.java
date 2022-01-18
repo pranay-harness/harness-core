@@ -95,6 +95,10 @@ public class GitChangeSetMapper {
             .build();
       }
     } else {
+      if (changeType == ChangeType.RENAME) {
+        builder.setPrevFilePath(fileContent.getPrevFilePath());
+      }
+
       try {
         EntityType entityType = GitSyncUtils.getEntityTypeFromYaml(fileContent.getContent());
         builder.setEntityType(EntityToEntityProtoHelper.getEntityTypeFromProto(entityType));

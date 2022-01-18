@@ -58,6 +58,10 @@ public class ChangeSetHelperServiceImpl implements GitSdkInterface {
         final EntityDetail entityDetailDTO = entityDetailProtoToRestMapper.createEntityDetailDTO(entityRefForDeletion);
         entityGitPersistenceHelperService.delete(entityDetailDTO.getEntityRef());
         break;
+      case RENAME:
+        entityGitPersistenceHelperService.updateFilePath(
+            changeSet.getAccountId(), yaml, changeSet.getPrevFilePath(), changeSet.getFilePath());
+        break;
       case UNRECOGNIZED:
       default:
         throw new UnexpectedException(

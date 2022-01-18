@@ -23,6 +23,7 @@ import lombok.experimental.UtilityClass;
 public class PRFileListMapper {
   public GitDiffResultFileListDTO toGitDiffResultFileListDTO(List<PRFile> prFileList) {
     List<GitDiffResultFileDTO> gitDiffResultFileDTOList = new ArrayList<>();
+    GitDiffResultFileDTO.GitDiffResultFileDTOBuilder gitDiffResultFileDTOBuilder = GitDiffResultFileDTO.builder();
     if (prFileList != null) {
       prFileList.forEach(prFile -> {
         ChangeType changeType = ChangeType.MODIFY;
@@ -32,9 +33,9 @@ public class PRFileListMapper {
           changeType = ChangeType.DELETE;
         } else if (prFile.getRenamed()) {
           changeType = ChangeType.RENAME;
+          gitDiffResultFileDTOBuilder.prevFilePath(prFile.getPrevFilePath());
         }
-        gitDiffResultFileDTOList.add(
-            GitDiffResultFileDTO.builder().changeType(changeType).path(prFile.getPath()).build());
+        gitDiffResultFileDTOList.add(gitDiffResultFileDTOBuilder.changeType(changeType).path(prFile.getPath()).build());
       });
     }
     return GitDiffResultFileListDTO.builder().prFileList(gitDiffResultFileDTOList).build();

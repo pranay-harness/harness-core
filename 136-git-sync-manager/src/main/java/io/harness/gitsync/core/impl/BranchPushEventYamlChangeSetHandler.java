@@ -11,9 +11,9 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.git.YamlGitConfigDTO;
 import io.harness.exception.UnexpectedException;
+import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.beans.GitSyncDirection;
 import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest;
-import io.harness.gitsync.common.beans.GitToHarnessFileProcessingRequest.GitToHarnessFileProcessingRequestBuilder;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepStatus;
 import io.harness.gitsync.common.beans.GitToHarnessProcessingStepType;
 import io.harness.gitsync.common.beans.GitToHarnessProgressStatus;
@@ -311,14 +311,20 @@ public class BranchPushEventYamlChangeSetHandler implements YamlChangeSetHandler
   private List<GitToHarnessFileProcessingRequest> prepareFileProcessingRequests(
       List<GitFileChangeDTO> gitFileChangeDTOList, List<GitDiffResultFileDTO> gitDiffResultFileDTOList) {
     List<GitToHarnessFileProcessingRequest> fileProcessingRequests = new ArrayList<>();
-    Map<String, GitToHarnessFileProcessingRequestBuilder> filePathToRequestBuilderMap = new HashMap<>();
+    Map<String, GitFileChangeDTO> filePathToFileChangeDTOMap = new HashMap<>();
 
-    gitFileChangeDTOList.forEach(gitFileChangeDTO
-        -> filePathToRequestBuilderMap.put(
-            gitFileChangeDTO.getPath(), GitToHarnessFileProcessingRequest.builder().fileDetails(gitFileChangeDTO)));
+    gitFileChangeDTOList.forEach(
+        gitFileChangeDTO -> filePathToFileChangeDTOMap.put(gitFileChangeDTO.getPath(), gitFileChangeDTO));
+
     gitDiffResultFileDTOList.forEach(gitPRFileDTO -> {
-      fileProcessingRequests.add(
-          filePathToRequestBuilderMap.get(gitPRFileDTO.getPath()).changeType(gitPRFileDTO.getChangeType()).build());
+      GitFileChangeDTO gitFileChangeDTO = filePathToFileChangeDTOMap.get(gitPRFileDTO.getPath());
+      if (gitPRFileDTO.getChangeType() == ChangeType.RENAME) {
+        gitFileChangeDTO.setPrevFilePath(gitPRFileDTO.getPrevFilePath());
+      }
+      fileProcessingRequests.add(GitToHarnessFileProcessingRequest.builder()
+                                     .changeType(gitPRFileDTO.getChangeType())
+                                     .fileDetails(gitFileChangeDTO)
+                                     .build());
     });
     return fileProcessingRequests;
   }

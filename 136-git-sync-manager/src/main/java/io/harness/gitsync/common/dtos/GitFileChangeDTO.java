@@ -28,6 +28,7 @@ public class GitFileChangeDTO {
   String content;
   int status;
   String path;
+  String prevFilePath; // in case of RENAME
   String commitId;
   String objectId;
   String error;

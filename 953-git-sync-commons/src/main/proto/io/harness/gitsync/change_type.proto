@@ -13,5 +13,5 @@ enum ChangeType {
   ADD = 0;
   MODIFY = 1;
   DELETE = 2;
-  //  RENAME = 3; // not required for git to harness
+  RENAME = 3;
 }

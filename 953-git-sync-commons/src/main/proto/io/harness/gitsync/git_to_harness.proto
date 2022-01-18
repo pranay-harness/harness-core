@@ -58,6 +58,7 @@ message ChangeSet {
   YamlGitConfigInfo yaml_git_config_info = 7;
   string change_set_id = 8;
   io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO entityRefForDeletion = 9;
+  string prev_file_path = 10;
 }
 
 message ProcessingResponse {
