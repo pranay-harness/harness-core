@@ -696,8 +696,7 @@ public class DelegateModule extends AbstractModule {
   @Singleton
   @Named("cvngParallelExecutor")
   public ExecutorService cvngParallelExecutor() {
-    return ThreadPool.create(1, CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS, 5,
-        TimeUnit.SECONDS,
+    return ThreadPool.create(1, CVNextGenConstants.CVNG_MAX_PARALLEL_THREADS, 5, TimeUnit.SECONDS,
         new ThreadFactoryBuilder().setNameFormat("cvngParallelExecutor-%d").setPriority(Thread.MIN_PRIORITY).build());
   }
 

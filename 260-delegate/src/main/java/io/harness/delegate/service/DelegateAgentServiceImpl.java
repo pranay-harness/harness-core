@@ -969,9 +969,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
 
   private void startGrpcService() {
     if (delegateConfiguration.isGrpcServiceEnabled() && acquireTasks.get() && !restartableServiceManager.isRunning()) {
-      grpcServiceExecutor.submit(() -> {
-        restartableServiceManager.start();
-      });
+      grpcServiceExecutor.submit(() -> { restartableServiceManager.start(); });
     }
   }
 
@@ -1309,8 +1307,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     final boolean terminatedSync = syncExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
     final boolean terminatedPoll = taskPollExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 
-    log.info(
-        "Executors terminated after {}s. All tasks completed? Artifact [{}], Async [{}], Sync [{}], Polling [{}]",
+    log.info("Executors terminated after {}s. All tasks completed? Artifact [{}], Async [{}], Sync [{}], Polling [{}]",
         Duration.ofMillis(clock.millis() - shutdownStart).toMillis() * 1000, terminatedArtifact, terminatedAsync,
         terminatedSync, terminatedPoll);
 
@@ -1319,7 +1316,7 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       perpetualTaskWorker.stop();
     }
 
-    if(restartableServiceManager != null) {
+    if (restartableServiceManager != null) {
       restartableServiceManager.stop();
     }
 
