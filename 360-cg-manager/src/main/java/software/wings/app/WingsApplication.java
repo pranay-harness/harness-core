@@ -142,6 +142,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
 import io.harness.reflection.HarnessReflections;
+import io.harness.request.RequestContextFilter;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secret.ConfigSecretUtils;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -713,7 +714,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Authentication/Authorization filters
     registerAuthFilters(configuration, environment, injector);
     registerCorrelationFilter(environment, injector);
-
+    registerRequestContextFilter(environment);
     // Register collection iterators
     if (configuration.isEnableIterators()) {
       if (isManager()) {
@@ -1190,6 +1191,10 @@ public class WingsApplication extends Application<MainConfiguration> {
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
+  }
+
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
   }
 
   private void registerQueueListeners(MainConfiguration configuration, Injector injector) {
