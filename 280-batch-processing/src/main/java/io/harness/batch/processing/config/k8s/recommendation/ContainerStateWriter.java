@@ -112,6 +112,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
                                .kind("Pod")
                                .build();
         workloadId = Objects.requireNonNull(podToWorkload.get(podId));
+        log.info("XXX workloadId: Old path:  {}", workloadId);
         // intentional reference equality
         if (workloadId == NOT_FOUND) {
           // pod to workload mapping not found in instanceData. Skip this item.
@@ -126,6 +127,7 @@ class ContainerStateWriter implements ItemWriter<PublishedMessage> {
                          .name(workloadName)
                          .kind(workloadKind)
                          .build();
+        log.info("XXX workloadId: New path: {}", workloadId);
       }
       WorkloadState workloadState = workloadToRecommendation.computeIfAbsent(workloadId, this::getWorkloadState);
       updateContainerStateMap(workloadState.getContainerStateMap(), containerStateProto);

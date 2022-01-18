@@ -197,6 +197,7 @@ public class K8sMetricCollector {
   }
   private void collectContainerStates(
       List<PodMetrics> podMetricsList, CoreV1Api coreV1Api, K8sControllerFetcher controllerFetcher) {
+    log.info("XXX collectContainerStates called with {} pod metric items", podMetricsList.size());
     for (PodMetrics podMetrics : podMetricsList) {
       if (isEmpty(podMetrics.getContainers())) {
         // Nothing to aggregate. Continue with the next podMetrics in the list.
@@ -205,6 +206,7 @@ public class K8sMetricCollector {
       String namespace = podMetrics.getMetadata().getNamespace();
       String podName = podMetrics.getMetadata().getName();
       Pair<String, String> workloadInfo = getWorkloadInfo(namespace, podName, coreV1Api, controllerFetcher);
+      log.info("XXX collectContainerStates workloadInfo {}/{} -> {}", namespace, podName, workloadInfo);
       if (workloadInfo == null) {
         continue;
       }
@@ -353,6 +355,8 @@ public class K8sMetricCollector {
         .map(e -> {
           ContainerStateCacheKey key = e.getKey();
           ContainerState containerState = e.getValue();
+          log.info("XXX Pub ContainerState: {}:{}:{}:{}, clusterId: {}", key.getNamespace(), key.getWorkloadKind(),
+              key.getWorkloadName(), key.getContainerName(), clusterDetails.getClusterId());
           HistogramCheckpoint histogramCheckpoint = containerState.getCpuHistogram().saveToCheckpoint();
           HistogramCheckpoint histogramCheckpointV2 = containerState.getCpuHistogramV2().saveToCheckpoint();
           return ContainerStateProto.newBuilder()
