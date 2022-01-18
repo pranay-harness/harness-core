@@ -8,6 +8,7 @@
 package io.harness.pms.governance;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.contracts.plan.ExpansionRequestType.KEY;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +18,7 @@ import io.harness.CategoryTest;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.sdk.PmsSdkInstance;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.rule.Owner;
@@ -47,20 +49,26 @@ public class ExpansionRequestsHelperTest extends CategoryTest {
     Map<String, Set<String>> cdSupportedTypes = new HashMap<>();
     cdSupportedTypes.put("stage", Collections.singleton("Deployment"));
     cdSupportedTypes.put("step", Collections.singleton("K8sApply"));
-    PmsSdkInstance cdInstance = PmsSdkInstance.builder()
-                                    .name("cd")
-                                    .expandableFields(Arrays.asList("connectorRef", "serviceRef", "environmentRef"))
-                                    .supportedTypes(cdSupportedTypes)
-                                    .build();
+    PmsSdkInstance cdInstance =
+        PmsSdkInstance.builder()
+            .name("cd")
+            .jsonExpansionInfo(
+                Arrays.asList(JsonExpansionInfo.newBuilder().setKey("connectorRef").setExpansionType(KEY).build(),
+                    JsonExpansionInfo.newBuilder().setKey("serviceRef").setExpansionType(KEY).build(),
+                    JsonExpansionInfo.newBuilder().setKey("environmentRef").setExpansionType(KEY).build()))
+            .supportedTypes(cdSupportedTypes)
+            .build();
 
     Map<String, Set<String>> pmsSupportedTypes = new HashMap<>();
     pmsSupportedTypes.put("stage", Collections.singleton("Approval"));
     pmsSupportedTypes.put("step", Collections.singleton("ShellScript"));
-    PmsSdkInstance pmsInstance = PmsSdkInstance.builder()
-                                     .name("pms")
-                                     .expandableFields(Collections.singletonList("connectorRef"))
-                                     .supportedTypes(pmsSupportedTypes)
-                                     .build();
+    PmsSdkInstance pmsInstance =
+        PmsSdkInstance.builder()
+            .name("pms")
+            .jsonExpansionInfo(Collections.singletonList(
+                JsonExpansionInfo.newBuilder().setKey("connectorRef").setExpansionType(KEY).build()))
+            .supportedTypes(pmsSupportedTypes)
+            .build();
     activeInstances = Arrays.asList(cdInstance, pmsInstance);
     doReturn(activeInstances).when(pmsSdkInstanceService).getActiveInstances();
   }

@@ -19,6 +19,7 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.InitializeSdkResponse;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.SdkStep;
@@ -118,7 +119,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.interruptConsumerConfig, request.getInterruptConsumerConfig())
             .set(PmsSdkInstanceKeys.staticAliases, request.getStaticAliasesMap())
             .set(PmsSdkInstanceKeys.sdkFunctors, request.getSdkFunctorsList())
-            .set(PmsSdkInstanceKeys.expandableFields, request.getExpandableFieldsList())
+            .set(PmsSdkInstanceKeys.jsonExpansionInfo, request.getJsonExpansionInfoList())
             .set(PmsSdkInstanceKeys.orchestrationEventConsumerConfig, request.getOrchestrationEventConsumerConfig())
             .set(PmsSdkInstanceKeys.active, true)
             .set(PmsSdkInstanceKeys.sdkModuleInfo, request.getSdkModuleInfo())
