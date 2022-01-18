@@ -184,6 +184,13 @@ public class BudgetUtils {
     return UNDEFINED_PERSPECTIVE;
   }
 
+  public static String getPerspectiveNameForBudget(Budget budget) {
+    if (isPerspectiveBudget(budget)) {
+      return budget.getScope().getEntityNames().get(0);
+    }
+    return UNDEFINED_PERSPECTIVE;
+  }
+
   public static boolean isBudgetBasedOnGivenPerspective(Budget budget, String perspectiveId) {
     if (isPerspectiveBudget(budget)) {
       return budget.getScope().getEntityIds().get(0).equals(perspectiveId);
