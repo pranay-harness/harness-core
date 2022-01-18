@@ -13,6 +13,8 @@ import static io.harness.annotations.dev.HarnessTeam.GTM;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.cdlicense.bean.CgActiveServicesUsageInfo;
+import io.harness.cdlicense.bean.CgLicenseModel;
 import io.harness.ng.core.account.DefaultExperience;
 
 import software.wings.beans.LicenseInfo;
@@ -32,4 +34,6 @@ public class AccountDetails {
   private LicenseInfo licenseInfo;
   private CeLicenseInfo ceLicenseInfo;
   private int activeServiceCount;
+  private CgActiveServicesUsageInfo activeServicesUsageInfo;
+  private CgLicenseModel licenseModel;
 }

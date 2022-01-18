@@ -71,6 +71,8 @@ import io.harness.ccm.views.service.impl.CEReportTemplateBuilderServiceImpl;
 import io.harness.ccm.views.service.impl.CEViewServiceImpl;
 import io.harness.ccm.views.service.impl.ViewCustomFieldServiceImpl;
 import io.harness.ccm.views.service.impl.ViewsBillingServiceImpl;
+import io.harness.cdlicense.impl.CgCdLicenseUsageService;
+import io.harness.cdlicense.impl.CgCdLicenseUsageServiceImpl;
 import io.harness.config.PipelineConfig;
 import io.harness.configuration.DeployVariant;
 import io.harness.connector.ConnectorResourceClientModule;
@@ -1116,6 +1118,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(CeAccountExpirationChecker.class).to(CeAccountExpirationCheckerImpl.class);
     bind(AccessRequestService.class).to(AccessRequestServiceImpl.class);
     bind(DelegateTaskServiceClassic.class).to(DelegateTaskServiceClassicImpl.class);
+
+    bind(CgCdLicenseUsageService.class).to(CgCdLicenseUsageServiceImpl.class);
 
     bind(GcbService.class).to(GcbServiceImpl.class);
     bind(ACRResourceProvider.class);

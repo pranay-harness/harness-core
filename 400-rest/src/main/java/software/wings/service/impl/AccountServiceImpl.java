@@ -62,6 +62,7 @@ import io.harness.beans.PageResponse;
 import io.harness.beans.PageResponse.PageResponseBuilder;
 import io.harness.cache.HarnessCacheManager;
 import io.harness.ccm.license.CeLicenseInfo;
+import io.harness.cdlicense.impl.CgCdLicenseUsageService;
 import io.harness.cvng.beans.ServiceGuardLimitDTO;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.structure.UUIDGenerator;
@@ -300,6 +301,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private RemoteObserverInformer remoteObserverInformer;
   @Inject private DelegateNgTokenService delegateNgTokenService;
   @Inject private HPersistence persistence;
+  @Inject private CgCdLicenseUsageService cgCdLicenseUsageService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -581,6 +583,10 @@ public class AccountServiceImpl implements AccountService {
     accountDetails.setDefaultExperience(account.getDefaultExperience());
     accountDetails.setCreatedFromNG(account.isCreatedFromNG());
     accountDetails.setActiveServiceCount(workflowExecutionService.getActiveServiceCount(accountId));
+
+    accountDetails.setActiveServicesUsageInfo(cgCdLicenseUsageService.getActiveServiceLicenseUsage(accountId));
+    // Todo: requires input LicenseModel from api request
+    //    accountDetails.setLicenseModel(CgLicenseModel.SERVICES);
     return accountDetails;
   }
 
