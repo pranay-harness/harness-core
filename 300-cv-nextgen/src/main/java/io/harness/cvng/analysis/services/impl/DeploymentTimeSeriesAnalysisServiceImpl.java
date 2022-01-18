@@ -113,7 +113,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public List<String> getTransactionNames(String accountId, String verificationJobInstanceId,
-      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
     List<TransactionMetricInfo> transactionMetricInfoList =
         getMetrics(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
     List<String> transactionNameList = new ArrayList<>();
@@ -124,7 +124,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
 
   @Override
   public List<String> getNodeNames(String accountId, String verificationJobInstanceId,
-      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
     List<TransactionMetricInfo> transactionMetricInfoList =
         getMetrics(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
     List<String> nodeNameList = new ArrayList<>();

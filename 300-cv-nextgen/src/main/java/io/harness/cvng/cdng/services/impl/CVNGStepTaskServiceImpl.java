@@ -134,17 +134,17 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
   }
 
   @Override
-  public List<String> getTransactionNames(String accountId, String callBackId,
-      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
-    return deploymentTimeSeriesAnalysisService.getTransactionNames(accountId,
-        getByCallBackId(callBackId).getVerificationJobInstanceId(), deploymentTimeSeriesAnalysisFilter, pageParams);
+  public List<String> getTransactionNames(
+      String accountId, String callBackId, DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
+    return deploymentTimeSeriesAnalysisService.getTransactionNames(
+        accountId, getByCallBackId(callBackId).getVerificationJobInstanceId(), deploymentTimeSeriesAnalysisFilter);
   }
 
   @Override
-  public List<String> getNodeNames(String accountId, String callBackId,
-      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
-    return deploymentTimeSeriesAnalysisService.getTransactionNames(accountId,
-        getByCallBackId(callBackId).getVerificationJobInstanceId(), deploymentTimeSeriesAnalysisFilter, pageParams);
+  public List<String> getNodeNames(
+      String accountId, String callBackId, DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
+    return deploymentTimeSeriesAnalysisService.getNodeNames(
+        accountId, getByCallBackId(callBackId).getVerificationJobInstanceId(), deploymentTimeSeriesAnalysisFilter);
   }
 
   @Override
