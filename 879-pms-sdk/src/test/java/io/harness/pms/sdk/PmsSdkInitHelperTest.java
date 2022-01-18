@@ -26,7 +26,6 @@ import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.core.governance.ExpansionResponse;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandlerInfo;
-import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.JsonNode;

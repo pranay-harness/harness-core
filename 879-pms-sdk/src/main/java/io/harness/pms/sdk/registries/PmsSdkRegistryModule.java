@@ -22,7 +22,6 @@ import io.harness.pms.sdk.core.adviser.Adviser;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.events.node.facilitate.Facilitator;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
-import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandlerInfo;
 import io.harness.pms.sdk.core.registries.AdviserRegistry;
 import io.harness.pms.sdk.core.registries.FacilitatorRegistry;
