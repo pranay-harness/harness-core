@@ -8,7 +8,7 @@
 package io.harness.cdlicense.impl;
 
 import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.CG_LICENSE_INSTANCE_LIMIT;
-import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.PERCENTILE;
+import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.INSTANCE_COUNT_PERCENTILE_DISC;
 import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.TIME_PERIOD;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
@@ -16,6 +16,7 @@ import static java.util.stream.Collectors.toList;
 
 import io.harness.cdlicense.bean.CgActiveServicesUsageInfo;
 import io.harness.cdlicense.bean.CgServiceUsage;
+import io.harness.cdlicense.bean.CgServiceUsage.CgServiceUsageBuilder;
 
 import com.google.inject.Inject;
 import java.util.Collections;
@@ -34,7 +35,7 @@ public class CgCdLicenseUsageServiceImpl implements CgCdLicenseUsageService {
         cgCdLicenseUsageQueryHelper.fetchDistinctSvcIdUsedInDeployments(accountId, TIME_PERIOD);
     Map<String, CgServiceUsage> percentileInstanceServicesUsageMap =
         cgCdLicenseUsageQueryHelper.getPercentileInstanceForServices(
-            accountId, serviceIdsFromDeployments, 30, PERCENTILE);
+            accountId, serviceIdsFromDeployments, 30, INSTANCE_COUNT_PERCENTILE_DISC);
     Map<String, String> servicesNames =
         cgCdLicenseUsageQueryHelper.fetchServicesNames(accountId, serviceIdsFromDeployments);
     return buildCgActiveServicesUsageInfo(serviceIdsFromDeployments, percentileInstanceServicesUsageMap, servicesNames);
@@ -74,19 +75,19 @@ public class CgCdLicenseUsageServiceImpl implements CgCdLicenseUsageService {
   private CgServiceUsage buildActiveServiceUsageList(@NonNull String serviceId,
       @NonNull Map<String, CgServiceUsage> percentileInstanceServicesUsageMap,
       @NonNull Map<String, String> servicesNames) {
-    CgServiceUsage cgServiceUsage = CgServiceUsage.builder().serviceId(serviceId).build();
-    if (servicesNames.get(serviceId) != null) {
-      cgServiceUsage.setName(servicesNames.get(serviceId));
+    CgServiceUsageBuilder cgServiceUsageBuilder = CgServiceUsage.builder().serviceId(serviceId);
+    if (servicesNames.containsKey(serviceId)) {
+      cgServiceUsageBuilder.name(servicesNames.get(serviceId));
     }
-    if (percentileInstanceServicesUsageMap.get(serviceId) != null) {
-      cgServiceUsage.setInstanceCount(percentileInstanceServicesUsageMap.get(serviceId).getInstanceCount());
-      cgServiceUsage.setLicensesUsed(
+    if (percentileInstanceServicesUsageMap.containsKey(serviceId)) {
+      cgServiceUsageBuilder.instanceCount(percentileInstanceServicesUsageMap.get(serviceId).getInstanceCount());
+      cgServiceUsageBuilder.licensesUsed(
           computeServiceLicenseUsed(percentileInstanceServicesUsageMap.get(serviceId).getInstanceCount()));
     } else {
-      cgServiceUsage.setInstanceCount(0);
-      cgServiceUsage.setLicensesUsed(1);
+      cgServiceUsageBuilder.instanceCount(0);
+      cgServiceUsageBuilder.licensesUsed(1);
     }
-    return cgServiceUsage;
+    return cgServiceUsageBuilder.build();
   }
 
   private long computeServiceLicenseUsed(long instanceCount) {

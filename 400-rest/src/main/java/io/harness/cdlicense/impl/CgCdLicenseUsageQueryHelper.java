@@ -7,16 +7,15 @@
 
 package io.harness.cdlicense.impl;
 
-import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.FECTH_PERCENTILE_INSTANCE_COUNT_FOR_SERVICES;
-import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.FECTH_SERVICES_IN_LAST_N_DAYS_DEPLOYMENT;
 import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.MAX_RETRY;
+import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.QUERY_FECTH_PERCENTILE_INSTANCE_COUNT_FOR_SERVICES;
+import static io.harness.cdlicense.bean.CgCdLicenseUsageConstants.QUERY_FECTH_SERVICES_IN_LAST_N_DAYS_DEPLOYMENT;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static java.util.stream.Collectors.toList;
 
 import io.harness.cdlicense.bean.CgServiceUsage;
-import io.harness.exception.DeploymentMigrationException;
+import io.harness.cdlicense.exception.CgLicenseUsageException;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.Service;
@@ -45,27 +44,36 @@ public class CgCdLicenseUsageQueryHelper {
     boolean successfulOperation = false;
     List<String> serviceIds = new ArrayList<>();
 
-    while (!successfulOperation && retry < MAX_RETRY)
+    while (!successfulOperation && retry < MAX_RETRY) {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
-           PreparedStatement fetchStatement = dbConnection.prepareStatement(FECTH_SERVICES_IN_LAST_N_DAYS_DEPLOYMENT)) {
+           PreparedStatement fetchStatement =
+               dbConnection.prepareStatement(QUERY_FECTH_SERVICES_IN_LAST_N_DAYS_DEPLOYMENT)) {
         fetchStatement.setString(1, accountId);
         fetchStatement.setInt(2, timePeriod);
 
         ResultSet resultSet = fetchStatement.executeQuery();
-        while (resultSet.next()) {
-          serviceIds.add(resultSet.getString(1));
-        }
+        serviceIds = processResultSetToFetchServiceIds(resultSet);
         successfulOperation = true;
       } catch (SQLException exception) {
         if (retry >= MAX_RETRY) {
           String errorLog = "MAX RETRY FAILURE : Failed to fetch serviceIds within interval";
-          throw new DeploymentMigrationException(errorLog, exception);
+          throw new CgLicenseUsageException(errorLog, exception);
         }
         log.error(
             "Failed to fetch serviceIds within interval for last [{} days] deployments for accountId : [{}] , retry : [{}]",
-            accountId, timePeriod, retry, exception);
+            timePeriod, accountId, retry, exception);
         retry++;
       }
+    }
+
+    return serviceIds;
+  }
+
+  private List<String> processResultSetToFetchServiceIds(ResultSet resultSet) throws SQLException {
+    List<String> serviceIds = new ArrayList<>();
+    while (resultSet.next()) {
+      serviceIds.add(resultSet.getString(1));
+    }
     return serviceIds;
   }
 
@@ -79,44 +87,53 @@ public class CgCdLicenseUsageQueryHelper {
     boolean successfulOperation = false;
     Map<String, CgServiceUsage> serviceUsageMap = new HashMap<>();
 
-    while (!successfulOperation && retry < MAX_RETRY)
+    while (!successfulOperation && retry < MAX_RETRY) {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
            PreparedStatement fetchStatement =
-               dbConnection.prepareStatement(FECTH_PERCENTILE_INSTANCE_COUNT_FOR_SERVICES)) {
+               dbConnection.prepareStatement(QUERY_FECTH_PERCENTILE_INSTANCE_COUNT_FOR_SERVICES)) {
         fetchStatement.setDouble(1, percentile);
         fetchStatement.setString(2, accountId);
         fetchStatement.setArray(3, dbConnection.createArrayOf("text", svcIds.toArray()));
         fetchStatement.setInt(4, timePeriod);
 
         ResultSet resultSet = fetchStatement.executeQuery();
-        while (resultSet.next()) {
-          serviceUsageMap.put(resultSet.getString(1),
-              CgServiceUsage.builder().serviceId(resultSet.getString(1)).instanceCount(resultSet.getInt(2)).build());
-        }
+        serviceUsageMap = processResultSetToCreateServiceUsageMap(resultSet);
         successfulOperation = true;
       } catch (SQLException exception) {
         if (retry >= MAX_RETRY) {
           String errorLog = "MAX RETRY FAILURE : Failed to fetch service usage within interval";
-          throw new DeploymentMigrationException(errorLog, exception);
+          throw new CgLicenseUsageException(errorLog, exception);
         }
         log.error("Failed to fetch service usage for accountId : [{}] , retry : [{}]", accountId, retry, exception);
         retry++;
       }
+    }
+
+    return serviceUsageMap;
+  }
+
+  private Map<String, CgServiceUsage> processResultSetToCreateServiceUsageMap(ResultSet resultSet) throws SQLException {
+    Map<String, CgServiceUsage> serviceUsageMap = new HashMap<>();
+    while (resultSet.next()) {
+      serviceUsageMap.put(resultSet.getString(1),
+          CgServiceUsage.builder().serviceId(resultSet.getString(1)).instanceCount(resultSet.getInt(2)).build());
+    }
+
     return serviceUsageMap;
   }
 
   public Map<String, String> fetchServicesNames(String accountId, List<String> serviceUuids) {
-    if (isNotEmpty(serviceUuids)) {
-      serviceUuids = serviceUuids.stream().distinct().collect(toList());
-      List<Service> services = wingsPersistence.createQuery(Service.class)
-                                   .filter(Service.ServiceKeys.accountId, accountId)
-                                   .field(Service.ServiceKeys.uuid)
-                                   .in(serviceUuids)
-                                   .project(Service.ServiceKeys.uuid, true)
-                                   .project(Service.ServiceKeys.name, true)
-                                   .asList();
-      return services.stream().collect(Collectors.toMap(Service::getUuid, Service::getName));
+    if (isEmpty(serviceUuids)) {
+      return Collections.emptyMap();
     }
-    return Collections.emptyMap();
+    serviceUuids = serviceUuids.stream().distinct().collect(toList());
+    List<Service> services = wingsPersistence.createQuery(Service.class)
+                                 .filter(Service.ServiceKeys.accountId, accountId)
+                                 .field(Service.ServiceKeys.uuid)
+                                 .in(serviceUuids)
+                                 .project(Service.ServiceKeys.uuid, true)
+                                 .project(Service.ServiceKeys.name, true)
+                                 .asList();
+    return services.stream().collect(Collectors.toMap(Service::getUuid, Service::getName));
   }
 }
