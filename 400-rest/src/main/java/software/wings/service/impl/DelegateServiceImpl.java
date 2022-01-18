@@ -31,7 +31,6 @@ import static io.harness.eventsframework.EventsFrameworkMetadataConstants.DELETE
 import static io.harness.exception.WingsException.USER;
 import static io.harness.k8s.KubernetesConvention.getAccountIdentifier;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
-import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_REGISTRATION;
 import static io.harness.metrics.impl.DelegateMetricsServiceImpl.DELEGATE_REGISTRATION_FAILED;
 import static io.harness.mongo.MongoUtils.setUnset;
 import static io.harness.obfuscate.Obfuscator.obfuscate;
@@ -2568,8 +2567,6 @@ public class DelegateServiceImpl implements DelegateService {
     if (delegate == null) {
       return null;
     }
-
-    delegateMetricsService.recordDelegateMetrics(delegate, DELEGATE_REGISTRATION);
 
     return DelegateRegisterResponse.builder()
         .delegateId(delegate.getUuid())

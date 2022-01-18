@@ -7,9 +7,7 @@
 
 package io.harness.metrics.impl;
 
-import static org.mongodb.morphia.aggregation.Accumulator.accumulator;
-import static org.mongodb.morphia.aggregation.Group.grouping;
-import static org.mongodb.morphia.aggregation.Group.id;
+import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
@@ -23,14 +21,16 @@ import io.harness.persistence.HPersistence;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.query.Query;
 
 @Slf4j
-public class DelegateTaskMetricsPublisher implements MetricsPublisher {
+public class DelegateMetricsPublisher implements MetricsPublisher {
   @Inject private MetricService metricService;
   @Inject private HPersistence persistence;
   private static final String ACTIVE_DELEGATES_COUNT = "active_delegates_count";
@@ -45,35 +45,33 @@ public class DelegateTaskMetricsPublisher implements MetricsPublisher {
     log.info("Starting getting delegate metrics.");
     long startTime = Instant.now().toEpochMilli();
 
-    Query<Delegate> query = persistence.createQuery(Delegate.class)
-                                .field(DelegateKeys.status)
-                                .equal(DelegateInstanceStatus.ENABLED)
-                                .field(DelegateKeys.lastHeartBeat)
-                                .greaterThan(Instant.now().minusSeconds(60).toEpochMilli());
-    persistence.getDatastore(Delegate.class)
-        .createAggregation(Delegate.class)
-        .match(query)
-        .group(id(grouping("accountId", "accountId")), grouping("count", accumulator("$sum", 1)))
-        .aggregate(DelegateAggregator.class)
-        .forEachRemaining(instanceCount -> {
-          try (DelegateMetricContext ignore = new DelegateMetricContext(instanceCount.id.accountId)) {
-            metricService.recordMetric(ACTIVE_DELEGATES_COUNT, instanceCount.count);
-          }
-        });
+    Function<Delegate, DelegateLabel> compositeKey =
+        delegate -> new DelegateLabel(delegate.getAccountId(), delegate.getVersion());
+
+    List<Delegate> delegates = persistence.createQuery(Delegate.class, excludeAuthority)
+                                   .field(DelegateKeys.status)
+                                   .equal(DelegateInstanceStatus.ENABLED)
+                                   .field(DelegateKeys.lastHeartBeat)
+                                   .greaterThan(Instant.now().minusSeconds(300).toEpochMilli())
+                                   .asList();
+
+    Map<DelegateLabel, List<Delegate>> map =
+        delegates.stream().collect(Collectors.groupingBy(compositeKey, Collectors.toList()));
+
+    map.forEach((key, value) -> {
+      try (DelegateMetricContext ignore = new DelegateMetricContext(key.getAccountId(), key.getVersion())) {
+        metricService.recordMetric(ACTIVE_DELEGATES_COUNT, value.size());
+      }
+    });
 
     log.info("Total time taken to collect metrics for class {} {} (ms)", DelegateTask.class.getSimpleName(),
         Instant.now().toEpochMilli() - startTime);
   }
 
   @Data
-  @NoArgsConstructor
-  private static class DelegateAggregator {
-    @Id ID id;
-    int count;
-  }
-  @Data
-  @NoArgsConstructor
-  private static class ID {
+  @AllArgsConstructor
+  private static class DelegateLabel {
     String accountId;
+    String version;
   }
 }
