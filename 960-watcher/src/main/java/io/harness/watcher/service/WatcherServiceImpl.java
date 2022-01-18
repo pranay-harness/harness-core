@@ -644,10 +644,6 @@ public class WatcherServiceImpl implements WatcherService {
                   drainingNeededList.add(delegateProcess);
                 }
               }
-              if (accountVersion) {
-                messageService.writeMessageToChannel(
-                    DELEGATE, delegateProcess, DELEGATE_SEND_VERSION_HEADER, Boolean.FALSE.toString());
-              }
 
               if (newDelegate) {
                 log.info("New delegate process {} is starting", delegateProcess);
