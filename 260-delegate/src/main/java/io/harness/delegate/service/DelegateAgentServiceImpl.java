@@ -1555,29 +1555,31 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
       String watcherProcess = messageService.getData(WATCHER_DATA, WATCHER_PROCESS, String.class);
       log.warn("Watcher process {} needs restart", watcherProcess);
       watcherUpgradeExecutor.submit(() -> {
-        try {
-          ProcessControl.ensureKilled(watcherProcess, Duration.ofSeconds(120));
-          messageService.closeChannel(WATCHER, watcherProcess);
-          sleep(ofSeconds(2));
-          // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
-          // resetting version matched timestamp
-          messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
-          watcherVersionMatchedAt = clock.millis();
-          StartedProcess newWatcher = new ProcessExecutor()
-                                          .command("nohup", "./start.sh")
-                                          .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
-                                          .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
-                                          .readOutput(true)
-                                          .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
-                                          .start();
-          if (multiVersionRestartNeeded && newWatcher.getProcess().isAlive()) {
-            sleep(ofSeconds(20L));
-            FileUtils.forceDelete(new File("delegate.sh"));
-            FileUtils.forceDelete(new File("delegate.jar"));
-            restartNeeded.set(true);
+        synchronized (this) {
+          try {
+            ProcessControl.ensureKilled(watcherProcess, Duration.ofSeconds(120));
+            messageService.closeChannel(WATCHER, watcherProcess);
+            sleep(ofSeconds(2));
+            // Prevent a second restart attempt right away at next heartbeat by writing the watcher heartbeat and
+            // resetting version matched timestamp
+            messageService.putData(WATCHER_DATA, WATCHER_HEARTBEAT, clock.millis());
+            watcherVersionMatchedAt = clock.millis();
+            StartedProcess newWatcher = new ProcessExecutor()
+                    .command("nohup", "./start.sh")
+                    .redirectError(Slf4jStream.of("RestartWatcherScript").asError())
+                    .redirectOutput(Slf4jStream.of("RestartWatcherScript").asInfo())
+                    .readOutput(true)
+                    .setMessageLogger((log, format, arguments) -> log.info(format, arguments))
+                    .start();
+            if (multiVersionRestartNeeded && newWatcher.getProcess().isAlive()) {
+              sleep(ofSeconds(20L));
+              FileUtils.forceDelete(new File("delegate.sh"));
+              FileUtils.forceDelete(new File("delegate.jar"));
+              restartNeeded.set(true);
+            }
+          } catch (Exception e) {
+            log.error("Error restarting watcher {}", watcherProcess, e);
           }
-        } catch (Exception e) {
-          log.error("Error restarting watcher {}", watcherProcess, e);
         }
       });
     }
