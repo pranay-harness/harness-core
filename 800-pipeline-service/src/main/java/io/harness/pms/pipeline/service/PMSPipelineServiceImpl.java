@@ -542,6 +542,17 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     return ExpansionsMerger.mergeExpansions(pipelineYaml, expansionResponseBatches);
   }
 
+  @Override
+  public PipelineEntity updateGitFilePath(PipelineEntity pipelineEntity, String newFilePath) {
+    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(pipelineEntity.getAccountId(),
+        pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), false,
+        null);
+
+    Update update = new Update().set(PipelineEntityKeys.filePath, newFilePath);
+    return updatePipelineMetadata(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
+        pipelineEntity.getProjectIdentifier(), criteria, update);
+  }
+
   ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {
     ByteString gitSyncBranchContextBytes = gitSyncHelper.getGitSyncBranchContextBytesThreadLocal();
     if (gitSyncBranchContextBytes != null) {
