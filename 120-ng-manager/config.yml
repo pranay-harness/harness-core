@@ -70,7 +70,6 @@ logging:
   loggers:
     org.glassfish.jersey: WARN
     allbegray.slack: WARN
-    com.fasterxml.jackson: DEBUG
     org.glassfish.jersey.server.ServerRuntime.Responder: "OFF"
   appenders:
     - type: console
