@@ -27,6 +27,9 @@ public class ChangeTypeMapper {
     if (changeType == io.harness.git.model.ChangeType.MODIFY) {
       return ChangeType.MODIFY;
     }
+    if (changeType == io.harness.git.model.ChangeType.RENAME) {
+      return ChangeType.RENAME;
+    }
     return ChangeType.UNRECOGNIZED;
   }
 }
