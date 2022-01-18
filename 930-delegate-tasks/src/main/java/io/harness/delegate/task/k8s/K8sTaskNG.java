@@ -31,11 +31,13 @@ import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
 import io.harness.k8s.model.K8sDelegateTaskParams;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.secret.SecretSanitizerThreadLocal;
 
 import software.wings.delegatetasks.ExceptionMessageSanitizer;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Map;
 import java.util.function.BooleanSupplier;
@@ -58,6 +60,8 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
   public K8sTaskNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
+
+    SecretSanitizerThreadLocal.addAll(delegateTaskPackage.getSecrets());
   }
 
   @Override
@@ -73,7 +77,11 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         : CommandUnitsProgress.builder().build();
 
     log.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
-    decryptRequestDTOs(k8sDeployRequest);
+    try {
+      decryptRequestDTOs(k8sDeployRequest);
+    } catch (IOException ioException) {
+      log.error("Failure in Decryption");
+    }
 
     if (k8sDeployRequest.getTaskType() == K8sTaskType.INSTANCE_SYNC) {
       try {
@@ -178,7 +186,7 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     }
   }
 
-  public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) {
+  public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) throws IOException {
     manifestDelegateConfigHelper.decryptManifestDelegateConfig(k8sDeployRequest.getManifestDelegateConfig());
     containerDeploymentDelegateBaseHelper.decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
   }
