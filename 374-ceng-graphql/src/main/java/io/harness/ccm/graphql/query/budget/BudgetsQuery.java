@@ -125,6 +125,7 @@ public class BudgetsQuery {
         .id(budget.getUuid())
         .name(budget.getName())
         .perspectiveId(BudgetUtils.getPerspectiveIdForBudget(budget))
+        .perspectiveName(BudgetUtils.getPerspectiveNameForBudget(budget))
         .budgetAmount(budget.getBudgetAmount())
         .actualCost(budget.getActualCost())
         .forecastCost(budget.getForecastCost())
