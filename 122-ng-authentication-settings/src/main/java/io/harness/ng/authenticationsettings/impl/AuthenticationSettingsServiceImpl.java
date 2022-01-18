@@ -165,7 +165,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
         }
         if (isNotEmpty(samlSettings.getClientId()) && isNotEmpty(samlSettings.getEncryptedClientSecret())) {
           samlSettingsBuilt.setClientId(samlSettings.getClientId());
-          samlSettingsBuilt.setClientSecret(samlSettings.getEncryptedClientSecret());
+          samlSettingsBuilt.setClientSecret("********"); // setting to a masked value for clientSecret
         } else if (isNotEmpty(samlSettings.getClientId()) && isEmpty(samlSettings.getEncryptedClientSecret())
             || isEmpty(samlSettings.getClientId()) && isNotEmpty(samlSettings.getEncryptedClientSecret())) {
           throw new InvalidRequestException(

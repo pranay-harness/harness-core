@@ -70,6 +70,7 @@ public interface AuthSettingsManagerClient {
   @PUT(API_PREFIX + "accounts/whitelisted-domains")
   Call<RestResponse<LoginSettings>> updateWhitelistedDomains(
       @Query("accountId") @NotEmpty String accountId, @Body Set<String> whitelistedDomains);
+
   @Multipart
   @POST(API_PREFIX + "sso/saml-idp-metadata-upload")
   Call<RestResponse<SSOConfig>> uploadSAMLMetadata(@Query("accountId") String accountId,

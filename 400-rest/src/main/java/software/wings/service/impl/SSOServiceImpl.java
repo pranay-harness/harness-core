@@ -149,6 +149,12 @@ public class SSOServiceImpl implements SSOService {
       if (isEmpty(displayName)) {
         displayName = settings.getDisplayName();
       }
+      if (isNotEmpty(clientId) && isNotEmpty(clientSecret)
+          && "********".equals(String.valueOf(clientSecret))) { // suggests only clientId updated
+        // set the old cg secret ref
+        final String oldClientSecretRef = settings.getEncryptedClientSecret();
+        clientSecret = isNotEmpty(oldClientSecretRef) ? oldClientSecretRef.toCharArray() : clientSecret;
+      }
 
       buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl, entityIdentifier,
           samlProviderType, clientId, clientSecret);
@@ -518,16 +524,6 @@ public class SSOServiceImpl implements SSOService {
       samlSettingsDeleted = ssoSettingService.deleteSamlSettings(samlSettings);
     }
     return samlSettingsDeleted;
-  }
-
-  private boolean deleteLdapSettings(String accountId, String targetAccountType) {
-    boolean ldapSettingsDeleted = true;
-    LdapSettings ldapSettings = ssoSettingService.getLdapSettingsByAccountId(accountId);
-    if (ldapSettings != null) {
-      log.info("Deleting LDAP SSO settings for accountId={} and targetAccountType={}", accountId, targetAccountType);
-      ldapSettingsDeleted = ssoSettingService.deleteLdapSettings(accountId) != null;
-    }
-    return ldapSettingsDeleted;
   }
 
   private void setOauthIfSetAfterSSODelete(String accountId) {

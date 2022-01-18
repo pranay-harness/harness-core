@@ -8,6 +8,7 @@
 package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -18,6 +19,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.SecretManagerConfig;
 import io.harness.beans.SecretText;
 import io.harness.eraro.ErrorCode;
+import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ng.core.account.AuthenticationMechanism;
 import io.harness.rest.RestResponse;
@@ -119,7 +121,7 @@ public class SSOResourceNG {
       @FormDataParam("entityIdentifier") String entityIdentifier,
       @FormDataParam("samlProviderType") String samlProviderType, @FormDataParam("clientId") String clientId,
       @FormDataParam("clientSecret") String clientSecret) {
-    final String clientSecretRef = getCGSecretManagerRefForClientSecret(accountId, clientSecret);
+    final String clientSecretRef = getCGSecretManagerRefForClientSecret(accountId, true, clientId, clientSecret);
     return new RestResponse<>(ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName,
         groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId,
         isEmpty(clientSecretRef) ? null : clientSecretRef.toCharArray()));
@@ -137,7 +139,7 @@ public class SSOResourceNG {
       @FormDataParam("entityIdentifier") String entityIdentifier,
       @FormDataParam("samlProviderType") String samlProviderType, @FormDataParam("clientId") String clientId,
       @FormDataParam("clientSecret") String clientSecret) {
-    final String clientSecretRef = getCGSecretManagerRefForClientSecret(accountId, clientSecret);
+    final String clientSecretRef = getCGSecretManagerRefForClientSecret(accountId, false, clientId, clientSecret);
     return new RestResponse<>(ssoService.updateSamlConfiguration(accountId, uploadedInputStream, displayName,
         groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId,
         isEmpty(clientSecretRef) ? null : clientSecretRef.toCharArray()));
@@ -164,9 +166,21 @@ public class SSOResourceNG {
     }
   }
 
-  private String getCGSecretManagerRefForClientSecret(final String accountId, final String clientSecret) {
+  private String getCGSecretManagerRefForClientSecret(
+      final String accountId, final boolean isCreateCall, final String clientId, final String clientSecret) {
+    final String validationErrorMsg = "Both clientId and clientSecret needs to be provided together for SAML setting";
+    if (isCreateCall) {
+      if (isNotEmpty(clientId) && isEmpty(clientSecret) || isEmpty(clientId) && isNotEmpty(clientSecret)) {
+        throw new InvalidRequestException(validationErrorMsg, WingsException.USER);
+      }
+    }
     if (isEmpty(clientSecret)) {
       return null;
+    }
+    if (!isCreateCall && isNotEmpty(clientId) && "********".equals(clientSecret)) {
+      return clientSecret;
+    } else if (!isCreateCall && isEmpty(clientId) && isNotEmpty(clientSecret)) {
+      throw new InvalidRequestException(validationErrorMsg, WingsException.USER);
     }
     SecretManagerConfig secretManagerConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
     SecretText secretText = new SecretText();
