@@ -7,6 +7,8 @@
 
 package io.harness.secret;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
+
 import java.util.HashSet;
 import java.util.Set;
 import lombok.experimental.UtilityClass;
@@ -24,6 +26,9 @@ public class SecretSanitizerThreadLocal {
   }
 
   public static void addAll(final Set<String> secrets) {
+    if (isEmpty(secrets)) {
+      return;
+    }
     if (triggeredByThreadLocal.get() == null) {
       triggeredByThreadLocal.set(new HashSet<>());
     }

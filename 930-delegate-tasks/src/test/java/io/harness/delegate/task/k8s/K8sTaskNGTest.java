@@ -65,8 +65,6 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
-import software.wings.service.intfc.security.EncryptionService;
-
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;

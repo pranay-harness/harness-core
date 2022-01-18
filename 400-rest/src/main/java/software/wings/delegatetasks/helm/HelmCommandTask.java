@@ -31,6 +31,7 @@ import io.harness.secret.SecretSanitizerThreadLocal;
 import software.wings.beans.command.ExecutionLogCallback;
 import software.wings.beans.command.HelmDummyCommandUnit;
 import software.wings.delegatetasks.DelegateLogService;
+import software.wings.delegatetasks.ExceptionMessageSanitizer;
 import software.wings.helpers.ext.container.ContainerDeploymentDelegateHelper;
 import software.wings.helpers.ext.helm.HelmCommandExecutionResponse;
 import software.wings.helpers.ext.helm.HelmDeployService;
@@ -97,10 +98,11 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           throw new HarnessException("Operation not supported");
       }
     } catch (Exception ex) {
-      String errorMsg = ex.getMessage();
+      String errorMsg = ExceptionMessageSanitizer.sanitizeException(ex).getMessage();
       helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
           errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      log.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), ex);
+      log.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()),
+          ExceptionMessageSanitizer.sanitizeException(ex));
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage("Exception in processing helm task: " + errorMsg)
