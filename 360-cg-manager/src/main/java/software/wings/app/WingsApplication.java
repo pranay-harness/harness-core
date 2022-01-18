@@ -63,6 +63,7 @@ import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
+import io.harness.delegate.telemetry.DelegateTelemetryPublisher;
 import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -1399,6 +1400,7 @@ public class WingsApplication extends Application<MainConfiguration> {
             iteratorsConfig.getPerpetualTaskRebalanceIteratorConfig().getThreadPoolSize());
     injector.getInstance(DelegateTaskExpiryCheckIterator.class)
         .registerIterators(iteratorsConfig.getDelegateTaskExpiryCheckIteratorConfig().getThreadPoolSize());
+    injector.getInstance(DelegateTelemetryPublisher.class).registerIterators();
   }
 
   public static void registerIteratorsManager(IteratorsConfig iteratorsConfig, Injector injector) {
