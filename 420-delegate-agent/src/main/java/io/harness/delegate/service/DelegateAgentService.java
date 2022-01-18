@@ -22,5 +22,5 @@ public interface DelegateAgentService {
 
   boolean isSocketHealthy();
 
-  void shutdown(final boolean shouldUnregister) throws InterruptedException;
+  void shutdown(boolean shouldUnregister) throws InterruptedException;
 }
