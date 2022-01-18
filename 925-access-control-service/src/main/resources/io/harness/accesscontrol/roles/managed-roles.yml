@@ -109,6 +109,11 @@ roles:
         - core_governancePolicySets_view
         - chi_monitoredservice_view
         - chi_slo_view
+        - ff_featureflag_view
+        - ff_targetgroup_view
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_view
       allowedScopeLevels:
         - project
       managed: true
@@ -183,6 +188,22 @@ roles:
         - chi_slo_view
         - chi_slo_edit
         - chi_slo_delete
+        - ff_featureflag_edit
+        - ff_featureflag_delete
+        - ff_featureflag_view
+        - ff_targetgroup_view
+        - ff_targetgroup_edit
+        - ff_targetgroup_delete
+        - ff_environment_targetGroupEdit
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_apiKeyCreate
+        - ff_environment_apiKeyDelete
+        - ff_environment_edit
+        - ff_environment_view
+        - ff_featureflag_toggle
+        - core_dashboards_view
+        - core_dashboards_edit
       allowedScopeLevels:
         - organization
       managed: true
@@ -210,6 +231,12 @@ roles:
         - core_pipeline_view
         - chi_monitoredservice_view
         - chi_slo_view
+        - ff_featureflag_view
+        - ff_targetgroup_view
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_view
+        - core_dashboards_view
       allowedScopeLevels:
         - organization
       managed: true
@@ -293,6 +320,20 @@ roles:
         - chi_slo_view
         - chi_slo_edit
         - chi_slo_delete
+        - ff_featureflag_edit
+        - ff_featureflag_delete
+        - ff_featureflag_view
+        - ff_targetgroup_view
+        - ff_targetgroup_edit
+        - ff_targetgroup_delete
+        - ff_environment_targetGroupEdit
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_apiKeyCreate
+        - ff_environment_apiKeyDelete
+        - ff_environment_edit
+        - ff_environment_view
+        - ff_featureflag_toggle
       allowedScopeLevels:
         - account
       managed: true
@@ -323,6 +364,12 @@ roles:
         - core_pipeline_view
         - chi_monitoredservice_view
         - chi_slo_view
+        - ff_featureflag_view
+        - ff_targetgroup_view
+        - ff_target_view
+        - ff_environment_apiKeyView
+        - ff_environment_view
+        - core_dashboards_view
       allowedScopeLevels:
         - account
       managed: true
@@ -346,12 +393,6 @@ roles:
         - core_user_view
         - core_role_view
         - core_resourcegroup_view
-        - core_delegate_view
-        - core_delegateconfiguration_view
-        - core_serviceaccount_view
-        - core_template_view
-        - chi_monitoredservice_view
-        - chi_slo_view
       allowedScopeLevels:
         - project
       managed: true
@@ -359,22 +400,6 @@ roles:
       name: Feature Flag Manage Role
       description: Can edit and view existing feature flags
       permissions:
-        - core_project_view
-        - core_secret_view
-        - core_connector_view
-        - core_delegate_view
-        - core_delegateconfiguration_view
-        - core_pipeline_view
-        - core_service_view
-        - core_environment_view
-        - core_usergroup_view
-        - core_user_view
-        - core_role_view
-        - core_resourcegroup_view
-        - core_serviceaccount_view
-        - core_template_view
-        - chi_monitoredservice_view
-        - chi_slo_view
         - ff_environment_edit
         - ff_environment_view
         - ff_featureflag_edit
@@ -392,22 +417,6 @@ roles:
       name: Governance Admin
       description: Can view, edit, and delete Policies and Policy Sets
       permissions:
-        - core_project_view
-        - core_secret_view
-        - core_connector_view
-        - core_delegate_view
-        - core_delegateconfiguration_view
-        - core_pipeline_view
-        - core_service_view
-        - core_environment_view
-        - core_usergroup_view
-        - core_user_view
-        - core_role_view
-        - core_resourcegroup_view
-        - core_serviceaccount_view
-        - core_template_view
-        - chi_monitoredservice_view
-        - chi_slo_view
         - core_governancePolicySets_view
         - core_governancePolicySets_edit
         - core_governancePolicySets_delete
