@@ -97,6 +97,16 @@ public class YamlNode implements Visitable {
     return String.join(PATH_SEP, path);
   }
 
+  public String getStageLocalYamlPath() {
+    String fullYamlPath = getYamlPath();
+    List<String> split = Arrays.stream(fullYamlPath.split(PATH_SEP)).collect(Collectors.toList());
+    if (split.size() < 4 || !split.get(3).equals(YAMLFieldNameConstants.STAGE)) {
+      throw new InvalidRequestException("Yaml node is not a node inside a stage.");
+    }
+    List<String> localFQNSplit = split.subList(3, split.size());
+    return String.join(PATH_SEP, localFQNSplit);
+  }
+
   public static String getLastKeyInPath(String path) {
     if (EmptyPredicate.isEmpty(path)) {
       throw new InvalidRequestException("Path cannot be empty");
@@ -373,6 +383,14 @@ public class YamlNode implements Visitable {
       return new YamlField(new YamlNode(name, valueFromField, this));
     }
     return null;
+  }
+
+  public YamlField getFieldOrThrow(String name) {
+    JsonNode valueFromField = getValueInternal(name);
+    if (valueFromField != null) {
+      return new YamlField(new YamlNode(name, valueFromField, this));
+    }
+    throw new InvalidRequestException("Field for key [" + name + "] does not exist");
   }
 
   private JsonNode getValueInternal(String key) {

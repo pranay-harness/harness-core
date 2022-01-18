@@ -14,8 +14,10 @@ import static io.harness.pms.yaml.YamlNode.PATH_SEP;
 import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.common.NGExpressionUtils;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
@@ -29,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 @OwnedBy(PIPELINE)
 @Singleton
@@ -49,6 +52,11 @@ public class ExpansionRequestsExtractor {
 
     Set<ExpansionRequest> serviceCalls = new HashSet<>();
     getServiceCalls(pipelineNode, expandableFieldsPerService, typeToService, namespace, serviceCalls);
+
+    List<LocalFQNExpansionInfo> localFQNRequestMetadata = expansionRequestsHelper.getLocalFQNRequestMetadata();
+    if (EmptyPredicate.isNotEmpty(localFQNRequestMetadata)) {
+      getFQNBasedServiceCalls(pipelineNode, localFQNRequestMetadata, serviceCalls);
+    }
     return serviceCalls;
   }
 
@@ -74,7 +82,7 @@ public class ExpansionRequestsExtractor {
         : Collections.emptySet();
     for (String key : keys) {
       if (expandableKeys.contains(key)) {
-        JsonNode value = node.getField(key).getNode().getCurrJsonNode();
+        JsonNode value = node.getFieldOrThrow(key).getNode().getCurrJsonNode();
         if (value.isTextual() && NGExpressionUtils.containsPattern(GENERIC_EXPRESSIONS_PATTERN, value.textValue())) {
           continue;
         }
@@ -86,7 +94,8 @@ public class ExpansionRequestsExtractor {
         serviceCalls.add(request);
         continue;
       }
-      getServiceCalls(node.getField(key).getNode(), expandableFieldsPerService, typeToService, namespace, serviceCalls);
+      getServiceCalls(
+          node.getFieldOrThrow(key).getNode(), expandableFieldsPerService, typeToService, namespace, serviceCalls);
     }
     if (popNamespace) {
       namespace.pop();
@@ -98,6 +107,70 @@ public class ExpansionRequestsExtractor {
     List<YamlNode> nodes = node.asArray();
     for (YamlNode internalNode : nodes) {
       getServiceCalls(internalNode, expandableFieldsPerService, typeToService, namespace, serviceCalls);
+    }
+  }
+
+  void getFQNBasedServiceCalls(
+      YamlNode pipelineNode, List<LocalFQNExpansionInfo> localFQNRequestMetadata, Set<ExpansionRequest> serviceCalls) {
+    YamlNode internalNode = pipelineNode.getFieldOrThrow(YAMLFieldNameConstants.PIPELINE).getNode();
+    List<YamlNode> stagesList = internalNode.getFieldOrThrow(YAMLFieldNameConstants.STAGES).getNode().asArray();
+    for (YamlNode stageNode : stagesList) {
+      getServiceCallsForStage(stageNode, localFQNRequestMetadata, serviceCalls);
+    }
+  }
+
+  void getServiceCallsForStage(
+      YamlNode stageNode, List<LocalFQNExpansionInfo> localFQNRequestMetadata, Set<ExpansionRequest> serviceCalls) {
+    YamlNode stageNodeInternal = stageNode.getFieldOrThrow(YAMLFieldNameConstants.STAGE).getNode();
+    String stageType = stageNodeInternal.getType();
+    List<LocalFQNExpansionInfo> currStageRequestsData = getRequestsDataForStageType(localFQNRequestMetadata, stageType);
+    if (EmptyPredicate.isNotEmpty(currStageRequestsData)) {
+      getServiceCalls(stageNodeInternal, currStageRequestsData, serviceCalls);
+    }
+  }
+
+  List<LocalFQNExpansionInfo> getRequestsDataForStageType(
+      List<LocalFQNExpansionInfo> localFQNRequestMetadata, String stageType) {
+    return localFQNRequestMetadata.stream()
+        .filter(e -> stageType.equals(e.getStageType()))
+        .collect(Collectors.toList());
+  }
+
+  void getServiceCalls(
+      YamlNode node, List<LocalFQNExpansionInfo> currStageRequestsData, Set<ExpansionRequest> serviceCalls) {
+    if (node.isObject()) {
+      getServiceCallsForObject(node, currStageRequestsData, serviceCalls);
+    } else if (node.isArray()) {
+      getServiceCallsForArray(node, currStageRequestsData, serviceCalls);
+    }
+  }
+
+  void getServiceCallsForObject(
+      YamlNode node, List<LocalFQNExpansionInfo> currStageRequestsData, Set<ExpansionRequest> serviceCalls) {
+    List<YamlField> fields = node.fields();
+    for (YamlField field : fields) {
+      YamlNode currNode = field.getNode();
+      String yamlPath = currNode.getYamlPath();
+      String localPath = currNode.getStageLocalYamlPath();
+      List<LocalFQNExpansionInfo> selectedExpansionRequestData =
+          currStageRequestsData.stream().filter(e -> e.getLocalFQN().equals(localPath)).collect(Collectors.toList());
+      selectedExpansionRequestData.forEach(e -> {
+        ExpansionRequest expansionRequest = ExpansionRequest.builder()
+                                                .module(e.getModule())
+                                                .fqn(yamlPath)
+                                                .fieldValue(currNode.getCurrJsonNode())
+                                                .build();
+        serviceCalls.add(expansionRequest);
+      });
+      getServiceCalls(field.getNode(), currStageRequestsData, serviceCalls);
+    }
+  }
+
+  void getServiceCallsForArray(
+      YamlNode node, List<LocalFQNExpansionInfo> currStageRequestsData, Set<ExpansionRequest> serviceCalls) {
+    List<YamlNode> nodes = node.asArray();
+    for (YamlNode internalNode : nodes) {
+      getServiceCalls(internalNode, currStageRequestsData, serviceCalls);
     }
   }
 }

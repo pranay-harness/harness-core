@@ -31,6 +31,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -49,6 +50,8 @@ public class ExpansionRequestsExtractorTest extends CategoryTest {
 
   Map<String, ModuleType> typeToService;
   Map<ModuleType, Set<String>> expandableFieldsPerService;
+  List<LocalFQNExpansionInfo> localFQNRequestMetadata;
+  String pipelineYaml;
 
   private String readFile() {
     ClassLoader classLoader = getClass().getClassLoader();
@@ -62,6 +65,7 @@ public class ExpansionRequestsExtractorTest extends CategoryTest {
 
   @Before
   public void setUp() {
+    pipelineYaml = readFile();
     MockitoAnnotations.initMocks(this);
     typeToService = new HashMap<>();
     typeToService.put("Approval", ModuleType.PMS);
@@ -76,14 +80,22 @@ public class ExpansionRequestsExtractorTest extends CategoryTest {
     expandableFieldsPerService.put(
         ModuleType.CD, new HashSet<>(Arrays.asList("connectorRef", "serviceRef", "environmentRef")));
     doReturn(expandableFieldsPerService).when(expansionRequestsHelper).getExpandableFieldsPerService();
+
+    LocalFQNExpansionInfo sloExpansion =
+        LocalFQNExpansionInfo.builder().module(ModuleType.CV).stageType("Deployment").localFQN("stage/spec").build();
+    LocalFQNExpansionInfo effExpansion = LocalFQNExpansionInfo.builder()
+                                             .module(ModuleType.CE)
+                                             .stageType("Deployment")
+                                             .localFQN("stage/spec/execution")
+                                             .build();
+    localFQNRequestMetadata = Arrays.asList(sloExpansion, effExpansion);
   }
 
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testFetchExpansionRequests() {
-    String pipelineYaml = readFile();
-    assertThat(pipelineYaml).isNotNull();
+    doReturn(Collections.emptyList()).when(expansionRequestsHelper).getLocalFQNRequestMetadata();
     Set<ExpansionRequest> expansionRequests = expansionRequestsExtractor.fetchExpansionRequests(pipelineYaml);
     assertThat(expansionRequests).hasSize(5);
     assertThat(expansionRequests)
@@ -134,5 +146,31 @@ public class ExpansionRequestsExtractorTest extends CategoryTest {
     assertThat(serviceCalls).hasSize(1);
     ExpansionRequest request = new ArrayList<>(serviceCalls).get(0);
     assertThat(request.getFqn()).isEqualTo("spec/spec/spec/connectorRef");
+  }
+
+  @Test
+  @Owner(developers = NAMAN)
+  @Category(UnitTests.class)
+  public void testGetFQNBasedServiceCalls() throws IOException {
+    doReturn(localFQNRequestMetadata).when(expansionRequestsHelper).getLocalFQNRequestMetadata();
+
+    YamlNode pipelineNode = YamlUtils.readTree(pipelineYaml).getNode();
+    Set<ExpansionRequest> serviceCalls = new HashSet<>();
+    expansionRequestsExtractor.getFQNBasedServiceCalls(pipelineNode, localFQNRequestMetadata, serviceCalls);
+    assertThat(serviceCalls).hasSize(2);
+    List<ExpansionRequest> serviceCallsList = new ArrayList<>(serviceCalls);
+    ExpansionRequest expansionRequest0 = serviceCallsList.get(0);
+    if (expansionRequest0.getModule().equals(ModuleType.CV)) {
+      assertThat(expansionRequest0.getFqn()).isEqualTo("pipeline/stages/[1]/stage/spec");
+      ExpansionRequest expansionRequest1 = serviceCallsList.get(1);
+      assertThat(expansionRequest1.getModule()).isEqualTo(ModuleType.CE);
+      assertThat(expansionRequest1.getFqn()).isEqualTo("pipeline/stages/[1]/stage/spec/execution");
+      return;
+    }
+    assertThat(expansionRequest0.getModule()).isEqualTo(ModuleType.CE);
+    assertThat(expansionRequest0.getFqn()).isEqualTo("pipeline/stages/[1]/stage/spec/execution");
+    ExpansionRequest expansionRequest1 = serviceCallsList.get(1);
+    assertThat(expansionRequest1.getModule()).isEqualTo(ModuleType.CV);
+    assertThat(expansionRequest1.getFqn()).isEqualTo("pipeline/stages/[1]/stage/spec");
   }
 }

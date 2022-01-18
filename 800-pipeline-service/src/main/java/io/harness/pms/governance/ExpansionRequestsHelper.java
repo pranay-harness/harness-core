@@ -20,6 +20,7 @@ import io.harness.pms.yaml.YAMLFieldNameConstants;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -67,5 +68,27 @@ public class ExpansionRequestsHelper {
       supportedStepTypes.forEach(type -> typeToModule.put(type, module));
     });
     return typeToModule;
+  }
+
+  public List<LocalFQNExpansionInfo> getLocalFQNRequestMetadata() {
+    List<LocalFQNExpansionInfo> localFQNExpansionInfo = new ArrayList<>();
+
+    List<PmsSdkInstance> activeInstances = pmsSdkInstanceService.getActiveInstances();
+    for (PmsSdkInstance sdkInstance : activeInstances) {
+      String sdkInstanceName = sdkInstance.getName();
+      ModuleType module = ModuleType.fromString(sdkInstanceName);
+      List<JsonExpansionInfo> jsonExpansionInfo =
+          sdkInstance.getJsonExpansionInfo()
+              .stream()
+              .filter(info -> info.getExpansionType().equals(ExpansionRequestType.LOCAL_FQN))
+              .collect(Collectors.toList());
+      jsonExpansionInfo.forEach(info
+          -> localFQNExpansionInfo.add(LocalFQNExpansionInfo.builder()
+                                           .module(module)
+                                           .localFQN(info.getKey())
+                                           .stageType(info.getStageType().getType())
+                                           .build()));
+    }
+    return localFQNExpansionInfo;
   }
 }
