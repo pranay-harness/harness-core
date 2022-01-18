@@ -429,3 +429,5 @@ replace_key_value pipelineEventConsumersConfig.createPlan.threads "$CREATE_PLAN_
 replace_key_value pipelineEventConsumersConfig.planNotify.threads "$PLAN_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value segmentConfiguration.url "$SEGMENT_URL"
+replace_key_value secretsConfiguration.gcpSecretManagerProject "$GCP_SECRET_MANAGER_PROJECT"
+replace_key_value secretsConfiguration.secretResolutionEnabled "$RESOLVE_SECRETS"

@@ -130,6 +130,7 @@ import io.harness.registrars.PipelineServiceFacilitatorRegistrar;
 import io.harness.registrars.PipelineServiceStepRegistrar;
 import io.harness.request.RequestContextFilter;
 import io.harness.resource.VersionInfoResource;
+import io.harness.secret.ConfigSecretUtils;
 import io.harness.security.NextGenAuthenticationFilter;
 import io.harness.security.annotations.NextGenManagerAuth;
 import io.harness.serializer.PipelineServiceUtilAdviserRegistrar;
@@ -270,6 +271,7 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
   public void run(PipelineServiceConfiguration appConfig, Environment environment) {
     log.info("Starting Pipeline Service Application ...");
     MaintenanceController.forceMaintenance(true);
+    ConfigSecretUtils.resolveSecrets(appConfig.getSecretsConfiguration(), appConfig);
 
     ExecutorModule.getInstance().setExecutorService(ThreadPool.create(appConfig.getCommonPoolConfig().getCorePoolSize(),
         appConfig.getCommonPoolConfig().getMaxPoolSize(), appConfig.getCommonPoolConfig().getIdleTime(),
