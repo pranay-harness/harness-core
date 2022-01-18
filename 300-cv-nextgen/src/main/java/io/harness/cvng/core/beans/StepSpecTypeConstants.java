@@ -13,5 +13,5 @@ import io.harness.annotations.dev.OwnedBy;
 
 @OwnedBy(CV)
 public interface StepSpecTypeConstants {
-  String CV_CREATE = "CVCreate";
+  String VERIFY = "Verify";
 }

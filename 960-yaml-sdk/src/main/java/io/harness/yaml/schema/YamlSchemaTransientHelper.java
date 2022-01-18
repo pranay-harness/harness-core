@@ -46,7 +46,7 @@ public class YamlSchemaTransientHelper {
       add(EntityType.TEMPLATE);
       add(EntityType.SERVICENOW_APPROVAL_STEP);
       add(EntityType.JIRA_APPROVAL_STEP);
-      add(EntityType.CV_VERIFY_STEP);
+      add(EntityType.VERIFY_STEP);
     }
   };
 
