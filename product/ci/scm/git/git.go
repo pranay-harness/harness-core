@@ -207,13 +207,13 @@ func GetLatestCommit(ctx context.Context, request *pb.GetLatestCommitRequest, lo
 	}
 	if request.GetBranch() != "" && strings.Contains(ref, "/") {
 		switch client.Driver {
-			case scm.DriverBitbucket,
-				scm.DriverStash:
-				ref = scm.TrimRef(ref)
-				branch, _, err := client.Git.FindBranch(ctx, request.GetSlug(), ref)
-				if err == nil {
-					ref = branch.Sha
-				}
+		case scm.DriverBitbucket,
+			scm.DriverStash:
+			ref = scm.TrimRef(ref)
+			branch, _, err := client.Git.FindBranch(ctx, request.GetSlug(), ref)
+			if err == nil {
+				ref = branch.Sha
+			}
 		}
 	}
 
@@ -280,8 +280,8 @@ func FindCommit(ctx context.Context, request *pb.FindCommitRequest, log *zap.Sug
 	log.Infow("FindCommit success", "slug", request.GetSlug(), "commitId", request.GetRef(), "elapsed_time_ms", utils.TimeSince(start))
 
 	out = &pb.FindCommitResponse{
-		Commit:   commit,
-		Status:   int32(response.Status),
+		Commit: commit,
+		Status: int32(response.Status),
 	}
 	return out, nil
 }
@@ -472,9 +472,10 @@ func convertRepoList(from []*scm.Repository) (to []*pb.Repository) {
 
 func convertChange(from *scm.Change) *pb.PRFile {
 	return &pb.PRFile{
-		Path:    from.Path,
-		Added:   from.Added,
-		Deleted: from.Deleted,
-		Renamed: from.Renamed,
+		Path:         from.Path,
+		Added:        from.Added,
+		Deleted:      from.Deleted,
+		Renamed:      from.Renamed,
+		PrevFilePath: from.PrevFilePath,
 	}
 }
