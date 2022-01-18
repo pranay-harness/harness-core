@@ -46,7 +46,6 @@ import io.harness.connector.ConnectorInfoDTO;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
-import io.harness.delegate.exception.HelmNGException;
 import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.git.GitFetchFilesConfig;
 import io.harness.delegate.task.git.GitFetchRequest;
@@ -61,7 +60,6 @@ import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.delegate.task.k8s.ManifestDelegateConfig;
 import io.harness.eraro.Level;
 import io.harness.exception.ExceptionUtils;
-import io.harness.exception.HelmClientRuntimeException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.expression.ExpressionEvaluatorUtils;
 import io.harness.git.model.FetchFilesResult;
@@ -606,16 +604,6 @@ public class NativeHelmStepHelper extends CDStepHelper {
     return stepResponseBuilder;
   }
 
-  public Exception getRootCause(Exception e) {
-    while (e != null) {
-      if (e.getMessage() != null) {
-        return e;
-      }
-      e = (Exception) e.getCause();
-    }
-    return e;
-  }
-
   public StepResponse handleTaskException(
       Ambiance ambiance, NativeHelmExecutionPassThroughData executionPassThroughData, Exception e) throws Exception {
     // Trying to figure out if exception is coming from helm task or it is an exception from delegate service.
@@ -630,7 +618,7 @@ public class NativeHelmStepHelper extends CDStepHelper {
                                   .addFailureTypes(FailureType.APPLICATION_FAILURE)
                                   .setLevel(Level.ERROR.name())
                                   .setCode(GENERAL_ERROR.name())
-                                  .setMessage(emptyIfNull(ExceptionUtils.getMessage(getRootCause(e))))
+                                  .setMessage(emptyIfNull(ExceptionUtils.getMessage(e)))
                                   .build();
 
     return StepResponse.builder()

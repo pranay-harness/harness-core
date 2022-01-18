@@ -11,8 +11,6 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 public interface HelmDeployServiceNG {
   void setLogStreamingClient(ILogStreamingTaskClient iLogStreamingTaskClient);

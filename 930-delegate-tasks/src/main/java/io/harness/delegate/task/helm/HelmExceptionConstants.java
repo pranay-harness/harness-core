@@ -35,10 +35,13 @@ public class HelmExceptionConstants {
     public static final String HINT_CHART_VERSION_IMPROPER_CONSTRAINT = "Provide existing and valid helm chart version";
     public static final String HINT_INVALID_VALUE_TYPE =
         "Could not validate value type. Please provide valid type of values.";
+    public static final String HINT_INVALID_YAML = "K8s yaml is invalid/incorrect.";
     public static final String DEFAULT_HINT_HELM_INSTALL =
         "Make sure that the helm chart can be installed successfully using the helm cli.";
     public static final String DEFAULT_HINT_HELM_HIST = "Helm history cmd has failed";
     public static final String DEFAULT_HINT_HELM_LIST_RELEASE = "Helm List releases cmd has failed";
+    public static final String DEFAULT_HINT_HELM_RENDER_CHART = "Failed to render helm chart";
+    public static final String DEFAULT_HINT_HELM_ROLLBACK = "Failed to rollback helm chart";
     public static final String HINT_UNKNOWN_COMMAND_FLAG = "Helm incorrect command flag";
 
     public Hints() {
@@ -65,9 +68,14 @@ public class HelmExceptionConstants {
         "Given helm chart contains invalid type values. Please provide correct type values within the release manifest.";
     public static final String EXPLAIN_UNKNOWN_COMMAND_FLAG =
         "Provided Command flag is incorrect or invalid. Please check.";
+    public static final String EXPLAIN_INVALID_YAML =
+        "Error processing yaml manifest. Please check the indentation, any invalid/missing fields etc. For more details, please check logs.";
     public static final String DEFAULT_EXPLAIN_HELM_INSTALL = "Unable to install helm chart.";
     public static final String DEFAULT_EXPLAIN_HELM_HIST = "Unable to execute release history cmd";
     public static final String DEFAULT_EXPLAIN_LIST_RELEASE = "Unable to execute list release cmd";
+    public static final String DEFAULT_EXPLAIN_RENDER_CHART =
+        "Unable to render helm chart, pls check logs for further details";
+    public static final String DEFAULT_EXPLAIN_ROLLBACK = "Unable to rollback helm chart. ";
     public Explanations() {
       throw new UnsupportedOperationException("not supported");
     }

@@ -34,12 +34,11 @@ import io.harness.cdng.k8s.beans.StepExceptionPassThroughData;
 import io.harness.cdng.stepsdependency.constants.OutcomeExpressionConstants;
 import io.harness.common.NGTimeConversionHelper;
 import io.harness.delegate.beans.logstreaming.UnitProgressData;
+import io.harness.delegate.exception.HelmNGException;
 import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmCommandRequestNG;
 import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
-import io.harness.delegate.task.helm.HelmListReleaseResponseNG;
-import io.harness.delegate.task.helm.HelmReleaseHistoryCmdResponseNG;
 import io.harness.exception.GeneralException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
@@ -150,7 +149,7 @@ public class HelmDeployStepTest extends AbstractHelmStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testFinalizeExecutionException() throws Exception {
     final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
-    final Exception thrownException = new GeneralException("Something went wrong");
+    final Exception thrownException = new HelmNGException(0, new GeneralException("Something went wrong"));
     final NativeHelmExecutionPassThroughData executionPassThroughData =
         NativeHelmExecutionPassThroughData.builder().build();
     final StepResponse stepResponse = StepResponse.builder().status(Status.FAILED).build();
@@ -247,54 +246,5 @@ public class HelmDeployStepTest extends AbstractHelmStepExecutorTestBase {
                        NativeHelmExecutionPassThroughData.builder().build(), () -> helmCmdExecResponseNGFail)
                    .getStatus())
         .isEqualTo(Status.FAILED);
-  }
-
-  @Test
-  @Owner(developers = ACHYUTH)
-  @Category(UnitTests.class)
-  public void testFinalizeExecutionFailedHelmHist() throws Exception {
-    final HelmDeployStepParams stepParameters = HelmDeployStepParams.infoBuilder().build();
-    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
-
-    HelmCmdExecResponseNG helmCmdExecResponseNGFail =
-        HelmCmdExecResponseNG.builder()
-            .helmCommandResponse(HelmReleaseHistoryCmdResponseNG.builder()
-                                     .releaseInfoList(Collections.emptyList())
-                                     .output("Some weird error")
-                                     .build())
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .errorMessage("Some weird error")
-            .commandExecutionStatus(FAILURE)
-            .build();
-    assertThat(helmDeployStep
-                   .finalizeExecutionWithSecurityContext(ambiance, stepElementParameters,
-                       NativeHelmExecutionPassThroughData.builder().build(), () -> helmCmdExecResponseNGFail)
-                   .getStatus())
-        .isEqualTo(Status.FAILED);
-  }
-
-  @Test
-  @Owner(developers = ACHYUTH)
-  @Category(UnitTests.class)
-  public void testFinalizeExecutionFailedListRelease() throws Exception {
-    final HelmDeployStepParams stepParameters = HelmDeployStepParams.infoBuilder().build();
-    final StepElementParameters stepElementParameters = StepElementParameters.builder().spec(stepParameters).build();
-
-    HelmCmdExecResponseNG helmCmdExecResponseNGFail =
-        HelmCmdExecResponseNG.builder()
-            .helmCommandResponse(HelmListReleaseResponseNG.builder()
-                                     .releaseInfoList(Collections.emptyList())
-                                     .output("Some weird error")
-                                     .build())
-            .commandUnitsProgress(UnitProgressData.builder().build())
-            .errorMessage("Some weird error")
-            .commandExecutionStatus(FAILURE)
-            .build();
-    assertThat(helmDeployStep
-                   .finalizeExecutionWithSecurityContext(ambiance, stepElementParameters,
-                       NativeHelmExecutionPassThroughData.builder().build(), () -> helmCmdExecResponseNGFail)
-                   .getFailureInfo()
-                   .getErrorMessage())
-        .contains("Some weird error");
   }
 }

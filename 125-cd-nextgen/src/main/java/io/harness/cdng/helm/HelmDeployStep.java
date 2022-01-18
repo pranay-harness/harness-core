@@ -30,6 +30,7 @@ import io.harness.delegate.exception.HelmNGException;
 import io.harness.delegate.task.helm.HelmCmdExecResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCmdResponseNG;
 import io.harness.delegate.task.helm.HelmInstallCommandRequestNG;
+import io.harness.exception.ExceptionUtils;
 import io.harness.executions.steps.ExecutionNodeType;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.plancreator.steps.common.StepElementParameters;
@@ -121,13 +122,17 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
     try {
       helmCmdExecResponseNG = (HelmCmdExecResponseNG) responseDataSupplier.get();
     } catch (Exception e) {
-      Exception ex = (Exception) e.getCause();
-      nativeHelmDeployOutcomeBuilder.prevReleaseVersion(((HelmNGException) ex).getPrevReleaseVersion());
-      nativeHelmDeployOutcomeBuilder.newReleaseVersion(((HelmNGException) ex).getPrevReleaseVersion() + 1);
+      HelmNGException ex = ExceptionUtils.cause(HelmNGException.class, e);
+      if (ex == null) { // in case of any other unexpected exception (from fetch files task)
+        log.error("Error while processing Helm Task response: {}", ExceptionUtils.getMessage(e), e);
+        return nativeHelmStepHelper.handleTaskException(ambiance, nativeHelmExecutionPassThroughData, e);
+      }
+      nativeHelmDeployOutcomeBuilder.prevReleaseVersion(ex.getPrevReleaseVersion());
+      nativeHelmDeployOutcomeBuilder.newReleaseVersion(ex.getPrevReleaseVersion() + 1);
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_DEPLOY_OUTCOME,
           nativeHelmDeployOutcomeBuilder.build(), StepOutcomeGroup.STEP.name());
-      Exception exc = (Exception) ex.getCause();
-      log.error("Error while processing Helm Task response: {}", exc.getMessage(), exc);
+
+      log.error("Error while processing Helm Task response: {}", ExceptionUtils.getMessage(ex), ex);
 
       return nativeHelmStepHelper.handleTaskException(ambiance, nativeHelmExecutionPassThroughData, e);
     }

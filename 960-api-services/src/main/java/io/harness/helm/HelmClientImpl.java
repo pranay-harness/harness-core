@@ -472,7 +472,7 @@ public class HelmClientImpl implements HelmClient {
 
   @Override
   public String getHelmPath(HelmVersion helmVersion) {
-    return k8sGlobalConfigService.getHelmPath(helmVersion);
+    return helmVersion == HelmVersion.V3 ? k8sGlobalConfigService.getHelmPath(HelmVersion.V3) : "helm";
   }
 
   public HelmCliResponse fetchCliResponseWithExceptionHandling(String command, HelmCliCommandType commandType,

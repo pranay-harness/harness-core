@@ -150,7 +150,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   public HelmCommandResponseNG deploy(HelmInstallCommandRequestNG commandRequest) throws IOException {
     LogCallback logCallback = commandRequest.getLogCallback();
     HelmChartInfo helmChartInfo = null;
-    int prevVersion = -100;
+    int prevVersion = -1;
     try {
       HelmInstallCmdResponseNG commandResponse;
       logCallback.saveExecutionLog(
@@ -473,9 +473,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return new HelmCommandResponseNG(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
     } catch (Exception e) {
-      log.error("Helm rollback failed:", e);
-      return new HelmCommandResponseNG(
-          CommandExecutionStatus.FAILURE, e.getMessage() == null ? ExceptionUtils.getMessage(e) : e.getMessage());
+      String msg = e.getMessage() == null ? ExceptionUtils.getMessage(e) : e.getMessage();
+      log.error("Helm rollback failed: " + msg, e);
+      throw new HelmNGException(-1, e);
+      //      return new HelmCommandResponseNG(
+      //          CommandExecutionStatus.FAILURE, e.getMessage() == null ? ExceptionUtils.getMessage(e) :
+      //          e.getMessage());
     } finally {
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
     }

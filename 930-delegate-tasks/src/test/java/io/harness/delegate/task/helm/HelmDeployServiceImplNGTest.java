@@ -602,7 +602,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(k8sTaskHelperBase)
         .saveReleaseHistory(any(), eq(helmRollbackCommandRequestNG.getReleaseName()), anyString(), anyBoolean());
 
-    assertThatCode(() -> helmDeployService.rollback(helmRollbackCommandRequestNG)).doesNotThrowAnyException();
+    assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
+        .isInstanceOf(HelmNGException.class);
 
     // K8SteadyStateCheckEnabled true -- valid releaseHistory
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -621,9 +622,10 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     // K8SteadyStateCheckEnabled true -- failed release
     releaseHistory.setReleaseStatus(Release.Status.Failed);
 
-    HelmCommandResponseNG responseNG = executeRollbackWithReleaseHistory(releaseHistory, 2);
-    assertThat(responseNG.getOutput())
-        .contains("Invalid status for release with number 2. Expected 'Succeeded' status, actual status is 'Failed'");
+    assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 2))
+        .isInstanceOf(HelmNGException.class)
+        .getRootCause()
+        .hasMessage("Invalid status for release with number 2. Expected 'Succeeded' status, actual status is 'Failed'");
   }
 
   @Test
@@ -650,9 +652,10 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     IOException ioException = new IOException("Some I/O issue");
     doThrow(ioException).when(helmClient).rollback(any(HelmCommandData.class));
 
-    HelmCommandResponseNG helmCommandResponse = helmDeployService.rollback(helmRollbackCommandRequestNG);
-    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(helmCommandResponse.getOutput()).contains("Some I/O issue");
+    assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
+        .isInstanceOf(HelmNGException.class)
+        .getRootCause()
+        .hasMessage("Some I/O issue");
   }
 
   @Test
