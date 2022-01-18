@@ -19,7 +19,6 @@ import io.harness.lock.AcquiredLock;
 import io.harness.lock.PersistentLocker;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
 import io.harness.pms.contracts.plan.InitializeSdkResponse;
-import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.contracts.plan.PmsServiceGrpc.PmsServiceImplBase;
 import io.harness.pms.contracts.plan.Types;
 import io.harness.pms.contracts.steps.SdkStep;
