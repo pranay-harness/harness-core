@@ -49,6 +49,10 @@ public class GitFullSyncJob implements PersistentEntity, PersistentRegularIterab
   String projectIdentifier;
   String yamlGitConfigIdentifier;
   String syncStatus;
+  private boolean createPullRequest;
+  String targetBranch;
+  String branch;
+  String prTitle;
 
   int retryCount;
   @FdIndex @NonFinal Long nextRuntime;

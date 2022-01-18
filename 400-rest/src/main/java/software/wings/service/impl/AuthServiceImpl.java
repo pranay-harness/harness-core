@@ -51,6 +51,7 @@ import io.harness.exception.UnauthorizedException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.logging.AutoLogContext;
+import io.harness.outbox.api.OutboxService;
 import io.harness.persistence.HPersistence;
 import io.harness.security.DelegateTokenAuthenticator;
 import io.harness.security.dto.UserPrincipal;
@@ -71,6 +72,9 @@ import software.wings.beans.Workflow;
 import software.wings.beans.security.AccountPermissions;
 import software.wings.beans.security.AppPermission;
 import software.wings.beans.security.UserGroup;
+import software.wings.core.events.Login2FAEvent;
+import software.wings.core.events.LoginEvent;
+import software.wings.core.events.UnsuccessfulLoginEvent;
 import software.wings.core.managerConfiguration.ConfigurationController;
 import software.wings.dl.GenericDbCache;
 import software.wings.logcontext.UserLogContext;
@@ -160,6 +164,7 @@ public class AuthServiceImpl implements AuthService {
   @Inject private AuditServiceHelper auditServiceHelper;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private DelegateTokenAuthenticator delegateTokenAuthenticator;
+  @Inject private OutboxService outboxService;
 
   @Inject
   public AuthServiceImpl(GenericDbCache dbCache, HPersistence persistence, UserService userService,
@@ -1228,6 +1233,31 @@ public class AuthServiceImpl implements AuthService {
   public void auditUnsuccessfulLogin(String accountId, User user) {
     if (Objects.nonNull(user) && Objects.nonNull(accountId)) {
       auditServiceHelper.reportForAuditingUsingAccountId(accountId, null, user, Event.Type.UNSUCCESSFUL_LOGIN);
+    }
+  }
+
+  @Override
+  public void auditLoginToNg(List<String> accountIds, User loggedInUser) {
+    if (Objects.nonNull(loggedInUser) && Objects.nonNull(accountIds)) {
+      accountIds.forEach(accountId
+          -> outboxService.save(
+              new LoginEvent(accountId, loggedInUser.getUuid(), loggedInUser.getEmail(), loggedInUser.getName())));
+    }
+  }
+
+  @Override
+  public void auditLogin2FAToNg(List<String> accountIds, User loggedInUser) {
+    if (Objects.nonNull(loggedInUser) && Objects.nonNull(accountIds)) {
+      accountIds.forEach(accountId
+          -> outboxService.save(
+              new Login2FAEvent(accountId, loggedInUser.getUuid(), loggedInUser.getEmail(), loggedInUser.getName())));
+    }
+  }
+
+  @Override
+  public void auditUnsuccessfulLoginToNg(String accountId, User user) {
+    if (Objects.nonNull(user) && Objects.nonNull(accountId)) {
+      outboxService.save(new UnsuccessfulLoginEvent(accountId, user.getUuid(), user.getEmail(), user.getName()));
     }
   }
 

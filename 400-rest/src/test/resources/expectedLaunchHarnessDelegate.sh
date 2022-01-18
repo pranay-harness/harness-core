@@ -29,7 +29,6 @@ sudo docker run -d --restart unless-stopped --hostname=$(hostname -f | head -c 6
 -e POLL_FOR_TASKS=false \
 -e HELM_DESIRED_VERSION= \
 -e CF_PLUGIN_HOME= \
--e USE_CDN=false \
 -e CDN_URL=http://localhost:9500 \
 -e JRE_VERSION=1.8.0_242 \
 -e HELM3_PATH= \

@@ -30,9 +30,6 @@ import io.harness.app.GraphQLModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
-import io.harness.capability.CapabilitySubjectPermissionCrudObserver;
-import io.harness.capability.service.CapabilityService;
-import io.harness.capability.service.CapabilityServiceImpl;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.KubernetesClusterHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
@@ -53,7 +50,6 @@ import io.harness.delegate.beans.DelegateSyncTaskResponse;
 import io.harness.delegate.beans.DelegateTaskProgressResponse;
 import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
-import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
 import io.harness.event.EventsModule;
 import io.harness.event.usagemetrics.EventsModuleHelper;
 import io.harness.eventframework.dms.DmsObserverEventProducer;
@@ -856,9 +852,6 @@ public class NGMigrationApplication extends Application<MigratorConfig> {
     delegateTaskService.getDelegateTaskStatusObserverSubject().register(
         injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
-    delegateServiceImpl.getSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
-
     DelegateProfileServiceImpl delegateProfileService =
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class));
     DelegateProfileEventHandler delegateProfileEventHandler =
@@ -874,11 +867,6 @@ public class NGMigrationApplication extends Application<MigratorConfig> {
     perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
         injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
     delegateServiceImpl.getSubject().register(perpetualTaskService);
-
-    CapabilityServiceImpl capabilityService =
-        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
-    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
   }
 
   /**
@@ -1078,17 +1066,6 @@ public class NGMigrationApplication extends Application<MigratorConfig> {
                                     .build());
             remoteObservers.add(RemoteObserver.builder()
                                     .subjectCLass(DelegateServiceImpl.class)
-                                    .observerClass(DelegateObserver.class)
-                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
-                                    .observer(PerpetualTaskServiceImpl.class)
-                                    .build());
-            remoteObservers.add(RemoteObserver.builder()
-                                    .subjectCLass(DelegateProfileServiceImpl.class)
-                                    .observerClass(DelegateObserver.class)
-                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
-                                    .build());
-            remoteObservers.add(RemoteObserver.builder()
-                                    .subjectCLass(DelegateServiceImpl.class)
                                     .observerClass(DelegateProfileObserver.class)
                                     .observer(DelegateProfileEventHandler.class)
                                     .build());
@@ -1106,11 +1083,6 @@ public class NGMigrationApplication extends Application<MigratorConfig> {
                                     .subjectCLass(PerpetualTaskServiceImpl.class)
                                     .observerClass(PerpetualTaskStateObserver.class)
                                     .observer(DelegateInsightsServiceImpl.class)
-                                    .build());
-            remoteObservers.add(RemoteObserver.builder()
-                                    .subjectCLass(CapabilityServiceImpl.class)
-                                    .observerClass(CapabilitySubjectPermissionCrudObserver.class)
-                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
                                     .build());
             remoteObservers.add(RemoteObserver.builder()
                                     .subjectCLass(PerpetualTaskServiceImpl.class)

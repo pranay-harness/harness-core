@@ -189,6 +189,18 @@ if [[ "" != "$NG_MANAGER_CLIENT_BASEURL" ]]; then
   yq write -i $CONFIG_FILE ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
 fi
 
+if [[ "" != "$CENG_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.baseUrl "$CENG_CLIENT_BASEURL"
+fi
+
+if [[ "" != "$CENG_CLIENT_READ_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.readTimeOutSeconds "$CENG_CLIENT_READ_TIMEOUT"
+fi
+
+if [[ "" != "$CENG_CLIENT_CONNECT_TIMEOUT" ]]; then
+  yq write -i $CONFIG_FILE ceNextGenClientConfig.connectTimeOutSeconds "$CENG_CLIENT_CONNECT_TIMEOUT"
+fi
+
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then
   yq write -i $CONFIG_FILE nextGen.jwtAuthSecret "$JWT_AUTH_SECRET"
 fi

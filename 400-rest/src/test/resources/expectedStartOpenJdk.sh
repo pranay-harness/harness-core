@@ -203,25 +203,25 @@ if [ ! -d $JRE_DIR -o ! -e $JRE_BINARY ]; then
   JVM_TAR_FILENAME=$(basename "$JVM_URL")
   curl $MANAGER_PROXY_CURL -#kLO $JVM_URL
   echo "Extracting JRE packages..."
-  rm -rf $JRE_DIR
-  tar xzf $JVM_TAR_FILENAME
-  rm -f $JVM_TAR_FILENAME
+rm -rf $JRE_DIR
+tar xzf $JVM_TAR_FILENAME
+rm -f $JVM_TAR_FILENAME
 fi
 
 if [ ! -d $JRE_DIR  -o ! -e $JRE_BINARY ]; then
-  echo "No JRE available. Exiting."
-  exit 1
+echo "No JRE available. Exiting."
+exit 1
 fi
 
-USE_CDN=false
+export DEPLOY_MODE=KUBERNETES
 
 echo "Checking Watcher latest version..."
 WATCHER_STORAGE_URL=http://localhost:8888
 REMOTE_WATCHER_LATEST=$(curl $MANAGER_PROXY_CURL -ks $WATCHER_STORAGE_URL/watcherci.txt)
-if [ "$USE_CDN" = false ]; then
-    REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
+REMOTE_WATCHER_URL=$WATCHER_STORAGE_URL/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 else
-    REMOTE_WATCHER_URL=http://localhost:9500/builds/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
+REMOTE_WATCHER_URL=http://localhost:9500/builds/$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f2)
 fi
 REMOTE_WATCHER_VERSION=$(echo $REMOTE_WATCHER_LATEST | cut -d " " -f1)
 
@@ -239,11 +239,9 @@ else
   fi
 fi
 
-export DEPLOY_MODE=KUBERNETES
-
 if [[ $DEPLOY_MODE != "KUBERNETES" ]]; then
-  echo "Checking Delegate latest version..."
-  DELEGATE_STORAGE_URL=http://localhost:8888
+echo "Checking Delegate latest version..."
+DELEGATE_STORAGE_URL=http://localhost:8888
   REMOTE_DELEGATE_LATEST=$(curl $MANAGER_PROXY_CURL -ks $DELEGATE_STORAGE_URL/delegateci.txt)
   REMOTE_DELEGATE_URL=$DELEGATE_STORAGE_URL/$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f2)
   REMOTE_DELEGATE_VERSION=$(echo $REMOTE_DELEGATE_LATEST | cut -d " " -f1)

@@ -23,10 +23,11 @@ public class GitFullSyncConfigDTO {
   @Schema(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) private String projectIdentifier;
   @Schema(description = GitSyncApiConstants.DEFAULT_BRANCH_PARAM_MESSAGE) private String baseBranch;
   @Schema(description = "Branch on which Entities will be pushed") private String branch;
-  @Schema(description = "PR Title") private String message;
+  @Schema(description = "PR Title") private String prTitle;
   @Schema(description = "This checks whether to create a pull request. Its default value is False")
   private boolean createPullRequest;
   @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) private String repoIdentifier;
   @Schema(description = "Checks the new Branch") boolean isNewBranch;
   @Schema(description = "Target Branch for pull request") String targetBranch;
+  @Schema(description = "Root Folder Path where entities will be pushed") String rootFolder;
 }

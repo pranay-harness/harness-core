@@ -129,7 +129,7 @@ public class StatusUtils {
     switch (status) {
       case RUNNING:
         return EnumSet.of(QUEUED, ASYNC_WAITING, APPROVAL_WAITING, RESOURCE_WAITING, TASK_WAITING, TIMED_WAITING,
-            INTERVENTION_WAITING, PAUSED, PAUSING);
+            INTERVENTION_WAITING, PAUSED, PAUSING, APPROVAL_REJECTED);
       case INTERVENTION_WAITING:
         return BROKE_STATUSES;
       case TIMED_WAITING:
@@ -144,7 +144,7 @@ public class StatusUtils {
         return EnumSet.of(QUEUED, RUNNING, PAUSING);
       case DISCONTINUING:
         return EnumSet.of(QUEUED, RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
-            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED, EXPIRED);
+            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED, EXPIRED, APPROVAL_REJECTED);
       case QUEUED:
         return EnumSet.of(PAUSED, PAUSING);
       case ABORTED:
@@ -157,7 +157,7 @@ public class StatusUtils {
       case SUCCEEDED:
         return EnumSet.of(INTERVENTION_WAITING, RUNNING, QUEUED);
       case IGNORE_FAILED:
-        return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING);
+        return EnumSet.of(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING, APPROVAL_REJECTED);
       default:
         throw new IllegalStateException("Unexpected value: " + status);
     }

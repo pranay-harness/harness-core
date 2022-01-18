@@ -22,6 +22,7 @@ import io.harness.exception.ApprovalStepNGException;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.plan.execution.SetupAbstractionKeys;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.yaml.ParameterField;
@@ -115,6 +116,29 @@ public class ServiceNowApprovalStepTest extends CategoryTest {
     StepResponse response =
         serviceNowApprovalStep.handleAsyncResponse(ambiance, parameters, Collections.singletonMap("key", responseData));
     assertThat(response.getStatus()).isEqualTo(Status.SUCCEEDED);
+    assertThat(response.getStepOutcomes().iterator().next().getOutcome())
+        .isNotNull()
+        .isInstanceOf(ServiceNowApprovalOutCome.class);
+  }
+
+  @Test
+  @Owner(developers = PRABU)
+  @Category(UnitTests.class)
+  public void testHandleAsyncResponseRejected() {
+    Ambiance ambiance = buildAmbiance();
+    StepElementParameters parameters = getStepElementParameters();
+
+    ServiceNowApprovalResponseData responseData =
+        ServiceNowApprovalResponseData.builder().instanceId(INSTANCE_ID).build();
+    ServiceNowApprovalInstance approvalInstance = ServiceNowApprovalInstance.builder().build();
+    approvalInstance.setStatus(ApprovalStatus.REJECTED);
+    doReturn(approvalInstance).when(approvalInstanceService).get(INSTANCE_ID);
+    StepResponse response =
+        serviceNowApprovalStep.handleAsyncResponse(ambiance, parameters, Collections.singletonMap("key", responseData));
+    assertThat(response.getStatus()).isEqualTo(Status.APPROVAL_REJECTED);
+    assertThat(response.getFailureInfo().getFailureData(0).getFailureTypesList())
+        .containsExactly(FailureType.UNKNOWN_FAILURE);
+    assertThat(response.getFailureInfo().getFailureData(0).getMessage()).isEqualTo("Approval Step has been Rejected");
     assertThat(response.getStepOutcomes().iterator().next().getOutcome())
         .isNotNull()
         .isInstanceOf(ServiceNowApprovalOutCome.class);

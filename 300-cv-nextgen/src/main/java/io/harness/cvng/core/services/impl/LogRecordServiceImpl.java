@@ -10,6 +10,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.beans.LogRecordDTO;
+import io.harness.cvng.core.beans.demo.DemoTemplate;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.LogRecord.LogRecordKeys;
@@ -22,13 +23,19 @@ import io.harness.serializer.JsonUtils;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.base.Charsets;
+import com.google.common.collect.Iterators;
 import com.google.common.io.Resources;
 import com.google.inject.Inject;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class LogRecordServiceImpl implements LogRecordService {
@@ -67,11 +74,11 @@ public class LogRecordServiceImpl implements LogRecordService {
 
   @Override
   public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException {
+      DemoTemplate demoTemplate, Instant startTime, Instant endTime) throws IOException {
     List<LogRecordDTO> logRecordsToBeSaved = new ArrayList<>();
     Instant time = startTime;
 
-    String demoTemplatePath = getDemoTemplate(verificationTaskId, endTime, demoTemplateIdentifier);
+    String demoTemplatePath = getDemoTemplate(verificationTaskId, endTime, demoTemplate);
     List<List<LogRecordDTO>> logRecordsList =
         JsonUtils.asObject(demoTemplatePath, new TypeReference<List<List<LogRecordDTO>>>() {});
     int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
@@ -85,7 +92,37 @@ public class LogRecordServiceImpl implements LogRecordService {
         logRecordDTO.setVerificationTaskId(verificationTaskId);
         logRecordDTO.setTimestamp(time.toEpochMilli());
       }
+      if (demoTemplate.isHighRisk()) {
+        String newLogMessage;
+        Map<Thread, StackTraceElement[]> stacktraces = Thread.getAllStackTraces();
+        if (!stacktraces.isEmpty()) {
+          int randomStacktraceIndex = new Random().nextInt(stacktraces.size());
+          Map.Entry<Thread, StackTraceElement[]> stacktrace =
+              Iterators.get(stacktraces.entrySet().iterator(), randomStacktraceIndex);
 
+          newLogMessage = "java.lang.RuntimeException: \n"
+              + String.join("\n",
+                  Arrays.stream(stacktrace.getValue())
+                      .map(stackTraceElement -> stackTraceElement.toString())
+                      .collect(Collectors.toList()));
+        } else {
+          newLogMessage = "java.lang.RuntimeException: \n" + UUID.randomUUID().toString()
+              + " Method throws runtime exception " + UUID.randomUUID().toString();
+        }
+
+        for (Instant instant = startTime; instant.isBefore(endTime); instant = instant.plus(Duration.ofMinutes(1))) {
+          int freq = new Random().nextInt(5) + 1;
+          for (int i = 0; i < freq; i++) {
+            logRecordsDTOAtTime.add(LogRecordDTO.builder()
+                                        .accountId(accountId)
+                                        .verificationTaskId(verificationTaskId)
+                                        .host("verification-svc-canary-58589fd55f")
+                                        .timestamp(instant.toEpochMilli())
+                                        .log(newLogMessage)
+                                        .build());
+          }
+        }
+      }
       logRecordsToBeSaved.addAll(logRecordsDTOAtTime);
       index++;
       time = time.plus(1, ChronoUnit.MINUTES);
@@ -94,8 +131,9 @@ public class LogRecordServiceImpl implements LogRecordService {
     save(logRecordsToBeSaved);
   }
 
-  private String getDemoTemplate(String verificationTaskId, Instant endTime, String demoTemplateIdentifier)
+  private String getDemoTemplate(String verificationTaskId, Instant endTime, DemoTemplate demoTemplate)
       throws IOException {
+    String demoTemplateIdentifier = demoTemplate.getDemoTemplateIdentifier();
     if (verificationTaskService.isServiceGuardId(verificationTaskId)) {
       LogCVConfig cvConfig =
           (LogCVConfig) cvConfigService.get(verificationTaskService.getCVConfigId(verificationTaskId));

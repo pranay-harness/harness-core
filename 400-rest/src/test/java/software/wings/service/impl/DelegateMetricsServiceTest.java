@@ -79,16 +79,6 @@ public class DelegateMetricsServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
-  public void testGetDelegateTaskResponseContext() {
-    try (AutoMetricContext autoMetricContext =
-             metricContextBuilder.getContext(createDefaultDelegateTaskResponse(), DelegateTaskResponse.class)) {
-      assertThat(autoMetricContext).isNotNull();
-    }
-  }
-
-  @Test
-  @Owner(developers = BOJAN)
-  @Category(UnitTests.class)
   public void testRecordDelegateTaskMetrics() {
     delegateMetricsService.recordDelegateTaskMetrics(createDefaultDelegateTask(), TEST_CUSTOM_METRIC_NAME);
 
@@ -99,7 +89,7 @@ public class DelegateMetricsServiceTest extends WingsBaseTest {
   @Owner(developers = BOJAN)
   @Category(UnitTests.class)
   public void testRecordDelegateTaskMetricsParams() {
-    delegateMetricsService.recordDelegateTaskMetrics("accountId", "delegateId", TEST_CUSTOM_METRIC_NAME);
+    delegateMetricsService.recordDelegateTaskMetrics("accountId", TEST_CUSTOM_METRIC_NAME);
 
     Mockito.verify(metricService).incCounter(eq(TEST_CUSTOM_METRIC_NAME));
   }

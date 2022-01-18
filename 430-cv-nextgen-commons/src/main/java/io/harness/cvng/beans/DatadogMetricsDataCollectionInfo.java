@@ -7,6 +7,7 @@
 
 package io.harness.cvng.beans;
 
+import io.harness.data.structure.CollectionUtils;
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.cvng.datadog.DatadogUtils;
 
@@ -27,7 +28,7 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
   @Override
   public Map<String, Object> getDslEnvVariables(DatadogConnectorDTO connectorConfigDTO) {
     Map<String, Object> dslEnvVariables = new HashMap<>();
-    List<String> queries =
+    List<String> queries = CollectionUtils.emptyIfNull(
         metricDefinitions.stream()
             .map(metricCollectionInfo -> {
               if (isCollectHostData() && metricCollectionInfo.getServiceInstanceIdentifierTag() != null
@@ -36,9 +37,9 @@ public class DatadogMetricsDataCollectionInfo extends TimeSeriesDataCollectionIn
               }
               return metricCollectionInfo.getQuery();
             })
-            .collect(Collectors.toList());
-    List<String> metricIdentifiers =
-        metricDefinitions.stream().map(MetricCollectionInfo::getMetricIdentifier).collect(Collectors.toList());
+            .collect(Collectors.toList()));
+    List<String> metricIdentifiers = CollectionUtils.emptyIfNull(
+        metricDefinitions.stream().map(MetricCollectionInfo::getMetricIdentifier).collect(Collectors.toList()));
     dslEnvVariables.put("queries", queries);
     dslEnvVariables.put("groupName", groupName);
     dslEnvVariables.put("metricIdentifiers", metricIdentifiers);

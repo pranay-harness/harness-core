@@ -98,6 +98,7 @@ import software.wings.expression.ManagerExpressionEvaluator;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.ProvisionerAware;
+import software.wings.prune.PruneEntityListener;
 import software.wings.prune.PruneEvent;
 import software.wings.service.impl.aws.model.AwsCFTemplateParamsData;
 import software.wings.service.intfc.AppService;
@@ -111,8 +112,10 @@ import software.wings.service.intfc.LogService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
+import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.aws.manager.AwsCFHelperServiceManager;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
 import software.wings.service.intfc.security.SecretManager;
 import software.wings.service.intfc.yaml.YamlPushService;
 import software.wings.settings.SettingVariableTypes;
@@ -176,6 +179,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private GitUtilsManager gitUtilsManager;
   @Inject private GitFileConfigHelperService gitFileConfigHelperService;
+  @Inject private UserGroupService userGroupService;
 
   static final String DUPLICATE_VAR_MSG_PREFIX = "variable names should be unique, duplicate variable(s) found: ";
 
@@ -565,21 +569,18 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
 
     LimitEnforcementUtils.withCounterDecrement(checker, () -> {
       ensureSafeToDelete(appId, infrastructureProvisioner);
-
+      pruneQueue.send(new PruneEvent(InfrastructureProvisioner.class, appId, infrastructureProvisionerId));
       yamlPushService.pushYamlChangeSet(accountId, infrastructureProvisioner, null, Type.DELETE, syncFromGit, false);
-
       wingsPersistence.delete(InfrastructureProvisioner.class, appId, infrastructureProvisionerId);
     });
   }
 
   @Override
   public void pruneDescendingEntities(String appId, String infrastructureProvisionerId) {
-    // nothing to prune
-  }
-
-  private void prune(String appId, String infraProvisionerId) {
-    pruneQueue.send(new PruneEvent(InfrastructureProvisioner.class, appId, infraProvisionerId));
-    delete(appId, infraProvisionerId);
+    List<OwnedByInfrastructureProvisioner> services = ServiceClassLocator.descendingServices(
+        this, InfrastructureProvisionerServiceImpl.class, OwnedByInfrastructureProvisioner.class);
+    PruneEntityListener.pruneDescendingEntities(
+        services, descending -> descending.pruneByInfrastructureProvisioner(appId, infrastructureProvisionerId));
   }
 
   @Override
@@ -588,7 +589,7 @@ public class InfrastructureProvisionerServiceImpl implements InfrastructureProvi
                                                     .filter(InfrastructureProvisioner.APP_ID, appId)
                                                     .asKeyList();
     for (Key<InfrastructureProvisioner> key : keys) {
-      prune(appId, (String) key.getId());
+      delete(appId, (String) key.getId());
       harnessTagService.pruneTagLinks(appService.getAccountIdByAppId(appId), (String) key.getId());
     }
   }

@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class DatadogServiceImpl implements DatadogService {
-  public static final int MAX_ACTIVE_METRICS_COUNT = 500;
+  public static final int MAX_ACTIVE_METRICS_COUNT = 1000;
 
   @Inject private OnboardingService onboardingService;
 

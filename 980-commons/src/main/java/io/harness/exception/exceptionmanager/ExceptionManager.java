@@ -54,7 +54,7 @@ public class ExceptionManager {
       }
       return processedException;
     } catch (Exception ex) {
-      log.error("Exception occured while handling error in exception manager", ex);
+      log.error("Exception occurred while handling error in exception manager", ex);
       String errorMessage = ex.getMessage() == null ? "Unexpected error" : ex.getMessage();
       return NestedExceptionUtils.hintWithExplanationException(HintException.HINT_UNEXPECTED_ERROR,
           ExplanationException.EXPLANATION_UNEXPECTED_ERROR, new GeneralException(errorMessage));
@@ -114,7 +114,7 @@ public class ExceptionManager {
       }
       return handledException;
     } catch (Exception e) {
-      log.error("Exception occured while handling exception : {}", exception, e);
+      log.error("An error occurred while handling the exception : {}", exception, e);
       return prepareUnhandledExceptionResponse(exception);
     }
   }
