@@ -112,6 +112,28 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
+  public List<String> getTransactionNames(String accountId, String verificationJobInstanceId,
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
+    List<TransactionMetricInfo> transactionMetricInfoList =
+        getMetrics(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
+    List<String> transactionNameList = new ArrayList<>();
+    transactionMetricInfoList.stream().forEach(transactionMetricInfo
+        -> transactionNameList.add(transactionMetricInfo.getTransactionMetric().getTransactionName()));
+    return transactionNameList;
+  }
+
+  @Override
+  public List<String> getNodeNames(String accountId, String verificationJobInstanceId,
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
+    List<TransactionMetricInfo> transactionMetricInfoList =
+        getMetrics(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
+    List<String> nodeNameList = new ArrayList<>();
+    transactionMetricInfoList.stream().forEach(transactionMetricInfo
+        -> transactionMetricInfo.getNodes().stream().forEach(node -> nodeNameList.add(node.getHostName().get())));
+    return nodeNameList;
+  }
+
+  @Override
   public TimeSeriesAnalysisSummary getAnalysisSummary(List<String> verificationJobInstanceIds) {
     Preconditions.checkNotNull(
         verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");

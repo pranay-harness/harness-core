@@ -88,6 +88,32 @@ public class CVNGStepResource {
   }
 
   @GET
+  @Path("/{verifyStepExecutionId}/all-transaction-names")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all the transaction names", nickname = "getVerifyStepTransactionNames")
+  public RestResponse<List<String>> getTransactionNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
+      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId,
+      @BeanParam DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter,
+      @BeanParam PageParams pageParams) {
+    return new RestResponse(
+        stepTaskService.getTransactionNames(accountId, callBackId, deploymentTimeSeriesAnalysisFilter, pageParams));
+  }
+
+  @GET
+  @Path("/{verifyStepExecutionId}/all-node-names")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all the Node names", nickname = "getVerifyStepNodeNames")
+  public RestResponse<List<String>> getNodeNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
+      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId,
+      @BeanParam DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter,
+      @BeanParam PageParams pageParams) {
+    return new RestResponse(
+        stepTaskService.getTransactionNames(accountId, callBackId, deploymentTimeSeriesAnalysisFilter, pageParams));
+  }
+
+  @GET
   @Path("/{verifyStepExecutionId}/healthSources")
   @Timed
   @ExceptionMetered

@@ -134,6 +134,20 @@ public class CVNGStepTaskServiceImpl implements CVNGStepTaskService {
   }
 
   @Override
+  public List<String> getTransactionNames(String accountId, String callBackId,
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
+    return deploymentTimeSeriesAnalysisService.getTransactionNames(accountId,
+        getByCallBackId(callBackId).getVerificationJobInstanceId(), deploymentTimeSeriesAnalysisFilter, pageParams);
+  }
+
+  @Override
+  public List<String> getNodeNames(String accountId, String callBackId,
+      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams) {
+    return deploymentTimeSeriesAnalysisService.getTransactionNames(accountId,
+        getByCallBackId(callBackId).getVerificationJobInstanceId(), deploymentTimeSeriesAnalysisFilter, pageParams);
+  }
+
+  @Override
   public Set<HealthSourceDTO> healthSources(String accountId, String callBackId) {
     Set<HealthSourceDTO> healthSourceDTOS = new HashSet<>();
     List<VerificationJobInstance> verificationJobInstances =
