@@ -1302,10 +1302,10 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
     syncExecutor.shutdown();
     taskPollExecutor.shutdown();
 
-    final boolean terminatedArtifact = artifactExecutor.awaitTermination(10, TimeUnit.MINUTES);
-    final boolean terminatedAsync = asyncExecutor.awaitTermination(10, TimeUnit.MINUTES);
-    final boolean terminatedSync = syncExecutor.awaitTermination(10, TimeUnit.MINUTES);
-    final boolean terminatedPoll = taskPollExecutor.awaitTermination(10, TimeUnit.MINUTES);
+    final boolean terminatedArtifact = artifactExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    final boolean terminatedAsync = asyncExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    final boolean terminatedSync = syncExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
+    final boolean terminatedPoll = taskPollExecutor.awaitTermination(Long.MAX_VALUE, TimeUnit.MILLISECONDS);
 
     log.info(
         "Executors terminated after {}s. All tasks completed? Artifact [{}], Async [{}], Sync [{}], Polling [{}]",
