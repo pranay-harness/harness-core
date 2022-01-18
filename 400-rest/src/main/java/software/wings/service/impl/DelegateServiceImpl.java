@@ -1413,20 +1413,24 @@ public class DelegateServiceImpl implements DelegateService {
 
   @VisibleForTesting
   protected String getDelegateDockerImage(String accountId) {
+    final String ringImage = delegateRingService.getDelegateImageTag(accountId);
+    if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId) && isNotBlank(ringImage)) {
+      return ringImage;
+    }
     if (isNotBlank(mainConfiguration.getPortal().getDelegateDockerImage())) {
       return mainConfiguration.getPortal().getDelegateDockerImage();
-    } else if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId)) {
-      return delegateRingService.getDelegateImageTag(accountId);
     }
     return "harness/delegate:latest";
   }
 
   @VisibleForTesting
   protected String getUpgraderDockerImage(String accountId) {
+    final String ringImage = delegateRingService.getUpgraderImageTag(accountId);
+    if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId) && isNotBlank(ringImage)) {
+      return ringImage;
+    }
     if (isNotBlank(mainConfiguration.getPortal().getUpgraderDockerImage())) {
       return mainConfiguration.getPortal().getUpgraderDockerImage();
-    } else if (featureFlagService.isEnabled(USE_IMMUTABLE_DELEGATE, accountId)) {
-      return delegateRingService.getUpgraderImageTag(accountId);
     }
     return "harness/upgrader:latest";
   }
