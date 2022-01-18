@@ -29,7 +29,6 @@ import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.logging.MdcContextSetter;
 import io.harness.manage.GlobalContextManager;
 import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
-import io.harness.security.PrincipalContextData;
 import io.harness.security.SourcePrincipalContextData;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.serializer.KryoSerializer;
