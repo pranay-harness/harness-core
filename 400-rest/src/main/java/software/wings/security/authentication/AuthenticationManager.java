@@ -350,7 +350,7 @@ public class AuthenticationManager {
       if (e.getCode() == ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED) {
         throw new WingsException(DOMAIN_WHITELIST_FILTER_CHECK_FAILED, USER);
       } else if (e.getCode() == ErrorCode.USER_DOES_NOT_EXIST) {
-        throw new InvalidCredentialsException(INVALID_CREDENTIAL.name(), USER, e);
+        throw new InvalidCredentialsException(INVALID_CREDENTIAL.name(), USER);
       }
       throw e;
     } catch (Exception e) {
@@ -428,7 +428,7 @@ public class AuthenticationManager {
     String[] decryptedData = decryptBasicToken(basicToken);
     User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
 
     if (user.isDisabled()) {
