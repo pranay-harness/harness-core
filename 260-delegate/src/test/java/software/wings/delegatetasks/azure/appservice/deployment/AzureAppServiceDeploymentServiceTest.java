@@ -270,59 +270,6 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
-  public void testDeployDockerImageInvalidSlotName() {
-    AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
-    AzureAppServiceDockerDeploymentContext azureAppServiceDockerDeploymentContext =
-        AzureAppServiceDockerDeploymentContext.builder()
-            .imagePathAndTag(IMAGE_AND_TAG)
-            .slotName("")
-            .steadyStateTimeoutInMin(1)
-            .logStreamingTaskClient(mockLogStreamingTaskClient)
-            .dockerSettings(new HashMap<>())
-            .azureWebClientContext(azureWebClientContext)
-            .build();
-
-    doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
-
-    assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(()
-                        -> azureAppServiceDeploymentService.deployDockerImage(
-                            azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build()))
-        .withMessageContaining(SLOT_NAME_BLANK_ERROR_MSG);
-  }
-
-  @Test
-  @Owner(developers = TMACARI)
-  @Category(UnitTests.class)
-  public void testDeployDockerImageInvalidAppName() {
-    AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
-    azureWebClientContext.setAppName("");
-    AzureAppServiceDockerDeploymentContext azureAppServiceDockerDeploymentContext =
-        AzureAppServiceDockerDeploymentContext.builder()
-            .imagePathAndTag(IMAGE_AND_TAG)
-            .slotName(SLOT_NAME)
-            .steadyStateTimeoutInMin(1)
-            .logStreamingTaskClient(mockLogStreamingTaskClient)
-            .dockerSettings(new HashMap<>())
-            .azureWebClientContext(azureWebClientContext)
-            .build();
-
-    doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
-
-    assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(()
-                        -> azureAppServiceDeploymentService.deployDockerImage(
-                            azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build()))
-        .withMessageContaining(WEB_APP_NAME_BLANK_ERROR_MSG);
-
-    assertThat(azureAppServiceDockerDeploymentContext.toString()).isNotNull();
-    assertThat(azureAppServiceDockerDeploymentContext.equals(AzureAppServiceDockerDeploymentContext.builder().build()))
-        .isFalse();
-  }
-
-  @Test
-  @Owner(developers = TMACARI)
-  @Category(UnitTests.class)
   public void testRerouteProductionSlotTraffic() {
     AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
     azureAppServiceDeploymentService.rerouteProductionSlotTraffic(
