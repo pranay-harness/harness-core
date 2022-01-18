@@ -143,23 +143,20 @@ public class DelegateApplication {
 
   private void addShutdownHook(Injector injector, MessageService messageService) {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+      try {
+        injector.getInstance(DelegateAgentService.class).shutdown(false);
+      } catch (final InterruptedException e) {
+        log.error("Delegate shutdown interrupted", e);
+        Thread.currentThread().interrupt();
+      }
+
       messageService.closeChannel(DELEGATE, processId);
       messageService.closeData(DELEGATE_DASH + processId);
       log.info("Message service has been closed.");
 
-      final RestartableServiceManager grpcService = injector.getInstance(RestartableServiceManager.class);
-      if (grpcService != null) {
-        grpcService.stop();
-      }
-
       final PingPongClient pingPongClient = injector.getInstance(PingPongClient.class);
       if (pingPongClient != null) {
         pingPongClient.stopAsync();
-      }
-
-      final ChronicleEventTailer chronicleEventTailer = injector.getInstance(ChronicleEventTailer.class);
-      if (chronicleEventTailer != null) {
-        chronicleEventTailer.stopAsync().awaitTerminated();
       }
 
       injector.getInstance(ExecutorService.class).shutdown();

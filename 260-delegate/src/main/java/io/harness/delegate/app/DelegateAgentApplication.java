@@ -114,7 +114,7 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
   private void addShutdownHook(final Injector injector) {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       try {
-        injector.getInstance(DelegateAgentService.class).shutdown();
+        injector.getInstance(DelegateAgentService.class).shutdown(true);
       } catch (final InterruptedException e) {
         log.error("Delegate shutdown interrupted", e);
         Thread.currentThread().interrupt();
@@ -124,8 +124,11 @@ public class DelegateAgentApplication extends Application<DelegateAgentConfig> {
       injector.getInstance(EventPublisher.class).shutdown();
       log.info("Executor services have been shut down.");
 
-      injector.getInstance(PingPongClient.class).stopAsync();
-      log.info("PingPong client have been shut down.");
+      final PingPongClient pingPongClient = injector.getInstance(PingPongClient.class);
+      if (pingPongClient != null) {
+        pingPongClient.stopAsync();
+        log.info("PingPong client have been shut down.");
+      }
 
       injector.getInstance(AsyncHttpClient.class).close();
       log.info("Async HTTP client has been closed.");

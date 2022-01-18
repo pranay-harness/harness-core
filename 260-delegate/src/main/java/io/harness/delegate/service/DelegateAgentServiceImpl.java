@@ -429,9 +429,11 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
   }
 
   @Override
-  public void shutdown() throws InterruptedException {
+  public void shutdown(final boolean shouldUnregister) throws InterruptedException {
     shutdownExecutors();
-    unregisterDelegate();
+    if (shouldUnregister) {
+      unregisterDelegate();
+    }
   }
 
   @Getter(value = PACKAGE, onMethod = @__({ @VisibleForTesting })) private boolean kubectlInstalled;
