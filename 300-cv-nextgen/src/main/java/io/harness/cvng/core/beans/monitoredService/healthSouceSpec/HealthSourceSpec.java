@@ -35,6 +35,7 @@ import org.hibernate.validator.constraints.NotEmpty;
       @JsonSubTypes.Type(value = StackdriverMetricHealthSourceSpec.class, name = "Stackdriver"),
       @JsonSubTypes.Type(value = DatadogMetricHealthSourceSpec.class, name = "DatadogMetrics"),
       @JsonSubTypes.Type(value = DatadogLogHealthSourceSpec.class, name = "DatadogLog"),
+      @JsonSubTypes.Type(value = ErrorTrackingHealthSourceSpec.class, name = "ErrorTracking"),
       @JsonSubTypes.Type(value = CustomHealthSourceSpec.class, name = "CustomHealth")
 })
 public abstract class HealthSourceSpec {
