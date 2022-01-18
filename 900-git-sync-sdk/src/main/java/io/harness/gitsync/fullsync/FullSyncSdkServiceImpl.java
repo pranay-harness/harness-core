@@ -34,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 public class FullSyncSdkServiceImpl implements FullSyncSdkService {
   Map<EntityType, GitSdkEntityHandlerInterface> gitPersistenceHelperServiceMap;
   EntityLookupHelper entityLookupHelper;
-
   @Override
   public FileChanges getFileChanges(ScopeDetails scopeDetails) {
     List<FileChange> fileChangeList = new ArrayList<>();

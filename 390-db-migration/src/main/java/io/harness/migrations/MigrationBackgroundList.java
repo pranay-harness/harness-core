@@ -118,7 +118,6 @@ import io.harness.migrations.all.RemoveDeletedAppIdsFromUserGroups;
 import io.harness.migrations.all.RemoveDeprecatedFieldsFromHarnessUserGroup;
 import io.harness.migrations.all.RemoveDuplicateUserGroupNameMigration;
 import io.harness.migrations.all.RemoveSupportEmailFromSalesContacts;
-import io.harness.migrations.all.RemoveUsageRestrictionForApplicationDefaultsMigration;
 import io.harness.migrations.all.ScheduleSegmentPublishJob;
 import io.harness.migrations.all.SendInviteUrlForAllUserInvites;
 import io.harness.migrations.all.SetAccountIdProvisioners;
@@ -366,7 +365,6 @@ public class MigrationBackgroundList {
         .add(Pair.of(210, DefaultDelegateNgTokenMigration.class))
         .add(Pair.of(211, AddRingsToAccountMigration.class))
         .add(Pair.of(212, AddRingDetailsToDelegateRing.class))
-        .add(Pair.of(213, RemoveUsageRestrictionForApplicationDefaultsMigration.class))
         .build();
   }
 }

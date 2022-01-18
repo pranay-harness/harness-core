@@ -33,7 +33,6 @@ import io.harness.walktree.visitor.entityreference.EntityReferenceExtractorVisit
 
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -78,14 +77,13 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
       FilterCreatorHelper.checkIfVariableNamesAreValid(variablesField);
     }
 
+    creationResponse.referredEntities(new ArrayList<>(getReferredEntities(filterCreationContext, stageElementConfig)));
+
     if (stageElementConfig.getStageType() == null || stageElementConfig.getStageType().getExecution() == null) {
       throw new InvalidYamlRuntimeException(String.format(
           "Execution section is required in %s stage [%s]. Please add it and try again", stageElementConfig.getType(),
           YamlUtils.getFullyQualifiedName(filterCreationContext.getCurrentField().getNode())));
     }
-
-    creationResponse.referredEntities(new ArrayList<>(getReferredEntities(filterCreationContext, stageElementConfig)));
-
     creationResponse.dependencies(
         DependenciesUtils.toDependenciesProto(getDependencies(filterCreationContext.getCurrentField())));
 
@@ -100,16 +98,18 @@ public abstract class GenericStageFilterJsonCreator implements FilterJsonCreator
       FilterCreationContext filterCreationContext, StageElementConfig stageElementConfig) {
     Set<EntityDetailProtoDTO> referredEntities = getReferences(filterCreationContext.getSetupMetadata().getAccountId(),
         filterCreationContext.getSetupMetadata().getOrgId(), filterCreationContext.getSetupMetadata().getProjectId(),
-        stageElementConfig.getStageType(), filterCreationContext.getCurrentField());
+        stageElementConfig.getStageType(), stageElementConfig.getIdentifier());
     referredEntities.addAll(extractSecretRefs(filterCreationContext));
     return referredEntities;
   }
 
   private Set<EntityDetailProtoDTO> getReferences(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, StageInfoConfig stageInfoConfig, YamlField stageYamlField) {
-    YamlField specYamlField = stageYamlField.getNode().getField(YAMLFieldNameConstants.SPEC);
-    String fullQualifiedNameFromRoot = YamlUtils.getFullyQualifiedName(specYamlField.getNode());
-    List<String> qualifiedNameList = new LinkedList<>(Arrays.asList(fullQualifiedNameFromRoot.split("\\.")));
+      String projectIdentifier, StageInfoConfig stageInfoConfig, String stageIdentifier) {
+    List<String> qualifiedNameList = new LinkedList<>();
+    qualifiedNameList.add(YAMLFieldNameConstants.PIPELINE);
+    qualifiedNameList.add(YAMLFieldNameConstants.STAGES);
+    qualifiedNameList.add(stageIdentifier);
+    qualifiedNameList.add(YAMLFieldNameConstants.SPEC);
     EntityReferenceExtractorVisitor visitor = simpleVisitorFactory.obtainEntityReferenceExtractorVisitor(
         accountIdentifier, orgIdentifier, projectIdentifier, qualifiedNameList);
     visitor.walkElementTree(stageInfoConfig);

@@ -7,8 +7,6 @@
 
 package io.harness.ng.authenticationsettings.impl;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import io.harness.accesscontrol.AccountIdentifier;
@@ -18,8 +16,6 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.enforcement.client.annotation.FeatureRestrictionCheck;
 import io.harness.enforcement.client.services.EnforcementClientService;
 import io.harness.enforcement.constants.FeatureRestrictionName;
-import io.harness.exception.InvalidRequestException;
-import io.harness.exception.WingsException;
 import io.harness.ng.authenticationsettings.dtos.AuthenticationSettingsResponse;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.LDAPSettings;
 import io.harness.ng.authenticationsettings.dtos.mechanisms.NGAuthSettings;
@@ -34,7 +30,6 @@ import software.wings.beans.loginSettings.LoginSettings;
 import software.wings.beans.loginSettings.PasswordStrengthPolicy;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SAMLProviderType;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
@@ -148,31 +143,16 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
     for (SSOSettings ssoSetting : ssoSettings) {
       if (ssoSetting.getType().equals(SSOType.SAML)) {
         SamlSettings samlSettings = (SamlSettings) ssoSetting;
-        SAMLSettings samlSettingsBuilt = SAMLSettings.builder()
-                                             .identifier(samlSettings.getUuid())
-                                             .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
-                                             .logoutUrl(samlSettings.getLogoutUrl())
-                                             .origin(samlSettings.getOrigin())
-                                             .displayName(samlSettings.getDisplayName())
-                                             .authorizationEnabled(samlSettings.isAuthorizationEnabled())
-                                             .entityIdentifier(samlSettings.getEntityIdentifier())
-                                             .build();
+        result.add(SAMLSettings.builder()
+                       .identifier(samlSettings.getUuid())
+                       .groupMembershipAttr(samlSettings.getGroupMembershipAttr())
+                       .logoutUrl(samlSettings.getLogoutUrl())
+                       .origin(samlSettings.getOrigin())
+                       .displayName(samlSettings.getDisplayName())
+                       .authorizationEnabled(samlSettings.isAuthorizationEnabled())
+                       .entityIdentifier(samlSettings.getEntityIdentifier())
+                       .build());
 
-        if (null != samlSettings.getSamlProviderType()) {
-          samlSettingsBuilt.setSamlProviderType(samlSettings.getSamlProviderType().name());
-        } else {
-          samlSettingsBuilt.setSamlProviderType(SAMLProviderType.OTHER.name());
-        }
-        if (isNotEmpty(samlSettings.getClientId()) && isNotEmpty(samlSettings.getEncryptedClientSecret())) {
-          samlSettingsBuilt.setClientId(samlSettings.getClientId());
-          samlSettingsBuilt.setClientSecret(samlSettings.getEncryptedClientSecret());
-        } else if (isNotEmpty(samlSettings.getClientId()) && isEmpty(samlSettings.getEncryptedClientSecret())
-            || isEmpty(samlSettings.getClientId()) && isNotEmpty(samlSettings.getEncryptedClientSecret())) {
-          throw new InvalidRequestException(
-              "Both clientId and clientSecret needs to be present together in SAML setting", WingsException.USER);
-        }
-
-        result.add(samlSettingsBuilt);
       } else if (ssoSetting.getType().equals(SSOType.OAUTH)) {
         OauthSettings oAuthSettings = (OauthSettings) ssoSetting;
         result.add(OAuthSettings.builder()
@@ -203,37 +183,28 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
   @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
   public SSOConfig uploadSAMLMetadata(@NotNull @AccountIdentifier String accountId,
       @NotNull MultipartBody.Part inputStream, @NotNull String displayName, String groupMembershipAttr,
-      @NotNull Boolean authorizationEnabled, String logoutUrl, String entityIdentifier, String samlProviderType,
-      String clientId, String clientSecret) {
+      @NotNull Boolean authorizationEnabled, String logoutUrl, String entityIdentifier) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
     RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
-    RequestBody samlProviderTypePart = createPartFromString(samlProviderType);
-    RequestBody clientIdPart = createPartFromString(clientId);
-    RequestBody clientSecretPart = createPartFromString(clientSecret);
     return getResponse(managerClient.uploadSAMLMetadata(accountId, inputStream, displayNamePart,
-        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart, samlProviderTypePart,
-        clientIdPart, clientSecretPart));
+        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
 
   @Override
   @FeatureRestrictionCheck(FeatureRestrictionName.SAML_SUPPORT)
   public SSOConfig updateSAMLMetadata(@NotNull @AccountIdentifier String accountId, MultipartBody.Part inputStream,
       String displayName, String groupMembershipAttr, @NotNull Boolean authorizationEnabled, String logoutUrl,
-      String entityIdentifier, String samlProviderType, String clientId, String clientSecret) {
+      String entityIdentifier) {
     RequestBody displayNamePart = createPartFromString(displayName);
     RequestBody groupMembershipAttrPart = createPartFromString(groupMembershipAttr);
     RequestBody authorizationEnabledPart = createPartFromString(String.valueOf(authorizationEnabled));
     RequestBody logoutUrlPart = createPartFromString(logoutUrl);
     RequestBody entityIdentifierPart = createPartFromString(entityIdentifier);
-    RequestBody samlProviderTypePart = createPartFromString(samlProviderType);
-    RequestBody clientIdPart = createPartFromString(clientId);
-    RequestBody clientSecretPart = createPartFromString(clientSecret);
     return getResponse(managerClient.updateSAMLMetadata(accountId, inputStream, displayNamePart,
-        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart, samlProviderTypePart,
-        clientIdPart, clientSecretPart));
+        groupMembershipAttrPart, authorizationEnabledPart, logoutUrlPart, entityIdentifierPart));
   }
 
   @Override

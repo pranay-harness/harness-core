@@ -9,7 +9,6 @@ package io.harness.delegate.beans.connector.localconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.DecryptableEntity;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -35,9 +34,9 @@ import lombok.ToString;
 @EqualsAndHashCode(callSuper = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Schema(name = "LocalConnector", description = "This contains the local connector information.")
+@Schema(name = "LocalConnector", description = "This contains the Local connector information")
 public class LocalConnectorDTO extends ConnectorConfigDTO {
-  @Schema(description = SecretManagerDescriptionConstants.DEFAULT) private boolean isDefault;
+  private boolean isDefault;
   @JsonIgnore private boolean harnessManaged;
 
   @Builder

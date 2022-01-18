@@ -23,19 +23,15 @@ import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.exception.SecretManagementDelegateException;
 
-import com.microsoft.aad.adal4j.AuthenticationException;
 import com.microsoft.azure.AzureEnvironment;
-import com.microsoft.azure.CloudException;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.Azure;
 import com.microsoft.azure.management.keyvault.Vault;
 import com.microsoft.azure.management.resources.ResourceGroup;
 import com.microsoft.azure.management.resources.fluentcore.arm.models.HasName;
-import com.microsoft.rest.RestException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -45,7 +41,6 @@ import org.apache.commons.lang3.NotImplementedException;
 @OwnedBy(PL)
 @Slf4j
 public class NGAzureKeyVaultFetchEngineTask extends AbstractDelegateRunnableTask {
-  private static String possibleExceptionMessage;
   public NGAzureKeyVaultFetchEngineTask(DelegateTaskPackage delegateTaskPackage,
       ILogStreamingTaskClient logStreamingTaskClient, Consumer<DelegateTaskResponse> consumer,
       BooleanSupplier preExecute) {
@@ -68,15 +63,6 @@ public class NGAzureKeyVaultFetchEngineTask extends AbstractDelegateRunnableTask
       String message = "Failed to list secret engines for due to unexpected network error. Please try again.";
       log.error(message, exception);
       throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
-    } catch (RuntimeException ex) {
-      if (ex instanceof CloudException) {
-        throw ex;
-      } else if (isNestedAuthenticationException(ex)) {
-        throw new RestException(possibleExceptionMessage, null);
-      } else {
-        String message = "Failed to list secret engines for due to unexpected network error. Please try again.";
-        throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, USER);
-      }
     }
     return NGAzureKeyVaultFetchEngineResponse.builder().secretEngines(secretEngines).build();
   }
@@ -117,24 +103,5 @@ public class NGAzureKeyVaultFetchEngineTask extends AbstractDelegateRunnableTask
       default:
         return AzureEnvironment.AZURE;
     }
-  }
-
-  private boolean isNestedAuthenticationException(Exception exception) {
-    if (exception.getCause() instanceof IOException) {
-      Exception nestedLevel1Exception = (IOException) exception.getCause();
-      if (nestedLevel1Exception.getCause() instanceof ExecutionException) {
-        Exception nestedLevel2Exception = (ExecutionException) nestedLevel1Exception.getCause();
-        if (nestedLevel2Exception.getCause() instanceof AuthenticationException) {
-          Exception nestedLevel3Exception = (AuthenticationException) nestedLevel2Exception.getCause();
-          possibleExceptionMessage = nestedLevel3Exception.getMessage();
-          return true;
-        }
-      }
-    }
-    return false;
-  }
-
-  public boolean isSupportingErrorFramework() {
-    return true;
   }
 }

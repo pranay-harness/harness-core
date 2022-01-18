@@ -52,7 +52,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.zeroturnaround.exec.ProcessExecutor;
 import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.LogOutputStream;
@@ -66,9 +65,7 @@ import org.zeroturnaround.exec.stream.LogOutputStream;
 @OwnedBy(CDP)
 public class HelmClientImpl implements HelmClient {
   @Inject private K8sGlobalConfigService k8sGlobalConfigService;
-
   private static final String OVERRIDE_FILE_PATH = "./repository/helm/overrides/${CONTENT_HASH}.yaml";
-  public static final String DEBUG_COMMAND_FLAG = "--debug";
   public static final LoadingCache<String, Object> lockObjects =
       CacheBuilder.newBuilder().expireAfterAccess(30, TimeUnit.MINUTES).build(CacheLoader.from(Object::new));
 
@@ -146,12 +143,8 @@ public class HelmClientImpl implements HelmClient {
                                 .replace("${FLAGS}", "--max 5")
                                 .replace("${RELEASE_NAME}", releaseName);
 
-    String commandFlags = helmCommandData.getCommandFlags();
-    if (HelmVersion.V2.equals(helmCommandData.getHelmVersion())) {
-      StringUtils.replace(commandFlags, DEBUG_COMMAND_FLAG, EMPTY);
-    }
-    releaseHistory = applyCommandFlags(releaseHistory, commandType, commandFlags, helmCommandData.isHelmCmdFlagsNull(),
-        helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    releaseHistory = applyCommandFlags(releaseHistory, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(releaseHistory, helmCommandData.getLogCallback());
     releaseHistory = applyKubeConfigToCommand(releaseHistory, kubeConfigLocation);
 
@@ -167,12 +160,8 @@ public class HelmClientImpl implements HelmClient {
     String listRelease = getHelmCommandTemplateWithHelmPath(commandType, helmCommandData.getHelmVersion())
                              .replace("${RELEASE_NAME}", helmCommandData.getReleaseName());
 
-    String commandFlags = helmCommandData.getCommandFlags();
-    if (HelmVersion.V2.equals(helmCommandData.getHelmVersion())) {
-      StringUtils.replace(commandFlags, DEBUG_COMMAND_FLAG, EMPTY);
-    }
-    listRelease = applyCommandFlags(listRelease, commandType, commandFlags, helmCommandData.isHelmCmdFlagsNull(),
-        helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
+    listRelease = applyCommandFlags(listRelease, commandType, helmCommandData.getCommandFlags(),
+        helmCommandData.isHelmCmdFlagsNull(), helmCommandData.getValueMap(), helmCommandData.getHelmVersion());
     logHelmCommandInExecutionLogs(listRelease, helmCommandData.getLogCallback());
     listRelease = applyKubeConfigToCommand(listRelease, kubeConfigLocation);
 

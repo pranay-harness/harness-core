@@ -92,7 +92,7 @@ public class ManifestHelper {
 
   private List<KubernetesResource> getKubernetesResources(Map map, ListKind listKind) {
     org.yaml.snakeyaml.Yaml yaml = new org.yaml.snakeyaml.Yaml(
-        new io.kubernetes.client.util.Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
+        new io.kubernetes.client.util.Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
     List<KubernetesResource> resources =
         getItems(map).stream().map(item -> getKubernetesResource(yaml.dump(item), item)).collect(Collectors.toList());
 

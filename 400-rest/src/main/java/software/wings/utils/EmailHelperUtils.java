@@ -24,7 +24,7 @@ import java.util.List;
 public class EmailHelperUtils {
   @Inject private SettingsService settingsService;
   @Inject private AccountService accountService;
-  public static final String NG_SMTP_SETTINGS_PREFIX = "ngSmtpConfig-";
+  static final String NG_SMTP_SETTINGS_PREFIX = "ngSmtpConfig-";
 
   public SmtpConfig getSmtpConfig(String accountId) {
     if (accountId == null) {

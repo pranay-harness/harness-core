@@ -55,8 +55,6 @@ import io.harness.connector.mappers.docker.DockerDTOToEntity;
 import io.harness.connector.mappers.docker.DockerEntityToDTO;
 import io.harness.connector.mappers.dynatracemapper.DynatraceDTOToEntity;
 import io.harness.connector.mappers.dynatracemapper.DynatraceEntityToDTO;
-import io.harness.connector.mappers.errortrackingmapper.ErrorTrackingDTOToEntity;
-import io.harness.connector.mappers.errortrackingmapper.ErrorTrackingEntityToDTO;
 import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostDTOToEntity;
 import io.harness.connector.mappers.gcpcloudcost.GcpCloudCostEntityToDTO;
 import io.harness.connector.mappers.gcpmappers.GcpDTOToEntity;
@@ -111,7 +109,6 @@ import io.harness.connector.validator.CEKubernetesConnectionValidator;
 import io.harness.connector.validator.CVConnectorValidator;
 import io.harness.connector.validator.ConnectionValidator;
 import io.harness.connector.validator.DockerConnectionValidator;
-import io.harness.connector.validator.ErrorTrackingConnectorValidator;
 import io.harness.connector.validator.GcpConnectorValidator;
 import io.harness.connector.validator.HttpHelmRepoConnectionValidator;
 import io.harness.connector.validator.JiraConnectorValidator;
@@ -265,10 +262,6 @@ public class ConnectorRegistryFactory {
     registrar.put(ConnectorType.SERVICENOW,
         new ConnectorRegistrar(ConnectorCategory.TICKETING, ServiceNowConnectorValidator.class,
             ServiceNowValidationParamsProvider.class, ServiceNowDTOtoEntity.class, ServiceNowEntityToDTO.class,
-            NotSupportedValidationHandler.class));
-    registrar.put(ConnectorType.ERROR_TRACKING,
-        new ConnectorRegistrar(ConnectorCategory.MONITORING, ErrorTrackingConnectorValidator.class,
-            CVConnectorParamsProvider.class, ErrorTrackingDTOToEntity.class, ErrorTrackingEntityToDTO.class,
             NotSupportedValidationHandler.class));
   }
 

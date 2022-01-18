@@ -55,6 +55,7 @@ import io.harness.pms.pipeline.StepCategory;
 import io.harness.pms.pipeline.StepPalleteFilterWrapper;
 import io.harness.pms.pipeline.StepPalleteInfo;
 import io.harness.pms.pipeline.StepPalleteModuleInfo;
+import io.harness.pms.pipeline.mappers.PipelineYamlDtoMapper;
 import io.harness.pms.sdk.PmsSdkInstanceService;
 import io.harness.pms.variables.VariableCreatorMergeService;
 import io.harness.pms.variables.VariableMergeServiceResponse;
@@ -119,7 +120,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
           pipelineEntity.getIdentifier());
 
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
-      PipelineEntity createdEntity = pmsPipelineRepository.save(entityWithUpdatedInfo);
+      PipelineEntity createdEntity =
+          pmsPipelineRepository.save(entityWithUpdatedInfo, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo));
       sendPipelineSaveTelemetryEvent(createdEntity, CREATING_PIPELINE);
       return createdEntity;
     } catch (DuplicateKeyException ex) {
@@ -194,8 +196,7 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
                                     .withDescription(pipelineEntity.getDescription())
                                     .withTags(pipelineEntity.getTags())
                                     .withIsEntityInvalid(false)
-                                    .withTemplateReference(pipelineEntity.getTemplateReference())
-                                    .withAllowStageExecutions(pipelineEntity.getAllowStageExecutions());
+                                    .withTemplateReference(pipelineEntity.getTemplateReference());
 
     return makePipelineUpdateCall(tempEntity, entityToUpdate, changeType);
   }
@@ -223,8 +224,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
       PipelineEntity pipelineEntity, PipelineEntity oldEntity, ChangeType changeType) {
     try {
       PipelineEntity entityWithUpdatedInfo = pmsPipelineServiceHelper.updatePipelineInfo(pipelineEntity);
-      PipelineEntity updatedResult =
-          pmsPipelineRepository.updatePipelineYaml(entityWithUpdatedInfo, oldEntity, changeType);
+      PipelineEntity updatedResult = pmsPipelineRepository.updatePipelineYaml(
+          entityWithUpdatedInfo, oldEntity, PipelineYamlDtoMapper.toDto(entityWithUpdatedInfo), changeType);
 
       if (updatedResult == null) {
         throw new InvalidRequestException(format(
@@ -323,7 +324,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PipelineEntity pipelineEntityUpdated = existingPipeline.withYaml(invalidYaml)
                                                .withObjectIdOfYaml(EntityObjectIdUtils.getObjectIdOfYaml(invalidYaml))
                                                .withIsEntityInvalid(true);
-    pmsPipelineRepository.updatePipelineYaml(pipelineEntityUpdated, existingPipeline, ChangeType.NONE);
+    pmsPipelineRepository.updatePipelineYaml(
+        pipelineEntityUpdated, existingPipeline, PipelineYamlDtoMapper.toDto(pipelineEntityUpdated), ChangeType.NONE);
     return true;
   }
 
@@ -340,7 +342,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     PipelineEntity existingEntity = optionalPipelineEntity.get();
     PipelineEntity withDeleted = existingEntity.withDeleted(true);
     try {
-      PipelineEntity deletedEntity = pmsPipelineRepository.deletePipeline(withDeleted);
+      PipelineEntity deletedEntity =
+          pmsPipelineRepository.deletePipeline(withDeleted, PipelineYamlDtoMapper.toDto(withDeleted));
       if (deletedEntity.getDeleted()) {
         return true;
       } else {
@@ -451,7 +454,8 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Page<PipelineEntity> pipelineEntities =
         pmsPipelineRepository.findAll(criteria, pageRequest, accountId, orgId, projectId, false);
     for (PipelineEntity pipelineEntity : pipelineEntities) {
-      pmsPipelineRepository.deletePipeline(pipelineEntity.withDeleted(true));
+      pmsPipelineRepository.deletePipeline(
+          pipelineEntity.withDeleted(true), PipelineYamlDtoMapper.toDto(pipelineEntity.withDeleted(true)));
     }
     return true;
   }
@@ -540,17 +544,6 @@ public class PMSPipelineServiceImpl implements PMSPipelineService {
     Set<ExpansionResponseBatch> expansionResponseBatches =
         jsonExpander.fetchExpansionResponses(expansionRequests, expansionRequestMetadata);
     return ExpansionsMerger.mergeExpansions(pipelineYaml, expansionResponseBatches);
-  }
-
-  @Override
-  public PipelineEntity updateGitFilePath(PipelineEntity pipelineEntity, String newFilePath) {
-    Criteria criteria = PMSPipelineServiceHelper.getPipelineEqualityCriteria(pipelineEntity.getAccountId(),
-        pipelineEntity.getOrgIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getIdentifier(), false,
-        null);
-
-    Update update = new Update().set(PipelineEntityKeys.filePath, newFilePath);
-    return updatePipelineMetadata(pipelineEntity.getAccountId(), pipelineEntity.getOrgIdentifier(),
-        pipelineEntity.getProjectIdentifier(), criteria, update);
   }
 
   ExpansionRequestMetadata getRequestMetadata(String accountId, String orgIdentifier, String projectIdentifier) {

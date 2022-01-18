@@ -1706,9 +1706,6 @@
         "name"
       ],
       "properties": {
-        "allowStageExecutions": {
-          "type": "boolean"
-        },
         "description": {
           "type": "string"
         },

@@ -23,7 +23,7 @@ public class GitFullSyncConfigMapper {
     return GitFullSyncConfigDTO.builder()
         .branch(gitFullSyncConfig.getBranch())
         .baseBranch(gitFullSyncConfig.getBaseBranch())
-        .prTitle(gitFullSyncConfig.getPrTitle())
+        .message(gitFullSyncConfig.getMessage())
         .createPullRequest(gitFullSyncConfig.isCreatePullRequest())
         .repoIdentifier(gitFullSyncConfig.getYamlGitConfigIdentifier())
         .accountIdentifier(gitFullSyncConfig.getAccountIdentifier())
@@ -31,7 +31,6 @@ public class GitFullSyncConfigMapper {
         .projectIdentifier(gitFullSyncConfig.getProjectIdentifier())
         .targetBranch(gitFullSyncConfig.getTargetBranch())
         .isNewBranch(gitFullSyncConfig.isNewBranch())
-        .rootFolder(gitFullSyncConfig.getRootFolder())
         .build();
   }
 
@@ -39,7 +38,7 @@ public class GitFullSyncConfigMapper {
       @NotNull GitFullSyncConfigRequestDTO gitFullSyncConfigRequestDTO) {
     return GitFullSyncConfig.builder()
         .baseBranch(gitFullSyncConfigRequestDTO.getBaseBranch())
-        .prTitle(gitFullSyncConfigRequestDTO.getPrTitle())
+        .message(gitFullSyncConfigRequestDTO.getMessage())
         .accountIdentifier(accountIdentifier)
         .orgIdentifier(orgIdentifier)
         .projectIdentifier(projectIdentifier)
@@ -48,7 +47,6 @@ public class GitFullSyncConfigMapper {
         .createPullRequest(gitFullSyncConfigRequestDTO.isCreatePullRequest())
         .targetBranch(gitFullSyncConfigRequestDTO.getTargetBranch())
         .isNewBranch(gitFullSyncConfigRequestDTO.isNewBranch())
-        .rootFolder(gitFullSyncConfigRequestDTO.getRootFolder())
         .build();
   }
 }

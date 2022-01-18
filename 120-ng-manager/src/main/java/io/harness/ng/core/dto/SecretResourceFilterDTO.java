@@ -7,7 +7,6 @@
 
 package io.harness.ng.core.dto;
 
-import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.connector.ConnectorCategory;
@@ -21,12 +20,12 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.PL)
-@Schema(name = "SecretResourceFilter", description = "This has the filter information for the Secret in Harness.")
+@Schema(name = "SecretResourceFilter",
+    description = "This is the view of the SecretResourceFilter entity defined in Harness")
 public class SecretResourceFilterDTO {
-  @Schema(description = NGResourceFilterConstants.IDENTIFIER_LIST) List<String> identifiers;
-  @Schema(description = NGResourceFilterConstants.SEARCH_TERM) String searchTerm;
-  @Schema(description = NGResourceFilterConstants.TYPE_LIST) List<SecretType> secretTypes;
+  List<String> identifiers;
+  String searchTerm;
+  List<SecretType> secretTypes;
   ConnectorCategory sourceCategory;
-  @Schema(description = "This is true if secrets are filtered at every subsequent scope. Otherwise, it is false.")
   boolean includeSecretsFromEverySubScope;
 }

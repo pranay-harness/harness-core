@@ -8,7 +8,6 @@
 package software.wings.resources;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 import static software.wings.security.PermissionAttribute.PermissionType.MANAGE_AUTHENTICATION_SETTINGS;
@@ -93,12 +92,9 @@ public class SSOResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
-      @FormDataParam("entityIdentifier") String entityIdentifier,
-      @FormDataParam("samlProviderType") String samlProviderType, @FormDataParam("clientId") String clientId,
-      @FormDataParam("clientSecret") String clientSecret) {
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
     return new RestResponse<>(ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName,
-        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId,
-        isEmpty(clientSecret) ? null : clientSecret.toCharArray()));
+        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier));
   }
 
   @POST
@@ -142,12 +138,9 @@ public class SSOResource {
       @FormDataParam("file") FormDataContentDisposition fileDetail, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
-      @FormDataParam("entityIdentifier") String entityIdentifier,
-      @FormDataParam("samlProviderType") String samlProviderType, @FormDataParam("clientId") String clientId,
-      @FormDataParam("clientSecret") String clientSecret) {
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
     return new RestResponse<>(ssoService.updateSamlConfiguration(accountId, uploadedInputStream, displayName,
-        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId,
-        isEmpty(clientSecret) ? null : clientSecret.toCharArray()));
+        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier));
   }
 
   @PUT

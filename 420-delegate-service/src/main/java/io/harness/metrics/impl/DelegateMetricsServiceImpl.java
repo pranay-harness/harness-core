@@ -48,8 +48,8 @@ public class DelegateMetricsServiceImpl implements DelegateMetricsService {
   }
 
   @Override
-  public void recordDelegateTaskMetrics(String accountId, String metricName) {
-    try (DelegateTaskMetricContext ignore = new DelegateTaskMetricContext(accountId)) {
+  public void recordDelegateTaskMetrics(String accountId, String delegateId, String metricName) {
+    try (DelegateTaskMetricContext ignore = new DelegateTaskMetricContext(accountId, delegateId)) {
       metricService.incCounter(metricName);
     }
   }

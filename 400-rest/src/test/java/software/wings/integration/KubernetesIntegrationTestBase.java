@@ -93,7 +93,7 @@ public abstract class KubernetesIntegrationTestBase extends CategoryTest {
             .endSpec()
             .build());
 
-    kubernetesService.createOrReplaceServiceFabric8(config,
+    kubernetesService.createOrReplaceService(config,
         new ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()
@@ -148,7 +148,7 @@ public abstract class KubernetesIntegrationTestBase extends CategoryTest {
             .endSpec()
             .build());
 
-    kubernetesService.createOrReplaceServiceFabric8(config,
+    kubernetesService.createOrReplaceService(config,
         new ServiceBuilder()
             .withApiVersion("v1")
             .withNewMetadata()

@@ -9,7 +9,6 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -34,12 +33,9 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("AwsKmsConnectorCredential")
 @JsonDeserialize(using = AwsKmsCredentialDTODeserializer.class)
 @Schema(name = "AwsKmsConnectorCredential",
-    description = "Returns the configuration details for the AWS KMS Secret Manager.")
+    description = "Returns config details for the AWS KMS Secret Manager Connector.")
 public class AwsKmsConnectorCredentialDTO {
-  @Schema(description = SecretManagerDescriptionConstants.AWS_CREDENTIAL)
-  @NotNull
-  @JsonProperty("type")
-  AwsKmsCredentialType credentialType;
+  @NotNull @JsonProperty("type") AwsKmsCredentialType credentialType;
   @JsonProperty("spec")
   @JsonTypeInfo(
       use = JsonTypeInfo.Id.NAME, property = "type", include = JsonTypeInfo.As.EXTERNAL_PROPERTY, visible = true)

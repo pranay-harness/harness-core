@@ -8,6 +8,8 @@
 package io.harness.perpetualtask.k8s.informer.handlers;
 
 import io.harness.annotations.dev.HarnessModule;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.ccm.commons.constants.Constants;
 import io.harness.event.client.EventPublisher;
@@ -23,9 +25,9 @@ import com.google.common.collect.ImmutableSet;
 import com.google.protobuf.Timestamp;
 import io.kubernetes.client.common.KubernetesObject;
 import io.kubernetes.client.informer.ResourceEventHandler;
+import io.kubernetes.client.openapi.models.CoreV1Event;
 import io.kubernetes.client.openapi.models.V1DaemonSet;
 import io.kubernetes.client.openapi.models.V1Deployment;
-import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.openapi.models.V1Job;
 import io.kubernetes.client.openapi.models.V1Node;
 import io.kubernetes.client.openapi.models.V1ObjectMeta;
@@ -46,6 +48,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.joor.Reflect;
 
+@OwnedBy(HarnessTeam.CE)
 @Slf4j
 @TargetModule(HarnessModule._420_DELEGATE_AGENT)
 public abstract class BaseHandler<ApiType extends KubernetesObject> implements ResourceEventHandler<ApiType> {
@@ -67,7 +70,7 @@ public abstract class BaseHandler<ApiType extends KubernetesObject> implements R
       classes.put("v1beta1/CronJob", V1beta1CronJob.class);
       classes.put("v1/DaemonSet", V1DaemonSet.class);
       classes.put("v1/Deployment", V1Deployment.class);
-      classes.put("v1/Event", V1Event.class);
+      classes.put("v1/CoreV1Event", CoreV1Event.class);
       classes.put("v1/Job", V1Job.class);
       classes.put("v1/Node", V1Node.class);
       classes.put("v1/Pod", V1Pod.class);

@@ -12,7 +12,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cvng.activity.beans.ActivityVerificationResultDTO;
 import io.harness.cvng.activity.beans.DeploymentActivitySummaryDTO;
 import io.harness.cvng.activity.entities.Activity;
-import io.harness.cvng.activity.entities.DeploymentActivity;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterChartDTO;
 import io.harness.cvng.analysis.beans.LogAnalysisClusterDTO;
 import io.harness.cvng.analysis.beans.TransactionMetricInfoSummaryPageDTO;
@@ -37,8 +36,9 @@ import java.util.Set;
 public interface ActivityService {
   Activity get(String activityId);
   Activity getByVerificationJobInstanceId(String verificationJobInstanceId);
-  @Deprecated String register(String accountId, ActivityDTO activityDTO);
-  @Deprecated String register(Activity activity);
+
+  String register(String accountId, ActivityDTO activityDTO);
+  String register(Activity activity);
 
   void updateActivityStatus(Activity activity);
 
@@ -84,7 +84,6 @@ public interface ActivityService {
 
   Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers, List<String> environmentIdentifiers,
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);
-  @Deprecated String createActivityForDemo(DeploymentActivity activity, ActivityVerificationStatus verificationStatus);
-  List<DeploymentActivity> getDemoDeploymentActivity(
-      ServiceEnvironmentParams serviceEnvironmentParams, Instant startTime, Instant endTime);
+
+  String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus);
 }

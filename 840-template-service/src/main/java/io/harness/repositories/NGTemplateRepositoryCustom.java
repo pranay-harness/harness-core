@@ -18,7 +18,6 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
-import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(CDC)
 public interface NGTemplateRepositoryCustom {
@@ -45,6 +44,4 @@ public interface NGTemplateRepositoryCustom {
 
   boolean existsByAccountIdAndOrgIdAndProjectIdAndIdentifierAndVersionLabel(
       String accountId, String orgIdentifier, String projectIdentifier, String templateIdentifier, String versionLabel);
-
-  TemplateEntity update(Criteria criteria, Update update);
 }

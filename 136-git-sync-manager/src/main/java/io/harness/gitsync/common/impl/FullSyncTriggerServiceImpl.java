@@ -66,13 +66,12 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
     TriggerFullSyncRequestDTO triggerFullSyncRequestDTO =
         TriggerFullSyncRequestDTO.builder()
             .branch(gitFullSyncConfigDTO.getBranch())
-            .prTitle(gitFullSyncConfigDTO.getPrTitle())
+            .commitMessage(gitFullSyncConfigDTO.getMessage())
             .createPR(gitFullSyncConfigDTO.isCreatePullRequest())
             .targetBranchForPR(gitFullSyncConfigDTO.getTargetBranch())
             .yamlGitConfigIdentifier(gitFullSyncConfigDTO.getRepoIdentifier())
             .isNewBranch(gitFullSyncConfigDTO.isNewBranch())
             .baseBranch(gitFullSyncConfigDTO.getBaseBranch())
-            .rootFolder(gitFullSyncConfigDTO.getRootFolder())
             .build();
     final String messageId =
         sendEventForFullSync(accountIdentifier, orgIdentifier, projectIdentifier, triggerFullSyncRequestDTO);
@@ -100,11 +99,10 @@ public class FullSyncTriggerServiceImpl implements FullSyncTriggerService {
                                                      .setGitConfigScope(entityScopeInfoBuilder.build())
                                                      .setBranch(fullSyncRequest.getBranch())
                                                      .setCreatePr(fullSyncRequest.isCreatePR())
-                                                     .setIsNewBranch(fullSyncRequest.isNewBranch())
-                                                     .setRootFolder(fullSyncRequest.getRootFolder());
+                                                     .setIsNewBranch(fullSyncRequest.isNewBranch());
 
     if (fullSyncRequest.isCreatePR()) {
-      builder.setTargetBranch(fullSyncRequest.getTargetBranchForPR()).setPrTitle(fullSyncRequest.getPrTitle());
+      builder.setTargetBranch(fullSyncRequest.getTargetBranchForPR());
     }
 
     if (fullSyncRequest.isNewBranch()) {

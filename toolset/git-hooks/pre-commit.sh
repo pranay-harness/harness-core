@@ -46,10 +46,9 @@ then
 else
     echo -e '\033[0;34m' checking license  ... to disable: '\033[0;37m'git config --add $LICENSE_PROPERTY false '\033[0m'
 
-    LICENSE_DIR="$BASEDIR/scripts/license"
     for file in `git diff-index --cached --name-only $against`
     do
-        "$LICENSE_DIR"/add_license_header.sh -l "$LICENSE_DIR/.license-header-polyform-free-trial.txt" -f "${file}"
+        $BASEDIR/scripts/license/add_license_header.sh -l "${BASEDIR}/.license-header-polyform-free-trial.txt" -f "${file}"
         git diff --exit-code -- "${file}"
         if [ "$?" -ne "0" ]
         then

@@ -74,7 +74,7 @@ public class CrdWorkloadFetcher {
     ApiextensionsV1Api apiextensionsV1Api = new ApiextensionsV1Api(apiClient);
     try {
       V1CustomResourceDefinitionList v1CustomResourceDefinitionList =
-          apiextensionsV1Api.listCustomResourceDefinition(null, null, null, null, null, null, null, null, null);
+          apiextensionsV1Api.listCustomResourceDefinition(null, null, null, null, null, null, null, null, null, null);
       for (V1CustomResourceDefinition crd : v1CustomResourceDefinitionList.getItems()) {
         V1CustomResourceDefinitionNames names = crd.getSpec().getNames();
         plurals.put(names.getKind(), names.getPlural());

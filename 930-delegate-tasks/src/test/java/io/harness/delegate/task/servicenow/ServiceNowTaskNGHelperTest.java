@@ -108,7 +108,7 @@ public class ServiceNowTaskNGHelperTest extends CategoryTest {
                                                                 .serviceNowConnectorDTO(serviceNowConnectorDTO)
                                                                 .build()))
         .isInstanceOf(ServiceNowException.class)
-        .hasMessage("Invalid ServiceNow credentials");
+        .hasMessage("ServiceNowException: Invalid ServiceNow credentials");
     verify(secretDecryptionService).decrypt(any(), any());
   }
 

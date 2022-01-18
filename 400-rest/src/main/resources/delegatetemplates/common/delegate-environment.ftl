@@ -11,6 +11,8 @@
           value: ${delegateCheckLocation}
         - name: HELM_DESIRED_VERSION
           value: ""
+        - name: USE_CDN
+          value: "${useCdn}"
         - name: CDN_URL
           value: ${cdnUrl}
         - name: JRE_VERSION
@@ -89,8 +91,6 @@
           value: "${grpcServiceEnabled}"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "${grpcServiceConnectorPort}"
-        - name: VERSION_CHECK_DISABLED
-          value: "${versionCheckDisabled}"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:

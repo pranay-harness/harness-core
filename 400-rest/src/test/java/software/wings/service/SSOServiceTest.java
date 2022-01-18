@@ -42,7 +42,6 @@ import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.LdapTestResponse.Status;
 import software.wings.beans.sso.LdapUserSettings;
-import software.wings.beans.sso.SAMLProviderType;
 import software.wings.beans.sso.SSOType;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -136,9 +135,8 @@ public class SSOServiceTest extends WingsBaseTest {
     mockSamlSettings.setDisplayName("Okta");
     when(SSO_SETTING_SERVICE.getSamlSettingsByAccountId(anyString())).thenReturn(mockSamlSettings);
 
-    SSOConfig settings =
-        ssoService.uploadSamlConfiguration(account.getUuid(), getClass().getResourceAsStream("/okta-IDP-metadata.xml"),
-            "Okta", "group", true, logoutUrl, "app.harness.io", SAMLProviderType.OKTA.name(), anyString(), any());
+    SSOConfig settings = ssoService.uploadSamlConfiguration(account.getUuid(),
+        getClass().getResourceAsStream("/okta-IDP-metadata.xml"), "Okta", "group", true, logoutUrl, "app.harness.io");
     String idpRedirectUrl = ((SamlSettings) settings.getSsoSettings().get(0)).getUrl();
     assertThat(idpRedirectUrl)
         .isEqualTo("https://dev-274703.oktapreview.com/app/harnessiodev274703_testapp_1/exkefa5xlgHhrU1Mc0h7/sso/saml");
@@ -146,7 +144,7 @@ public class SSOServiceTest extends WingsBaseTest {
 
     try {
       ssoService.uploadSamlConfiguration(account.getUuid(), getClass().getResourceAsStream("/SamlResponse.txt"), "Okta",
-          "group", true, logoutUrl, "app.harness.io", SAMLProviderType.OKTA.name(), anyString(), any());
+          "group", true, logoutUrl, "app.harness.io");
       failBecauseExceptionWasNotThrown(WingsException.class);
     } catch (WingsException e) {
       assertThat(e.getMessage()).isEqualTo(ErrorCode.INVALID_SAML_CONFIGURATION.name());

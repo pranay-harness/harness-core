@@ -114,7 +114,6 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ResourceLookupService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.ownership.OwnedByPipeline;
@@ -167,7 +166,6 @@ public class PipelineServiceImpl implements PipelineService {
   @Inject private TriggerService triggerService;
   @Inject private WingsPersistence wingsPersistence;
   @Inject private WorkflowService workflowService;
-  @Inject private UserGroupService userGroupService;
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private YamlPushService yamlPushService;
   @Inject private WorkflowServiceHelper workflowServiceHelper;

@@ -10,24 +10,14 @@ package software.wings.beans.sso;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
-import static software.wings.settings.SettingVariableTypes.SSO_SAML;
-
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.encryption.Encrypted;
-
-import software.wings.annotation.EncryptableSetting;
-import software.wings.jersey.JsonViews;
-import software.wings.settings.SettingVariableTypes;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeName;
-import com.fasterxml.jackson.annotation.JsonView;
-import com.github.reinert.jjschema.SchemaIgnore;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -36,20 +26,15 @@ import lombok.EqualsAndHashCode;
 @OwnedBy(PL)
 @TargetModule(HarnessModule._950_NG_AUTHENTICATION_SERVICE)
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName("SAML")
-public class SamlSettings extends SSOSettings implements EncryptableSetting {
+public class SamlSettings extends SSOSettings {
   @JsonIgnore @NotNull private String metaDataFile;
   @NotNull private String accountId;
   @NotNull private String origin;
   private String logoutUrl;
   private String groupMembershipAttr;
   private String entityIdentifier;
-  private SAMLProviderType samlProviderType;
-  private String clientId;
-  @Encrypted(fieldName = "clientSecret") private char[] clientSecret;
-  @JsonIgnore @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedClientSecret;
 
   @JsonCreator
   @Builder
@@ -57,9 +42,7 @@ public class SamlSettings extends SSOSettings implements EncryptableSetting {
       @JsonProperty("url") String url, @JsonProperty("metaDataFile") String metaDataFile,
       @JsonProperty("accountId") String accountId, @JsonProperty("origin") String origin,
       @JsonProperty("groupMembershipAttr") String groupMembershipAttr, @JsonProperty("logoutUrl") String logoutUrl,
-      @JsonProperty("entityIdentifier") String entityIdentifier,
-      @JsonProperty("providerType") SAMLProviderType samlProviderType, @JsonProperty("clientId") String clientId,
-      @JsonProperty("clientSecret") final char[] clientSecret) {
+      @JsonProperty("entityIdentifier") String entityIdentifier) {
     super(SSOType.SAML, displayName, url);
     this.metaDataFile = metaDataFile;
     this.accountId = accountId;
@@ -67,9 +50,6 @@ public class SamlSettings extends SSOSettings implements EncryptableSetting {
     this.groupMembershipAttr = groupMembershipAttr;
     this.logoutUrl = logoutUrl;
     this.entityIdentifier = entityIdentifier;
-    this.samlProviderType = samlProviderType;
-    this.clientId = clientId;
-    this.clientSecret = clientSecret == null ? null : clientSecret.clone();
   }
 
   @Override
@@ -85,10 +65,5 @@ public class SamlSettings extends SSOSettings implements EncryptableSetting {
   @JsonProperty
   public boolean isAuthorizationEnabled() {
     return isNotEmpty(groupMembershipAttr);
-  }
-
-  @Override
-  public SettingVariableTypes getSettingType() {
-    return SSO_SAML;
   }
 }

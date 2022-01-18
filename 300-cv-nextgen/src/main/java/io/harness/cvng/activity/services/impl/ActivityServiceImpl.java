@@ -11,7 +11,6 @@ import static io.harness.cvng.activity.CVActivityConstants.HEALTH_VERIFICATION_R
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.persistence.HQuery.excludeAuthority;
-import static io.harness.persistence.HQuery.excludeValidate;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -24,7 +23,6 @@ import io.harness.cvng.activity.entities.Activity;
 import io.harness.cvng.activity.entities.Activity.ActivityKeys;
 import io.harness.cvng.activity.entities.Activity.ActivityUpdatableEntity;
 import io.harness.cvng.activity.entities.DeploymentActivity;
-import io.harness.cvng.activity.entities.DeploymentActivity.DeploymentActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.KubernetesClusterActivityKeys;
 import io.harness.cvng.activity.entities.KubernetesClusterActivity.ServiceEnvironment.ServiceEnvironmentKeys;
 import io.harness.cvng.activity.services.api.ActivityService;
@@ -443,9 +441,8 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   @Override
-  public String createActivityForDemo(DeploymentActivity activity, ActivityVerificationStatus verificationStatus) {
+  public String createActivityForDemo(Activity activity, ActivityVerificationStatus verificationStatus) {
     activity.validate();
-    activity.setDemoActivity(true);
     List<VerificationJobInstance> verificationJobInstances = new ArrayList<>();
     activity.getVerificationJobs().forEach(verificationJob -> {
       VerificationJobInstanceBuilder verificationJobInstanceBuilder = fillOutCommonJobInstanceProperties(
@@ -462,19 +459,6 @@ public class ActivityServiceImpl implements ActivityService {
     log.info("Registered demo activity of type {} for account {}, project {}, org {}", activity.getType(),
         activity.getAccountId(), activity.getProjectIdentifier(), activity.getOrgIdentifier());
     return activity.getUuid();
-  }
-
-  @Override
-  public List<DeploymentActivity> getDemoDeploymentActivity(
-      ServiceEnvironmentParams serviceEnvironmentParams, Instant startTime, Instant endTime) {
-    return (List<DeploymentActivity>) (List<?>) createQuery(serviceEnvironmentParams)
-        .filter(ActivityKeys.type, ActivityType.DEPLOYMENT)
-        .filter(DeploymentActivityKeys.isDemoActivity, true)
-        .field(ActivityKeys.activityStartTime)
-        .greaterThanOrEq(startTime)
-        .field(ActivityKeys.activityStartTime)
-        .lessThan(endTime)
-        .asList();
   }
 
   private List<String> getVerificationJobInstanceId(String activityId) {
@@ -607,7 +591,7 @@ public class ActivityServiceImpl implements ActivityService {
   }
 
   private Query<Activity> createQuery(ServiceEnvironmentParams serviceEnvironmentParams) {
-    return hPersistence.createQuery(Activity.class, excludeValidate)
+    return hPersistence.createQuery(Activity.class)
         .filter(ActivityKeys.accountId, serviceEnvironmentParams.getAccountIdentifier())
         .filter(ActivityKeys.orgIdentifier, serviceEnvironmentParams.getOrgIdentifier())
         .filter(ActivityKeys.projectIdentifier, serviceEnvironmentParams.getProjectIdentifier())

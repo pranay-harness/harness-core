@@ -63,14 +63,12 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
 
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedPassword;
 
-  private boolean skipValidation;
-
   public ArtifactoryConfig() {
     super(SettingVariableTypes.ARTIFACTORY.name());
   }
 
   public ArtifactoryConfig(String artifactoryUrl, String username, char[] password, List<String> delegateSelectors,
-      String accountId, String encryptedPassword, boolean skipValidation) {
+      String accountId, String encryptedPassword) {
     this();
     this.artifactoryUrl = artifactoryUrl;
     this.username = username;
@@ -78,7 +76,6 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
     this.accountId = accountId;
     this.encryptedPassword = encryptedPassword;
     this.delegateSelectors = delegateSelectors;
-    this.skipValidation = skipValidation;
   }
 
   // NOTE: Do not remove this. As UI expects this field should be there..Lombok Default is not working
@@ -126,14 +123,12 @@ public class ArtifactoryConfig extends SettingValue implements EncryptableSettin
   @EqualsAndHashCode(callSuper = true)
   public static final class Yaml extends ArtifactServerYaml {
     private List<String> delegateSelectors;
-    private boolean skipValidation;
 
     @Builder
     public Yaml(String type, String harnessApiVersion, String url, String username, String password,
-        UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors, boolean skipValidation) {
+        UsageRestrictions.Yaml usageRestrictions, List<String> delegateSelectors) {
       super(type, harnessApiVersion, url, username, password, usageRestrictions);
       this.delegateSelectors = delegateSelectors;
-      this.skipValidation = skipValidation;
     }
   }
 }

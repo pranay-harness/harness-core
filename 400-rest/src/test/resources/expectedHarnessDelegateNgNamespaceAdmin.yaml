@@ -139,8 +139,6 @@ spec:
           value: "false"
         - name: GRPC_SERVICE_CONNECTOR_PORT
           value: "0"
-        - name: VERSION_CHECK_DISABLED
-          value: "false"
         - name: DELEGATE_NAMESPACE
           valueFrom:
             fieldRef:
@@ -169,6 +167,8 @@ spec:
           value: delegateci.txt
         - name: HELM_DESIRED_VERSION
           value: ""
+        - name: USE_CDN
+          value: "false"
         - name: CDN_URL
           value: http://localhost:9500
         - name: JRE_VERSION

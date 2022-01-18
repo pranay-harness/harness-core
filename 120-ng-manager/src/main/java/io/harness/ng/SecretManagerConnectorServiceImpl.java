@@ -350,10 +350,4 @@ public class SecretManagerConnectorServiceImpl implements ConnectorService {
   public ConnectorDTO fullSyncEntity(EntityDetailProtoDTO entityDetailProtoDTO) {
     return defaultConnectorService.fullSyncEntity(entityDetailProtoDTO);
   }
-
-  @Override
-  public ConnectorResponseDTO updateGitFilePath(
-      ConnectorDTO connectorDTO, String accountIdentifier, String newFilePath) {
-    return defaultConnectorService.updateGitFilePath(connectorDTO, accountIdentifier, newFilePath);
-  }
 }

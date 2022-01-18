@@ -27,7 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Singleton
 public class NGTelemetryPublisher {
-  public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
   @Inject TelemetryReporter telemetryReporter;
   @Inject CDPipelineInstrumentationHelper cdPipelineInstrumentationHelper;
   @Inject InstanceService instanceService;
@@ -86,10 +85,9 @@ public class NGTelemetryPublisher {
 
   private String getAccountId() {
     List<AccountDTO> accountDTOList = RestClientUtils.getResponse(accountClient.getAllAccounts());
-    String accountId = accountDTOList.get(0).getIdentifier();
-    if (accountDTOList.size() > 1 && accountId.equals(GLOBAL_ACCOUNT_ID)) {
-      accountId = accountDTOList.get(1).getIdentifier();
+    if (accountDTOList == null || accountDTOList.size() == 0) {
+      return null;
     }
-    return accountId;
+    return accountDTOList.get(0).getIdentifier();
   }
 }

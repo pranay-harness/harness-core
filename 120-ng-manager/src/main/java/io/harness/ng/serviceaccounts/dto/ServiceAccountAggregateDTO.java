@@ -12,7 +12,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.ng.core.dto.RoleAssignmentMetadataDTO;
 import io.harness.serviceaccount.ServiceAccountDTO;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 import lombok.Builder;
@@ -21,12 +20,11 @@ import lombok.Data;
 @Data
 @Builder
 @OwnedBy(HarnessTeam.PL)
-@Schema(name = "ServiceAccountAggregate", description = "This contains the Service Account details and its metadata.")
 public class ServiceAccountAggregateDTO {
   @NotNull ServiceAccountDTO serviceAccount;
-  @Schema(description = "This is the time at which Service Account was created.") @NotNull Long createdAt;
-  @Schema(description = "This is the time at which Service Account was last modified.") @NotNull Long lastModifiedAt;
-  @Schema(description = "This is the total number of tokens in a Service Account.") int tokensCount;
-  @Schema(description = "This is the list of Role Assignments for the Service Account.")
+  @NotNull Long createdAt;
+  @NotNull Long lastModifiedAt;
+
+  int tokensCount;
   List<RoleAssignmentMetadataDTO> roleAssignmentsMetadataDTO;
 }

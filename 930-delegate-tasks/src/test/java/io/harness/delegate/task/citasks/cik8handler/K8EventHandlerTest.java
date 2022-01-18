@@ -15,13 +15,15 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.k8s.apiclient.ApiClientFactory;
 import io.harness.rule.Owner;
 
 import io.kubernetes.client.openapi.ApiClient;
-import io.kubernetes.client.openapi.models.V1Event;
+import io.kubernetes.client.openapi.models.CoreV1Event;
 import io.kubernetes.client.util.Watch;
 import java.io.IOException;
 import okhttp3.Call;
@@ -32,6 +34,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CI)
 public class K8EventHandlerTest extends CategoryTest {
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
   @Mock private ApiClientFactory apiClientFactory;
@@ -49,7 +52,7 @@ public class K8EventHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void stopEventWatch() throws IOException {
-    Watch<V1Event> watch = mock(Watch.class);
+    Watch<CoreV1Event> watch = mock(Watch.class);
     doNothing().when(watch).close();
     k8EventHandler.stopEventWatch(watch);
     verify(watch).close();
@@ -59,7 +62,7 @@ public class K8EventHandlerTest extends CategoryTest {
   @Owner(developers = SHUBHAM)
   @Category(UnitTests.class)
   public void stopEventWatchWithIOError() throws IOException {
-    Watch<V1Event> watch = mock(Watch.class);
+    Watch<CoreV1Event> watch = mock(Watch.class);
     doThrow(IOException.class).when(watch).close();
     k8EventHandler.stopEventWatch(watch);
     verify(watch).close();

@@ -52,7 +52,6 @@ public class DeploymentActivity extends Activity {
   String artifactType;
   String artifactTag;
   String deploymentStatus;
-  boolean isDemoActivity;
 
   @Override
   public ActivityType getType() {

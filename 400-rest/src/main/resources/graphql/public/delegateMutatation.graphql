@@ -14,9 +14,6 @@ extend type Mutation {
   # attach scope to delegate
   attachScopeToDelegate(input: AttachScopeToDelegateInput!): AttachScopeToDelegatePayload
     @dataFetcher(name: attachScopeToDelegate)
-  # attach all scope to delegate
-  attachAllScopesToDelegate(input: AttachAllScopesToDelegateInput!): AttachScopeToDelegatePayload
-    @dataFetcher(name: attachAllScopesToDelegate)
 }
 
 input DelegateApproveRejectInput {
@@ -50,12 +47,6 @@ input AttachScopeToDelegateInput {
   delegateId: String!
   includeScopes: IdFilter
   excludeScopes: IdFilter
-}
-
-input AttachAllScopesToDelegateInput {
-  clientMutationId: String
-  accountId: String!
-  delegateId: String!
 }
 
 type DelegateApproveRejectPayload {

@@ -66,7 +66,6 @@ public class JiraApprovalStep extends AsyncExecutableWithRollback {
     }
     return StepResponse.builder()
         .status(instance.getStatus().toFinalExecutionStatus())
-        .failureInfo(instance.getFailureInfo())
         .stepOutcome(
             StepResponse.StepOutcome.builder().name("output").outcome(instance.toJiraApprovalOutcome()).build())
         .build();

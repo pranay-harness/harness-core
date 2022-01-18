@@ -60,7 +60,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import javax.validation.Valid;
@@ -628,9 +627,6 @@ public class PlanExecutionResource {
           pipelineIdentifier, projectIdentifier, orgIdentifier));
     }
     PipelineEntity pipelineEntity = optionalPipelineEntity.get();
-    if (!pipelineEntity.shouldAllowStageExecutions()) {
-      return ResponseDTO.newResponse(Collections.emptyList());
-    }
     List<StageExecutionResponse> stageExecutionResponse =
         StageExecutionSelectorHelper.getStageExecutionResponse(pipelineEntity.getYaml());
     return ResponseDTO.newResponse(stageExecutionResponse);

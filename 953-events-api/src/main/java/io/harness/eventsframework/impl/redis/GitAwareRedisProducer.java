@@ -49,12 +49,8 @@ public class GitAwareRedisProducer extends RedisProducer {
       if (gitBranchInfo == null) {
         return;
       }
-      if (gitBranchInfo.getYamlGitConfigId() != null) {
-        redisData.put(REPO, gitBranchInfo.getYamlGitConfigId());
-      }
-      if (gitBranchInfo.getBranch() != null) {
-        redisData.put(BRANCH, gitBranchInfo.getBranch());
-      }
+      redisData.put(REPO, gitBranchInfo.getYamlGitConfigId());
+      redisData.put(BRANCH, gitBranchInfo.getBranch());
     }
   }
 

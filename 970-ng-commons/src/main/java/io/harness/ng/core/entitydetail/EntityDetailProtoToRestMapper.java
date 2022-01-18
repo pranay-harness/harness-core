@@ -109,7 +109,7 @@ public class EntityDetailProtoToRestMapper {
         .build();
   }
 
-  public static EntityType mapEventToRestEntityType(EntityTypeProtoEnum type) {
+  private EntityType mapEventToRestEntityType(EntityTypeProtoEnum type) {
     Map<EntityTypeProtoEnum, EntityType> mappingBetweenProtoAndActualEnum =
         EventProtoToEntityHelper.getEntityTypeProtoEnumToRestEnumMap();
     if (mappingBetweenProtoAndActualEnum.containsKey(type)) {

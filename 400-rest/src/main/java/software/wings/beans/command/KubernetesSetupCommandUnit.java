@@ -769,7 +769,7 @@ public class KubernetesSetupCommandUnit extends ContainerSetupCommandUnit {
 
     service = kubernetesContainerService.getServiceFabric8(kubernetesConfig, serviceToCreate.getMetadata().getName());
     log.info("{} service [{}]", service == null ? "Creating" : "Replacing", serviceToCreate.getMetadata().getName());
-    service = kubernetesContainerService.createOrReplaceServiceFabric8(kubernetesConfig, serviceToCreate);
+    service = kubernetesContainerService.createOrReplaceService(kubernetesConfig, serviceToCreate);
     serviceClusterIP = service.getSpec().getClusterIP();
 
     if (service.getSpec().getType().equals(LOAD_BALANCER)) {

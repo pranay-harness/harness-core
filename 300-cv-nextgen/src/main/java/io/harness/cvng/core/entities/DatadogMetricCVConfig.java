@@ -74,7 +74,6 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
               .aggregation(definition.getAggregation())
               .metricTags(definition.getMetricTags())
               .isManualQuery(definition.isManualQuery())
-              .isCustomCreatedMetric(definition.isCustomCreatedMetric())
               .serviceInstanceIdentifierTag(definition.getServiceInstanceIdentifierTag())
               .sli(SLIMetricTransformer.transformDTOtoEntity(definition.getSli()))
               .liveMonitoring(LiveMonitoringTransformer.transformDTOtoEntity(definition.getAnalysis()))
@@ -107,7 +106,6 @@ public class DatadogMetricCVConfig extends MetricCVConfig {
     private List<String> metricTags;
     private TimeSeriesMetricType metricType;
     boolean isManualQuery;
-    boolean isCustomCreatedMetric;
     private String serviceInstanceIdentifierTag;
   }
 

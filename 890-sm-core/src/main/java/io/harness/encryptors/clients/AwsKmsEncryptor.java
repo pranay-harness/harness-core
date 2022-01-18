@@ -13,7 +13,6 @@ import static io.harness.data.encoding.EncodingUtils.encodeBase64;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.eraro.ErrorCode.AWS_SECRETS_MANAGER_OPERATION_ERROR;
 import static io.harness.eraro.ErrorCode.KMS_OPERATION_ERROR;
-import static io.harness.eraro.ErrorCode.SECRET_MANAGEMENT_ERROR;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_SRE;
 import static io.harness.threading.Morpheus.sleep;
@@ -27,7 +26,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.encryptors.KmsEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
-import io.harness.exception.SecretManagementException;
 import io.harness.security.SimpleEncryption;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -162,9 +160,6 @@ public class AwsKmsEncryptor implements KmsEncryptor {
     boolean isValidConfiguration = generateDataKeyResult != null && !generateDataKeyResult.getKeyId().isEmpty();
     log.info("Validating AWS KMS configuration End {0} isValidConfiguration: {1}", encryptionConfig.getName(),
         isValidConfiguration);
-    if (!isValidConfiguration) {
-      throw new SecretManagementException(SECRET_MANAGEMENT_ERROR, "The data key could not be generated", USER);
-    }
     return isValidConfiguration;
   }
 

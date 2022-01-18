@@ -187,9 +187,4 @@ public class AdminAccountServiceImpl implements AdminAccountService {
     accountService.updateNextGenEnabled(accountId, enabled);
     return true;
   }
-
-  @Override
-  public boolean updateRingName(String accountId, String ringName) {
-    return accountService.updateRingName(accountId, ringName);
-  }
 }

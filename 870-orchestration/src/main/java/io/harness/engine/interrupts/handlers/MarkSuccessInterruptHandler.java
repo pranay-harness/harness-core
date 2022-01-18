@@ -26,7 +26,6 @@ public class MarkSuccessInterruptHandler extends MarkStatusInterruptHandler {
   public Interrupt handleInterruptForNodeExecution(
       @NonNull @Valid Interrupt interrupt, @NonNull String nodeExecutionId) {
     return super.handleInterruptStatus(interrupt, nodeExecutionId, SUCCEEDED,
-        EnumSet.of(
-            Status.FAILED, Status.EXPIRED, Status.ERRORED, Status.INTERVENTION_WAITING, Status.APPROVAL_REJECTED));
+        EnumSet.of(Status.FAILED, Status.EXPIRED, Status.ERRORED, Status.INTERVENTION_WAITING));
   }
 }

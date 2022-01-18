@@ -9,10 +9,8 @@ package io.harness.secretmanagerclient.dto.awskms;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -29,12 +27,9 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "AwsKmsStsCredentialConfigKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.secretmanagerclient.dto.awskms.AwsKmsStsCredentialConfig")
-@Schema(
-    description =
-        "This contains the specifications of the AWS KMS credential, which uses the Delegate with STS role to authenticate.")
 public class AwsKmsStsCredentialConfig implements AwsKmsCredentialSpecConfig {
-  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) Set<String> delegateSelectors;
-  @Schema(description = SecretManagerDescriptionConstants.ROLE_ARN) String roleArn;
-  @Schema(description = SecretManagerDescriptionConstants.EXTERNAL_NAME) String externalName;
-  @Schema(description = SecretManagerDescriptionConstants.ASSUME_STS_ROLE_DURATION) int assumeStsRoleDuration;
+  Set<String> delegateSelectors;
+  String roleArn;
+  String externalName;
+  int assumeStsRoleDuration;
 }

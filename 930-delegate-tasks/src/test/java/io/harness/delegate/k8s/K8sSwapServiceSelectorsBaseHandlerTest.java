@@ -33,9 +33,9 @@ import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 
 import com.google.common.collect.ImmutableMap;
-import io.kubernetes.client.openapi.models.V1Service;
-import io.kubernetes.client.openapi.models.V1ServiceBuilder;
-import io.kubernetes.client.openapi.models.V1ServiceSpecBuilder;
+import io.fabric8.kubernetes.api.model.Service;
+import io.fabric8.kubernetes.api.model.ServiceBuilder;
+import io.fabric8.kubernetes.api.model.ServiceSpecBuilder;
 import java.util.Map;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,21 +56,23 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
     MockitoAnnotations.initMocks(this);
   }
 
-  private V1Service createService(String serviceName, Map<String, String> labelSelectors) {
-    V1ServiceSpecBuilder spec = new V1ServiceSpecBuilder().withSelector(labelSelectors);
+  private Service createService(String serviceName, Map<String, String> labelSelectors) {
+    ServiceSpecBuilder spec = new ServiceSpecBuilder().withSelector(labelSelectors);
 
-    return new V1ServiceBuilder().withNewMetadata().withName(serviceName).endMetadata().withSpec(spec.build()).build();
+    return new ServiceBuilder().withNewMetadata().withName(serviceName).endMetadata().withSpec(spec.build()).build();
   }
 
   @Test
   @Owner(developers = PUNEET)
   @Category(UnitTests.class)
   public void shouldSwapServicesIfErrorFrameworkNotSupported() {
-    V1Service service1 = createService("service1", ImmutableMap.of("label", "A"));
-    V1Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(service1);
-    when(kubernetesContainerService.getService(any(), eq(service2.getMetadata().getName()))).thenReturn(service2);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName())))
+        .thenReturn(service2);
     when(kubernetesContainerService.createOrReplaceService(any(), any()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[1]);
 
@@ -78,17 +80,17 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
         k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback);
     assertThat(success).isTrue();
 
-    ArgumentCaptor<V1Service> serviceArgumentCaptor = ArgumentCaptor.forClass(V1Service.class);
+    ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
 
-    verify(kubernetesContainerService, times(2)).getService(any(), any());
+    verify(kubernetesContainerService, times(2)).getServiceFabric8(any(), any());
 
     verify(kubernetesContainerService, times(2)).createOrReplaceService(eq(null), serviceArgumentCaptor.capture());
 
-    V1Service updatedService1 = serviceArgumentCaptor.getAllValues().get(0);
+    Service updatedService1 = serviceArgumentCaptor.getAllValues().get(0);
     assertThat(updatedService1.getMetadata().getName()).isEqualTo("service1");
     assertThat(updatedService1.getSpec().getSelector().get("label")).isEqualTo("B");
 
-    V1Service updatedService2 = serviceArgumentCaptor.getAllValues().get(1);
+    Service updatedService2 = serviceArgumentCaptor.getAllValues().get(1);
     assertThat(updatedService2.getMetadata().getName()).isEqualTo("service2");
     assertThat(updatedService2.getSpec().getSelector().get("label")).isEqualTo("A");
   }
@@ -97,27 +99,29 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldSwapServicesIfErrorFrameworkSupported() {
-    V1Service service1 = createService("service1", ImmutableMap.of("label", "A"));
-    V1Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(service1);
-    when(kubernetesContainerService.getService(any(), eq(service2.getMetadata().getName()))).thenReturn(service2);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName())))
+        .thenReturn(service2);
     when(kubernetesContainerService.createOrReplaceService(any(), any()))
         .thenAnswer(invocationOnMock -> invocationOnMock.getArguments()[1]);
 
     k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback, true);
 
-    ArgumentCaptor<V1Service> serviceArgumentCaptor = ArgumentCaptor.forClass(V1Service.class);
+    ArgumentCaptor<Service> serviceArgumentCaptor = ArgumentCaptor.forClass(Service.class);
 
-    verify(kubernetesContainerService, times(2)).getService(any(), any());
+    verify(kubernetesContainerService, times(2)).getServiceFabric8(any(), any());
 
     verify(kubernetesContainerService, times(2)).createOrReplaceService(eq(null), serviceArgumentCaptor.capture());
 
-    V1Service updatedService1 = serviceArgumentCaptor.getAllValues().get(0);
+    Service updatedService1 = serviceArgumentCaptor.getAllValues().get(0);
     assertThat(updatedService1.getMetadata().getName()).isEqualTo("service1");
     assertThat(updatedService1.getSpec().getSelector().get("label")).isEqualTo("B");
 
-    V1Service updatedService2 = serviceArgumentCaptor.getAllValues().get(1);
+    Service updatedService2 = serviceArgumentCaptor.getAllValues().get(1);
     assertThat(updatedService2.getMetadata().getName()).isEqualTo("service2");
     assertThat(updatedService2.getSpec().getSelector().get("label")).isEqualTo("A");
   }
@@ -126,8 +130,8 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionIfPrimaryNotFound() {
-    V1Service service1 = createService("service1", ImmutableMap.of("label", "A"));
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(null);
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName()))).thenReturn(null);
 
     assertThatThrownBy(
         () -> k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback, true))
@@ -150,8 +154,8 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenErrorFrameworkDisabledIfPrimaryNotFound() {
-    V1Service service1 = createService("service1", ImmutableMap.of("label", "A"));
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(null);
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName()))).thenReturn(null);
 
     boolean success =
         k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback);
@@ -162,11 +166,12 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldThrowExceptionIfStageNotFound() {
-    V1Service service1 = createService("service1", ImmutableMap.of("label", "A"));
-    V1Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(service1);
-    when(kubernetesContainerService.getService(any(), eq(service2.getMetadata().getName()))).thenReturn(null);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName()))).thenReturn(null);
 
     assertThatThrownBy(
         () -> k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback, true))
@@ -189,11 +194,12 @@ public class K8sSwapServiceSelectorsBaseHandlerTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenErrorFrameworkDisabledIfStageNotFound() {
-    V1Service service1 = createService("service1", ImmutableMap.of("label", "A"));
-    V1Service service2 = createService("service2", ImmutableMap.of("label", "B"));
+    Service service1 = createService("service1", ImmutableMap.of("label", "A"));
+    Service service2 = createService("service2", ImmutableMap.of("label", "B"));
 
-    when(kubernetesContainerService.getService(any(), eq(service1.getMetadata().getName()))).thenReturn(service1);
-    when(kubernetesContainerService.getService(any(), eq(service2.getMetadata().getName()))).thenReturn(null);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service1.getMetadata().getName())))
+        .thenReturn(service1);
+    when(kubernetesContainerService.getServiceFabric8(any(), eq(service2.getMetadata().getName()))).thenReturn(null);
 
     boolean success =
         k8sSwapServiceSelectorsBaseHandler.swapServiceSelectors(null, "service1", "service2", logCallback);

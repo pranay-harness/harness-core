@@ -15,6 +15,7 @@ import java.time.Duration;
 @OwnedBy(HarnessTeam.CV)
 public interface CVConstants {
   String SERVICE_BASE_URL = "/cv/api";
+  Duration VERIFICATION_JOB_INSTANCE_EXPIRY_DURATION = Duration.ofDays(30);
   Duration MAX_DATA_RETENTION_DURATION = Duration.ofDays(180);
   /**
    * This should be set in findOption for the queries that are potentially working with large data.
@@ -23,6 +24,7 @@ public interface CVConstants {
    * FindOptions().maxTime(MONGO_QUERY_TIMEOUT_SEC, TimeUnit.SECONDS);
    */
   int MONGO_QUERY_TIMEOUT_SEC = 5;
+  double DEPLOYMENT_RISK_SCORE_FAILURE_THRESHOLD = 0.5;
   String DEFAULT_HEALTH_JOB_NAME = "Health Verification";
   String DEFAULT_HEALTH_JOB_ID = DEFAULT_HEALTH_JOB_NAME.replace(" ", "_");
   String DEFAULT_TEST_JOB_NAME = "Load Test Verification";

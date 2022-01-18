@@ -179,8 +179,6 @@ public interface AccountService {
 
   boolean updateCompanyName(String accountId, String companyName);
 
-  boolean updateRingName(String accountId, String ringName);
-
   Boolean updateCloudCostEnabled(String accountId, boolean cloudCostEnabled);
 
   boolean updateCeAutoCollectK8sEvents(String accountId, boolean ceK8sEventCollectionEnabled);

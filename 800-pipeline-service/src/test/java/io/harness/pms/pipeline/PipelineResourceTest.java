@@ -101,7 +101,6 @@ public class PipelineResourceTest extends CategoryTest {
                  .identifier(PIPELINE_IDENTIFIER)
                  .name(PIPELINE_IDENTIFIER)
                  .yaml(yaml)
-                 .allowStageExecutions(false)
                  .build();
 
     entityGitDetails = EntityGitDetails.builder()
@@ -121,7 +120,6 @@ public class PipelineResourceTest extends CategoryTest {
                             .stageCount(1)
                             .stageName("qaStage")
                             .version(1L)
-                            .allowStageExecutions(false)
                             .build();
 
     executionSummaryEntity = PipelineExecutionSummaryEntity.builder()

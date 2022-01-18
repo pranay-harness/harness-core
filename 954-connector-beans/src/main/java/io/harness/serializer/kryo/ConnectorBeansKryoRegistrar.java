@@ -62,7 +62,6 @@ import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerRegistryProviderType;
 import io.harness.delegate.beans.connector.docker.DockerUserNamePasswordDTO;
 import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
-import io.harness.delegate.beans.connector.errortracking.ErrorTrackingConnectorDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorCredentialDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
@@ -313,6 +312,5 @@ public class ConnectorBeansKryoRegistrar implements KryoRegistrar {
     kryo.register(CustomHealthConnectorDTO.class, 19676);
     kryo.register(CustomHealthMethod.class, 19677);
     kryo.register(ServiceNowConnectorDTO.class, 19678);
-    kryo.register(ErrorTrackingConnectorDTO.class, 19679);
   }
 }

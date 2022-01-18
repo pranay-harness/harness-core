@@ -31,7 +31,6 @@ import org.springframework.data.mongodb.core.query.Criteria;
 @Slf4j
 @Singleton
 public class PipelineTelemetryPublisher {
-  public static final String GLOBAL_ACCOUNT_ID = "__GLOBAL_ACCOUNT_ID__";
   @Inject PMSPipelineService pmsPipelineService;
   @Inject PMSExecutionService pmsExecutionService;
   @Inject TelemetryReporter telemetryReporter;
@@ -51,7 +50,7 @@ public class PipelineTelemetryPublisher {
       Long totalPipelinesExecuted = 0L;
 
       String accountId = getAccountId();
-      if (EmptyPredicate.isNotEmpty(accountId) || !accountId.equals(GLOBAL_ACCOUNT_ID)) {
+      if (EmptyPredicate.isNotEmpty(accountId)) {
         Criteria criteria =
             Criteria.where(PipelineEntityKeys.createdAt).gt(System.currentTimeMillis() - MILLISECONDS_IN_A_DAY);
         pipelinesCreatedInADay = pmsPipelineService.countAllPipelines(criteria);
@@ -88,10 +87,9 @@ public class PipelineTelemetryPublisher {
 
   private String getAccountId() {
     List<AccountDTO> accountDTOList = RestClientUtils.getResponse(accountClient.getAllAccounts());
-    String accountId = accountDTOList.get(0).getIdentifier();
-    if (accountDTOList.size() > 1 && accountId.equals(GLOBAL_ACCOUNT_ID)) {
-      accountId = accountDTOList.get(1).getIdentifier();
+    if (accountDTOList == null || accountDTOList.size() == 0) {
+      return null;
     }
-    return accountId;
+    return accountDTOList.get(0).getIdentifier();
   }
 }

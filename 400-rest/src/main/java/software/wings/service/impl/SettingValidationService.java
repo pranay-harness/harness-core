@@ -17,12 +17,10 @@ import static io.harness.encryption.EncryptionReflectUtils.getEncryptedFields;
 import static io.harness.encryption.EncryptionReflectUtils.getEncryptedRefField;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
-import static io.harness.utils.DelegateOwner.getNGTaskSetupAbstractionsWithOwner;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static software.wings.beans.CGConstants.GLOBAL_APP_ID;
 import static software.wings.service.impl.AssignDelegateServiceImpl.SCOPE_WILDCARD;
-import static software.wings.utils.EmailHelperUtils.NG_SMTP_SETTINGS_PREFIX;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
@@ -135,7 +133,6 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -212,14 +209,6 @@ public class SettingValidationService {
                         .timeout(TimeUnit.MINUTES.toMillis(2))
                         .build())
               .build();
-      if (settingValue instanceof SmtpConfig
-          && (settingAttribute.getName().length() >= NG_SMTP_SETTINGS_PREFIX.length()
-              && (NG_SMTP_SETTINGS_PREFIX.equalsIgnoreCase(
-                  settingAttribute.getName().substring(0, NG_SMTP_SETTINGS_PREFIX.length()))))) {
-        final Map<String, String> ngTaskSetupAbstractionsWithOwner =
-            getNGTaskSetupAbstractionsWithOwner(settingAttribute.getAccountId(), null, null);
-        delegateTask.setSetupAbstractions(ngTaskSetupAbstractionsWithOwner);
-      }
       try {
         DelegateResponseData notifyResponseData = delegateService.executeTask(delegateTask);
         if (notifyResponseData instanceof ErrorNotifyResponseData) {
@@ -332,15 +321,10 @@ public class SettingValidationService {
       }
     } else if (settingValue instanceof JenkinsConfig || settingValue instanceof BambooConfig
         || settingValue instanceof NexusConfig || settingValue instanceof DockerConfig
-        || settingValue instanceof SmbConfig || settingValue instanceof SftpConfig
-        || settingValue instanceof AzureArtifactsConfig) {
+        || settingValue instanceof ArtifactoryConfig || settingValue instanceof SmbConfig
+        || settingValue instanceof SftpConfig || settingValue instanceof AzureArtifactsConfig) {
       buildSourceService.getBuildService(settingAttribute, GLOBAL_APP_ID)
           .validateArtifactServer(settingValue, encryptedDataDetails);
-    } else if (settingValue instanceof ArtifactoryConfig) {
-      if (!((ArtifactoryConfig) settingValue).isSkipValidation()) {
-        buildSourceService.getBuildService(settingAttribute, GLOBAL_APP_ID)
-            .validateArtifactServer(settingValue, encryptedDataDetails);
-      }
     } else if (settingValue instanceof AppDynamicsConfig) {
       newRelicService.validateConfig(settingAttribute, StateType.APP_DYNAMICS, encryptedDataDetails);
     } else if (settingValue instanceof DatadogConfig) {
@@ -391,9 +375,7 @@ public class SettingValidationService {
     } else if (settingValue instanceof JiraConfig) {
       jiraHelperService.validateCredential((JiraConfig) settingValue);
     } else if (settingValue instanceof ServiceNowConfig) {
-      if (!((ServiceNowConfig) settingValue).isSkipValidation()) {
-        servicenowServiceImpl.validateCredential(settingAttribute);
-      }
+      servicenowServiceImpl.validateCredential(settingAttribute);
     } else if (settingValue instanceof HelmRepoConfig) {
       validateHelmRepoConfig(settingAttribute, encryptedDataDetails);
     } else if (settingValue instanceof SpotInstConfig) {

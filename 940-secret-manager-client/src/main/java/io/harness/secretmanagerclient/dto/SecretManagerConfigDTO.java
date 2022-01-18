@@ -11,8 +11,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import static com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
-import io.harness.NGCommonEntityConstants;
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.secretmanagerclient.dto.awskms.AwsKmsConfigDTO;
 import io.harness.secretmanagerclient.dto.awssecretmanager.AwsSMConfigDTO;
@@ -46,18 +44,17 @@ import lombok.experimental.SuperBuilder;
 })
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(
-    name = "SecretManagerConfig", description = "This has the details of the Secret Manager entity defined in Harness.")
+    name = "SecretManagerConfig", description = "This is the view of the SecretManagerConfig entity defined in Harness")
 public abstract class SecretManagerConfigDTO {
-  @Schema(description = "Name of the Secret Manager.") private String name;
-  @Schema(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) private String accountIdentifier;
-  @Schema(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) private String orgIdentifier;
-  @Schema(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) private String projectIdentifier;
-  @Schema(description = "Tags for the Secret Manager.") private Map<String, String> tags;
-  @Schema(description = "Identifier of the Secret Manager.") private String identifier;
-  @Schema(description = "Description of the Secret Manager.") private String description;
-  @Schema(description = "This specifies the type of encryption used by the Secret Manager to encrypt Secrets.")
-  private EncryptionType encryptionType;
+  private String name;
+  private String accountIdentifier;
+  private String orgIdentifier;
+  private String projectIdentifier;
+  private Map<String, String> tags;
+  private String identifier;
+  private String description;
 
-  @JsonProperty("default") @Schema(description = SecretManagerDescriptionConstants.DEFAULT) private boolean isDefault;
-  @Schema(description = SecretManagerDescriptionConstants.HARNESS_MANAGED) private boolean harnessManaged;
+  private EncryptionType encryptionType;
+  @JsonProperty("default") private boolean isDefault;
+  private boolean harnessManaged;
 }

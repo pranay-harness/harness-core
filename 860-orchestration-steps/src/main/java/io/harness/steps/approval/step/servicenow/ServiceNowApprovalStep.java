@@ -65,7 +65,6 @@ public class ServiceNowApprovalStep extends AsyncExecutableWithRollback {
     }
     return StepResponse.builder()
         .status(instance.getStatus().toFinalExecutionStatus())
-        .failureInfo(instance.getFailureInfo())
         .stepOutcome(
             StepResponse.StepOutcome.builder().name("output").outcome(instance.toServiceNowApprovalOutcome()).build())
         .build();

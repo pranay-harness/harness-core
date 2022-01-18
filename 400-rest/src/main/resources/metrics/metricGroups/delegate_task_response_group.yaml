@@ -2,7 +2,10 @@ name: DelegateTaskResponse
 identifier: delegate_task_response
 labels:
   - accountId
-  - responseCode
+  - delegateId
+  - status
+  - version
+  - ng
   - taskType
   - async
-  - ng
+  - responseCode

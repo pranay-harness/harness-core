@@ -7,8 +7,6 @@
 
 package software.wings.resources;
 
-import static io.harness.data.structure.EmptyPredicate.isEmpty;
-
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
 import io.harness.annotations.dev.HarnessModule;
@@ -109,12 +107,9 @@ public class SSOResourceNG {
       @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
-      @FormDataParam("entityIdentifier") String entityIdentifier,
-      @FormDataParam("samlProviderType") String samlProviderType, @FormDataParam("clientId") String clientId,
-      @FormDataParam("clientSecret") String clientSecret) {
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
     return new RestResponse<>(ssoService.uploadSamlConfiguration(accountId, uploadedInputStream, displayName,
-        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId,
-        isEmpty(clientSecret) ? null : clientSecret.toCharArray()));
+        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier));
   }
 
   @PUT
@@ -126,12 +121,9 @@ public class SSOResourceNG {
       @FormDataParam("file") InputStream uploadedInputStream, @FormDataParam("displayName") String displayName,
       @FormDataParam("groupMembershipAttr") String groupMembershipAttr,
       @FormDataParam("authorizationEnabled") Boolean authorizationEnabled, @FormDataParam("logoutUrl") String logoutUrl,
-      @FormDataParam("entityIdentifier") String entityIdentifier,
-      @FormDataParam("samlProviderType") String samlProviderType, @FormDataParam("clientId") String clientId,
-      @FormDataParam("clientSecret") String clientSecret) {
+      @FormDataParam("entityIdentifier") String entityIdentifier) {
     return new RestResponse<>(ssoService.updateSamlConfiguration(accountId, uploadedInputStream, displayName,
-        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier, samlProviderType, clientId,
-        isEmpty(clientSecret) ? null : clientSecret.toCharArray()));
+        groupMembershipAttr, authorizationEnabled, logoutUrl, entityIdentifier));
   }
 
   @DELETE

@@ -731,10 +731,6 @@ public class UserServiceImpl implements UserService {
       account.setCompanyName(account.getCompanyName().trim());
     }
 
-    if (isNotBlank(account.getRingName())) {
-      account.setRingName(account.getRingName().trim());
-    }
-
     if (licenseInfo != null && AccountType.TRIAL.equals(licenseInfo.getAccountType())
         && account.getTrialSignupOptions() == null) {
       account.setTrialSignupOptions(TrialSignupOptions.getDefaultTrialSignupOptions());
@@ -2980,7 +2976,7 @@ public class UserServiceImpl implements UserService {
     try {
       user = userCache.get(userId);
     } catch (Exception ex) {
-      log.error("Exception occurred while loading User from cache", ex);
+      log.error("Exception occurred while loading User from DB", ex);
     }
     if (user == null) {
       log.info("User [{}] not found in Cache. Load it from DB", userId);

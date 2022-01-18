@@ -17,7 +17,6 @@ import io.harness.exception.HttpResponseException;
 import java.io.IOException;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import retrofit2.Call;
 import retrofit2.Response;
 
@@ -51,24 +50,17 @@ public class SafeHttpCall {
     }
   }
 
-  public static void validateResponse(Response<?> response) throws IOException {
-    okhttp3.Response rawResponse = response == null ? null : response.raw();
-    if (rawResponse == null) {
-      throw new GeneralException("Null response found");
-    }
-    if (!rawResponse.isSuccessful()) {
-      throw new HttpResponseException(rawResponse.code(), getErrorMessage(response, rawResponse));
-    }
+  public static void validateResponse(Response<?> response) {
+    validateRawResponse(response == null ? null : response.raw());
   }
 
-  private static String getErrorMessage(Response<?> response, okhttp3.Response rawResponse) throws IOException {
-    if (StringUtils.isNotBlank(rawResponse.message())) {
-      return rawResponse.message();
+  public static void validateRawResponse(okhttp3.Response response) {
+    if (response == null) {
+      throw new GeneralException("Null response found");
     }
-    if (response.errorBody() == null) {
-      return "";
+    if (!response.isSuccessful()) {
+      throw new HttpResponseException(response.code(), response.message());
     }
-    return response.errorBody().string();
   }
 
   public static void printErrorResponse(Response<?> response) {

@@ -27,6 +27,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.FeatureName;
 import io.harness.beans.SecretText;
+import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
@@ -42,7 +43,6 @@ import software.wings.beans.sso.LdapGroupResponse;
 import software.wings.beans.sso.LdapSettings;
 import software.wings.beans.sso.LdapTestResponse;
 import software.wings.beans.sso.OauthSettings;
-import software.wings.beans.sso.SAMLProviderType;
 import software.wings.beans.sso.SSOSettings;
 import software.wings.beans.sso.SamlSettings;
 import software.wings.delegatetasks.DelegateProxyFactory;
@@ -62,7 +62,6 @@ import software.wings.service.intfc.AccountService;
 import software.wings.service.intfc.SSOService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.ldap.LdapDelegateService;
-import software.wings.service.intfc.security.EncryptionService;
 import software.wings.service.intfc.security.SecretManager;
 
 import com.coveo.saml.SamlClient;
@@ -104,17 +103,15 @@ public class SSOServiceImpl implements SSOService {
   @Inject @Named(SamlFeature.FEATURE_NAME) private PremiumFeature samlFeature;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private AuditServiceHelper auditServiceHelper;
-  @Inject private EncryptionService encryptionService;
 
   @Override
   public SSOConfig uploadSamlConfiguration(String accountId, InputStream inputStream, String displayName,
-      String groupMembershipAttr, Boolean authorizationEnabled, String logoutUrl, String entityIdentifier,
-      String samlProviderType, String clientId, char[] clientSecret) {
+      String groupMembershipAttr, Boolean authorizationEnabled, String logoutUrl, String entityIdentifier) {
     try {
       String fileAsString = IOUtils.toString(inputStream, Charset.defaultCharset());
       groupMembershipAttr = authorizationEnabled ? groupMembershipAttr : null;
-      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl, entityIdentifier,
-          samlProviderType, clientId, clientSecret);
+      buildAndUploadSamlSettings(
+          accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl, entityIdentifier);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
@@ -132,8 +129,7 @@ public class SSOServiceImpl implements SSOService {
 
   @Override
   public SSOConfig updateSamlConfiguration(String accountId, InputStream inputStream, String displayName,
-      String groupMembershipAttr, Boolean authorizationEnabled, String logoutUrl, String entityIdentifier,
-      String samlProviderType, String clientId, char[] clientSecret) {
+      String groupMembershipAttr, Boolean authorizationEnabled, String logoutUrl, String entityIdentifier) {
     try {
       SamlSettings settings = ssoSettingService.getSamlSettingsByAccountId(accountId);
       String fileAsString;
@@ -150,8 +146,8 @@ public class SSOServiceImpl implements SSOService {
         displayName = settings.getDisplayName();
       }
 
-      buildAndUploadSamlSettings(accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl, entityIdentifier,
-          samlProviderType, clientId, clientSecret);
+      buildAndUploadSamlSettings(
+          accountId, fileAsString, displayName, groupMembershipAttr, logoutUrl, entityIdentifier);
       return getAccountAccessManagementSettings(accountId);
     } catch (SamlException | IOException | URISyntaxException e) {
       throw new WingsException(ErrorCode.INVALID_SAML_CONFIGURATION, e);
@@ -296,10 +292,8 @@ public class SSOServiceImpl implements SSOService {
   }
 
   private SamlSettings buildAndUploadSamlSettings(String accountId, String fileAsString, String displayName,
-      String groupMembershipAttr, String logoutUrl, String entityIdentifier, String samlProviderType, String clientId,
-      char[] clientSecret) throws SamlException, URISyntaxException {
+      String groupMembershipAttr, String logoutUrl, String entityIdentifier) throws SamlException, URISyntaxException {
     SamlClient samlClient = samlClientService.getSamlClient(entityIdentifier, fileAsString);
-
     SamlSettings samlSettings = SamlSettings.builder()
                                     .metaDataFile(fileAsString)
                                     .url(samlClient.getIdentityProviderUrl())
@@ -309,16 +303,6 @@ public class SSOServiceImpl implements SSOService {
                                     .groupMembershipAttr(groupMembershipAttr)
                                     .entityIdentifier(entityIdentifier)
                                     .build();
-
-    samlSettings.setSamlProviderType(getSAMLProviderType(samlProviderType));
-    if (isNotEmpty(clientId) && isNotEmpty(clientSecret)) {
-      samlSettings.setClientId(clientId);
-      samlSettings.setEncryptedClientSecret(String.valueOf(clientSecret));
-    } else if (isNotEmpty(clientId) && isEmpty(clientSecret) || isEmpty(clientId) && isNotEmpty(clientSecret)) {
-      throw new InvalidRequestException(
-          "Both clientId and clientSecret needs to be provided together for SAML setting", WingsException.USER);
-    }
-
     if (logoutUrl != null) {
       samlSettings.setLogoutUrl(logoutUrl);
     }
@@ -477,7 +461,7 @@ public class SSOServiceImpl implements SSOService {
 
   private boolean populateEncryptedFields(@NotNull LdapSettings settings) {
     if (!isExistingSetting(settings)) {
-      if (isEmpty(settings.getConnectionSettings().getBindDN())) {
+      if (EmptyPredicate.isEmpty(settings.getConnectionSettings().getBindDN())) {
         return false;
       }
       if (settings.getConnectionSettings().getBindPassword().equals(LdapConstants.MASKED_STRING)) {
@@ -545,22 +529,5 @@ public class SSOServiceImpl implements SSOService {
         || authenticationMechanism == AuthenticationMechanism.SAML && !samlFeature.isAvailableForAccount(accountId)) {
       throw new InvalidRequestException(String.format("Operation not permitted for account [%s]", accountId), USER);
     }
-  }
-
-  private SAMLProviderType getSAMLProviderType(String samlProviderType) {
-    if (isNotEmpty(samlProviderType)) {
-      switch (samlProviderType.toUpperCase()) {
-        case "AZURE":
-          return SAMLProviderType.AZURE;
-        case "OKTA":
-          return SAMLProviderType.OKTA;
-        case "ONELOGIN":
-          return SAMLProviderType.ONELOGIN;
-        default:
-          return SAMLProviderType.OTHER;
-      }
-    }
-
-    return SAMLProviderType.OTHER;
   }
 }

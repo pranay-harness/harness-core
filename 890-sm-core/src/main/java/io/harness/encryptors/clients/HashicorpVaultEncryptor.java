@@ -21,7 +21,6 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.concurrent.HTimeLimiter;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.exception.SecretManagementDelegateException;
-import io.harness.exception.runtime.HashiCorpVaultRuntimeException;
 import io.harness.helpers.ext.vault.VaultRestClientFactory;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptedRecordData;
@@ -66,12 +65,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          if (e instanceof HashiCorpVaultRuntimeException) {
-            throw new HashiCorpVaultRuntimeException(e.getMessage());
-          } else {
-            String message = "After " + NUM_OF_RETRIES + " tries, encryption for vault secret " + name + " failed.";
-            throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
-          }
+          String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
+          throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
       }
@@ -91,7 +86,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "After " + NUM_OF_RETRIES + " tries, encryption for vault secret " + name + " failed.";
+          String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
           throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -112,7 +107,7 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
         failedAttempts++;
         log.warn("encryption failed. trial num: {}", failedAttempts, e);
         if (failedAttempts == NUM_OF_RETRIES) {
-          String message = "After " + NUM_OF_RETRIES + " tries, encryption for vault secret " + name + " failed.";
+          String message = "encryption failed after " + NUM_OF_RETRIES + " retries for vault secret " + name;
           throw new SecretManagementDelegateException(VAULT_OPERATION_ERROR, message, e, USER);
         }
         sleep(ofMillis(1000));
@@ -238,8 +233,8 @@ public class HashicorpVaultEncryptor implements VaultEncryptor {
     try {
       createSecret(accountId, VaultConfig.VAULT_VAILDATION_URL, Boolean.TRUE.toString(), encryptionConfig);
     } catch (Exception exception) {
-      log.error("Validation for Secret Manager/KMS failed: " + encryptionConfig.getName());
-      throw exception;
+      log.error("Validation failed for Secret Manager/KMS: " + encryptionConfig.getName());
+      return false;
     }
     return true;
   }

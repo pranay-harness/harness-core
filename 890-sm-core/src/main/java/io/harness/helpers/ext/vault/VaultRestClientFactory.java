@@ -11,7 +11,6 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.runtime.HashiCorpVaultRuntimeException;
 import io.harness.network.Http;
 
 import software.wings.beans.VaultConfig;
@@ -138,7 +137,6 @@ public class VaultRestClientFactory {
       Response<Void> response =
           vaultRestClient.writeSecret(authToken, namespace, secretEngine, pathAndKey.path, valueMap).execute();
       logErrorIfRequestFailed(response, "V1Impl- writeSecret");
-      checkAndThrowHashicorpVaultRuntimeException(response);
       return response.isSuccessful();
     }
 
@@ -149,7 +147,6 @@ public class VaultRestClientFactory {
       Response<Void> response =
           vaultRestClient.deleteSecret(authToken, namespace, secretEngine, pathAndKey.path).execute();
       logErrorIfRequestFailed(response, "V1Impl-deleteSecret");
-      checkAndThrowHashicorpVaultRuntimeException(response);
       return response.isSuccessful();
     }
 
@@ -189,7 +186,6 @@ public class VaultRestClientFactory {
       Response<Void> response =
           vaultRestClient.writeSecret(authToken, namespace, secretEngine, pathAndKey.path, vaultSecretValue).execute();
       logErrorIfRequestFailed(response, "V2Impl-writeSecret");
-      checkAndThrowHashicorpVaultRuntimeException(response);
       return response.isSuccessful();
     }
 
@@ -200,7 +196,6 @@ public class VaultRestClientFactory {
       Response<Void> response =
           vaultRestClient.deleteSecret(authToken, namespace, secretEngine, pathAndKey.path).execute();
       logErrorIfRequestFailed(response, "V2Impl-deleteSecret");
-      checkAndThrowHashicorpVaultRuntimeException(response);
       return response.isSuccessful();
     }
 
@@ -243,16 +238,6 @@ public class VaultRestClientFactory {
       } else {
         log.error("Could not {} secret in the vault due to the following error {}", action,
             response.message() + response.body());
-      }
-    }
-  }
-
-  private void checkAndThrowHashicorpVaultRuntimeException(Response<Void> response) {
-    if (response != null && !response.isSuccessful()) {
-      if (response.errorBody() != null) {
-        throw new HashiCorpVaultRuntimeException(response.errorBody().toString());
-      } else {
-        throw new HashiCorpVaultRuntimeException(response.message() + response.body());
       }
     }
   }

@@ -38,7 +38,7 @@ public interface PMSInputSetRepositoryCustom {
 
   InputSetEntity update(InputSetEntity entityToUpdate, InputSetYamlDTO yamlDTO, ChangeType changeType);
 
-  InputSetEntity update(Criteria criteria, Update update);
+  InputSetEntity switchValidationFlag(Criteria criteria, Update update);
 
   InputSetEntity delete(InputSetEntity entityToDelete, InputSetYamlDTO yamlDTO);
 

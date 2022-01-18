@@ -6,6 +6,7 @@
  */
 
 package io.harness.cvng;
+
 import static io.harness.annotations.dev.HarnessTeam.CV;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
@@ -50,17 +51,15 @@ public class CVNGDataCollectionDelegateServiceImpl implements CVNGDataCollection
   @Override
   public String getDataCollectionResult(String accountId, DataCollectionRequest dataCollectionRequest,
       List<List<EncryptedDataDetail>> encryptedDataDetails) {
-    if (dataCollectionRequest.getConnectorConfigDTO() instanceof DecryptableEntity) {
-      List<DecryptableEntity> decryptableEntities =
-          dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities();
+    List<DecryptableEntity> decryptableEntities =
+        dataCollectionRequest.getConnectorConfigDTO().getDecryptableEntities();
 
-      if (isNotEmpty(decryptableEntities)) {
-        for (int decryptableEntityIndex = 0; decryptableEntityIndex < decryptableEntities.size();
-             decryptableEntityIndex++) {
-          DecryptableEntity decryptableEntity = decryptableEntities.get(decryptableEntityIndex);
-          List<EncryptedDataDetail> encryptedDataDetail = encryptedDataDetails.get(decryptableEntityIndex);
-          secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetail);
-        }
+    if (isNotEmpty(decryptableEntities)) {
+      for (int decryptableEntityIndex = 0; decryptableEntityIndex < decryptableEntities.size();
+           decryptableEntityIndex++) {
+        DecryptableEntity decryptableEntity = decryptableEntities.get(decryptableEntityIndex);
+        List<EncryptedDataDetail> encryptedDataDetail = encryptedDataDetails.get(decryptableEntityIndex);
+        secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetail);
       }
     }
 

@@ -46,7 +46,6 @@ import io.harness.cvng.core.entities.DatadogLogCVConfig;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig;
 import io.harness.cvng.core.entities.DeletedCVConfig;
 import io.harness.cvng.core.entities.DeploymentDataCollectionTask;
-import io.harness.cvng.core.entities.ErrorTrackingCVConfig;
 import io.harness.cvng.core.entities.HostRecord;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
@@ -174,7 +173,6 @@ public class CVNextGenMorphiaRegister implements MorphiaRegistrar {
     set.add(StackdriverLogCVConfig.class);
     set.add(DatadogMetricCVConfig.class);
     set.add(DatadogLogCVConfig.class);
-    set.add(ErrorTrackingCVConfig.class);
     set.add(MonitoredService.class);
     set.add(HarnessCDChangeSource.class);
     set.add(ChangeSource.class);

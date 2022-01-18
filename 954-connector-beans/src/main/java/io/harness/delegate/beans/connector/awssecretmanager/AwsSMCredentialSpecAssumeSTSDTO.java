@@ -9,7 +9,6 @@ package io.harness.delegate.beans.connector.awssecretmanager;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -28,14 +27,10 @@ import lombok.Data;
 @JsonTypeName(AwsSecretManagerConstants.ASSUME_STS_ROLE)
 @ApiModel("AwsSMCredentialSpecAssumeSTS")
 @Schema(name = "AwsSMCredentialSpecAssumeSTS",
-    description = "Returns credentials for the AWS Secret Manager for the IAM role.")
+    description =
+        "Returns credentials like RoleArn and externalId and STS role duration specific to IAM role for the AWS Secret Manager.")
 public class AwsSMCredentialSpecAssumeSTSDTO implements AwsSecretManagerCredentialSpecDTO {
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @Schema(description = SecretManagerDescriptionConstants.ROLE_ARN)
-  private String roleArn;
-  @ApiModelProperty(dataType = "string")
-  @Schema(description = SecretManagerDescriptionConstants.EXTERNAL_NAME)
-  private String externalId;
-  @Schema(description = SecretManagerDescriptionConstants.ASSUME_STS_ROLE_DURATION) private int assumeStsRoleDuration;
+  @ApiModelProperty(dataType = "string") @NotNull private String roleArn;
+  @ApiModelProperty(dataType = "string") private String externalId;
+  private int assumeStsRoleDuration;
 }

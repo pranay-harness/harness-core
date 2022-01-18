@@ -22,6 +22,5 @@ import lombok.Data;
 public class YamlSchemaMetadata {
   List<ModuleType> modulesSupported;
   List<String> featureFlags;
-  List<String> featureRestrictions;
   @NotNull YamlGroup yamlGroup;
 }

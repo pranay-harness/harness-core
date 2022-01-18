@@ -150,19 +150,13 @@ public class PlanNodeExecutionStrategy
 
   @Override
   public void processFacilitationResponse(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
-      ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
-          ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-      if (!check.isProceed()) {
-        log.info("Not Proceeding with Execution : {}", check.getReason());
-        return;
-      }
-      startHelper.startNode(ambiance, facilitatorResponse);
-    } catch (Exception exception) {
-      log.error("Exception Occurred while processing facilitation response NodeExecutionId : {}, PlanExecutionId: {}",
-          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
-      handleError(ambiance, exception);
+    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
+        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    if (!check.isProceed()) {
+      log.info("Not Proceeding with Execution : {}", check.getReason());
+      return;
     }
+    startHelper.startNode(ambiance, facilitatorResponse);
   }
 
   @Override

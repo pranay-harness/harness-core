@@ -197,7 +197,6 @@ import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.ServiceTemplateService;
 import software.wings.service.intfc.ServiceVariableService;
 import software.wings.service.intfc.TriggerService;
-import software.wings.service.intfc.UserGroupService;
 import software.wings.service.intfc.WorkflowExecutionService;
 import software.wings.service.intfc.WorkflowService;
 import software.wings.service.intfc.customdeployment.CustomDeploymentTypeService;
@@ -355,7 +354,6 @@ public class ServiceResourceServiceImpl implements ServiceResourceService, DataP
   @Inject private WorkflowExecutionService workflowExecutionService;
   @Inject private CustomDeploymentTypeService customDeploymentTypeService;
   @Inject private CVConfigurationService cvConfigurationService;
-  @Inject private UserGroupService userGroupService;
 
   /**
    * {@inheritDoc}

@@ -47,7 +47,6 @@ public class DatadogMetricHealthSourceSpecTransformer
               .aggregation(metricInfo.getAggregation())
               .metricTags(metricInfo.getMetricTags())
               .isManualQuery(metricInfo.isManualQuery())
-              .isCustomCreatedMetric(metricInfo.isCustomCreatedMetric())
               .riskProfile(riskProfile)
               .sli(transformSLIEntityToDTO(metricInfo.getSli()))
               .analysis(HealthSourceMetricDefinition.AnalysisDTO.builder()

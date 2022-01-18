@@ -10,7 +10,6 @@ package io.harness.pms.helpers;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.pms.contracts.plan.PrincipalType.API_KEY;
 import static io.harness.pms.contracts.plan.PrincipalType.SERVICE;
-import static io.harness.pms.contracts.plan.PrincipalType.SERVICE_ACCOUNT;
 import static io.harness.pms.contracts.plan.PrincipalType.USER;
 
 import io.harness.PipelineServiceConfiguration;
@@ -22,7 +21,6 @@ import io.harness.pms.contracts.plan.ExecutionPrincipalInfo;
 import io.harness.pms.contracts.plan.PrincipalType;
 import io.harness.security.SecurityContextBuilder;
 
-import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.Objects;
 
@@ -42,8 +40,7 @@ public class PrincipalInfoHelper {
         .build();
   }
 
-  @VisibleForTesting
-  PrincipalType fromSecurityPrincipalType(io.harness.security.dto.PrincipalType principalType) {
+  private PrincipalType fromSecurityPrincipalType(io.harness.security.dto.PrincipalType principalType) {
     switch (principalType) {
       case SERVICE:
         return SERVICE;
@@ -51,8 +48,6 @@ public class PrincipalInfoHelper {
         return API_KEY;
       case USER:
         return USER;
-      case SERVICE_ACCOUNT:
-        return SERVICE_ACCOUNT;
       default:
         return null;
     }

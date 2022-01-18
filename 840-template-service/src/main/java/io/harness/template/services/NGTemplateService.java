@@ -57,6 +57,4 @@ public interface NGTemplateService {
 
   boolean validateIdentifierIsUnique(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String templateIdentifier, String versionLabel);
-
-  TemplateEntity updateGitFilePath(TemplateEntity templateEntity, String newFilePath);
 }

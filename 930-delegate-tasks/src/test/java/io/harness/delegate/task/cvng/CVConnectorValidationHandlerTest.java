@@ -28,14 +28,11 @@ import io.harness.encryption.Scope;
 import io.harness.encryption.SecretRefData;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -77,14 +74,10 @@ public class CVConnectorValidationHandlerTest extends CategoryTest {
                                                   .url(url)
                                                   .build();
 
-    List<List<EncryptedDataDetail>> encryptedDataList = new ArrayList<>();
-    encryptedDataList.add(new ArrayList<>());
-    encryptedDataList.get(0).add(new EncryptedDataDetail());
-
     connectorValidationParams = CVConnectorValidationParams.builder()
                                     .connectorConfigDTO(datadogConnectorDTO)
                                     .connectorName("TestDatadogConnector")
-                                    .encryptedDataDetails(encryptedDataList)
+                                    .encryptedDataDetails(null)
                                     .connectorType(ConnectorType.DATADOG)
                                     .build();
   }

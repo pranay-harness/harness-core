@@ -79,12 +79,6 @@ public class ConnectorCustomRepositoryImpl implements ConnectorCustomRepository 
   }
 
   @Override
-  public Connector update(Criteria criteria, Update update) {
-    return mongoTemplate.findAndModify(
-        query(criteria), update, FindAndModifyOptions.options().returnNew(true), Connector.class);
-  }
-
-  @Override
   public UpdateResult updateMultiple(Query query, Update update) {
     return mongoTemplate.updateMulti(query, update, Connector.class);
   }

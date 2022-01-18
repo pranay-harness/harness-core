@@ -141,21 +141,22 @@
       "if" : {
         "properties" : {
           "type" : {
-            "const" : "ServiceNowApproval"
+            "const":"ServiceNowApproval"
           }
         }
       },
-      "then" : {
-        "properties" : {
-          "spec" : {
-            "$ref" : "#/definitions/cvng/ServiceNowApprovalStepInfo"
+      "then":{
+        "properties":{
+          "spec":{
+            "$ref":"#/definitions/cvng/ServiceNowApprovalStepInfo"
           }
         }
       }
-    }, {
-      "if" : {
-        "properties" : {
-          "type" : {
+    },
+      {
+        "if":{
+          "properties":{
+            "type":{
             "const" : "ShellScript"
           }
         }
@@ -383,7 +384,12 @@
             "$ref" : "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type" : "object",
+            "required" : [ "sensitivity" ],
             "properties" : {
+              "sensitivity" : {
+                "type" : "string",
+                "description" : "Possible values: [Low, Medium, High]"
+              },
               "trafficSplitPercentage" : {
                 "type" : "string",
                 "description" : "Example: 50, You can put max upto 50."
@@ -471,7 +477,12 @@
             "$ref" : "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type" : "object",
+            "required" : [ "sensitivity" ],
             "properties" : {
+              "sensitivity" : {
+                "type" : "string",
+                "description" : "Possible values: [Low, Medium, High]"
+              },
               "trafficSplitPercentage" : {
                 "type" : "string",
                 "description" : "Example: 50, You can put max upto 50."
@@ -820,7 +831,12 @@
             "$ref" : "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type" : "object",
+            "required" : [ "sensitivity" ],
             "properties" : {
+              "sensitivity" : {
+                "type" : "string",
+                "description" : "Possible values: [Low, Medium, High]"
+              },
               "trafficSplitPercentage" : {
                 "type" : "string",
                 "description" : "Example: 50, You can put max upto 50."
@@ -1361,43 +1377,54 @@
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
-        "ServiceNowApprovalStepInfo" : {
-          "allOf" : [ {
-            "$ref" : "#/definitions/cvng/StepSpecType"
-          }, {
-            "type" : "object",
-            "required" : [ "approvalCriteria", "connectorRef", "ticketNumber", "ticketType" ],
-            "properties" : {
-              "approvalCriteria" : {
-                "$ref" : "#/definitions/cvng/CriteriaSpecWrapper"
-              },
-              "connectorRef" : {
-                "type" : "string"
-              },
-              "delegateSelectors" : {
-                "oneOf" : [ {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                }, {
-                  "type" : "string",
-                  "pattern" : "^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
-                  "minLength" : 1
-                } ]
-              },
-              "rejectionCriteria" : {
-                "$ref" : "#/definitions/cvng/CriteriaSpecWrapper"
-              },
-              "ticketNumber" : {
-                "type" : "string"
-              },
-              "ticketType" : {
-                "type" : "string"
+        "ServiceNowApprovalStepInfo":{
+          "allOf":[
+            {
+              "$ref":"#/definitions/cvng/StepSpecType"
+            },
+            {
+              "type":"object",
+              "required":[
+                "approvalCriteria",
+                "connectorRef",
+                "ticketNumber",
+                "ticketType"
+              ],
+              "properties":{
+                "approvalCriteria":{
+                  "$ref":"#/definitions/cvng/CriteriaSpecWrapper"
+                },
+                "connectorRef":{
+                  "type":"string"
+                },
+                "delegateSelectors":{
+                  "oneOf":[
+                    {
+                      "type":"array",
+                      "items":{
+                        "type":"string"
+                      }
+                    },
+                    {
+                      "type":"string",
+                      "pattern":"^<\\+input>(\\.(allowedValues|regex)\\(.+?\\))*$",
+                      "minLength":1
+                    }
+                  ]
+                },
+                "rejectionCriteria":{
+                  "$ref":"#/definitions/cvng/CriteriaSpecWrapper"
+                },
+                "ticketNumber":{
+                  "type":"string"
+                },
+                "ticketType":{
+                  "type":"string"
+                }
               }
             }
-          } ],
-          "$schema" : "http://json-schema.org/draft-07/schema#"
+          ],
+          "$schema":"http://json-schema.org/draft-07/schema#"
         },
         "SetDefaultVariationsYaml" : {
           "allOf" : [ {
@@ -1796,18 +1823,19 @@
                 }
               }
             }
-          }, {
-            "if" : {
-              "properties" : {
-                "type" : {
-                  "const" : "ServiceNowApproval"
+          },
+            {
+              "if":{
+                "properties":{
+                  "type":{
+                    "const":"ServiceNowApproval"
+                  }
                 }
-              }
-            },
-            "then" : {
-              "properties" : {
-                "spec" : {
-                  "$ref" : "#/definitions/cvng/ServiceNowApprovalStepInfo"
+              },
+              "then":{
+                "properties":{
+                  "spec":{
+                    "$ref":"#/definitions/cvng/ServiceNowApprovalStepInfo"
                 }
               }
             }
@@ -1841,7 +1869,8 @@
                 }
               }
             }
-          } ]
+          }
+        ]
         },
         "StepGroupFailureActionConfig" : {
           "allOf" : [ {
@@ -1907,7 +1936,13 @@
             "$ref" : "#/definitions/cvng/VerificationJobSpec"
           }, {
             "type" : "object",
-            "properties" : { }
+            "required" : [ "sensitivity" ],
+            "properties" : {
+              "sensitivity" : {
+                "type" : "string",
+                "description" : "Possible values: [Low, Medium, High]"
+              }
+            }
           } ],
           "$schema" : "http://json-schema.org/draft-07/schema#"
         },
@@ -1983,7 +2018,7 @@
         },
         "VerificationJobSpec" : {
           "type" : "object",
-          "required" : [ "deploymentTag", "duration", "sensitivity" ],
+          "required" : [ "deploymentTag", "duration" ],
           "discriminator" : "type",
           "properties" : {
             "deploymentTag" : {
@@ -1993,10 +2028,6 @@
             "duration" : {
               "type" : "string",
               "description" : "Format example: 5m, 30m, please put multiple of 5"
-            },
-            "sensitivity" : {
-              "type" : "string",
-              "description" : "Possible values: [Low, Medium, High]"
             }
           },
           "$schema" : "http://json-schema.org/draft-07/schema#"

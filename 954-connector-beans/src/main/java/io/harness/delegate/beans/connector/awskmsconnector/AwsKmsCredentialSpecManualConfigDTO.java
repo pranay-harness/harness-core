@@ -9,7 +9,6 @@ package io.harness.delegate.beans.connector.awskmsconnector;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.encryption.SecretRefData;
 import io.harness.encryption.SecretReference;
@@ -30,16 +29,8 @@ import lombok.Data;
 @JsonTypeName(AwsKmsConstants.MANUAL_CONFIG)
 @ApiModel("AwsKmsCredentialSpecManualConfig")
 @Schema(name = "AwsKmsCredentialSpecManualConfig",
-    description = "This contains the AWS KMS Secret Manager's secret reference access key and secret key.")
+    description = "This contains the secret reference accessKey and secretKey of AWS KMS SM")
 public class AwsKmsCredentialSpecManualConfigDTO implements AwsKmsCredentialSpecDTO {
-  @SecretReference
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @Schema(description = SecretManagerDescriptionConstants.ACCESS_KEY)
-  private SecretRefData accessKey;
-  @SecretReference
-  @ApiModelProperty(dataType = "string")
-  @NotNull
-  @Schema(description = SecretManagerDescriptionConstants.SECRET_KEY)
-  private SecretRefData secretKey;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData accessKey;
+  @SecretReference @ApiModelProperty(dataType = "string") @NotNull private SecretRefData secretKey;
 }

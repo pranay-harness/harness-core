@@ -232,20 +232,15 @@ public class AdminAccountResource {
   @PUT
   @Path("{accountId}/details")
   public RestResponse<Boolean> updateAccountDetails(@PathParam("accountId") String accountId,
-      @QueryParam("account-name") String accountName, @QueryParam("company-name") String companyName,
-      @QueryParam("ring-name") String ringName) {
+      @QueryParam("account-name") String accountName, @QueryParam("company-name") String companyName) {
     boolean accountNameUpdateSuccess = true;
     boolean companyNameUpdateStatus = true;
-    boolean ringNameUpdateStatus = true;
     if (!StringUtils.isEmpty(accountName)) {
       accountNameUpdateSuccess = adminAccountService.updateAccountName(accountId, accountName);
     }
     if (!StringUtils.isEmpty(companyName)) {
       companyNameUpdateStatus = adminAccountService.updateCompanyName(accountId, companyName);
     }
-    if (!StringUtils.isEmpty(ringName)) {
-      ringNameUpdateStatus = adminAccountService.updateRingName(accountId, companyName);
-    }
-    return new RestResponse<>(accountNameUpdateSuccess && companyNameUpdateStatus && ringNameUpdateStatus);
+    return new RestResponse<>(accountNameUpdateSuccess && companyNameUpdateStatus);
   }
 }

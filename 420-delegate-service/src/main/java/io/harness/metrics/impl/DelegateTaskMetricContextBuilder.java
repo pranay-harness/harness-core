@@ -12,9 +12,11 @@ import static io.harness.delegate.beans.NgSetupFields.NG;
 
 import io.harness.beans.DelegateTask;
 import io.harness.delegate.beans.Delegate;
+import io.harness.delegate.beans.DelegateTaskResponse;
 import io.harness.metrics.AutoMetricContext;
 import io.harness.metrics.beans.DelegateMetricContext;
 import io.harness.metrics.beans.DelegateTaskMetricContext;
+import io.harness.metrics.beans.DelegateTaskResponseMetricContext;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Singleton;
@@ -28,11 +30,18 @@ public class DelegateTaskMetricContextBuilder {
   static {
     addToObjContextMap(DelegateTask.class,
         delegateTask
-        -> new DelegateTaskMetricContext(delegateTask.getAccountId(), isNg(delegateTask),
+        -> new DelegateTaskMetricContext(delegateTask.getAccountId(), delegateTask.getDelegateId(),
+            delegateTask.getStatus(), delegateTask.getVersion(), isNg(delegateTask),
             delegateTask.getData().getTaskType(), delegateTask.getData().isAsync()));
 
-    addToObjContextMap(
-        Delegate.class, delegate -> new DelegateMetricContext(delegate.getAccountId(), delegate.getVersion()));
+    addToObjContextMap(DelegateTaskResponse.class,
+        response
+        -> new DelegateTaskResponseMetricContext(
+            response.getAccountId(), response.getResponseCode(), response.getResponse().getClass()));
+    addToObjContextMap(Delegate.class,
+        delegate
+        -> new DelegateMetricContext(delegate.getAccountId(), delegate.getUuid(), delegate.getLastHeartBeat(),
+            delegate.isNg(), delegate.getStatus().name(), delegate.getVersion()));
   }
 
   private static <T> void addToObjContextMap(

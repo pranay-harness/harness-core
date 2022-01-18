@@ -60,7 +60,7 @@ public class PMSOpaServiceImpl implements PMSOpaService {
     }
     PipelineOpaEvaluationContextBuilder pipelineBuilder =
         PipelineOpaEvaluationContext.builder().pipeline(OpaUtils.extractObjectFromYamlString(pipelineYaml, "pipeline"));
-    EmbeddedUser embeddedUser = currentUserHelper.getFromSecurityContextFromPrincipal();
+    EmbeddedUser embeddedUser = currentUserHelper.getFromSecurityContext();
     UserOpaEvaluationContextBuilder userBuilder =
         UserOpaEvaluationContext.builder().email(embeddedUser.getEmail()).name(embeddedUser.getName());
 

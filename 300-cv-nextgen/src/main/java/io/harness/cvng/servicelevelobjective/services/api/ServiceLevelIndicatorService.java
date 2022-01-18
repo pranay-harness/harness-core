@@ -34,7 +34,6 @@ public interface ServiceLevelIndicatorService {
   ServiceLevelIndicator get(String sliId);
 
   List<CVConfig> fetchCVConfigForSLI(ServiceLevelIndicator serviceLevelIndicator);
-  List<CVConfig> fetchCVConfigForSLI(String sliId);
 
   ServiceLevelIndicator getServiceLevelIndicator(ProjectParams projectParams, String identifier);
 

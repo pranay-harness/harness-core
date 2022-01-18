@@ -374,7 +374,6 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
             .orgIdentifier(monitoredServiceEntity.getOrgIdentifier())
             .projectIdentifier(monitoredServiceEntity.getProjectIdentifier())
             .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
-            .environmentRefList(monitoredServiceEntity.getEnvironmentIdentifierList())
             .serviceRef(monitoredServiceEntity.getServiceIdentifier())
             .type(monitoredServiceEntity.getType())
             .description(monitoredServiceEntity.getDesc())
@@ -440,7 +439,6 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
                       .orgIdentifier(monitoredServiceEntity.getOrgIdentifier())
                       .projectIdentifier(monitoredServiceEntity.getProjectIdentifier())
                       .environmentRef(monitoredServiceEntity.getEnvironmentIdentifier())
-                      .environmentRefList(monitoredServiceEntity.getEnvironmentIdentifierList())
                       .serviceRef(monitoredServiceEntity.getServiceIdentifier())
                       .type(monitoredServiceEntity.getType())
                       .description(monitoredServiceEntity.getDesc())
@@ -599,21 +597,19 @@ public class MonitoredServiceServiceImpl implements MonitoredServiceService {
   }
 
   private void saveMonitoredServiceEntity(String accountId, MonitoredServiceDTO monitoredServiceDTO) {
-    MonitoredService monitoredServiceEntity =
-        MonitoredService.builder()
-            .name(monitoredServiceDTO.getName())
-            .desc(monitoredServiceDTO.getDescription())
-            .accountId(accountId)
-            .orgIdentifier(monitoredServiceDTO.getOrgIdentifier())
-            .projectIdentifier(monitoredServiceDTO.getProjectIdentifier())
-            .environmentIdentifier(monitoredServiceDTO.getEnvironmentRef())
-            .environmentIdentifierList(monitoredServiceDTO.getEnvironmentRefList())
-            .serviceIdentifier(monitoredServiceDTO.getServiceRef())
-            .identifier(monitoredServiceDTO.getIdentifier())
-            .type(monitoredServiceDTO.getType())
-            .enabled(getMonitoredServiceEnableStatus())
-            .tags(TagMapper.convertToList(monitoredServiceDTO.getTags()))
-            .build();
+    MonitoredService monitoredServiceEntity = MonitoredService.builder()
+                                                  .name(monitoredServiceDTO.getName())
+                                                  .desc(monitoredServiceDTO.getDescription())
+                                                  .accountId(accountId)
+                                                  .orgIdentifier(monitoredServiceDTO.getOrgIdentifier())
+                                                  .projectIdentifier(monitoredServiceDTO.getProjectIdentifier())
+                                                  .environmentIdentifier(monitoredServiceDTO.getEnvironmentRef())
+                                                  .serviceIdentifier(monitoredServiceDTO.getServiceRef())
+                                                  .identifier(monitoredServiceDTO.getIdentifier())
+                                                  .type(monitoredServiceDTO.getType())
+                                                  .enabled(getMonitoredServiceEnableStatus())
+                                                  .tags(TagMapper.convertToList(monitoredServiceDTO.getTags()))
+                                                  .build();
     if (monitoredServiceDTO.getSources() != null) {
       monitoredServiceEntity.setHealthSourceIdentifiers(monitoredServiceDTO.getSources()
                                                             .getHealthSources()

@@ -117,8 +117,6 @@ public class PipelineEntity
   @Wither int stageCount;
   @Wither @Singular List<String> stageNames;
 
-  @Wither Boolean allowStageExecutions;
-
   @Wither @Setter @NonFinal @Default Boolean templateReference = false;
 
   @Wither @Setter @NonFinal String objectIdOfYaml;
@@ -147,9 +145,5 @@ public class PipelineEntity
   @Override
   public String getInvalidYamlString() {
     return yaml;
-  }
-
-  public boolean shouldAllowStageExecutions() {
-    return allowStageExecutions != null && allowStageExecutions;
   }
 }

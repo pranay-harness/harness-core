@@ -51,7 +51,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -311,15 +310,15 @@ public class YamlSchemaUtils {
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
   }
   public void addOneOfInExecutionWrapperConfig(JsonNode pipelineSchema,
-      List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType, Set<String> enabledFeatureFlags,
-      Map<String, Boolean> featureRestrictionsMap) {
+      List<YamlSchemaWithDetails> stepSchemaWithDetails, ModuleType moduleType,
+      Collection<String> enabledFeatureFlags) {
     JsonNode executionWrapperConfigProperties = pipelineSchema.get(EXECUTION_WRAPPER_CONFIG_NODE).get(PROPERTIES_NODE);
     ArrayNode oneOfNode = getOneOfNode(executionWrapperConfigProperties);
     JsonNode stepsNode = executionWrapperConfigProperties.get(STEP_NODE);
 
     for (YamlSchemaWithDetails schemaWithDetails : stepSchemaWithDetails) {
       String nameSpaceString = getNamespaceFromModuleType(schemaWithDetails.getModuleType());
-      if (validateSchemaMetadata(schemaWithDetails, moduleType, enabledFeatureFlags, featureRestrictionsMap)) {
+      if (validateSchemaMetadata(schemaWithDetails, moduleType, enabledFeatureFlags)) {
         oneOfNode.add(JsonNodeUtils.upsertPropertyInObjectNode(new ObjectNode(JsonNodeFactory.instance), REF_NODE,
             "#/definitions/" + nameSpaceString + schemaWithDetails.getSchemaClassName()));
       }
@@ -328,26 +327,21 @@ public class YamlSchemaUtils {
     ((ObjectNode) stepsNode).set(ONE_OF_NODE, oneOfNode);
   }
 
-  private boolean validateSchemaMetadata(YamlSchemaWithDetails yamlSchemaWithDetails, ModuleType moduleType,
-      Set<String> enabledFeatureFlags, Map<String, Boolean> featureRestrictionsMap) {
+  private boolean validateSchemaMetadata(
+      YamlSchemaWithDetails yamlSchemaWithDetails, ModuleType moduleType, Collection<String> enabledFeatureFlags) {
     YamlSchemaMetadata yamlSchemaMetadata = yamlSchemaWithDetails.getYamlSchemaMetadata();
     if (yamlSchemaMetadata == null) {
       return false;
     }
-    List<ModuleType> supportedModules = CollectionUtils.emptyIfNull(yamlSchemaMetadata.getModulesSupported());
-    if (!supportedModules.contains(moduleType)) {
+    List<ModuleType> supportedModules = yamlSchemaMetadata.getModulesSupported();
+    if (supportedModules == null || !supportedModules.contains(moduleType)) {
       return false;
     }
 
-    if (!validateByFeatureFlags(yamlSchemaMetadata, enabledFeatureFlags)) {
-      return false;
+    List<String> requiredFeatureFlags = yamlSchemaMetadata.getFeatureFlags();
+    if (requiredFeatureFlags == null) {
+      return true;
     }
-
-    return validateByFeatureRestrictions(yamlSchemaMetadata, featureRestrictionsMap);
-  }
-
-  private boolean validateByFeatureFlags(YamlSchemaMetadata yamlSchemaMetadata, Set<String> enabledFeatureFlags) {
-    List<String> requiredFeatureFlags = CollectionUtils.emptyIfNull(yamlSchemaMetadata.getFeatureFlags());
     for (String featureFlag : requiredFeatureFlags) {
       if (!enabledFeatureFlags.contains(featureFlag)) {
         return false;
@@ -356,11 +350,11 @@ public class YamlSchemaUtils {
     return true;
   }
 
-  private boolean validateByFeatureRestrictions(
-      YamlSchemaMetadata yamlSchemaMetadata, Map<String, Boolean> featureRestrictionsMap) {
-    List<String> requiredFeatureRestrictions = CollectionUtils.emptyIfNull(yamlSchemaMetadata.getFeatureRestrictions());
-    for (String featureRestriction : requiredFeatureRestrictions) {
-      if (featureRestrictionsMap.get(featureRestriction) == null || !featureRestrictionsMap.get(featureRestriction)) {
+  private boolean validateByFeatureFlags(
+      YamlSchemaMetadata yamlSchemaMetadata, Collection<String> enabledFeatureFlags) {
+    List<String> requiredFeatureFlags = yamlSchemaMetadata.getFeatureFlags();
+    for (String featureFlag : CollectionUtils.emptyIfNull(requiredFeatureFlags)) {
+      if (!enabledFeatureFlags.contains(featureFlag)) {
         return false;
       }
     }
@@ -394,14 +388,13 @@ public class YamlSchemaUtils {
     return oneOfList;
   }
 
-  public Set<Class<?>> getNodeClassesByYamlGroup(List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup,
-      Set<String> enabledFeatureFlags, Map<String, Boolean> featureRestrictionsMap) {
+  public Set<Class<?>> getNodeClassesByYamlGroup(
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, String yamlGroup, Collection<String> enabledFeatureFlags) {
     return yamlSchemaRootClasses.stream()
         .filter(yamlSchemaRootClass
             -> yamlSchemaRootClass.getYamlSchemaMetadata() != null
                 && yamlSchemaRootClass.getYamlSchemaMetadata().getYamlGroup().getGroup().equals(yamlGroup))
         .filter(o -> validateByFeatureFlags(o.getYamlSchemaMetadata(), enabledFeatureFlags))
-        .filter(o -> validateByFeatureRestrictions(o.getYamlSchemaMetadata(), featureRestrictionsMap))
         .map(YamlSchemaRootClass::getClazz)
         .collect(Collectors.toSet());
   }

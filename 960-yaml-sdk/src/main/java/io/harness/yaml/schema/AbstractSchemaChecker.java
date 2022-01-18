@@ -76,11 +76,11 @@ public class AbstractSchemaChecker {
       log.info("Running schema check for {}", schemaRoot.getEntityType());
       final String schemaPathForEntityType = getSchemaPathForRootCLass(schemaRoot);
       final JsonNode jsonNode = entityTypeJsonNodeMap.get(schemaRoot.getEntityType());
-      final String currentVersionSchema = objectWriter.writeValueAsString(jsonNode);
-      final String previousVersionSchema =
+      final String s = objectWriter.writeValueAsString(jsonNode);
+      final String schemaInUT =
           IOUtils.resourceToString(schemaPathForEntityType, StandardCharsets.UTF_8, this.getClass().getClassLoader());
-      if (!previousVersionSchema.replaceAll("\\s+", "").equals(currentVersionSchema.replaceAll("\\s+", ""))) {
-        log.info("Difference in schema :\n" + StringUtils.difference(currentVersionSchema, previousVersionSchema));
+      if (!schemaInUT.replaceAll("\\s+", "").equals(s.replaceAll("\\s+", ""))) {
+        log.info("Difference in schema :\n" + StringUtils.difference(s, schemaInUT));
         throw new YamlSchemaException(String.format("Yaml schema not updated for %s", schemaRoot.getEntityType()));
       }
       log.info("schema check success for {}", schemaRoot.getEntityType());

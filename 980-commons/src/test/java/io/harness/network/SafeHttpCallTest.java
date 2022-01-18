@@ -8,10 +8,8 @@
 package io.harness.network;
 
 import static io.harness.rule.OwnerRule.GARVIT;
-import static io.harness.rule.OwnerRule.PRABU;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
@@ -67,48 +65,43 @@ public class SafeHttpCallTest extends CategoryTest {
   @Test(expected = GeneralException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testValidateNullResponse() throws IOException {
+  public void testValidateNullResponse() {
     SafeHttpCall.validateResponse(null);
   }
 
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testValidateSuccessfulResponse() throws IOException {
+  public void testValidateSuccessfulResponse() {
     SafeHttpCall.validateResponse(Response.success("hello"));
   }
 
   @Test(expected = HttpResponseException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testValidateUnsuccessfulResponse() throws IOException {
+  public void testValidateUnsuccessfulResponse() {
     SafeHttpCall.validateResponse(prepareErrorResponse(401));
+  }
+
+  @Test(expected = GeneralException.class)
+  @Owner(developers = GARVIT)
+  @Category(UnitTests.class)
+  public void testValidateNullRawResponse() {
+    SafeHttpCall.validateRawResponse(null);
   }
 
   @Test(expected = Test.None.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testValidateSuccessfulRawResponse() throws IOException {
-    SafeHttpCall.validateResponse(Response.success("test", prepareRawResponse(200)));
+  public void testValidateSuccessfulRawResponse() {
+    SafeHttpCall.validateRawResponse(prepareRawResponse(200));
   }
 
   @Test(expected = HttpResponseException.class)
   @Owner(developers = GARVIT)
   @Category(UnitTests.class)
-  public void testValidateUnsuccessfulRawResponse() throws IOException {
-    SafeHttpCall.validateResponse(
-        Response.error(ResponseBody.create(MediaType.parse("text/plain"), "MSG"), prepareRawResponse(401)));
-  }
-
-  @Test
-  @Owner(developers = PRABU)
-  @Category(UnitTests.class)
-  public void testValidateErrorMessageFromErrorBody() throws IOException {
-    assertThatThrownBy(()
-                           -> SafeHttpCall.validateResponse(
-                               Response.error(400, ResponseBody.create(MediaType.parse("text/plain"), "MSG"))))
-        .isInstanceOf(HttpResponseException.class)
-        .hasMessage("Unsuccessful HTTP call: status code = 400, message = MSG");
+  public void testValidateUnsuccessfulRawResponse() {
+    SafeHttpCall.validateRawResponse(prepareRawResponse(401));
   }
 
   private Response<String> prepareErrorResponse(int code) {

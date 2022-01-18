@@ -28,6 +28,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
+import io.harness.annotations.dev.HarnessTeam;
+import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.beans.ci.k8s.CIK8InitializeTaskParams;
 import io.harness.delegate.beans.ci.k8s.K8sTaskExecutionResponse;
@@ -50,7 +52,7 @@ import com.google.common.collect.ImmutableMap;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.V1Event;
+import io.kubernetes.client.openapi.models.CoreV1Event;
 import io.kubernetes.client.openapi.models.V1ObjectMetaBuilder;
 import io.kubernetes.client.openapi.models.V1PodBuilder;
 import io.kubernetes.client.openapi.models.V1Secret;
@@ -68,6 +70,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
+@OwnedBy(HarnessTeam.CI)
 public class CIK8InitializeTaskHandlerTest extends CategoryTest {
   @Mock private PodSpecBuilder podSpecBuilder;
   @Mock private K8sConnectorHelper k8sConnectorHelper;
@@ -150,7 +153,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
   @Category(UnitTests.class)
   public void executeTaskInternalWithPodReadyError() throws TimeoutException, InterruptedException, IOException {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
-    Watch<V1Event> watch = mock(Watch.class);
+    Watch<CoreV1Event> watch = mock(Watch.class);
     V1PodBuilder podBuilder = new V1PodBuilder();
 
     CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParams();
@@ -185,7 +188,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
   public void executeTaskInternalWithPVC() throws InterruptedException {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
     V1PodBuilder podBuilder = new V1PodBuilder();
-    Watch<V1Event> watch = mock(Watch.class);
+    Watch<CoreV1Event> watch = mock(Watch.class);
 
     CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParamsWithPVC();
     ImageDetailsWithConnector imageDetailsWithConnector =
@@ -217,7 +220,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
       throws UnsupportedEncodingException, TimeoutException, InterruptedException {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
     V1PodBuilder podBuilder = new V1PodBuilder();
-    Watch<V1Event> watch = mock(Watch.class);
+    Watch<CoreV1Event> watch = mock(Watch.class);
 
     CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParams();
     Map<String, ConnectorDetails> publishArtifactEncryptedValues = cik8InitializeTaskParams.getCik8PodParams()
@@ -254,7 +257,7 @@ public class CIK8InitializeTaskHandlerTest extends CategoryTest {
   public void executeTaskInternalWithServicePodSuccess() throws InterruptedException, ApiException {
     KubernetesConfig kubernetesConfig = mock(KubernetesConfig.class);
     V1PodBuilder podBuilder = new V1PodBuilder();
-    Watch<V1Event> watch = mock(Watch.class);
+    Watch<CoreV1Event> watch = mock(Watch.class);
 
     CIK8InitializeTaskParams cik8InitializeTaskParams = buildTaskParamsWithPodSvc();
     Map<String, SecretParams> gitSecretData = new HashMap<>();

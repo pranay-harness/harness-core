@@ -75,6 +75,10 @@
           "value": ""
         },
         {
+          "name": "USE_CDN",
+          "value": "${useCdn}"
+        },
+        {
           "name": "CDN_URL",
           "value": "${cdnUrl}"
         },
@@ -113,10 +117,6 @@
         {
           "name": "INSTALL_CLIENT_TOOLS_IN_BACKGROUND",
           "value": "true"
-        },
-        {
-          "name": "VERSION_CHECK_DISABLED",
-          "value": "${versionCheckDisabled}"
         }
       ],
       "memory": 6144,

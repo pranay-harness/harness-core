@@ -6,7 +6,6 @@
  */
 
 package io.harness.delegate.task.cvng;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
@@ -21,7 +20,6 @@ import io.harness.delegate.beans.connector.ConnectorValidationParams;
 import io.harness.delegate.beans.connector.cvconnector.CVConnectorValidationParams;
 import io.harness.delegate.beans.cvng.ConnectorValidationInfo;
 import io.harness.errorhandling.NGErrorHelper;
-import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import com.google.inject.Inject;
@@ -29,7 +27,6 @@ import com.google.inject.Singleton;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.List;
 
 @Singleton
 @OwnedBy(HarnessTeam.CV)
@@ -45,21 +42,9 @@ public class CVConnectorValidationHandler implements ConnectorValidationHandler 
     final CVConnectorValidationParams cvConnectorValidationParams =
         (CVConnectorValidationParams) connectorValidationParams;
     final ConnectorConfigDTO connectorConfigDTO = cvConnectorValidationParams.getConnectorConfigDTO();
-
     if (connectorConfigDTO instanceof DecryptableEntity) {
-      List<DecryptableEntity> decryptableEntities = connectorConfigDTO.getDecryptableEntities();
-      List<List<EncryptedDataDetail>> encryptedDataDetails = cvConnectorValidationParams.getEncryptedDataDetails();
-
-      if (isNotEmpty(decryptableEntities)) {
-        for (int decryptableEntityIndex = 0; decryptableEntityIndex < decryptableEntities.size();
-             decryptableEntityIndex++) {
-          DecryptableEntity decryptableEntity = decryptableEntities.get(decryptableEntityIndex);
-          List<EncryptedDataDetail> encryptedDataDetail = encryptedDataDetails.get(decryptableEntityIndex);
-          secretDecryptionService.decrypt(decryptableEntity, encryptedDataDetail);
-        }
-      }
+      secretDecryptionService.decrypt(connectorConfigDTO, cvConnectorValidationParams.getEncryptedDataDetails());
     }
-
     ConnectorValidationResult result = null;
     boolean validCredentials = false;
     try {

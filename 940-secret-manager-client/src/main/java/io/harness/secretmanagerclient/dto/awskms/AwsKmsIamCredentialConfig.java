@@ -9,10 +9,8 @@ package io.harness.secretmanagerclient.dto.awskms;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
-import io.harness.SecretManagerDescriptionConstants;
 import io.harness.annotations.dev.OwnedBy;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.Set;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -29,9 +27,6 @@ import org.springframework.data.annotation.TypeAlias;
 @FieldNameConstants(innerTypeName = "AwsKmsIamCredentialConfigKeys")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @TypeAlias("io.harness.secretmanagerclient.dto.awskms.AwsKmsIamCredentialConfig")
-@Schema(
-    description =
-        "This contains information on the AWS KMS credential type, which uses a Delegate with an IAM Role to authenticate.")
 public class AwsKmsIamCredentialConfig implements AwsKmsCredentialSpecConfig {
-  @Schema(description = SecretManagerDescriptionConstants.DELEGATE_SELECTORS) Set<String> delegateSelectors;
+  Set<String> delegateSelectors;
 }
