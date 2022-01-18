@@ -212,14 +212,14 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
     helmCliResponse.setCommandExecutionStatus(SUCCESS);
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.install(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.install(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
 
     ArgumentCaptor<io.harness.helm.HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
-    verify(helmClient).install(argumentCaptor.capture());
+    verify(helmClient).install(argumentCaptor.capture(), eq(false));
   }
 
   @Test
@@ -245,9 +245,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
     List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.install(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.install(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
@@ -263,7 +263,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     ContainerInfo actualContainerInfo = helmCommandResponse.getContainerInfoList().get(0);
     assertThat(actualContainerInfo).isEqualTo(expectedContainerInfo);
 
-    verify(helmClient).install(argumentCaptor.capture());
+    verify(helmClient).install(argumentCaptor.capture(), eq(false));
 
     verify(k8sTaskHelper, times(1))
         .doStatusCheckAllResourcesForHelm(any(Kubectl.class),
@@ -296,9 +296,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     ContainerInfo expectedContainerInfo = ContainerInfo.builder().hostName("test").build();
     List<ContainerInfo> containerInfos = ImmutableList.of(expectedContainerInfo);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.install(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.install(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
     when(containerDeploymentDelegateHelper.useK8sSteadyStateCheck(anyBoolean(), any(), any())).thenReturn(true);
     when(k8sTaskHelperBase.readManifests(any(), any())).thenReturn(resources);
     when(k8sTaskHelperBase.getContainerInfos(any(), any(), anyString(), anyLong())).thenReturn(containerInfos);
@@ -316,7 +316,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     ContainerInfo actualContainerInfo = helmCommandResponse.getContainerInfoList().get(0);
     assertThat(actualContainerInfo).isEqualTo(expectedContainerInfo);
 
-    verify(helmClient).install(argumentCaptor.capture());
+    verify(helmClient).install(argumentCaptor.capture(), eq(false));
   }
 
   @Test
@@ -328,14 +328,14 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
     helmCliResponse.setCommandExecutionStatus(SUCCESS);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.upgrade(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
 
     ArgumentCaptor<io.harness.helm.HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
-    verify(helmClient).upgrade(argumentCaptor.capture());
+    verify(helmClient).upgrade(argumentCaptor.capture(), eq(false));
   }
 
   @Test
@@ -350,9 +350,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     helmInstallCommandResponse.setCommandExecutionStatus(FAILURE);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.upgrade(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
 
     HelmCommandResponse response = spyHelmDeployService.deploy(helmInstallCommandRequest);
     assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -372,9 +372,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliResponse.setOutput("Timed out");
     helmCliResponse.setCommandExecutionStatus(FAILURE);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.upgrade(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
 
     HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
 
@@ -388,8 +388,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDeployWingsException() throws Exception {
     GeneralException exception = new GeneralException("Something went wrong");
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.upgrade(any())).thenThrow(exception);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any(), eq(false))).thenThrow(exception);
     assertThatThrownBy(() -> helmDeployService.deploy(helmInstallCommandRequest)).isEqualTo(exception);
   }
 
@@ -398,8 +398,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDeployException() throws Exception {
     IOException ioException = new IOException("Some I/O issue");
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.upgrade(any())).thenThrow(ioException);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any(), eq(false))).thenThrow(ioException);
 
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -416,14 +416,14 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
     helmCliResponse.setCommandExecutionStatus(SUCCESS);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
-    when(helmClient.install(any())).thenReturn(helmCliResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.install(any(), eq(false))).thenReturn(helmCliResponse);
 
     ArgumentCaptor<io.harness.helm.HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
-    verify(helmClient).install(argumentCaptor.capture());
+    verify(helmClient).install(argumentCaptor.capture(), eq(false));
     io.harness.helm.HelmCommandData commandRequest = argumentCaptor.getAllValues().get(0);
     assertThat(commandRequest.getYamlFiles().size()).isEqualTo(2);
     assertThat(commandRequest.getYamlFiles())
@@ -441,14 +441,14 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmCliListReleasesResponse.setCommandExecutionStatus(SUCCESS);
     helmCliResponse.setCommandExecutionStatus(SUCCESS);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
-    when(helmClient.install(any())).thenReturn(helmCliResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.install(any(), eq(false))).thenReturn(helmCliResponse);
 
     ArgumentCaptor<io.harness.helm.HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
     HelmCommandResponse helmCommandResponse = helmDeployService.deploy(helmInstallCommandRequest);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(SUCCESS);
-    verify(helmClient).install(argumentCaptor.capture());
+    verify(helmClient).install(argumentCaptor.capture(), eq(false));
     io.harness.helm.HelmCommandData commandRequest = argumentCaptor.getAllValues().get(0);
     assertThat(commandRequest.getYamlFiles().size()).isEqualTo(3);
     assertThat(commandRequest.getYamlFiles())
@@ -469,11 +469,11 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmInstallCommandRequest.setVariableOverridesYamlFiles(asList(HelmTestConstants.GIT_FILE_CONTENT_3_KEY));
     helmCliReleaseHistoryResponse.setCommandExecutionStatus(CommandExecutionStatus.FAILURE);
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.install(any())).thenReturn(helmCliResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.install(any(), eq(false))).thenReturn(helmCliResponse);
     when(gitService.fetchFilesByPath(any(), any(), any(), any(), any(), anyBoolean(), eq(false)))
         .thenThrow(new InvalidRequestException("WingsException", USER));
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
 
     helmDeployService.deploy(helmInstallCommandRequest);
   }
@@ -561,7 +561,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void shouldListReleaseHistoryV2() throws Exception {
     HelmReleaseHistoryCommandRequest request = HelmReleaseHistoryCommandRequest.builder().build();
 
-    when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(HelmCliResponse.builder()
                         .commandExecutionStatus(SUCCESS)
                         .output(HelmTestConstants.RELEASE_HIST_V2)
@@ -582,7 +582,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void shouldListReleaseHistoryV3() throws Exception {
     HelmReleaseHistoryCommandRequest request = HelmReleaseHistoryCommandRequest.builder().build();
 
-    when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(HelmCliResponse.builder()
                         .commandExecutionStatus(SUCCESS)
                         .output(HelmTestConstants.RELEASE_HIST_V3)
@@ -602,7 +602,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void shouldNotThrowExceptionInReleaseHist() throws Exception {
     HelmReleaseHistoryCommandRequest request = HelmReleaseHistoryCommandRequest.builder().build();
 
-    when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenThrow(new InterruptedException());
 
     HelmReleaseHistoryCommandResponse response = helmDeployService.releaseHistory(request);
@@ -624,7 +624,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void shouldListReleaseV2() throws Exception {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(HelmCliResponse.builder()
                         .commandExecutionStatus(SUCCESS)
                         .output(HelmTestConstants.LIST_RELEASE_V2)
@@ -645,7 +645,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void shouldListReleaseV3() throws Exception {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(HelmCliResponse.builder()
                         .commandExecutionStatus(SUCCESS)
                         .output(HelmTestConstants.LIST_RELEASE_V3)
@@ -667,7 +667,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   private void shouldNotThrowExceptionInListRelease() throws Exception {
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenThrow(new InterruptedException());
 
     HelmListReleasesCommandResponse response = helmDeployService.listReleases(request);
@@ -684,7 +684,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(
             HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(HelmTestConstants.VERSION_V2).build());
 
@@ -701,7 +701,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).build());
 
     assertThatExceptionOfType(InvalidRequestException.class)
@@ -715,7 +715,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenReturn(
             HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(HelmTestConstants.VERSION_V3).build());
 
@@ -732,7 +732,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     setFakeTimeLimiter();
     HelmInstallCommandRequest request = HelmInstallCommandRequest.builder().build();
 
-    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request)))
+    when(helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(request), false))
         .thenThrow(new UncheckedTimeoutException());
 
     assertThatExceptionOfType(InvalidRequestException.class)
@@ -756,7 +756,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     helmDeployService.addPublicRepo(request);
 
-    verify(helmClient, never()).addPublicRepo(any());
+    verify(helmClient, never()).addPublicRepo(any(), eq(false));
   }
   @Test
   @Owner(developers = YOGESH)
@@ -774,7 +774,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     helmDeployService.addPublicRepo(request);
 
-    verify(helmClient, never()).addPublicRepo(any());
+    verify(helmClient, never()).addPublicRepo(any(), eq(false));
   }
 
   @Test
@@ -789,11 +789,12 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.getHelmRepoList(HelmCommandDataMapper.getHelmCommandData(request)))
         .thenReturn(
             HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(HelmTestConstants.REPO_LIST_V2).build());
-    when(helmClient.addPublicRepo(any())).thenReturn(HelmCliResponse.builder().commandExecutionStatus(SUCCESS).build());
+    when(helmClient.addPublicRepo(any(), eq(false)))
+        .thenReturn(HelmCliResponse.builder().commandExecutionStatus(SUCCESS).build());
 
     HelmCommandResponse response = helmDeployService.addPublicRepo(request);
 
-    verify(helmClient, times(1)).addPublicRepo(any());
+    verify(helmClient, times(1)).addPublicRepo(any(), eq(false));
     assertThat(response).isNotNull();
     assertThat(response.getCommandExecutionStatus()).isEqualTo(SUCCESS);
   }
@@ -810,7 +811,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     when(helmClient.getHelmRepoList(HelmCommandDataMapper.getHelmCommandData(request)))
         .thenReturn(
             HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(HelmTestConstants.REPO_LIST_V2).build());
-    when(helmClient.addPublicRepo(any())).thenReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).build());
+    when(helmClient.addPublicRepo(any(), eq(false)))
+        .thenReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).build());
 
     assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> helmDeployService.addPublicRepo(request));
   }
@@ -826,7 +828,8 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     when(helmClient.getHelmRepoList(HelmCommandDataMapper.getHelmCommandData(request)))
         .thenReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).output("command not found").build());
-    when(helmClient.addPublicRepo(any())).thenReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).build());
+    when(helmClient.addPublicRepo(any(), eq(false)))
+        .thenReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).build());
 
     assertThatExceptionOfType(InvalidRequestException.class).isThrownBy(() -> helmDeployService.addPublicRepo(request));
   }
@@ -917,8 +920,9 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   @Category(UnitTests.class)
   public void testDeployWithInvalidChartSpec() throws Exception {
     when(helmCommandHelper.isValidChartSpecification(any())).thenReturn(false);
-    when(helmClient.listReleases(any())).thenReturn(HelmCliResponse.builder().commandExecutionStatus(SUCCESS).build());
-    when(helmClient.releaseHistory(any()))
+    when(helmClient.listReleases(any(), eq(false)))
+        .thenReturn(HelmCliResponse.builder().commandExecutionStatus(SUCCESS).build());
+    when(helmClient.releaseHistory(any(), eq(false)))
         .thenReturn(HelmCliResponse.builder()
                         .commandExecutionStatus(SUCCESS)
                         .output(HelmTestConstants.RELEASE_HIST_V2)
@@ -960,7 +964,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     KubernetesConfig kubernetesConfig = KubernetesConfig.builder().build();
 
-    when(helmClient.rollback(any(HelmCommandData.class)))
+    when(helmClient.rollback(any(HelmCommandData.class), eq(false)))
         .thenReturn(
             HelmCliResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build());
     when(containerDeploymentDelegateHelper.getKubernetesConfig(any(K8sClusterConfig.class), anyBoolean()))
@@ -1066,7 +1070,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     List<ContainerInfo> containerInfosDefault3 =
         ImmutableList.of(ContainerInfo.builder().hostName("resource-3").build());
 
-    when(helmClient.rollback(any(HelmCommandData.class)))
+    when(helmClient.rollback(any(HelmCommandData.class), eq(false)))
         .thenReturn(
             HelmCliResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build());
     when(k8sTaskHelperBase.getReleaseHistoryFromSecret(any(KubernetesConfig.class), eq("release")))
@@ -1095,7 +1099,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     HTimeLimiterMocker.mockCallInterruptible(mockTimeLimiter).thenThrow(new UncheckedTimeoutException("Timed out"));
     doReturn(HelmCliResponse.builder().output("Rollback was a success.").commandExecutionStatus(SUCCESS).build())
         .when(helmClient)
-        .rollback(any(HelmCommandData.class));
+        .rollback(any(HelmCommandData.class), eq(false));
 
     HelmCommandResponse helmCommandResponse = helmDeployService.rollback(request);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -1108,7 +1112,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   public void testRollbackWingsException() throws Exception {
     GeneralException exception = new GeneralException("Something went wrong");
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
-    doThrow(exception).when(helmClient).rollback(any(HelmCommandData.class));
+    doThrow(exception).when(helmClient).rollback(any(HelmCommandData.class), eq(false));
 
     assertThatThrownBy(() -> helmDeployService.rollback(request)).isEqualTo(exception);
   }
@@ -1119,7 +1123,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   public void testRollbackException() throws Exception {
     IOException ioException = new IOException("Some I/O issue");
     HelmRollbackCommandRequest request = HelmRollbackCommandRequest.builder().build();
-    doThrow(ioException).when(helmClient).rollback(any(HelmCommandData.class));
+    doThrow(ioException).when(helmClient).rollback(any(HelmCommandData.class), eq(false));
 
     HelmCommandResponse helmCommandResponse = helmDeployService.rollback(request);
     assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
@@ -1134,7 +1138,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     HelmCliResponse failureResponse =
         HelmCliResponse.builder().output("Unable to rollback").commandExecutionStatus(FAILURE).build();
 
-    doReturn(failureResponse).when(helmClient).rollback(any(HelmCommandData.class));
+    doReturn(failureResponse).when(helmClient).rollback(any(HelmCommandData.class), eq(false));
 
     HelmInstallCommandResponse response = (HelmInstallCommandResponse) helmDeployService.rollback(request);
 
@@ -1250,11 +1254,12 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     HelmCliResponse helmCliResponse = HelmCliResponse.builder().build();
     doReturn(helmCliResponse)
         .when(helmClient)
-        .deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequest, new ExecutionLogCallback());
 
-    verify(helmClient, times(1)).deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+    verify(helmClient, times(1))
+        .deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
   }
 
   @Test
@@ -1263,7 +1268,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
   public void testDeleteAndPurgeHelmReleaseNameNotFailOnException() throws Exception {
     doThrow(new IOException("Unable to execute process"))
         .when(helmClient)
-        .deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     assertThatCode(
         () -> helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequest, new ExecutionLogCallback()))
@@ -1400,13 +1405,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     HelmCliResponse renderedHelmChartResponse =
         HelmCliResponse.builder().commandExecutionStatus(SUCCESS).output(renderedHelmChart).build();
 
-    when(helmClient.releaseHistory(any())).thenReturn(helmCliReleaseHistoryResponse);
-    when(helmClient.upgrade(any())).thenReturn(helmCliResponse);
-    when(helmClient.listReleases(any())).thenReturn(helmCliListReleasesResponse);
+    when(helmClient.releaseHistory(any(), eq(false))).thenReturn(helmCliReleaseHistoryResponse);
+    when(helmClient.upgrade(any(), eq(false))).thenReturn(helmCliResponse);
+    when(helmClient.listReleases(any(), eq(false))).thenReturn(helmCliListReleasesResponse);
     doReturn(renderedHelmChartResponse)
         .when(helmClient)
         .renderChart(any(HelmCommandData.class), eq("./repository/helm/source/${ACTIVITY_ID}/test"), eq("default"),
-            eq(Collections.emptyList()));
+            eq(Collections.emptyList()), eq(false));
     helmDeployService.deploy(helmInstallCommandRequest);
     ArgumentCaptor<String> savedLogsCaptor = ArgumentCaptor.forClass(String.class);
     verify(logCallback, atLeastOnce()).saveExecutionLog(savedLogsCaptor.capture());
@@ -1425,7 +1430,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     doReturn(HelmCliResponse.builder().commandExecutionStatus(FAILURE).output(output).build())
         .when(helmClient)
         .renderChart(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), chartLocation, namespace,
-            valueOverrides);
+            valueOverrides, false);
 
     assertThatThrownBy(
         () -> helmDeployService.renderHelmChart(helmInstallCommandRequest, namespace, chartLocation, valueOverrides))
@@ -1455,7 +1460,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(gitFiles)
         .when(gitService)
         .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true, false);
@@ -1493,7 +1498,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(gitFiles)
         .when(gitService)
         .fetchFilesByPath(gitConfig, SETTING_ID, COMMIT_REFERENCE, BRANCH_NAME, singletonList(FILE_PATH), true, false);
@@ -1523,13 +1528,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliResponse)
         .when(helmClient)
-        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliListReleasesResponse)
         .when(helmClient)
-        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     doReturn(HelmCliResponse.builder().output(searchChartResponse).build())
         .when(helmClient)
@@ -1556,13 +1561,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliResponse)
         .when(helmClient)
-        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliListReleasesResponse)
         .when(helmClient)
-        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     doReturn(HelmCliResponse.builder().output("").build())
         .when(helmClient)
@@ -1587,13 +1592,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliResponse)
         .when(helmClient)
-        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliListReleasesResponse)
         .when(helmClient)
-        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     HelmInstallCommandResponse response =
         (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
@@ -1611,13 +1616,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliResponse)
         .when(helmClient)
-        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliListReleasesResponse)
         .when(helmClient)
-        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     HelmInstallCommandResponse response =
         (HelmInstallCommandResponse) helmDeployService.deploy(helmInstallCommandRequest);
@@ -1649,13 +1654,13 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliResponse)
         .when(helmClient)
-        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .upgrade(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmCliListReleasesResponse)
         .when(helmClient)
-        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doReturn(helmChartInfo).when(helmTaskHelper).getHelmChartInfoFromChartsYamlFile(helmInstallCommandRequest);
 
     HelmInstallCommandResponse response =
@@ -1677,11 +1682,12 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(HelmCliResponse.builder().output(releaseListOutput).commandExecutionStatus(SUCCESS).build())
         .when(helmClient)
-        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .listReleases(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
 
     helmDeployService.deploy(helmInstallCommandRequest);
 
-    verify(helmClient, times(1)).deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+    verify(helmClient, times(1))
+        .deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
   }
 
   @Test
@@ -1692,7 +1698,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     ArgumentCaptor<io.harness.helm.HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
     helmDeployService.deploy(helmInstallCommandRequest);
 
@@ -1707,7 +1713,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
     helmInstallCommandRequest.setHelmCommandType(HelmCommandRequest.HelmCommandType.LIST_RELEASE);
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     helmDeployService.deploy(helmInstallCommandRequest);
 
     verify(helmClient, never()).repoUpdate(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
@@ -1722,7 +1728,7 @@ public class HelmDeployServiceImplTest extends WingsBaseTest {
 
     doReturn(helmCliReleaseHistoryResponse)
         .when(helmClient)
-        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));
+        .releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest), false);
     doThrow(thrownException)
         .when(helmClient)
         .repoUpdate(HelmCommandDataMapper.getHelmCommandData(helmInstallCommandRequest));

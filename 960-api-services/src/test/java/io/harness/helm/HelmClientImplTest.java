@@ -111,7 +111,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void upgrade() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = helmClient::upgrade;
+    ConsumerWrapper<HelmCommandData> command = helmCommandData -> helmClient.upgrade(helmCommandData, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo(
             "helm upgrade  crazy-helm harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml");
@@ -136,7 +136,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void install() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.install(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.install(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo(
             "helm install  harness --repo https://oci-registry --version 0.0.1  -f ./repository/helm/overrides/3d6bbbe972d7519aa70587fc065139e1.yaml -f ./repository/helm/overrides/e8073c3baf625e6ea83327282c26f1a6.yaml --name crazy-helm --namespace helm-namespace");
@@ -161,7 +161,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void rollback() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.rollback(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.rollback(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmRollbackCommandData))
         .isEqualTo("helm rollback  best-release-ever 2");
     assertThat(getCommandWithCommandFlags(HelmVersion.V2, command, helmRollbackCommandData))
@@ -177,7 +177,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void releaseHistory() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.releaseHistory(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.releaseHistory(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo("helm hist  crazy-helm --max 5");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandData))
@@ -196,7 +196,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void listReleases() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.listReleases(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.listReleases(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo("helm list  ^crazy-helm$");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandData))
@@ -215,7 +215,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void getClientAndServerVersion() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.getClientAndServerVersion(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.getClientAndServerVersion(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo("helm version --short");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandData))
@@ -234,7 +234,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void addPublicRepo() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.addPublicRepo(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.addPublicRepo(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo("helm repo add stable https://oci-registry");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandData))
@@ -290,7 +290,7 @@ public class HelmClientImplTest extends CategoryTest {
   @Owner(developers = YOGESH)
   @Category(UnitTests.class)
   public void deleteHelmRelease() throws Exception {
-    ConsumerWrapper<HelmCommandData> command = r -> helmClient.deleteHelmRelease(r);
+    ConsumerWrapper<HelmCommandData> command = r -> helmClient.deleteHelmRelease(r, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo("helm delete  --purge crazy-helm");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandData))
@@ -332,7 +332,7 @@ public class HelmClientImplTest extends CategoryTest {
     String namespace = "namespace";
     List<String> valuesOverrides = Collections.emptyList();
     ConsumerWrapper<HelmCommandData> command =
-        r -> helmClient.renderChart(r, chartLocation, namespace, valuesOverrides);
+        r -> helmClient.renderChart(r, chartLocation, namespace, valuesOverrides, false);
     assertThat(getCommandWithNoKubeConfig(HelmVersion.V2, command, helmInstallCommandData))
         .isEqualTo("helm template chartLocation  --name crazy-helm --namespace namespace");
     assertThat(getCommandWithNoValueOverride(HelmVersion.V2, command, helmInstallCommandData))

@@ -162,7 +162,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
           "List all existing deployed releases for release name: " + commandRequest.getReleaseName());
 
       HelmCliResponse helmCliResponse =
-          helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(commandRequest));
+          helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(commandRequest), false);
       executionLogCallback.saveExecutionLog(
           preProcessReleaseHistoryCommandOutput(helmCliResponse, commandRequest.getReleaseName()));
 
@@ -178,11 +178,11 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       if (checkNewHelmInstall(commandRequest)) {
         executionLogCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
         commandResponse = HelmCommandResponseMapper.getHelmInstallCommandResponse(
-            helmClient.install(HelmCommandDataMapper.getHelmCommandData(commandRequest)));
+            helmClient.install(HelmCommandDataMapper.getHelmCommandData(commandRequest), false));
       } else {
         executionLogCallback.saveExecutionLog("Previous release exists for chart. Upgrading chart");
         commandResponse = HelmCommandResponseMapper.getHelmInstallCommandResponse(
-            helmClient.upgrade(HelmCommandDataMapper.getHelmCommandData(commandRequest)));
+            helmClient.upgrade(HelmCommandDataMapper.getHelmCommandData(commandRequest), false));
       }
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       commandResponse.setHelmChartInfo(helmChartInfo);
@@ -576,7 +576,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
 
     try {
       HelmInstallCommandResponse commandResponse = HelmCommandResponseMapper.getHelmInstallCommandResponse(
-          helmClient.rollback(HelmCommandDataMapper.getHelmCommandData(commandRequest)));
+          helmClient.rollback(HelmCommandDataMapper.getHelmCommandData(commandRequest), false));
       executionLogCallback.saveExecutionLog(commandResponse.getOutput());
       if (commandResponse.getCommandExecutionStatus() != CommandExecutionStatus.SUCCESS) {
         return commandResponse;
@@ -656,8 +656,8 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     try {
       return HTimeLimiter.callInterruptible21(
           timeLimiter, Duration.ofMillis(DEFAULT_TILLER_CONNECTION_TIMEOUT_MILLIS), () -> {
-            HelmCliResponse cliResponse =
-                helmClient.getClientAndServerVersion(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
+            HelmCliResponse cliResponse = helmClient.getClientAndServerVersion(
+                HelmCommandDataMapper.getHelmCommandData(helmCommandRequest), false);
             if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
               throw new InvalidRequestException(cliResponse.getOutput());
             }
@@ -697,7 +697,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog("Adding repository " + commandRequest.getChartSpecification().getChartUrl()
               + " with name " + commandRequest.getRepoName(),
           LogLevel.INFO, CommandExecutionStatus.RUNNING);
-      cliResponse = helmClient.addPublicRepo(HelmCommandDataMapper.getHelmCommandData(commandRequest));
+      cliResponse = helmClient.addPublicRepo(HelmCommandDataMapper.getHelmCommandData(commandRequest), false);
       if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
         String msg = "Failed to add repository. Reason: " + cliResponse.getOutput();
         executionLogCallback.saveExecutionLog(msg);
@@ -722,7 +722,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     executionLogCallback.saveExecutionLog("Rendering Helm chart", LogLevel.INFO, CommandExecutionStatus.RUNNING);
 
     HelmCliResponse cliResponse = helmClient.renderChart(
-        HelmCommandDataMapper.getHelmCommandData(commandRequest), chartLocation, namespace, valueOverrides);
+        HelmCommandDataMapper.getHelmCommandData(commandRequest), chartLocation, namespace, valueOverrides, false);
     if (cliResponse.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
       String msg = format("Failed to render chart location: %s. Reason %s ", chartLocation, cliResponse.getOutput());
       executionLogCallback.saveExecutionLog(msg);
@@ -758,7 +758,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
   public HelmListReleasesCommandResponse listReleases(HelmInstallCommandRequest helmCommandRequest) {
     try {
       HelmCliResponse helmCliResponse =
-          helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
+          helmClient.listReleases(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest), false);
       List<ReleaseInfo> releaseInfoList =
           parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), HelmCommandType.LIST_RELEASE);
       return HelmListReleasesCommandResponse.builder()
@@ -780,7 +780,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     List<ReleaseInfo> releaseInfoList = new ArrayList<>();
     try {
       HelmCliResponse helmCliResponse =
-          helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest));
+          helmClient.releaseHistory(HelmCommandDataMapper.getHelmCommandData(helmCommandRequest), false);
       releaseInfoList =
           parseHelmReleaseCommandOutput(helmCliResponse.getOutput(), helmCommandRequest.getHelmCommandType());
     } catch (Exception e) {
@@ -855,7 +855,7 @@ public class HelmDeployServiceImpl implements HelmDeployService {
       executionLogCallback.saveExecutionLog(message);
 
       HelmCliResponse deleteCommandResponse =
-          helmClient.deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(commandRequest));
+          helmClient.deleteHelmRelease(HelmCommandDataMapper.getHelmCommandData(commandRequest), false);
       executionLogCallback.saveExecutionLog(deleteCommandResponse.getOutput());
     } catch (Exception e) {
       log.error("Helm delete failed", e);

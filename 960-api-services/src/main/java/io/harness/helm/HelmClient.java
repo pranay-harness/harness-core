@@ -30,67 +30,73 @@ public interface HelmClient {
    * Install helm command response.
    *
    * @param helmCommandData the command request
+   * @param isErrorFrameworkEnabled
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse install(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse install(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
   /**
    * Upgrade helm command response.
    *
    * @param helmCommandData the command request
+   * @param isErrorFrameworkEnabled
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    * @throws ExecutionException   the execution exception
    */
-  HelmCliResponse upgrade(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse upgrade(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
   /**
    * Rollback helm command response.
    *
    * @param helmCommandData the command request
+   * @param isErrorFrameworkEnabled
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse rollback(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse rollback(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
-  HelmCliResponse releaseHistory(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse releaseHistory(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
   /**
    * List releases helm cli response.
    *
    * @param helmCommandData the command request
+   * @param isErrorFrameworkEnabled
    * @return the helm cli response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse listReleases(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse listReleases(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
   /**
    * Gets client and server version.
    *
    * @param helmCommandData the helm command request
+   * @param isErrorFrameworkEnabled
    * @return the client and server version
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
    * @throws IOException          the io exception
    */
-  HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse getClientAndServerVersion(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled)
+      throws Exception;
 
-  HelmCliResponse addPublicRepo(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse addPublicRepo(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
   HelmCliResponse getHelmRepoList(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
 
-  HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData) throws Exception;
+  HelmCliResponse deleteHelmRelease(HelmCommandData helmCommandData, boolean isErrorFrameworkEnabled) throws Exception;
 
   HelmCliResponse repoUpdate(HelmCommandData helmCommandData)
       throws InterruptedException, TimeoutException, IOException;
@@ -108,6 +114,7 @@ public interface HelmClient {
    * @param chartLocation
    * @param namespace
    * @param valuesOverrides
+   * @param isErrorFrameworkEnabled
    * @return HelmCliResponse the helm cli response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
@@ -115,7 +122,7 @@ public interface HelmClient {
    * @throws ExecutionException   the execution exception
    */
   HelmCliResponse renderChart(HelmCommandData helmCommandData, String chartLocation, String namespace,
-      List<String> valuesOverrides) throws Exception;
+      List<String> valuesOverrides, boolean isErrorFrameworkEnabled) throws Exception;
 
   String getHelmPath(HelmVersion helmVersion);
 }

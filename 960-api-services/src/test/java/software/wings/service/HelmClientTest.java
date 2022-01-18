@@ -77,7 +77,7 @@ public class HelmClientTest extends CategoryTest {
   @Ignore("TODO: please provide clear motivation why this test is ignored")
   public void shouldRollback() throws Exception {
     HelmClientImpl.HelmCliResponse helmCliResponse =
-        helmClient.rollback(HelmCommandData.builder().releaseName("rel1").prevReleaseVersion(1).build());
+        helmClient.rollback(HelmCommandData.builder().releaseName("rel1").prevReleaseVersion(1).build(), false);
 
     log.info(helmCliResponse.getOutput());
   }
