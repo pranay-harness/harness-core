@@ -88,26 +88,6 @@ public class CVNGStepResource {
   }
 
   @GET
-  @Path("/{verifyStepExecutionId}/all-transaction-names")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "get all the transaction names", nickname = "getVerifyStepTransactionNames")
-  public RestResponse<List<String>> getTransactionNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
-      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId) {
-    return new RestResponse(stepTaskService.getTransactionNames(accountId, callBackId));
-  }
-
-  @GET
-  @Path("/{verifyStepExecutionId}/all-node-names")
-  @Timed
-  @ExceptionMetered
-  @ApiOperation(value = "get all the Node names", nickname = "getVerifyStepNodeNames")
-  public RestResponse<List<String>> getNodeNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
-      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId) {
-    return new RestResponse(stepTaskService.getNodeNames(accountId, callBackId));
-  }
-
-  @GET
   @Path("/{verifyStepExecutionId}/healthSources")
   @Timed
   @ExceptionMetered
@@ -142,5 +122,25 @@ public class CVNGStepResource {
       @BeanParam DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, @BeanParam PageParams pageParams) {
     return new RestResponse(stepTaskService.getDeploymentActivityLogAnalysisResult(
         accountId, callBackId, label, deploymentLogAnalysisFilter, pageParams));
+  }
+
+  @GET
+  @Path("/{verifyStepExecutionId}/all-transaction-names")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all the transaction names", nickname = "getVerifyStepTransactionNames")
+  public RestResponse<List<String>> getTransactionNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
+      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId) {
+    return new RestResponse(stepTaskService.getTransactionNames(accountId, callBackId));
+  }
+
+  @GET
+  @Path("/{verifyStepExecutionId}/all-node-names")
+  @Timed
+  @ExceptionMetered
+  @ApiOperation(value = "get all the Node names", nickname = "getVerifyStepNodeNames")
+  public RestResponse<List<String>> getNodeNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
+      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId) {
+    return new RestResponse(stepTaskService.getNodeNames(accountId, callBackId));
   }
 }

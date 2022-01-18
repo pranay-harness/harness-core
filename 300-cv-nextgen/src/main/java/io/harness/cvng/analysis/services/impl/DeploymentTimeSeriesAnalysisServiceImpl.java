@@ -112,47 +112,6 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   @Override
-  public List<String> getTransactionNames(String accountId, String verificationJobInstanceId) {
-    Set<String> transactionNameSet = new HashSet<>();
-    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
-        DeploymentTimeSeriesAnalysisFilter.builder().build();
-    List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
-        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
-
-    if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
-      return Collections.emptyList();
-    }
-
-    for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
-      timeSeriesAnalysis.getTransactionMetricSummaries().forEach(
-          transactionMetricHostData -> transactionNameSet.add(transactionMetricHostData.getTransactionName()));
-    }
-
-    return new ArrayList<>(transactionNameSet);
-  }
-
-  @Override
-  public List<String> getNodeNames(String accountId, String verificationJobInstanceId) {
-    Set<String> nodeNameSet = new HashSet<>();
-    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
-        DeploymentTimeSeriesAnalysisFilter.builder().build();
-    List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
-        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
-
-    if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
-      return Collections.emptyList();
-    }
-
-    for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
-      timeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
-          -> transactionMetricHostData.getHostData().forEach(
-              hostData -> nodeNameSet.add(hostData.getHostName().get())));
-    }
-
-    return new ArrayList<>(nodeNameSet);
-  }
-
-  @Override
   public TimeSeriesAnalysisSummary getAnalysisSummary(List<String> verificationJobInstanceIds) {
     Preconditions.checkNotNull(
         verificationJobInstanceIds, "Missing verificationJobInstanceIds when looking for summary");
@@ -214,6 +173,37 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  @Override
+  public List<String> getTransactionNames(String accountId, String verificationJobInstanceId) {
+    Set<String> transactionNameSet = new HashSet<>();
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder().build();
+    List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
+    for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
+      timeSeriesAnalysis.getTransactionMetricSummaries().forEach(
+          transactionMetricHostData -> transactionNameSet.add(transactionMetricHostData.getTransactionName()));
+    }
+
+    return new ArrayList<>(transactionNameSet);
+  }
+
+  @Override
+  public List<String> getNodeNames(String accountId, String verificationJobInstanceId) {
+    Set<String> nodeNameSet = new HashSet<>();
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder().build();
+    List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
+        getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
+    for (DeploymentTimeSeriesAnalysis timeSeriesAnalysis : latestDeploymentTimeSeriesAnalysis) {
+      timeSeriesAnalysis.getTransactionMetricSummaries().forEach(transactionMetricHostData
+          -> transactionMetricHostData.getHostData().forEach(
+              hostData -> nodeNameSet.add(hostData.getHostName().get())));
+    }
+
+    return new ArrayList<>(nodeNameSet);
   }
 
   private List<TransactionMetricInfo> getMetrics(String accountId, String verificationJobInstanceId,
