@@ -1,0 +1,9 @@
+- sidecar:
+    type: DockerRegistry
+    identifier: sidecar1
+- sidecar:
+    type: DockerRegistry
+    identifier: sidecar2
+- sidecar:
+    type: DockerRegistry
+    identifier: sidecar3

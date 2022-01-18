@@ -37,7 +37,6 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
@@ -118,7 +117,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
     YamlField sideCarsListYamlField =
         SideCarsListArtifactsUtility.createSideCarsArtifactYamlFieldAndSetYamlUpdate(artifactField, yamlUpdates);
 
-    Map<String, StepParameters> sideCarsParametersMap =
+    Map<String, ArtifactStepParameters> sideCarsParametersMap =
         sideCarsInfo.entrySet().stream().collect(Collectors.toMap(e -> e.getKey(), k -> k.getValue().getParams()));
     String sideCarsListPlanNodeId = "sidecars-" + artifactsId;
     Map<String, ByteString> metadataDependency =
@@ -140,7 +139,7 @@ public class ArtifactsPlanCreator extends ChildrenPlanCreator<ArtifactListConfig
   }
 
   private Map<String, ByteString> prepareMetadataForSideCarListArtifactPlanCreator(
-      String sideCarsListPlanNodeId, Map<String, StepParameters> sideCarsParametersMap) {
+      String sideCarsListPlanNodeId, Map<String, ArtifactStepParameters> sideCarsParametersMap) {
     Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(sideCarsListPlanNodeId)));
     metadataDependency.put(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP,

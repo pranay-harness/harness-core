@@ -44,8 +44,8 @@ public class SideCarsListArtifactsUtility {
     return sideCarsYamlField.getNode().getCurrJsonNode();
   }
 
-  public YamlField createIndividualSideCarsArtifactYamlFieldAndSetYamlUpdate(YamlField sideCarsYamlField,
-      String sideCarIdentifier, Map<String, YamlNode> mapIdentifierWithYamlNode, YamlUpdates.Builder yamlUpdates) {
+  public YamlField createIndividualSideCarsArtifactYamlFieldAndSetYamlUpdate(
+      YamlField sideCarsYamlField, String sideCarIdentifier, Map<String, YamlNode> mapIdentifierWithYamlNode) {
     if (mapIdentifierWithYamlNode.containsKey(sideCarIdentifier)) {
       return new YamlField(mapIdentifierWithYamlNode.get(sideCarIdentifier))
           .getNode()

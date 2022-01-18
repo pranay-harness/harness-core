@@ -25,14 +25,17 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
-import io.harness.polling.bean.artifact.ArtifactInfo;
 import io.harness.rule.Owner;
 
 import com.google.inject.Inject;
 import com.google.protobuf.ByteString;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Scanner;
+import java.util.Set;
 
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -89,15 +92,15 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
   private void checkForSidecarsMetadataDependency(PlanCreationResponse planCreationResponse, String nodeUuid) {
     assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
     assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
-            .isEqualTo(2);
+        .isEqualTo(2);
     assertThat(
-            planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-                    YamlTypes.UUID))
-            .isEqualTo(true);
+        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+            YamlTypes.UUID))
+        .isEqualTo(true);
     assertThat(
-            planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-                    PlanCreatorConstants.SIDECARS_PARAMETERS_MAP))
-            .isEqualTo(true);
+        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
+            PlanCreatorConstants.SIDECARS_PARAMETERS_MAP))
+        .isEqualTo(true);
   }
 
   @Test
@@ -162,7 +165,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
 
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile =
-            classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_empty_sidecar_yamlField.yml");
+        classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_empty_sidecar_yamlField.yml");
     assertThat(yamlFile).isNotNull();
 
     String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
@@ -172,7 +175,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
     Map<String, ArtifactsPlanCreator.ArtifactInfo> sidecarArtifactInfo = new HashMap<>();
     PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
     String nodeUuid = artifactsPlanCreator.addDependenciesForSideCarList(
-            ctx.getCurrentField(),artifactField.getNode().getUuid(),sidecarArtifactInfo,planCreationResponseMap);
+        ctx.getCurrentField(), artifactField.getNode().getUuid(), sidecarArtifactInfo, planCreationResponseMap);
     assertThat(planCreationResponseMap.size()).isEqualTo(1);
     assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
@@ -189,7 +192,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
 
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile =
-            classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_primary_yamlField.yml");
+        classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_primary_yamlField.yml");
     assertThat(yamlFile).isNotNull();
 
     String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
@@ -199,7 +202,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
     Map<String, ArtifactsPlanCreator.ArtifactInfo> sidecarArtifactInfo = new HashMap<>();
     PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
     String nodeUuid = artifactsPlanCreator.addDependenciesForSideCarList(
-            ctx.getCurrentField(),artifactField.getNode().getUuid(),sidecarArtifactInfo,planCreationResponseMap);
+        ctx.getCurrentField(), artifactField.getNode().getUuid(), sidecarArtifactInfo, planCreationResponseMap);
     assertThat(planCreationResponseMap.size()).isEqualTo(1);
     assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);
@@ -216,7 +219,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
 
     ClassLoader classLoader = this.getClass().getClassLoader();
     InputStream yamlFile =
-            classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_sidecars_yamlField.yml");
+        classLoader.getResourceAsStream("cdng/plan/artifact/artifact_yaml_with_sidecars_yamlField.yml");
     assertThat(yamlFile).isNotNull();
 
     String yaml = new Scanner(yamlFile, "UTF-8").useDelimiter("\\A").next();
@@ -226,7 +229,7 @@ public class ArtifactPlanCreatorTest extends CDNGTestBase {
     Map<String, ArtifactsPlanCreator.ArtifactInfo> sidecarArtifactInfo = new HashMap<>();
     PlanCreationContext ctx = PlanCreationContext.builder().currentField(artifactField).build();
     String nodeUuid = artifactsPlanCreator.addDependenciesForSideCarList(
-            ctx.getCurrentField(),artifactField.getNode().getUuid(),sidecarArtifactInfo,planCreationResponseMap);
+        ctx.getCurrentField(), artifactField.getNode().getUuid(), sidecarArtifactInfo, planCreationResponseMap);
     assertThat(planCreationResponseMap.size()).isEqualTo(1);
     assertThat(planCreationResponseMap.containsKey(nodeUuid)).isEqualTo(true);
     PlanCreationResponse planCreationResponse1 = planCreationResponseMap.get(nodeUuid);

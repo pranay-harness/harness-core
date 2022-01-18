@@ -11,6 +11,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.SidecarArtifact;
 import io.harness.cdng.artifact.steps.ArtifactStep;
+import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.delegate.task.artifacts.ArtifactSourceConstants;
@@ -21,7 +22,6 @@ import io.harness.pms.sdk.core.plan.PlanNode;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.serializer.KryoSerializer;
 
 import com.google.inject.Inject;
@@ -50,8 +50,8 @@ public class SideCarArtifactPlanCreator implements PartialPlanCreator<SidecarArt
   public PlanCreationResponse createPlanForField(PlanCreationContext ctx, SidecarArtifact artifactInfo) {
     String sideCarArtifactId = (String) kryoSerializer.asInflatedObject(
         ctx.getDependency().getMetadataMap().get(YamlTypes.UUID).toByteArray());
-    StepParameters stepParameters = (StepParameters) kryoSerializer.asInflatedObject(
-        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
+    ArtifactStepParameters stepParameters = (ArtifactStepParameters) kryoSerializer.asInflatedObject(
+        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECAR_STEP_PARAMETERS).toByteArray());
 
     String identifier = (String) kryoSerializer.asInflatedObject(
         ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.IDENTIFIER).toByteArray());

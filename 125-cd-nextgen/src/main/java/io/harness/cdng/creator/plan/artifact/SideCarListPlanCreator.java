@@ -10,6 +10,7 @@ package io.harness.cdng.creator.plan.artifact;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.artifact.bean.yaml.SidecarsListWrapper;
+import io.harness.cdng.artifact.steps.ArtifactStepParameters;
 import io.harness.cdng.artifact.steps.SidecarsStep;
 import io.harness.cdng.creator.plan.PlanCreatorConstants;
 import io.harness.cdng.utilities.SideCarsListArtifactsUtility;
@@ -18,7 +19,6 @@ import io.harness.data.structure.UUIDGenerator;
 import io.harness.pms.contracts.facilitators.FacilitatorObtainment;
 import io.harness.pms.contracts.facilitators.FacilitatorType;
 import io.harness.pms.contracts.plan.Dependency;
-import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.execution.OrchestrationFacilitatorType;
 import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.sdk.core.plan.PlanNode;
@@ -26,7 +26,6 @@ import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse.PlanCreationResponseBuilder;
 import io.harness.pms.sdk.core.plan.creation.creators.ChildrenPlanCreator;
-import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.yaml.DependenciesUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
@@ -65,14 +64,15 @@ public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrap
     LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap = new LinkedHashMap<>();
     YamlField sideCarsYamlField = ctx.getCurrentField();
 
-    Map<String, StepParameters> sideCarsParametersMap = (Map<String, StepParameters>) kryoSerializer.asInflatedObject(
-        ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
+    Map<String, ArtifactStepParameters> sideCarsParametersMap =
+        (Map<String, ArtifactStepParameters>) kryoSerializer.asInflatedObject(
+            ctx.getDependency().getMetadataMap().get(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP).toByteArray());
 
     List<YamlNode> yamlNodes = Optional.of(sideCarsYamlField.getNode().asArray()).orElse(Collections.emptyList());
-    Map<String, YamlNode> mapIdentifierWithYamlNode =
-        yamlNodes.stream().collect(Collectors.toMap(e -> e.getField("sidecar").getNode().getIdentifier(), k -> k));
+    Map<String, YamlNode> mapIdentifierWithYamlNode = yamlNodes.stream().collect(
+        Collectors.toMap(e -> e.getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG).getNode().getIdentifier(), k -> k));
 
-    for (Map.Entry<String, StepParameters> entry : sideCarsParametersMap.entrySet()) {
+    for (Map.Entry<String, ArtifactStepParameters> entry : sideCarsParametersMap.entrySet()) {
       addDependenciesForIndividualSideCar(
           sideCarsYamlField, entry.getKey(), entry.getValue(), mapIdentifierWithYamlNode, planCreationResponseMap);
     }
@@ -80,13 +80,12 @@ public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrap
     return planCreationResponseMap;
   }
 
-  private void addDependenciesForIndividualSideCar(YamlField sideCarsYamlField, String identifier,
-      StepParameters stepParameters, Map<String, YamlNode> mapIdentifierWithYamlNode,
+  public String addDependenciesForIndividualSideCar(YamlField sideCarsYamlField, String identifier,
+      ArtifactStepParameters stepParameters, Map<String, YamlNode> mapIdentifierWithYamlNode,
       LinkedHashMap<String, PlanCreationResponse> planCreationResponseMap) {
-    YamlUpdates.Builder yamlUpdates = YamlUpdates.newBuilder();
     YamlField individualSideCar =
         SideCarsListArtifactsUtility.createIndividualSideCarsArtifactYamlFieldAndSetYamlUpdate(
-            sideCarsYamlField, identifier, mapIdentifierWithYamlNode, yamlUpdates);
+            sideCarsYamlField, identifier, mapIdentifierWithYamlNode);
 
     String individualSideCarPlanNodeId = UUIDGenerator.generateUuid();
     Map<String, ByteString> metadataDependency = prepareMetadataForIndividualSideCarListArtifactPlanCreator(
@@ -100,18 +99,16 @@ public class SideCarListPlanCreator extends ChildrenPlanCreator<SidecarsListWrap
             .putDependencyMetadata(
                 individualSideCarPlanNodeId, Dependency.newBuilder().putAllMetadata(metadataDependency).build())
             .build());
-    if (yamlUpdates.getFqnToYamlCount() > 0) {
-      individualSideCarPlanResponse.yamlUpdates(yamlUpdates.build());
-    }
     planCreationResponseMap.put(individualSideCarPlanNodeId, individualSideCarPlanResponse.build());
+    return individualSideCarPlanNodeId;
   }
 
-  private Map<String, ByteString> prepareMetadataForIndividualSideCarListArtifactPlanCreator(
-      String individualSideCarPlanNodeId, StepParameters stepParameters, String identifier) {
+  public Map<String, ByteString> prepareMetadataForIndividualSideCarListArtifactPlanCreator(
+      String individualSideCarPlanNodeId, ArtifactStepParameters stepParameters, String identifier) {
     Map<String, ByteString> metadataDependency = new HashMap<>();
     metadataDependency.put(
         YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(individualSideCarPlanNodeId)));
-    metadataDependency.put(PlanCreatorConstants.SIDECARS_PARAMETERS_MAP,
+    metadataDependency.put(PlanCreatorConstants.SIDECAR_STEP_PARAMETERS,
         ByteString.copyFrom(kryoSerializer.asDeflatedBytes(stepParameters)));
     metadataDependency.put(
         PlanCreatorConstants.IDENTIFIER, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(identifier)));
