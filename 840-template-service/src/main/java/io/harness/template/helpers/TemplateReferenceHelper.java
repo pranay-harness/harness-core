@@ -26,8 +26,6 @@ import io.harness.entitysetupusageclient.remote.EntitySetupUsageClient;
 import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.eventsframework.schemas.entity.EntityTypeProtoEnum;
 import io.harness.eventsframework.schemas.entity.IdentifierRefProtoDTO;
-import io.harness.eventsframework.schemas.entity.ScopeProtoEnum;
-import io.harness.eventsframework.schemas.entity.TemplateReferenceProtoDTO;
 import io.harness.ng.core.entitysetupusage.dto.EntitySetupUsageDTO;
 import io.harness.ng.core.template.TemplateEntityType;
 import io.harness.pms.contracts.service.EntityReferenceRequest;
@@ -38,6 +36,7 @@ import io.harness.pms.merger.YamlConfig;
 import io.harness.pms.merger.fqn.FQN;
 import io.harness.pms.merger.fqn.FQNNode;
 import io.harness.preflight.PreFlightCheckMetadata;
+import io.harness.template.TemplateReferenceProtoUtils;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.services.NGTemplateServiceHelper;
 import io.harness.utils.IdentifierRefHelper;
@@ -47,7 +46,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.protobuf.ByteString;
-import com.google.protobuf.StringValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
@@ -89,7 +87,7 @@ public class TemplateReferenceHelper {
         correctFQNsOfReferredEntities(response.getReferredEntitiesList(), templateEntity.getTemplateEntityType());
     List<EntityDetailProtoDTO> referredEntitiesInLinkedTemplates =
         getNestedTemplateReferences(templateEntity.getAccountId(), templateEntity.getOrgIdentifier(),
-            templateEntity.getProjectIdentifier(), pmsUnderstandableYaml);
+            templateEntity.getProjectIdentifier(), pmsUnderstandableYaml, true);
     referredEntities.addAll(referredEntitiesInLinkedTemplates);
   }
 
@@ -121,8 +119,8 @@ public class TemplateReferenceHelper {
     return referredEntitiesWithModifiedFqn;
   }
 
-  private List<EntityDetailProtoDTO> getNestedTemplateReferences(
-      String accountId, String orgId, String projectId, String yaml) {
+  public List<EntityDetailProtoDTO> getNestedTemplateReferences(
+      String accountId, String orgId, String projectId, String yaml, boolean shouldModifyFqn) {
     List<EntityDetailProtoDTO> referredEntities = new ArrayList<>();
     YamlConfig yamlConfig = new YamlConfig(yaml);
     Map<FQN, Object> fqnToValueMap = yamlConfig.getFqnToValueMap();
@@ -161,8 +159,9 @@ public class TemplateReferenceHelper {
           // add linked template as reference
           referredEntities.add(getTemplateReference(templateIdentifierRef, versionLabel));
           // add runtime entities referred by linked template as references
-          referredEntities.addAll(getEntitiesReferredByTemplate(accountId, orgId, projectId, templateIdentifierRef,
-              versionLabel, fqnStringToValueMap, FQN.builder().fqnList(fqnList).build().getExpressionFqn()));
+          referredEntities.addAll(
+              getEntitiesReferredByTemplate(accountId, orgId, projectId, templateIdentifierRef, versionLabel,
+                  fqnStringToValueMap, FQN.builder().fqnList(fqnList).build().getExpressionFqn(), shouldModifyFqn));
         }
       }
     });
@@ -171,7 +170,7 @@ public class TemplateReferenceHelper {
 
   private List<EntityDetailProtoDTO> getEntitiesReferredByTemplate(String accountId, String orgId, String projectId,
       IdentifierRef templateIdentifierRef, String versionLabel, Map<String, Object> fqnStringToValueMap,
-      String linkedTemplateFqnExpression) {
+      String linkedTemplateFqnExpression, boolean shouldModifyFqn) {
     List<EntityDetailProtoDTO> referredEntitiesInTemplate = new ArrayList<>();
     NGTemplateReference ngTemplateReference = NGTemplateReference.builder()
                                                   .accountIdentifier(templateIdentifierRef.getAccountIdentifier())
@@ -203,8 +202,9 @@ public class TemplateReferenceHelper {
           JsonNode value = (JsonNode) fqnStringToValueMap.get(completeFqnForReferredEntity);
 
           if (isNotEmpty(value.asText())) {
-            referredEntitiesInTemplate.add(convertToEntityDetailProtoDTO(accountId, orgId, projectId,
-                completeFqnForReferredEntity, value.asText(), referredEntity.getReferredEntity().getType()));
+            referredEntitiesInTemplate.add(
+                convertToEntityDetailProtoDTO(accountId, orgId, projectId, completeFqnForReferredEntity, value.asText(),
+                    referredEntity.getReferredEntity().getType(), shouldModifyFqn));
           }
         }
       }
@@ -213,25 +213,28 @@ public class TemplateReferenceHelper {
   }
 
   private EntityDetailProtoDTO convertToEntityDetailProtoDTO(String accountId, String orgId, String projectId,
-      String fullQualifiedDomainName, String entityRefValue, EntityType entityType) {
+      String fullQualifiedDomainName, String entityRefValue, EntityType entityType, boolean shouldModifyFqn) {
     Map<String, String> metadata = new HashMap<>();
-    String modifiedFqn = replaceBaseIdentifierInFQNWithTemplateInputs(fullQualifiedDomainName);
-    metadata.put(PreFlightCheckMetadata.FQN, modifiedFqn);
 
     if (NGExpressionUtils.matchesInputSetPattern(entityRefValue)) {
+      if (shouldModifyFqn) {
+        fullQualifiedDomainName = replaceBaseIdentifierInFQNWithTemplateInputs(fullQualifiedDomainName);
+      }
+      metadata.put(PreFlightCheckMetadata.FQN, fullQualifiedDomainName);
       metadata.put(PreFlightCheckMetadata.EXPRESSION, entityRefValue);
       IdentifierRef identifierRef = IdentifierRefHelper.createIdentifierRefWithUnknownScope(
           accountId, orgId, projectId, entityRefValue, metadata);
       return EntityDetailProtoDTO.newBuilder()
           .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
-          .setType(EntityTypeProtoEnum.valueOf(entityType.name()))
+          .setType(getEntityTypeProtoEnumFromEntityType(entityType))
           .build();
     } else {
+      metadata.put(PreFlightCheckMetadata.FQN, fullQualifiedDomainName);
       IdentifierRef identifierRef =
           IdentifierRefHelper.getIdentifierRef(entityRefValue, accountId, orgId, projectId, metadata);
       return EntityDetailProtoDTO.newBuilder()
           .setIdentifierRef(IdentifierRefProtoUtils.createIdentifierRefProtoFromIdentifierRef(identifierRef))
-          .setType(EntityTypeProtoEnum.valueOf(entityType.name()))
+          .setType(getEntityTypeProtoEnumFromEntityType(entityType))
           .build();
     }
   }
@@ -239,32 +242,9 @@ public class TemplateReferenceHelper {
   private EntityDetailProtoDTO getTemplateReference(IdentifierRef templateIdentifierRef, String versionLabel) {
     return EntityDetailProtoDTO.newBuilder()
         .setType(EntityTypeProtoEnum.TEMPLATE)
-        .setTemplateRef(createTemplateReferenceProtoFromIdentifierRef(templateIdentifierRef, versionLabel))
+        .setTemplateRef(TemplateReferenceProtoUtils.createTemplateReferenceProtoFromIdentifierRef(
+            templateIdentifierRef, versionLabel))
         .build();
-  }
-
-  private TemplateReferenceProtoDTO createTemplateReferenceProtoFromIdentifierRef(
-      IdentifierRef identifierRef, String versionLabel) {
-    String accountIdentifier = identifierRef.getAccountIdentifier();
-    String projectIdentifier = identifierRef.getProjectIdentifier();
-    String orgIdentifier = identifierRef.getOrgIdentifier();
-    String identifier = identifierRef.getIdentifier();
-    Scope scope = identifierRef.getScope();
-
-    TemplateReferenceProtoDTO.Builder templateRefBuilder = TemplateReferenceProtoDTO.newBuilder()
-                                                               .setIdentifier(StringValue.of(identifier))
-                                                               .setAccountIdentifier(StringValue.of(accountIdentifier))
-                                                               .setScope(ScopeProtoEnum.valueOf(scope.toString()))
-                                                               .setVersionLabel(StringValue.of(versionLabel));
-    if (isNotEmpty(orgIdentifier)) {
-      templateRefBuilder.setOrgIdentifier(StringValue.of(orgIdentifier));
-    }
-
-    if (isNotEmpty(projectIdentifier)) {
-      templateRefBuilder.setProjectIdentifier(StringValue.of(projectIdentifier));
-    }
-
-    return templateRefBuilder.build();
   }
 
   private String replaceBaseIdentifierInFQNWithTemplateInputs(String fqn) {
@@ -273,5 +253,9 @@ public class TemplateReferenceHelper {
       return TEMPLATE_INPUTS + fqn.substring(indexOfFirstDot);
     }
     return fqn;
+  }
+
+  private EntityTypeProtoEnum getEntityTypeProtoEnumFromEntityType(EntityType entityType) {
+    return EntityTypeProtoEnum.valueOf(entityType.name());
   }
 }
