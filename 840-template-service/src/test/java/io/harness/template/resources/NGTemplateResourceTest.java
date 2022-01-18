@@ -48,6 +48,7 @@ import io.harness.template.beans.TemplateWrapperResponseDTO;
 import io.harness.template.entity.TemplateEntity;
 import io.harness.template.entity.TemplateEntity.TemplateEntityKeys;
 import io.harness.template.helpers.TemplateMergeHelper;
+import io.harness.template.helpers.TemplateReferenceHelper;
 import io.harness.template.helpers.TemplateYamlConversionHelper;
 import io.harness.template.services.NGTemplateService;
 import io.harness.template.services.NGTemplateServiceHelper;
@@ -93,6 +94,7 @@ public class NGTemplateResourceTest extends CategoryTest {
   @Mock TemplateMergeHelper templateMergeHelper;
   @Inject VariablesServiceBlockingStub variablesServiceBlockingStub;
   @Mock TemplateYamlConversionHelper templateYamlConversionHelper;
+  @Mock TemplateReferenceHelper templateReferenceHelper;
 
   private final String ACCOUNT_ID = "account_id";
   private final String ORG_IDENTIFIER = "orgId";
@@ -138,7 +140,7 @@ public class NGTemplateResourceTest extends CategoryTest {
     variablesServiceBlockingStub = VariablesServiceGrpc.newBlockingStub(channel);
 
     templateResource = new NGTemplateResource(templateService, templateServiceHelper, accessControlClient,
-        templateMergeHelper, variablesServiceBlockingStub, templateYamlConversionHelper);
+        templateMergeHelper, variablesServiceBlockingStub, templateYamlConversionHelper, templateReferenceHelper);
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "template.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);

@@ -100,6 +100,8 @@ public class NGTemplateServiceImplTest extends TemplateServiceTestBase {
     ClassLoader classLoader = this.getClass().getClassLoader();
     String filename = "template.yaml";
     yaml = Resources.toString(Objects.requireNonNull(classLoader.getResource(filename)), StandardCharsets.UTF_8);
+    on(templateServiceHelper).set("enforcementClientService", enforcementClientService);
+    on(templateServiceHelper).set("templateRepository", templateRepository);
     on(templateService).set("templateRepository", templateRepository);
     on(templateService).set("gitSyncSdkService", gitSyncSdkService);
     on(templateService).set("transactionHelper", transactionHelper);

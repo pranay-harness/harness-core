@@ -123,18 +123,21 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
                                          .versionLabel("1")
                                          .scope(Scope.ORG)
                                          .fqn("pipeline.stages.qaStage.spec.execution.steps.shellScriptStep11")
+                                         .stableTemplate(false)
                                          .build());
     templateReferenceSummaryList.add(TemplateReferenceSummary.builder()
                                          .templateIdentifier("template1")
                                          .versionLabel("1")
                                          .scope(Scope.PROJECT)
                                          .fqn("pipeline.stages.qaStage.spec.execution.steps.shellScriptStep12")
+                                         .stableTemplate(true)
                                          .build());
     templateReferenceSummaryList.add(TemplateReferenceSummary.builder()
                                          .templateIdentifier("template2")
                                          .versionLabel("1")
                                          .scope(Scope.ACCOUNT)
                                          .fqn("pipeline.stages.qaStage.spec.execution.steps.approval")
+                                         .stableTemplate(false)
                                          .build());
     assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).hasSize(3);
     assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).containsAll(templateReferenceSummaryList);
@@ -191,18 +194,21 @@ public class TemplateMergeHelperTest extends TemplateServiceTestBase {
                                          .versionLabel("1")
                                          .scope(Scope.PROJECT)
                                          .fqn("pipeline.stages.qaStage.spec.execution.steps.shellScriptStep11")
+                                         .stableTemplate(false)
                                          .build());
     templateReferenceSummaryList.add(TemplateReferenceSummary.builder()
                                          .templateIdentifier("template1")
                                          .versionLabel("1")
                                          .scope(Scope.PROJECT)
                                          .fqn("pipeline.stages.qaStage.spec.execution.steps.shellScriptStep12")
+                                         .stableTemplate(true)
                                          .build());
     templateReferenceSummaryList.add(TemplateReferenceSummary.builder()
                                          .templateIdentifier("template2")
                                          .versionLabel("1")
                                          .scope(Scope.PROJECT)
                                          .fqn("pipeline.stages.qaStage.spec.execution.steps.approval")
+                                         .stableTemplate(false)
                                          .build());
     assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).hasSize(3);
     assertThat(pipelineMergeResponse.getTemplateReferenceSummaries()).containsAll(templateReferenceSummaryList);
