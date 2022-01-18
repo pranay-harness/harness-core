@@ -28,10 +28,8 @@ public interface CVNGStepTaskService {
   DeploymentActivitySummaryDTO getDeploymentSummary(String callBackId);
   TransactionMetricInfoSummaryPageDTO getDeploymentActivityTimeSeriesData(String accountId, String callBackId,
       DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams);
-  List<String> getTransactionNames(
-      String accountId, String callBackId, DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter);
-  List<String> getNodeNames(
-      String accountId, String callBackId, DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter);
+  List<String> getTransactionNames(String accountId, String callBackId);
+  List<String> getNodeNames(String accountId, String callBackId);
   Set<HealthSourceDTO> healthSources(String accountId, String callBackId);
   List<LogAnalysisClusterChartDTO> getDeploymentActivityLogAnalysisClusters(
       String accountId, String callBackId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter);

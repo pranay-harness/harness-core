@@ -93,10 +93,8 @@ public class CVNGStepResource {
   @ExceptionMetered
   @ApiOperation(value = "get all the transaction names", nickname = "getVerifyStepTransactionNames")
   public RestResponse<List<String>> getTransactionNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
-      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId,
-      @BeanParam DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
-    return new RestResponse(
-        stepTaskService.getTransactionNames(accountId, callBackId, deploymentTimeSeriesAnalysisFilter));
+      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId) {
+    return new RestResponse(stepTaskService.getTransactionNames(accountId, callBackId));
   }
 
   @GET
@@ -105,9 +103,8 @@ public class CVNGStepResource {
   @ExceptionMetered
   @ApiOperation(value = "get all the Node names", nickname = "getVerifyStepNodeNames")
   public RestResponse<List<String>> getNodeNames(@NotEmpty @NotNull @QueryParam("accountId") String accountId,
-      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId,
-      @BeanParam DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter) {
-    return new RestResponse(stepTaskService.getNodeNames(accountId, callBackId, deploymentTimeSeriesAnalysisFilter));
+      @NotEmpty @NotNull @PathParam("verifyStepExecutionId") String callBackId) {
+    return new RestResponse(stepTaskService.getNodeNames(accountId, callBackId));
   }
 
   @GET

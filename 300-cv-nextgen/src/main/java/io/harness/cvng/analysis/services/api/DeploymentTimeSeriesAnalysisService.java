@@ -23,10 +23,8 @@ public interface DeploymentTimeSeriesAnalysisService {
   void save(DeploymentTimeSeriesAnalysis deploymentTimeSeriesAnalysis);
   TransactionMetricInfoSummaryPageDTO getMetrics(String accountId, String verificationJobInstanceId,
       DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter, PageParams pageParams);
-  List<String> getTransactionNames(String accountId, String verificationJobInstanceId,
-      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter);
-  List<String> getNodeNames(String accountId, String verificationJobInstanceId,
-      DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter);
+  List<String> getTransactionNames(String accountId, String verificationJobInstanceId);
+  List<String> getNodeNames(String accountId, String verificationJobInstanceId);
   List<DeploymentTimeSeriesAnalysis> getAnalysisResults(String verificationTaskId);
   Optional<Risk> getRecentHighestRiskScore(String accountId, String verificationJobInstanceId);
 
