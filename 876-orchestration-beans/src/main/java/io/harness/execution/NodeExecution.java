@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

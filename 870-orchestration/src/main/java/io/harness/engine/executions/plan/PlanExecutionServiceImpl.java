@@ -13,6 +13,7 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.mongodb.client.result.DeleteResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.node.NodeExecutionService;
@@ -227,5 +228,10 @@ public class PlanExecutionServiceImpl implements PlanExecutionService {
                             .lte(toTS);
 
     return mongoTemplate.find(query(criteria), PlanExecution.class);
+  }
+
+  @Override
+  public DeleteResult delete(PlanExecution planExecution) {
+    return mongoTemplate.remove(planExecution);
   }
 }

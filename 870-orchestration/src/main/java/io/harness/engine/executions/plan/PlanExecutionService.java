@@ -9,6 +9,7 @@ package io.harness.engine.executions.plan;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import com.mongodb.client.result.DeleteResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
@@ -50,4 +51,6 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
 
   List<PlanExecution> findAllByAccountIdAndOrgIdAndProjectIdAndLastUpdatedAtInBetweenTimestamps(
       String accountId, String orgId, String projectId, long startTS, long endTS);
+
+  DeleteResult delete(PlanExecution planExecution);
 }

@@ -9,6 +9,7 @@ package io.harness.engine.executions.node;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
+import com.mongodb.client.result.DeleteResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.retry.RetryStageInfo;
 import io.harness.execution.NodeExecution;
@@ -107,4 +108,6 @@ public interface NodeExecutionService {
   List<String> fetchStageFqnFromStageIdentifiers(String planExecutionId, List<String> stageIdentifiers);
 
   Map<String, Node> mapNodeExecutionIdWithPlanNodeForGivenStageFQN(String planExecutionId, List<String> stageFQNs);
+
+  DeleteResult deleteAll(List<String> ids);
 }

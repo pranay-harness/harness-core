@@ -20,6 +20,7 @@ import static org.springframework.data.domain.Sort.by;
 import static org.springframework.data.mongodb.core.query.Criteria.where;
 import static org.springframework.data.mongodb.core.query.Query.query;
 
+import com.mongodb.client.result.DeleteResult;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
@@ -656,6 +657,8 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
         .collect(Collectors.toList());
   }
 
+
+
   @Override
   public Map<String, Node> mapNodeExecutionIdWithPlanNodeForGivenStageFQN(
       String planExecutionId, List<String> stageFQNs) {
@@ -673,5 +676,11 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     nodeExecutions.forEach(
         nodeExecution -> nodeExecutionIdToPlanNode.put(nodeExecution.getUuid(), nodeExecution.getNode()));
     return nodeExecutionIdToPlanNode;
+  }
+
+  @Override
+  public DeleteResult deleteAll(List<String> ids) {
+    Query query = new Query().addCriteria(where(NodeExecutionKeys.uuid).in(ids));
+    return mongoTemplate.remove(query, NodeExecution.class);
   }
 }
