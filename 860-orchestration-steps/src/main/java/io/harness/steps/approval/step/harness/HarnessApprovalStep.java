@@ -59,6 +59,7 @@ public class HarnessApprovalStep extends AsyncExecutableWithRollback {
         (HarnessApprovalInstance) approvalInstanceService.get(responseData.getApprovalInstanceId());
     return StepResponse.builder()
         .status(instance.getStatus().toFinalExecutionStatus())
+        .failureInfo(instance.getFailureInfo())
         .stepOutcome(
             StepResponse.StepOutcome.builder().name("output").outcome(instance.toHarnessApprovalOutcome()).build())
         .build();

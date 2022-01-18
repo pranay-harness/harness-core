@@ -17,6 +17,7 @@ import static io.harness.exception.WingsException.ADMIN_SRE;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.exception.WingsException.USER_ADMIN;
 import static io.harness.filesystem.FileIo.deleteDirectoryAndItsContentIfExists;
+import static io.harness.git.Constants.EXCEPTION_STRING;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.shell.AuthenticationScheme.HTTP_PASSWORD;
 import static io.harness.shell.AuthenticationScheme.KERBEROS;
@@ -158,8 +159,8 @@ public class GitClientImpl implements GitClient {
    */
   public static final HttpConnectionFactory connectionFactory = new HttpClientConnectionFactory();
 
-  private synchronized GitCloneResult clone(
-      GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
+  @VisibleForTesting
+  synchronized GitCloneResult clone(GitConfig gitConfig, String gitRepoDirectory, String branch, boolean noCheckout) {
     try {
       if (new File(gitRepoDirectory).exists()) {
         deleteDirectoryAndItsContentIfExists(gitRepoDirectory);
@@ -367,8 +368,8 @@ public class GitClientImpl implements GitClient {
     }
   }
 
-  private synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext)
-      throws GitAPIException, IOException {
+  @VisibleForTesting
+  synchronized GitCheckoutResult checkout(GitOperationContext gitOperationContext) throws GitAPIException, IOException {
     GitConfig gitConfig = gitOperationContext.getGitConfig();
     Git git = Git.open(new File(gitClientHelper.getRepoDirectory(gitOperationContext)));
     try {
@@ -1090,6 +1091,16 @@ public class GitClientImpl implements GitClient {
     // opening/updating repo
     log.info(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + "Do a fresh clone");
     clone(gitConfig, gitClientHelper.getRepoDirectory(gitOperationContext), gitConfig.getBranch(), false);
+    try {
+      checkout(gitOperationContext);
+    } catch (IOException | GitAPIException ex) {
+      log.error(getGitLogMessagePrefix(gitConfig.getGitRepoType()) + EXCEPTION_STRING, ex);
+      throw new YamlException(format("Unable to checkout given reference: %s",
+                                  isEmpty(gitOperationContext.getGitConfig().getReference())
+                                      ? gitOperationContext.getGitConfig().getBranch()
+                                      : gitOperationContext.getGitConfig().getReference()),
+          ex, USER);
+    }
   }
 
   protected String getGitLogMessagePrefix(GitRepositoryType repositoryType) {

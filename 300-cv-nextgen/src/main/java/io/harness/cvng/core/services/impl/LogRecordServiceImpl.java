@@ -10,6 +10,7 @@ package io.harness.cvng.core.services.impl;
 import static io.harness.persistence.HQuery.excludeAuthority;
 
 import io.harness.cvng.beans.LogRecordDTO;
+import io.harness.cvng.core.beans.demo.DemoTemplate;
 import io.harness.cvng.core.entities.LogCVConfig;
 import io.harness.cvng.core.entities.LogRecord;
 import io.harness.cvng.core.entities.LogRecord.LogRecordKeys;
@@ -67,11 +68,11 @@ public class LogRecordServiceImpl implements LogRecordService {
 
   @Override
   public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException {
+      DemoTemplate demoTemplate, Instant startTime, Instant endTime) throws IOException {
     List<LogRecordDTO> logRecordsToBeSaved = new ArrayList<>();
     Instant time = startTime;
 
-    String demoTemplatePath = getDemoTemplate(verificationTaskId, endTime, demoTemplateIdentifier);
+    String demoTemplatePath = getDemoTemplate(verificationTaskId, endTime, demoTemplate);
     List<List<LogRecordDTO>> logRecordsList =
         JsonUtils.asObject(demoTemplatePath, new TypeReference<List<List<LogRecordDTO>>>() {});
     int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
@@ -94,8 +95,9 @@ public class LogRecordServiceImpl implements LogRecordService {
     save(logRecordsToBeSaved);
   }
 
-  private String getDemoTemplate(String verificationTaskId, Instant endTime, String demoTemplateIdentifier)
+  private String getDemoTemplate(String verificationTaskId, Instant endTime, DemoTemplate demoTemplate)
       throws IOException {
+    String demoTemplateIdentifier = demoTemplate.getDemoTemplateIdentifier();
     if (verificationTaskService.isServiceGuardId(verificationTaskId)) {
       LogCVConfig cvConfig =
           (LogCVConfig) cvConfigService.get(verificationTaskService.getCVConfigId(verificationTaskId));

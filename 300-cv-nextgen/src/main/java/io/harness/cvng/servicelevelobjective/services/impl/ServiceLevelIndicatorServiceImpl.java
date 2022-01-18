@@ -406,4 +406,9 @@ public class ServiceLevelIndicatorServiceImpl implements ServiceLevelIndicatorSe
         serviceLevelIndicator.getOrgIdentifier(), serviceLevelIndicator.getProjectIdentifier(),
         serviceLevelIndicator.getMonitoredServiceIdentifier(), serviceLevelIndicator.getHealthSourceIdentifier());
   }
+
+  @Override
+  public List<CVConfig> fetchCVConfigForSLI(String sliId) {
+    return fetchCVConfigForSLI(get(sliId));
+  }
 }

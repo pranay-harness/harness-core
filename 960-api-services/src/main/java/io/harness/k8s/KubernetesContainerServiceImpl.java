@@ -1075,11 +1075,63 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
   }
 
   @Override
-  public Service createOrReplaceService(KubernetesConfig kubernetesConfig, Service definition) {
+  public Service createOrReplaceServiceFabric8(KubernetesConfig kubernetesConfig, Service definition) {
     return kubernetesHelperService.getKubernetesClient(kubernetesConfig)
         .services()
         .inNamespace(kubernetesConfig.getNamespace())
         .createOrReplace(definition);
+  }
+
+  @Override
+  public V1Service createOrReplaceService(KubernetesConfig kubernetesConfig, V1Service definition) {
+    String name = definition.getMetadata().getName();
+    V1Service service = getService(kubernetesConfig, name);
+    return service == null ? createService(kubernetesConfig, definition) : replaceService(kubernetesConfig, definition);
+  }
+
+  @VisibleForTesting
+  V1Service createService(KubernetesConfig kubernetesConfig, V1Service definition) {
+    String name = definition.getMetadata().getName();
+    log.info("Creating service [{}]", name);
+    final Supplier<V1Service> v1ServiceMapSupplier = Retry.decorateSupplier(retry, () -> {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      try {
+        return new CoreV1Api(apiClient).createNamespacedService(
+            kubernetesConfig.getNamespace(), definition, null, null, null);
+      } catch (ApiException exception) {
+        String serviceDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
+            ? format("%s/Service/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
+            : "Service";
+        String message = format(
+            "Failed to create %s. Code: %s, message: %s", serviceDef, exception.getCode(), exception.getResponseBody());
+        log.error(message);
+        throw new InvalidRequestException(message, exception, USER);
+      }
+    });
+    return v1ServiceMapSupplier.get();
+  }
+
+  @VisibleForTesting
+  V1Service replaceService(KubernetesConfig kubernetesConfig, V1Service definition) {
+    String name = definition.getMetadata().getName();
+    log.info("Replacing service [{}]", name);
+    final Supplier<V1Service> v1ServiceSupplier = Retry.decorateSupplier(retry, () -> {
+      ApiClient apiClient = kubernetesHelperService.getApiClient(kubernetesConfig);
+      try {
+        return new CoreV1Api(apiClient).replaceNamespacedService(
+            name, kubernetesConfig.getNamespace(), definition, null, null, null);
+      } catch (ApiException exception) {
+        String serviceDef = definition.getMetadata() != null && isNotEmpty(definition.getMetadata().getName())
+            ? format("%s/Service/%s", kubernetesConfig.getNamespace(), definition.getMetadata().getName())
+            : "Service";
+        String message = format("Failed to replace %s. Code: %s, message: %s", serviceDef, exception.getCode(),
+            exception.getResponseBody());
+        log.error(message);
+        throw new InvalidRequestException(message, exception, USER);
+      }
+    });
+
+    return v1ServiceSupplier.get();
   }
 
   @Override
@@ -1980,7 +2032,7 @@ public class KubernetesContainerServiceImpl implements KubernetesContainerServic
                                    .map(entry -> format(K8S_SELECTOR_FORMAT, entry.getKey(), entry.getValue()))
                                    .collect(Collectors.joining(K8S_SELECTOR_DELIMITER));
         V1PodList podList = new CoreV1Api(apiClient).listNamespacedPod(
-            namespace, null, null, null, null, labelSelector, null, null, null, null, false);
+            namespace, null, null, null, null, labelSelector, null, null, null, null);
         return podList.getItems()
             .stream()
             .filter(pod

@@ -18,7 +18,7 @@ public class TriggeredByHelper {
   @Inject private CurrentUserHelper currentUserHelper;
 
   public TriggeredBy getFromSecurityContext() {
-    EmbeddedUser user = currentUserHelper.getFromSecurityContext();
+    EmbeddedUser user = currentUserHelper.getFromSecurityContextFromPrincipal();
     return TriggeredBy.newBuilder()
         .setUuid(user.getUuid())
         .setIdentifier(user.getName())

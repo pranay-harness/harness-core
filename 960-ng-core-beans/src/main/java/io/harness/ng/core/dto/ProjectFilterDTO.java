@@ -10,6 +10,7 @@ package io.harness.ng.core.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.ModuleType;
+import io.harness.NGResourceFilterConstants;
 import io.harness.annotations.dev.OwnedBy;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,11 +25,11 @@ import lombok.experimental.FieldDefaults;
 @Data
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@Schema(name = "ProjectFilter", description = "This is the Project Filter defined in Harness")
+@Schema(name = "ProjectFilter", description = "This is the Project Filter defined in Harness.")
 public class ProjectFilterDTO {
-  @Schema(description = "Search Term") String searchTerm;
-  @Schema(description = "Set of Organization Identifiers") Set<String> orgIdentifiers;
-  @Schema(description = "This field denotes if project filter has module") Boolean hasModule;
+  @Schema(description = NGResourceFilterConstants.SEARCH_TERM) String searchTerm;
+  @Schema(description = "List of identifiers for Organizations.") Set<String> orgIdentifiers;
+  @Schema(description = "This is true if the Project has a module. Else it is false.") Boolean hasModule;
   @Schema(description = "Module Type") ModuleType moduleType;
-  @Schema(description = "List of Identifiers") List<String> identifiers;
+  @Schema(description = NGResourceFilterConstants.IDENTIFIER_LIST) List<String> identifiers;
 }

@@ -44,4 +44,6 @@ public interface EntityTypeConstants {
   String K8S_CANARY_DEPLOY = "K8sCanaryDeploy";
   String SERVICENOW_APPROVAL = "ServiceNowApproval";
   String JIRA_APPROVAL = "JiraApproval";
+  String HARNESS_APPROVAL = "HarnessApproval";
+  String BARRIER = "Barrier";
 }

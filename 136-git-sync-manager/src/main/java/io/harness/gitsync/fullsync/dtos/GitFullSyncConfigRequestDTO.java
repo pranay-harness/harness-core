@@ -22,11 +22,12 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class GitFullSyncConfigRequestDTO {
   @Schema(description = "Branch on which Entities will be pushed") @NotNull String branch;
-  @Schema(description = "PR Title") String message;
+  @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @NotNull String repoIdentifier;
+  @Schema(description = "Root Folder Path where entities will be pushed") @NotNull String rootFolder;
+  @Schema(description = "Checks the new Branch") boolean isNewBranch;
   @Schema(description = GitSyncApiConstants.DEFAULT_BRANCH_PARAM_MESSAGE) String baseBranch;
   @Schema(description = "This checks whether to create a pull request. Its default value is False")
   boolean createPullRequest;
-  @Schema(description = GitSyncApiConstants.REPOID_PARAM_MESSAGE) @NotNull String repoIdentifier;
-  @Schema(description = "Checks the new Branch") boolean isNewBranch;
   @Schema(description = "Target Branch for pull request") String targetBranch;
+  @Schema(description = "PR Title") String prTitle;
 }

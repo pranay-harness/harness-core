@@ -57,6 +57,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.eraro.ErrorCode;
 import io.harness.event.handler.impl.EventPublishHelper;
 import io.harness.exception.GeneralException;
+import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.UserGroupAlreadyExistException;
 import io.harness.exception.WingsException;
@@ -84,6 +85,7 @@ import software.wings.features.RbacFeature;
 import software.wings.features.api.UsageLimitedFeature;
 import software.wings.scheduler.LdapGroupSyncJobHelper;
 import software.wings.security.AppFilter;
+import software.wings.security.EnvFilter;
 import software.wings.security.Filter;
 import software.wings.security.GenericEntityFilter;
 import software.wings.security.PermissionAttribute;
@@ -93,6 +95,7 @@ import software.wings.security.UserThreadLocal;
 import software.wings.service.UserGroupUtils;
 import software.wings.service.impl.workflow.UserGroupDeleteEventHandler;
 import software.wings.service.intfc.AccountService;
+import software.wings.service.intfc.AppService;
 import software.wings.service.intfc.AuthService;
 import software.wings.service.intfc.SSOSettingService;
 import software.wings.service.intfc.UserGroupService;
@@ -155,6 +158,7 @@ public class UserGroupServiceImpl implements UserGroupService {
   @Inject @Named(RbacFeature.FEATURE_NAME) private UsageLimitedFeature rbacFeature;
   @Inject private FeatureFlagService featureFlagService;
   @Inject private LdapGroupSyncJobHelper ldapGroupSyncJobHelper;
+  @Inject private AppService appService;
 
   @Override
   public UserGroup save(UserGroup userGroup) {
@@ -1018,6 +1022,70 @@ public class UserGroupServiceImpl implements UserGroupService {
     }
   }
 
+  private void pruneEntityIdFromUserGroup(String appId, String entityId) {
+    String accountId = appService.getAccountIdByAppId(appId);
+    if (isEmpty(accountId) || isEmpty(entityId)) {
+      return;
+    }
+    Set<String> deletedEntityIds = new HashSet<>();
+    deletedEntityIds.add(entityId);
+
+    try (HIterator<UserGroup> userGroupIterator =
+             new HIterator<>(wingsPersistence.createQuery(UserGroup.class, excludeAuthority)
+                                 .filter(UserGroupKeys.accountId, accountId)
+                                 .fetch())) {
+      while (userGroupIterator.hasNext()) {
+        final UserGroup userGroup = userGroupIterator.next();
+        removeEntityIdsFromAppPermissions(userGroup, deletedEntityIds);
+      }
+    }
+  }
+
+  private void removeEntityIdsFromAppPermissions(UserGroup userGroup, Set<String> entityIds) {
+    boolean isModified = false;
+    Set<AppPermission> appPermissions = userGroup.getAppPermissions();
+    Set<AppPermission> newAppPermissions = new HashSet<>();
+    if (isEmpty(appPermissions) || isEmpty(entityIds)) {
+      return;
+    }
+    for (AppPermission permission : appPermissions) {
+      if (permission == null) {
+        continue;
+      }
+      boolean includeCurrentPermission = true;
+      Filter filter = permission.getEntityFilter();
+      if (filter != null && filter.getIds() != null && filter.getIds().removeIf(entityIds::contains)) {
+        isModified = true;
+        if (isEmpty(filter.getIds()) && isEntityFilterSelected(filter)) {
+          includeCurrentPermission = false;
+        }
+      }
+      if (includeCurrentPermission) {
+        newAppPermissions.add(permission);
+      }
+    }
+    if (isModified) {
+      userGroup.setAppPermissions(newAppPermissions);
+      log.info("Pruning entity ids from user group: {} for entityIds {}", userGroup.getUuid(), entityIds);
+      updatePermissions(userGroup);
+    }
+  }
+
+  private boolean isEntityFilterSelected(Filter filter) {
+    if (filter == null) {
+      throw new InvalidArgumentsException("Filter in appPermission for userGroup is null.");
+    }
+    if (filter instanceof GenericEntityFilter) {
+      String filterType = ((GenericEntityFilter) filter).getFilterType();
+      return GenericEntityFilter.FilterType.SELECTED.equals(filterType);
+    }
+    if (filter instanceof EnvFilter) {
+      Set<String> filterTypes = ((EnvFilter) filter).getFilterTypes();
+      return isNotEmpty(filterTypes) && filterTypes.contains(EnvFilter.FilterType.SELECTED);
+    }
+    return false;
+  }
+
   @Override
   public List<UserGroup> getUserGroupsBySsoId(String accountId, String ssoId) {
     PageRequest<UserGroup> pageRequest = aPageRequest()
@@ -1147,5 +1215,35 @@ public class UserGroupServiceImpl implements UserGroupService {
         removeAppIdsFromAppPermissions(userGroup, deletedIds);
       }
     }
+  }
+
+  @Override
+  public void pruneByService(String appId, String serviceId) {
+    pruneEntityIdFromUserGroup(appId, serviceId);
+  }
+
+  @Override
+  public void pruneByEnvironment(String appId, String envId) {
+    pruneEntityIdFromUserGroup(appId, envId);
+  }
+
+  @Override
+  public void pruneByInfrastructureProvisioner(String appId, String infrastructureProvisionerId) {
+    pruneEntityIdFromUserGroup(appId, infrastructureProvisionerId);
+  }
+
+  @Override
+  public void pruneByPipeline(String appId, String pipelineId) {
+    pruneEntityIdFromUserGroup(appId, pipelineId);
+  }
+
+  @Override
+  public void pruneByWorkflow(String appId, String workflowId) {
+    pruneEntityIdFromUserGroup(appId, workflowId);
+  }
+
+  @Override
+  public void pruneByTemplate(String appId, String templateId) {
+    pruneEntityIdFromUserGroup(appId, templateId);
   }
 }

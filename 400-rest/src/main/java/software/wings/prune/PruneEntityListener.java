@@ -36,6 +36,7 @@ import software.wings.beans.Workflow;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.artifact.ArtifactStream;
 import software.wings.beans.infrastructure.Host;
+import software.wings.beans.template.Template;
 import software.wings.dl.WingsPersistence;
 import software.wings.infra.InfrastructureDefinition;
 import software.wings.service.intfc.ActivityService;
@@ -52,6 +53,7 @@ import software.wings.service.intfc.PipelineService;
 import software.wings.service.intfc.ServiceResourceService;
 import software.wings.service.intfc.SettingsService;
 import software.wings.service.intfc.WorkflowService;
+import software.wings.service.intfc.template.TemplateService;
 
 import com.google.inject.Inject;
 import java.time.OffsetDateTime;
@@ -81,6 +83,7 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
   @Inject private InfrastructureDefinitionService infrastructureDefinitionService;
   @Inject private SettingsService settingsService;
   @Inject private ApplicationManifestService applicationManifestService;
+  @Inject private TemplateService templateService;
 
   @Inject
   public PruneEntityListener(QueueConsumer<PruneEvent> queueConsumer) {
@@ -153,6 +156,8 @@ public class PruneEntityListener extends QueueListener<PruneEvent> {
         settingsService.pruneBySettingAttribute(appId, entityId);
       } else if (clz.equals(ApplicationManifest.class)) {
         applicationManifestService.pruneDescendingEntities(appId, entityId);
+      } else if (clz.equals(Template.class)) {
+        templateService.pruneDescendingEntities(appId, entityId);
       } else {
         log.error("Unsupported class [{}] was scheduled for pruning.", clz.getCanonicalName());
       }

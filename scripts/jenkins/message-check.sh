@@ -7,7 +7,7 @@
 set +e
 
 COMMIT_CONTENT="\[feat]|\[fix]|\[techdebt]|feat|fix|techdebt"
-PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIE|PL|SEC|SWAT|GTM|FFM|OPA|ONP|LWG|ART|GIT"
+PROJECTS="BT|CCE|CCM|CDC|CDNG|CDP|CE|CI|CV|CVNG|DEL|DOC|DX|ER|OPS|PIE|PL|SEC|SWAT|GTM|FFM|OPA|ONP|LWG|ART|GIT|OENG"
 
 # Check commit message if there's a single commit
 #if [ $(git rev-list --count $ghprbActualCommit ^origin/master)  -eq 1 ]; then

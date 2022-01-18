@@ -8,6 +8,7 @@
 package io.harness.artifacts.gcr.service;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.govern.Switch.unhandled;
 import static io.harness.network.Http.getOkHttpClientBuilder;
@@ -25,6 +26,7 @@ import io.harness.artifacts.gcr.beans.GcrInternalConfig;
 import io.harness.context.MdcGlobalContextData;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.ExceptionUtils;
+import io.harness.exception.GcpServerException;
 import io.harness.exception.InvalidArtifactServerException;
 import io.harness.exception.WingsException;
 import io.harness.exception.exceptionmanager.exceptionhandler.ExceptionMetadataKeys;
@@ -35,6 +37,7 @@ import io.harness.expression.RegexFunctor;
 import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.manage.GlobalContextManager;
 import io.harness.network.Http;
+import io.harness.serializer.JsonUtils;
 
 import com.google.inject.Singleton;
 import java.io.IOException;
@@ -105,17 +108,27 @@ public class GcrApiServiceImpl implements GcrApiService {
     }
   }
 
-  private void checkValidImage(String imageName, Response<GcrImageTagResponse> response) {
-    if (response.code() == 404) { // Page not found
-      ErrorHandlingGlobalContextData globalContextData =
-          GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
-      if (globalContextData != null && globalContextData.isSupportedErrorFramework()
-          && response.body().tags.size() == 0) {
-        throw new GcrImageNotFoundRuntimeException(
-            "Image name [" + imageName + "] does not exist in Google Container Registry.");
+  private void checkValidImage(String imageName, Response<GcrImageTagResponse> response) throws IOException {
+    if (response.code() >= 400) {
+      if (response.code() == 404) {
+        ErrorHandlingGlobalContextData globalContextData =
+            GlobalContextManager.get(ErrorHandlingGlobalContextData.IS_SUPPORTED_ERROR_FRAMEWORK);
+        if (globalContextData != null && globalContextData.isSupportedErrorFramework()
+            && response.body().tags.size() == 0) {
+          throw new GcrImageNotFoundRuntimeException(
+              "Image name [" + imageName + "] does not exist in Google Container Registry.");
+        }
+        throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
+            .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
+      } else {
+        String responseError = response.errorBody() != null ? response.errorBody().string() : "";
+        String errorMessage = isNotEmpty(responseError) && responseError.charAt(0) == '{'
+            ? JsonUtils.jsonPath(responseError, "concat($..code, $..message)").toString()
+            : responseError;
+
+        throw new GcpServerException(
+            "Failed to retrieve [" + imageName + "] from Google Container Registry. " + errorMessage);
       }
-      throw new WingsException(ErrorCode.INVALID_ARGUMENT, USER)
-          .addParam("args", "Image name [" + imageName + "] does not exist in Google Container Registry.");
     }
   }
 
