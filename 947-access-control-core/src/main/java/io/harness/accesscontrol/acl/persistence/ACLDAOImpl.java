@@ -17,7 +17,6 @@ import io.harness.accesscontrol.scopes.core.Scope;
 import io.harness.accesscontrol.scopes.core.ScopeLevel;
 import io.harness.annotations.dev.OwnedBy;
 
-import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
@@ -40,7 +39,6 @@ public class ACLDAOImpl implements ACLDAO {
   private static final String INCLUDE_CHILD_SCOPES_IDENTIFIER = "**";
   private final ACLRepository aclRepository;
   private final Set<String> scopeResourceTypes;
-  private final Set<String> createScopePermissions = Sets.newHashSet("core_project_create", "core_organization_create");
 
   @Inject
   public ACLDAOImpl(@Named(ACL.PRIMARY_COLLECTION) ACLRepository aclRepository, Map<String, ScopeLevel> scopeLevels) {
@@ -65,9 +63,6 @@ public class ACLDAOImpl implements ACLDAO {
     String resourceType = permissionCheck.getResourceType();
     String resourceIdentifier = permissionCheck.getResourceIdentifier();
     if (!scopeResourceTypes.contains(resourceType)) {
-      return true;
-    }
-    if (createScopePermissions.contains(permissionCheck.getPermission())) {
       return true;
     }
     if (permissionCheck.getResourceScope() == null) {
