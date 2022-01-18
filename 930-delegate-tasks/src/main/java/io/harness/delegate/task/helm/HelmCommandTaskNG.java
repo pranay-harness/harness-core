@@ -29,10 +29,12 @@ import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
 import io.harness.logging.LogLevel;
+import io.harness.secret.SecretSanitizerThreadLocal;
 
 import software.wings.delegatetasks.ExceptionMessageSanitizer;
 
 import com.google.inject.Inject;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
@@ -60,6 +62,7 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
   public HelmCommandTaskNG(DelegateTaskPackage delegateTaskPackage, ILogStreamingTaskClient logStreamingTaskClient,
       Consumer<DelegateTaskResponse> consumer, BooleanSupplier preExecute) {
     super(delegateTaskPackage, logStreamingTaskClient, consumer, preExecute);
+    SecretSanitizerThreadLocal.addAll(delegateTaskPackage.getSecrets());
   }
 
   @Override
@@ -143,7 +146,7 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
     return helmCommandExecutionResponse;
   }
 
-  public void decryptRequestDTOs(HelmCommandRequestNG commandRequestNG) {
+  public void decryptRequestDTOs(HelmCommandRequestNG commandRequestNG) throws IOException {
     manifestDelegateConfigHelper.decryptManifestDelegateConfig(commandRequestNG.getManifestDelegateConfig());
     containerDeploymentDelegateBaseHelper.decryptK8sInfraDelegateConfig(commandRequestNG.getK8sInfraDelegateConfig());
   }

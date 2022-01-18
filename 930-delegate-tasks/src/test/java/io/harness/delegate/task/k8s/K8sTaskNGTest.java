@@ -65,6 +65,8 @@ import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
 import io.harness.security.encryption.SecretDecryptionService;
 
+import software.wings.service.intfc.security.EncryptionService;
+
 import com.google.inject.Inject;
 import java.io.IOException;
 import java.util.List;
@@ -257,6 +259,8 @@ public class K8sTaskNGTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testRunHelmChartManifestDelegateConfigHttpV2() throws Exception {
+    char[] str = {'1', '2', '3'};
+    doReturn(str).when(decryptionService).getDecryptedValue(any());
     HttpHelmUsernamePasswordDTO usernamePasswordDTO = HttpHelmUsernamePasswordDTO.builder().build();
     final List<EncryptedDataDetail> encryptedDataDetails = singletonList(EncryptedDataDetail.builder().build());
     final HelmChartManifestDelegateConfig manifestConfig =
@@ -383,6 +387,8 @@ public class K8sTaskNGTest extends CategoryTest {
     final ArgumentCaptor<K8sDelegateTaskParams> delegateTaskParamsCaptor =
         ArgumentCaptor.forClass(K8sDelegateTaskParams.class);
 
+    char[] str = {'1', '2', '3'};
+    doReturn(str).when(decryptionService).getDecryptedValue(any());
     doReturn(K8sTaskType.DEPLOYMENT_ROLLING).when(k8sDeployRequest).getTaskType();
     doReturn(manifest).when(k8sDeployRequest).getManifestDelegateConfig();
     doReturn(k8sInfraDelegateConfig).when(k8sDeployRequest).getK8sInfraDelegateConfig();
