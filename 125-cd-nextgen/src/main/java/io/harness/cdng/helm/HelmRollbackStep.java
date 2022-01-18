@@ -89,6 +89,7 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
       stepResponse = generateStepResponse(ambiance, executionResponse, stepResponseBuilder);
     } catch (Exception e) {
       log.error("Error while processing Helm Task response: {}", ExceptionUtils.getMessage(e), e);
+      throw e;
     } finally {
       stepHelper.sendRollbackTelemetryEvent(ambiance, stepResponse == null ? Status.FAILED : stepResponse.getStatus());
     }
@@ -156,6 +157,13 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
     }
 
     NativeHelmDeployOutcome nativeHelmDeployOutcome = (NativeHelmDeployOutcome) helmDeployOptionalOutput.getOutput();
+    if (!nativeHelmDeployOutcome.isInstallUpgrade()) {
+      return TaskRequest.newBuilder()
+          .setSkipTaskRequest(SkipTaskRequest.newBuilder()
+                                  .setMessage("Helm install/upgrade was not executed. Skipping rollback.")
+                                  .build())
+          .build();
+    }
     ManifestsOutcome manifestsOutcome = nativeHelmStepHelper.resolveManifestsOutcome(ambiance);
     ManifestOutcome manifestOutcome = nativeHelmStepHelper.getHelmSupportedManifestOutcome(manifestsOutcome.values());
     HelmChartManifestOutcome helmChartManifestOutcome = (HelmChartManifestOutcome) manifestOutcome;

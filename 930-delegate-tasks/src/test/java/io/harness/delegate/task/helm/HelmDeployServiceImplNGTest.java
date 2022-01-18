@@ -603,7 +603,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .saveReleaseHistory(any(), eq(helmRollbackCommandRequestNG.getReleaseName()), anyString(), anyBoolean());
 
     assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
-        .isInstanceOf(HelmNGException.class);
+        .isInstanceOf(GeneralException.class);
 
     // K8SteadyStateCheckEnabled true -- valid releaseHistory
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
@@ -623,8 +623,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     releaseHistory.setReleaseStatus(Release.Status.Failed);
 
     assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 2))
-        .isInstanceOf(HelmNGException.class)
-        .getRootCause()
+        .isInstanceOf(InvalidRequestException.class)
         .hasMessage("Invalid status for release with number 2. Expected 'Succeeded' status, actual status is 'Failed'");
   }
 
@@ -653,8 +652,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     doThrow(ioException).when(helmClient).rollback(any(HelmCommandData.class));
 
     assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
-        .isInstanceOf(HelmNGException.class)
-        .getRootCause()
+        .isInstanceOf(IOException.class)
         .hasMessage("Some I/O issue");
   }
 

@@ -10,6 +10,7 @@ package io.harness.delegate.task.helm;
 import static io.harness.rule.OwnerRule.ACHYUTH;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
@@ -29,6 +30,7 @@ import io.harness.delegate.beans.DelegateTaskPackage;
 import io.harness.delegate.beans.TaskData;
 import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.logstreaming.NGDelegateLogCallback;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.ManifestDelegateConfigHelper;
 import io.harness.delegate.task.k8s.ContainerDeploymentDelegateBaseHelper;
 import io.harness.k8s.K8sGlobalConfigService;
@@ -72,6 +74,7 @@ public class HelmCommandTaskNGTest extends CategoryTest {
         new HelmCommandResponseNG(CommandExecutionStatus.SUCCESS, "Helm3 is installed at [mock]");
 
     doReturn(logCallback).when(spyHelmCommandTask).getLogCallback(any(), anyString(), anyBoolean(), any());
+    doReturn("some string").when(spyHelmCommandTask).getDeploymentMessage(any());
     doNothing().when(logCallback).saveExecutionLog(anyString(), any(), any());
     doReturn(ensureHelmInstalledResponse)
         .when(helmDeployServiceNG)
@@ -89,7 +92,7 @@ public class HelmCommandTaskNGTest extends CategoryTest {
     doReturn(kubernetesConfig).when(containerDeploymentDelegateBaseHelper).createKubernetesConfig(any());
     doReturn(kubeConfigLocation).when(containerDeploymentDelegateBaseHelper).createKubeConfig(eq(kubernetesConfig));
 
-    spyHelmCommandTask.run(dummyCommandRequest);
+    assertThatThrownBy(() -> spyHelmCommandTask.run(dummyCommandRequest)).isInstanceOf(TaskNGDataException.class);
 
     verify(helmDeployServiceNG, times(1)).ensureHelmInstalled(dummyCommandRequest);
     ArgumentCaptor<String> kubeLocationCaptor = ArgumentCaptor.forClass(String.class);
@@ -117,7 +120,7 @@ public class HelmCommandTaskNGTest extends CategoryTest {
   @Test
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
-  public void testRunTaskWithRollbackCommand() {
+  public void testRunTaskWithRollbackCommand() throws Exception {
     HelmRollbackCommandRequestNG request = HelmRollbackCommandRequestNG.builder().accountId("accountId").build();
     HelmInstallCmdResponseNG rollbackResponse =
         HelmInstallCmdResponseNG.builder().commandExecutionStatus(CommandExecutionStatus.SUCCESS).build();
@@ -156,10 +159,10 @@ public class HelmCommandTaskNGTest extends CategoryTest {
     HelmInstallCommandRequestNG request = HelmInstallCommandRequestNG.builder().accountId("accountId").build();
     doThrow(new IOException("Unable to deploy")).when(helmDeployServiceNG).deploy(request);
 
-    HelmCmdExecResponseNG response = spyHelmCommandTask.run(request);
-
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.FAILURE);
-    assertThat(response.getErrorMessage()).isEqualTo("Exception in processing helm task: Unable to deploy");
+    assertThatThrownBy(() -> spyHelmCommandTask.run(request))
+        .isInstanceOf(TaskNGDataException.class)
+        .getRootCause()
+        .hasMessageContaining("Unable to deploy");
   }
 
   @Test
@@ -186,7 +189,7 @@ public class HelmCommandTaskNGTest extends CategoryTest {
     ArgumentCaptor<LogCallback> logCallbackCaptor = ArgumentCaptor.forClass(LogCallback.class);
     doReturn(mock(LogCallback.class)).when(dummyCommandRequest).getLogCallback();
 
-    helmCommandTaskNG.run(dummyCommandRequest);
+    assertThatThrownBy(() -> helmCommandTaskNG.run(dummyCommandRequest)).isInstanceOf(TaskNGDataException.class);
 
     verify(dummyCommandRequest, times(1)).setLogCallback(logCallbackCaptor.capture());
     assertThat(logCallbackCaptor.getValue()).isInstanceOf(NGDelegateLogCallback.class);

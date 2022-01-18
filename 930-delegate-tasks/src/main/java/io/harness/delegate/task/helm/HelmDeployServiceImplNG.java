@@ -151,6 +151,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     LogCallback logCallback = commandRequest.getLogCallback();
     HelmChartInfo helmChartInfo = null;
     int prevVersion = -1;
+    boolean isInstallUpgrade = false;
     try {
       HelmInstallCmdResponseNG commandResponse;
       logCallback.saveExecutionLog(
@@ -183,10 +184,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       if (helmListReleaseResponseNG.getCommandExecutionStatus() == CommandExecutionStatus.FAILURE) {
         throw new HelmNGException(prevVersion,
             new HelmClientRuntimeException(
-                new HelmClientException(helmListReleaseResponseNG.getOutput(), USER, HelmCliCommandType.LIST_RELEASE)));
+                new HelmClientException(helmListReleaseResponseNG.getOutput(), USER, HelmCliCommandType.LIST_RELEASE)),
+            false);
       }
 
       // list releases cmd passed
+      isInstallUpgrade = true;
       if (checkNewHelmInstall(helmListReleaseResponseNG)) {
         // install
         logCallback.saveExecutionLog("No previous deployment found for release. Installing chart");
@@ -242,12 +245,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
     } catch (UncheckedTimeoutException e) {
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
-      throw new HelmNGException(prevVersion, e);
+      throw new HelmNGException(prevVersion, e, isInstallUpgrade);
     } catch (Exception e) {
       String exceptionMessage = ExceptionUtils.getMessage(e);
       String msg = "Exception in deploying helm chart: " + exceptionMessage;
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
-      throw new HelmNGException(prevVersion, e);
+      throw new HelmNGException(prevVersion, e, isInstallUpgrade);
     }
   }
 
@@ -431,7 +434,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @Override
-  public HelmCommandResponseNG rollback(HelmRollbackCommandRequestNG commandRequest) {
+  public HelmCommandResponseNG rollback(HelmRollbackCommandRequestNG commandRequest) throws Exception {
     LogCallback logCallback = commandRequest.getLogCallback();
     kubernetesConfig =
         containerDeploymentDelegateBaseHelper.createKubernetesConfig(commandRequest.getK8sInfraDelegateConfig());
@@ -475,7 +478,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     } catch (Exception e) {
       String msg = e.getMessage() == null ? ExceptionUtils.getMessage(e) : e.getMessage();
       log.error("Helm rollback failed: " + msg, e);
-      throw new HelmNGException(-1, e);
+      throw e;
       //      return new HelmCommandResponseNG(
       //          CommandExecutionStatus.FAILURE, e.getMessage() == null ? ExceptionUtils.getMessage(e) :
       //          e.getMessage());

@@ -90,26 +90,19 @@ public class HelmClientRuntimeExceptionHandler implements ExceptionHandler {
     // specific exceptions:
     switch (cause.getHelmCliCommandType()) {
       case REPO_ADD:
-        handleRepoAddException(cause);
-        break;
+        return handleRepoAddException(cause);
       case FETCH:
-        handleFetchException(cause);
-        break;
+        return handleFetchException(cause);
       case INSTALL:
-        handleInstallException(cause);
-        break;
+        return handleInstallException(cause);
       case RELEASE_HISTORY:
-        handleReleaseHistException(cause);
-        break;
+        return handleReleaseHistException(cause);
       case LIST_RELEASE:
-        handleListReleaseException(cause);
-        break;
+        return handleListReleaseException(cause);
       case RENDER_CHART:
-        handleRenderChartException(cause);
-        break;
+        return handleRenderChartException(cause);
       case ROLLBACK:
-        handleRollbackException(cause);
-        break;
+        return handleRollbackException(cause);
       default:
     }
 

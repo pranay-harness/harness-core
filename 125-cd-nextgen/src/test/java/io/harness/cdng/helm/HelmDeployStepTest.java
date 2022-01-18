@@ -149,7 +149,7 @@ public class HelmDeployStepTest extends AbstractHelmStepExecutorTestBase {
   @Category(UnitTests.class)
   public void testFinalizeExecutionException() throws Exception {
     final StepElementParameters stepElementParameters = StepElementParameters.builder().build();
-    final Exception thrownException = new HelmNGException(0, new GeneralException("Something went wrong"));
+    final Exception thrownException = new HelmNGException(0, new GeneralException("Something went wrong"), false);
     final NativeHelmExecutionPassThroughData executionPassThroughData =
         NativeHelmExecutionPassThroughData.builder().build();
     final StepResponse stepResponse = StepResponse.builder().status(Status.FAILED).build();

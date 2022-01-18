@@ -13,9 +13,11 @@ import lombok.Value;
 @EqualsAndHashCode(callSuper = false)
 public class HelmNGException extends DataException {
   int prevReleaseVersion;
+  boolean isInstallUpgrade;
 
-  public HelmNGException(int prevReleaseVersion, Throwable cause) {
+  public HelmNGException(int prevReleaseVersion, Throwable cause, boolean isInstallUpgrade) {
     super(cause);
     this.prevReleaseVersion = prevReleaseVersion;
+    this.isInstallUpgrade = isInstallUpgrade;
   }
 }

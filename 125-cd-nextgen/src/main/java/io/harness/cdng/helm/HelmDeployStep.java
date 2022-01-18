@@ -129,6 +129,7 @@ public class HelmDeployStep extends TaskChainExecutableWithRollbackAndRbac imple
       }
       nativeHelmDeployOutcomeBuilder.prevReleaseVersion(ex.getPrevReleaseVersion());
       nativeHelmDeployOutcomeBuilder.newReleaseVersion(ex.getPrevReleaseVersion() + 1);
+      nativeHelmDeployOutcomeBuilder.isInstallUpgrade(ex.isInstallUpgrade());
       executionSweepingOutputService.consume(ambiance, OutcomeExpressionConstants.HELM_DEPLOY_OUTCOME,
           nativeHelmDeployOutcomeBuilder.build(), StepOutcomeGroup.STEP.name());
 

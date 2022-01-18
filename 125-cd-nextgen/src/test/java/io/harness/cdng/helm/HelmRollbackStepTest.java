@@ -129,14 +129,16 @@ public class HelmRollbackStepTest extends CategoryTest {
   @Owner(developers = ABOSII)
   @Category(UnitTests.class)
   public void testRollback() {
-    OptionalSweepingOutput releaseOutput = OptionalSweepingOutput.builder()
-                                               .found(true)
-                                               .output(NativeHelmDeployOutcome.builder().releaseName("test").build())
-                                               .build();
-    OptionalSweepingOutput deploymentOutput = OptionalSweepingOutput.builder()
-                                                  .found(true)
-                                                  .output(NativeHelmDeployOutcome.builder().releaseName("test").build())
-                                                  .build();
+    OptionalSweepingOutput releaseOutput =
+        OptionalSweepingOutput.builder()
+            .found(true)
+            .output(NativeHelmDeployOutcome.builder().isInstallUpgrade(true).releaseName("test").build())
+            .build();
+    OptionalSweepingOutput deploymentOutput =
+        OptionalSweepingOutput.builder()
+            .found(true)
+            .output(NativeHelmDeployOutcome.builder().isInstallUpgrade(true).releaseName("test").build())
+            .build();
 
     testRollback(releaseOutput, deploymentOutput, "test");
   }

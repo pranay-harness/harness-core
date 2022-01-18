@@ -22,7 +22,7 @@ public interface HelmDeployServiceNG {
    * @param commandRequest       the command request
    * @return the helm command response
    */
-  HelmCommandResponseNG rollback(HelmRollbackCommandRequestNG commandRequest);
+  HelmCommandResponseNG rollback(HelmRollbackCommandRequestNG commandRequest) throws Exception;
 
   /**
    * Ensure helm cli and tiller installed helm command response.
