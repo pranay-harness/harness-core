@@ -10,6 +10,7 @@ package io.harness.ng.core.dto;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.data.validator.NGEntityName;
 import io.harness.data.validator.Trimmed;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -27,6 +28,6 @@ import org.hibernate.validator.constraints.NotEmpty;
 public class NgSmtpDTO {
   private String uuid;
   @NotEmpty String accountId;
-  @NotNull @NotBlank @Trimmed(message = "The name must not have trailing spaces.") private String name;
+  @NotNull @NotBlank @Trimmed(message = "The name must not have trailing spaces.") @NGEntityName private String name;
   @Valid @NotNull private SmtpConfigDTO value;
 }
