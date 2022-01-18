@@ -21,10 +21,7 @@ import org.hibernate.validator.constraints.NotEmpty;
 @FieldNameConstants(innerTypeName = "TimeScaleDBConfigFields")
 @FieldDefaults(makeFinal = false)
 public class TimeScaleDBConfig {
-  @JsonProperty(defaultValue = "jdbc:postgresql://localhost:5432/harness")
-  @NotEmpty
-  @ConfigSecret
-  private String timescaledbUrl;
+  @JsonProperty(defaultValue = "jdbc:postgresql://localhost:5432/harness") @NotEmpty private String timescaledbUrl;
   @ConfigSecret private String timescaledbUsername;
   @ConfigSecret private String timescaledbPassword;
   int connectTimeout;
