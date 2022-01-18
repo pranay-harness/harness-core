@@ -23,7 +23,7 @@ import com.google.inject.Singleton;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.CoreV1Event;
+import io.kubernetes.client.openapi.models.V1Event;
 import io.kubernetes.client.util.Watch;
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -37,11 +37,11 @@ public class K8EventHandler {
 
   private static Integer watchTimeout = 8 * 60;
 
-  public Watch<CoreV1Event> startAsyncPodEventWatch(
+  public Watch<V1Event> startAsyncPodEventWatch(
       KubernetesConfig kubernetesConfig, String namespace, String pod, ILogStreamingTaskClient logStreamingTaskClient) {
     String fieldSelector = String.format("involvedObject.name=%s,involvedObject.kind=Pod", pod);
     try {
-      Watch<CoreV1Event> watch = createWatch(kubernetesConfig, namespace, fieldSelector);
+      Watch<V1Event> watch = createWatch(kubernetesConfig, namespace, fieldSelector);
       new Thread(() -> {
         try {
           logWatchEvents(watch, logStreamingTaskClient);
@@ -59,7 +59,7 @@ public class K8EventHandler {
     }
   }
 
-  public void stopEventWatch(Watch<CoreV1Event> watch) {
+  public void stopEventWatch(Watch<V1Event> watch) {
     try {
       watch.close();
     } catch (IOException e) {
@@ -67,20 +67,19 @@ public class K8EventHandler {
     }
   }
 
-  private Watch<CoreV1Event> createWatch(KubernetesConfig kubernetesConfig, String namespace, String fieldSelector)
+  private Watch<V1Event> createWatch(KubernetesConfig kubernetesConfig, String namespace, String fieldSelector)
       throws ApiException {
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     return Watch.createWatch(apiClient,
         coreV1Api.listNamespacedEventCall(
-            namespace, null, false, null, fieldSelector, null, null, null, null, watchTimeout, Boolean.TRUE, null),
-        new TypeToken<Watch.Response<CoreV1Event>>() {}.getType());
+            namespace, null, null, null, fieldSelector, null, null, null, watchTimeout, Boolean.TRUE, null),
+        new TypeToken<Watch.Response<V1Event>>() {}.getType());
   }
 
-  private void logWatchEvents(Watch<CoreV1Event> watch, ILogStreamingTaskClient logStreamingTaskClient)
-      throws IOException {
+  private void logWatchEvents(Watch<V1Event> watch, ILogStreamingTaskClient logStreamingTaskClient) throws IOException {
     try {
-      for (Watch.Response<CoreV1Event> item : watch) {
+      for (Watch.Response<V1Event> item : watch) {
         if (item != null && item.object != null && isNotEmpty(item.object.getMessage())) {
           streamLogLine(logStreamingTaskClient, getLogLevel(item.object.getType()), item.object.getMessage());
           log.info(

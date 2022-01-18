@@ -31,7 +31,7 @@ import com.google.inject.Inject;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
-import io.kubernetes.client.openapi.models.CoreV1EventList;
+import io.kubernetes.client.openapi.models.V1EventList;
 import io.kubernetes.client.openapi.models.V1NamespaceList;
 import io.kubernetes.client.openapi.models.V1OwnerReference;
 import io.kubernetes.client.openapi.models.V1PodList;
@@ -59,8 +59,8 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
-      V1NamespaceList v1NamespaceList = coreV1Api.listNamespace(
-          null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, null, 60, Boolean.FALSE);
+      V1NamespaceList v1NamespaceList =
+          coreV1Api.listNamespace(null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, 60, Boolean.FALSE);
       List<String> rv = new ArrayList<>();
       v1NamespaceList.getItems().forEach(v1Namespace -> {
         if (isNotEmpty(filter)
@@ -86,7 +86,7 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
       V1PodList podList = coreV1Api.listNamespacedPod(
-          namespace, null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, null, 60, Boolean.FALSE);
+          namespace, null, Boolean.TRUE, null, null, null, Integer.MAX_VALUE, null, 60, Boolean.FALSE);
       Set<String> rv = new HashSet<>();
       podList.getItems().forEach(viPod -> {
         List<V1OwnerReference> ownerReferences = viPod.getMetadata().getOwnerReferences();
@@ -122,8 +122,8 @@ public class K8InfoDataServiceImpl implements K8InfoDataService {
     ApiClient apiClient = apiClientFactory.getClient(kubernetesConfig);
     CoreV1Api coreV1Api = new CoreV1Api(apiClient);
     try {
-      CoreV1EventList v1EventList =
-          coreV1Api.listEventForAllNamespaces(Boolean.TRUE, null, null, null, 10, null, null, null, 60, Boolean.FALSE);
+      V1EventList v1EventList =
+          coreV1Api.listEventForAllNamespaces(Boolean.TRUE, null, null, null, 10, null, null, 60, Boolean.FALSE);
       List<String> rv = new ArrayList<>();
       v1EventList.getItems().forEach(v1Event -> { rv.add(v1Event.getMessage()); });
       return rv;
