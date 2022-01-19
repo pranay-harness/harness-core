@@ -74,6 +74,8 @@ public class SSOResourceNG {
   @Inject private SecretManagerConfigService secretManagerConfigService;
   @Inject private SecretManager secretManager;
 
+  static final String CLIENT_SECRET_NAME_PREFIX = "ClientSecret-NamePrefix-";
+
   @GET
   @Path("get-access-management")
   @Timed
@@ -184,12 +186,26 @@ public class SSOResourceNG {
       throw new InvalidRequestException(validationErrorMsg, WingsException.USER);
     }
     SecretManagerConfig secretManagerConfig = secretManagerConfigService.getDefaultSecretManager(accountId);
+    if (!isCreateCall) {
+      final String secretName = CLIENT_SECRET_NAME_PREFIX + accountId;
+      final SecretText secretText =
+          buildSecretTextForClientSecret(clientSecret, secretName, secretManagerConfig.getUuid());
+      final String cgSecretRefId = secretManager.getSecretByName(accountId, secretName).getUuid();
+      secretManager.updateSecretText(accountId, cgSecretRefId, secretText, true);
+      return cgSecretRefId;
+    }
+    final SecretText secretText =
+        buildSecretTextForClientSecret(clientSecret, CLIENT_SECRET_NAME_PREFIX + accountId, secretManagerConfig.getUuid());
+    return secretManager.saveSecretText(accountId, secretText, true);
+  }
+
+  private SecretText buildSecretTextForClientSecret(
+      final String clientSecret, final String secretName, final String managerConfigUuid) {
     SecretText secretText = new SecretText();
     secretText.setValue(clientSecret);
-    String secretName = "ClientSecret-" + accountId + "-" + UUID.randomUUID();
     secretText.setName(secretName);
     secretText.setScopedToAccount(true);
-    secretText.setKmsId(secretManagerConfig.getUuid());
-    return secretManager.saveSecretText(accountId, secretText, true);
+    secretText.setKmsId(managerConfigUuid);
+    return secretText;
   }
 }
