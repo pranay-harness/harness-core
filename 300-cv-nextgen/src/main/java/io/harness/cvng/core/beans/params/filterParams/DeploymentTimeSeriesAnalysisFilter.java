@@ -8,21 +8,34 @@
 package io.harness.cvng.core.beans.params.filterParams;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
+import java.util.List;
 import javax.ws.rs.QueryParam;
 import lombok.AccessLevel;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Value;
 import lombok.experimental.FieldDefaults;
 import lombok.experimental.SuperBuilder;
 
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @SuperBuilder
-@Value
+@Data
 @NoArgsConstructor
 public class DeploymentTimeSeriesAnalysisFilter extends TimeSeriesAnalysisFilter {
-  @QueryParam("hostName") String hostName;
+  // currently not removing hostName for backward compatibility
+  // TODO: remove String hostName and only use List<String> hostNameList
+  @Deprecated @QueryParam("hostName") String hostName;
+  @QueryParam("hostNames") List<String> hostNames;
+  @QueryParam("transactionNames") List<String> transactionNames;
 
   public boolean filterByHostName() {
     return isNotEmpty(hostName);
+  }
+
+  public boolean filterByHostNames() {
+    return isNotEmpty(hostNames);
+  }
+
+  public boolean filterByTransactionNames() {
+    return isNotEmpty(transactionNames);
   }
 }

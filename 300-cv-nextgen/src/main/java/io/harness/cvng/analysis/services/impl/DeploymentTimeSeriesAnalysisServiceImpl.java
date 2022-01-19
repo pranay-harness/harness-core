@@ -58,7 +58,6 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 import org.mongodb.morphia.query.Sort;
 
 public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSeriesAnalysisService {
@@ -101,6 +100,13 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
                       || transactionMetricInfo.getTransactionMetric().getTransactionName().toLowerCase().contains(
                           deploymentTimeSeriesAnalysisFilter.getFilter().toLowerCase()))
               .collect(Collectors.toList());
+    }
+    if (deploymentTimeSeriesAnalysisFilter.filterByTransactionNames()) {
+      transactionMetricInfoList = transactionMetricInfoList.stream()
+                                      .filter(transactionMetricInfo
+                                          -> deploymentTimeSeriesAnalysisFilter.getTransactionNames().contains(
+                                              transactionMetricInfo.getTransactionMetric().getTransactionName()))
+                                      .collect(Collectors.toList());
     }
 
     return TransactionMetricInfoSummaryPageDTO.builder()
@@ -211,6 +217,15 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
     List<DeploymentTimeSeriesAnalysis> latestDeploymentTimeSeriesAnalysis =
         getLatestDeploymentTimeSeriesAnalysis(accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter);
 
+    List<String> hostNames = new ArrayList<>();
+    if (deploymentTimeSeriesAnalysisFilter.filterByHostNames()) {
+      hostNames.addAll(deploymentTimeSeriesAnalysisFilter.getHostNames());
+    }
+    if (deploymentTimeSeriesAnalysisFilter.filterByHostName()) {
+      hostNames.add(deploymentTimeSeriesAnalysisFilter.getHostName());
+    }
+    deploymentTimeSeriesAnalysisFilter.setHostNames(hostNames);
+
     if (isEmpty(latestDeploymentTimeSeriesAnalysis)) {
       return Collections.emptyList();
     }
@@ -231,7 +246,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
           .stream()
           .filter(transactionMetricHostData
               -> filterAnomalousMetrics(transactionMetricHostData,
-                  deploymentTimeSeriesAnalysisFilter.filterByHostName(),
+                  deploymentTimeSeriesAnalysisFilter.filterByHostNames(),
                   deploymentTimeSeriesAnalysisFilter.isAnomalous()))
           .forEach(transactionMetricHostData -> {
             Map<Risk, Integer> nodeCountByRiskStatusMap = new HashMap<>();
@@ -239,7 +254,7 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
             transactionMetricHostData.getHostData()
                 .stream()
                 .filter(hostData
-                    -> filterHostData(hostData, deploymentTimeSeriesAnalysisFilter.getHostName(),
+                    -> filterHostData(hostData, deploymentTimeSeriesAnalysisFilter.getHostNames(),
                         deploymentTimeSeriesAnalysisFilter.isAnomalous()))
                 .forEach(hostData -> {
                   nodeDataSet.add(hostData);
@@ -267,11 +282,11 @@ public class DeploymentTimeSeriesAnalysisServiceImpl implements DeploymentTimeSe
   }
 
   private boolean filterHostData(
-      DeploymentTimeSeriesAnalysisDTO.HostData hostData, String hostName, boolean anomalousMetricsOnly) {
-    if (StringUtils.isBlank(hostName)) {
+      DeploymentTimeSeriesAnalysisDTO.HostData hostData, List<String> hostNames, boolean anomalousMetricsOnly) {
+    if (hostNames.isEmpty()) {
       return true;
     } else if (hostData.getHostName().isPresent()) {
-      return hostName.equals(hostData.getHostName().get()) && (!anomalousMetricsOnly || hostData.isAnomalous());
+      return hostNames.contains(hostData.getHostName().get()) && (!anomalousMetricsOnly || hostData.isAnomalous());
     } else {
       return false;
     }

@@ -692,6 +692,8 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
                                                                                 .filter(null)
                                                                                 .anomalous(false)
                                                                                 .hostName(null)
+                                                                                .hostNames(null)
+                                                                                .transactionNames(null)
                                                                                 .build();
     PageParams pageParams = PageParams.builder().page(0).size(10).build();
 
@@ -715,6 +717,94 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(1).getNodeCountByRiskStatusMap().get(
             Risk.HEALTHY))
         .isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withTransactionNameFilters() {
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder()
+            .healthSourceIdentifiers(null)
+            .filter(null)
+            .anomalous(false)
+            .hostName(null)
+            .hostNames(null)
+            .transactionNames(Arrays.asList("/todolist/inside"))
+            .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(1);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getTransactionMetric()
+                   .getTransactionName())
+        .isEqualTo("/todolist/inside");
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetMetrics_withHostNamesFilters() {
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+
+    DeploymentTimeSeriesAnalysisFilter deploymentTimeSeriesAnalysisFilter =
+        DeploymentTimeSeriesAnalysisFilter.builder()
+            .healthSourceIdentifiers(null)
+            .filter(null)
+            .anomalous(false)
+            .hostName(null)
+            .hostNames(Arrays.asList("node1", "node2"))
+            .transactionNames(null)
+            .build();
+    PageParams pageParams = PageParams.builder().page(0).size(10).build();
+
+    TransactionMetricInfoSummaryPageDTO transactionMetricInfoSummaryPageDTO =
+        deploymentTimeSeriesAnalysisService.getMetrics(
+            accountId, verificationJobInstanceId, deploymentTimeSeriesAnalysisFilter, pageParams);
+
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().size()).isEqualTo(2);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(0).getNodes().size())
+        .isEqualTo(2);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse().getContent().get(1).getNodes().size())
+        .isEqualTo(2);
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(0)
+                   .getNodes()
+                   .first()
+                   .getHostName()
+                   .get())
+        .isEqualTo("node2");
+    assertThat(transactionMetricInfoSummaryPageDTO.getPageResponse()
+                   .getContent()
+                   .get(1)
+                   .getNodes()
+                   .first()
+                   .getHostName()
+                   .get())
+        .isEqualTo("node2");
   }
 
   @Test
