@@ -234,9 +234,10 @@ public class HelmTaskHelper {
                 StandardCharsets.UTF_8);
             valuesYamlContents.add(fileContent);
           } catch (Exception ex) {
+            Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
             String msg = format("Required values yaml file with path %s not found", filePath);
-            log.error(msg, ExceptionMessageSanitizer.sanitizeException(ex));
-            throw new InvalidArgumentsException(msg, ExceptionMessageSanitizer.sanitizeException(ex), USER);
+            log.error(msg, sanitizedException);
+            throw new InvalidArgumentsException(msg, sanitizedException, USER);
           }
           mapK8sValuesLocationToContents.put(key, valuesYamlContents);
         });

@@ -75,12 +75,12 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, null);
       } catch (Exception ex) {
+        Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
         log.error("Exception in processing K8s task [{}]",
-            k8sTaskParameters.getCommandName() + ":" + k8sTaskParameters.getCommandType(),
-            ExceptionMessageSanitizer.sanitizeException(ex));
+            k8sTaskParameters.getCommandName() + ":" + k8sTaskParameters.getCommandType(), sanitizedException);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(ex)))
+            .errorMessage(ExceptionUtils.getMessage(sanitizedException))
             .build();
       }
     } else {
@@ -118,12 +118,12 @@ public class K8sTask extends AbstractDelegateRunnableTask {
         return k8sCommandTaskTypeToTaskHandlerMap.get(k8sTaskParameters.getCommandType().name())
             .executeTask(k8sTaskParameters, k8SDelegateTaskParams);
       } catch (Exception ex) {
+        Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
         log.error("Exception in processing K8s task [{}]",
-            k8sTaskParameters.getCommandName() + ":" + k8sTaskParameters.getCommandType(),
-            ExceptionMessageSanitizer.sanitizeException(ex));
+            k8sTaskParameters.getCommandName() + ":" + k8sTaskParameters.getCommandType(), sanitizedException);
         return K8sTaskExecutionResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(ex)))
+            .errorMessage(ExceptionUtils.getMessage(sanitizedException))
             .build();
       } finally {
         cleanup(workingDirectory);

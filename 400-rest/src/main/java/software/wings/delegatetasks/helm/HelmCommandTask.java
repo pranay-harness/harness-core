@@ -98,11 +98,11 @@ public class HelmCommandTask extends AbstractDelegateRunnableTask {
           throw new HarnessException("Operation not supported");
       }
     } catch (Exception ex) {
-      String errorMsg = ExceptionMessageSanitizer.sanitizeException(ex).getMessage();
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
+      String errorMsg = sanitizedException.getMessage();
       helmCommandRequest.getExecutionLogCallback().saveExecutionLog(
           errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      log.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()),
-          ExceptionMessageSanitizer.sanitizeException(ex));
+      log.error(format("Exception in processing helm task [%s]", helmCommandRequest.toString()), sanitizedException);
       return HelmCommandExecutionResponse.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage("Exception in processing helm task: " + errorMsg)

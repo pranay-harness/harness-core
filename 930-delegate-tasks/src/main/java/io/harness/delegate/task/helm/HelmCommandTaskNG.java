@@ -113,11 +113,11 @@ public class HelmCommandTaskNG extends AbstractDelegateRunnableTask {
           throw new UnsupportedOperationException("Operation not supported");
       }
     } catch (Exception ex) {
-      String errorMsg = ExceptionMessageSanitizer.sanitizeException(ex).getMessage();
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
+      String errorMsg = sanitizedException.getMessage();
       helmCommandRequestNG.getLogCallback().saveExecutionLog(
           errorMsg + "\n Overall deployment Failed", LogLevel.ERROR, CommandExecutionStatus.FAILURE);
-      log.error(format("Exception in processing helm task [%s]", helmCommandRequestNG.toString()),
-          ExceptionMessageSanitizer.sanitizeException(ex));
+      log.error(format("Exception in processing helm task [%s]", helmCommandRequestNG.toString()), sanitizedException);
       return HelmCmdExecResponseNG.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .errorMessage("Exception in processing helm task: " + errorMsg)

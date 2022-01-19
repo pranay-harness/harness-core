@@ -246,8 +246,10 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       return commandResponse;
 
     } catch (UncheckedTimeoutException e) {
+      UncheckedTimeoutException sanitizedException =
+          (UncheckedTimeoutException) ExceptionMessageSanitizer.sanitizeException(e);
       String msg = TIMED_OUT_IN_STEADY_STATE;
-      log.error(msg, ExceptionMessageSanitizer.sanitizeException(e));
+      log.error(msg, sanitizedException);
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
       return HelmInstallCmdResponseNG.builder()
           .prevReleaseVersion(prevVersion)
@@ -255,16 +257,17 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .output(new StringBuilder(256)
                       .append(TIMED_OUT_IN_STEADY_STATE)
                       .append(": [")
-                      .append(ExceptionMessageSanitizer.sanitizeException(e).getMessage())
+                      .append(sanitizedException.getMessage())
                       .append(" ]")
                       .toString())
           .helmChartInfo(helmChartInfo)
           .helmVersion(commandRequest.getHelmVersion())
           .build();
     } catch (WingsException e) {
-      String exceptionMessage = ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e));
+      WingsException sanitizedException = (WingsException) ExceptionMessageSanitizer.sanitizeException(e);
+      String exceptionMessage = ExceptionUtils.getMessage(sanitizedException);
       String msg = "Wings Exception:" + exceptionMessage;
-      log.error(msg, e);
+      log.error(msg, sanitizedException);
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       return HelmInstallCmdResponseNG.builder()
           .prevReleaseVersion(prevVersion)
@@ -275,9 +278,10 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .build();
       // throw e;
     } catch (Exception e) {
-      String exceptionMessage = ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e));
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      String exceptionMessage = ExceptionUtils.getMessage(sanitizedException);
       String msg = "Exception in deploying helm chart:" + exceptionMessage;
-      log.error(msg, ExceptionMessageSanitizer.sanitizeException(e));
+      log.error(msg, sanitizedException);
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       return HelmInstallCmdResponseNG.builder()
           .prevReleaseVersion(prevVersion)
@@ -519,9 +523,9 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      log.error("Helm rollback failed:", ExceptionMessageSanitizer.sanitizeException(e));
-      return new HelmCommandResponseNG(
-          CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)));
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("Helm rollback failed:", sanitizedException);
+      return new HelmCommandResponseNG(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(sanitizedException));
     } finally {
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
     }
@@ -579,10 +583,11 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .releaseInfoList(releaseInfoList)
           .build();
     } catch (Exception e) {
-      log.error("Helm list releases failed", ExceptionMessageSanitizer.sanitizeException(e));
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("Helm list releases failed", sanitizedException);
       return HelmListReleaseResponseNG.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)))
+          .output(ExceptionUtils.getMessage(sanitizedException))
           .build();
     }
   }
@@ -599,10 +604,11 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
           .releaseInfoList(releaseInfoList)
           .build();
     } catch (Exception e) {
-      log.error("Helm list releases failed:", ExceptionMessageSanitizer.sanitizeException(e));
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("Helm list releases failed:", sanitizedException);
       return HelmReleaseHistoryCmdResponseNG.builder()
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-          .output(ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)))
+          .output(ExceptionUtils.getMessage(sanitizedException))
           .build();
     }
   }
@@ -732,17 +738,19 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       logCallback.saveExecutionLog(color("Successfully fetched following files:", White, Bold));
       logCallback.saveExecutionLog(getManifestFileNamesInLogFormat(destinationDirectory));
     } catch (HelmClientException e) {
+      HelmClientException sanitizedException = (HelmClientException) ExceptionMessageSanitizer.sanitizeException(e);
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
-      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
-          ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientRuntimeException(e);
+      logCallback.saveExecutionLog(
+          errorMsg + ExceptionUtils.getMessage(sanitizedException), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientRuntimeException(sanitizedException);
     } catch (Exception e) {
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
-      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
-          ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(errorMsg, ExceptionMessageSanitizer.sanitizeException(e), HelmCliCommandType.FETCH);
+      logCallback.saveExecutionLog(
+          errorMsg + ExceptionUtils.getMessage(sanitizedException), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(errorMsg, sanitizedException, HelmCliCommandType.FETCH);
     }
   }
 

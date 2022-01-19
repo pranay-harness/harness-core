@@ -625,10 +625,9 @@ public class HelmDeployServiceImpl implements HelmDeployService {
     } catch (WingsException e) {
       throw e;
     } catch (Exception e) {
-      log.error(
-          "Helm chart rollback failed [{}]", commandRequest.toString(), ExceptionMessageSanitizer.sanitizeException(e));
-      return new HelmCommandResponse(
-          CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)));
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("Helm chart rollback failed [{}]", commandRequest.toString(), sanitizedException);
+      return new HelmCommandResponse(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(sanitizedException));
     } finally {
       cleanupWorkingDirectory(commandRequest);
     }

@@ -26,6 +26,7 @@ import io.harness.delegate.k8s.K8sRequestHandler;
 import io.harness.delegate.task.AbstractDelegateRunnableTask;
 import io.harness.delegate.task.ManifestDelegateConfigHelper;
 import io.harness.delegate.task.TaskParameters;
+import io.harness.exception.EncryptDecryptException;
 import io.harness.exception.ExceptionUtils;
 import io.harness.k8s.K8sGlobalConfigService;
 import io.harness.k8s.model.HelmVersion;
@@ -77,23 +78,19 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         : CommandUnitsProgress.builder().build();
 
     log.info("Starting task execution for Command {}", k8sDeployRequest.getTaskType().name());
-    try {
-      decryptRequestDTOs(k8sDeployRequest);
-    } catch (IOException ioException) {
-      log.error("Failure in Decryption");
-    }
+    decryptRequestDTOs(k8sDeployRequest);
 
     if (k8sDeployRequest.getTaskType() == K8sTaskType.INSTANCE_SYNC) {
       try {
         return k8sTaskTypeToRequestHandler.get(k8sDeployRequest.getTaskType().name())
             .executeTask(k8sDeployRequest, null, getLogStreamingTaskClient(), commandUnitsProgress);
       } catch (Exception ex) {
+        Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
         log.error("Exception in processing k8s task [{}]",
-            k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(),
-            ExceptionMessageSanitizer.sanitizeException(ex));
+            k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(), sanitizedException);
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(ex)))
+            .errorMessage(ExceptionUtils.getMessage(sanitizedException))
             .build();
       }
     } else {
@@ -139,25 +136,25 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
         k8sDeployResponse.setCommandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress));
         return k8sDeployResponse;
       } catch (Exception ex) {
+        Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(ex);
         log.error("Exception in processing k8s task [{}]",
-            k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(),
-            ExceptionMessageSanitizer.sanitizeException(ex));
+            k8sDeployRequest.getCommandName() + ":" + k8sDeployRequest.getTaskType(), sanitizedException);
         if (requestHandler != null && requestHandler.isErrorFrameworkSupported()) {
           try {
-            requestHandler.onTaskFailed(k8sDeployRequest, ExceptionMessageSanitizer.sanitizeException(ex),
-                getLogStreamingTaskClient(), commandUnitsProgress);
+            requestHandler.onTaskFailed(
+                k8sDeployRequest, sanitizedException, getLogStreamingTaskClient(), commandUnitsProgress);
           } catch (Exception e) {
             throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress),
                 ExceptionMessageSanitizer.sanitizeException(e));
           }
 
-          throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress),
-              ExceptionMessageSanitizer.sanitizeException(ex));
+          throw new TaskNGDataException(
+              UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), sanitizedException);
         }
 
         return K8sDeployResponse.builder()
             .commandExecutionStatus(CommandExecutionStatus.FAILURE)
-            .errorMessage(ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(ex)))
+            .errorMessage(ExceptionUtils.getMessage(sanitizedException))
             .commandUnitsProgress(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress))
             .build();
       } finally {
@@ -186,9 +183,14 @@ public class K8sTaskNG extends AbstractDelegateRunnableTask {
     }
   }
 
-  public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) throws IOException {
-    manifestDelegateConfigHelper.decryptManifestDelegateConfig(k8sDeployRequest.getManifestDelegateConfig());
-    containerDeploymentDelegateBaseHelper.decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
+  public void decryptRequestDTOs(K8sDeployRequest k8sDeployRequest) {
+    try {
+      manifestDelegateConfigHelper.decryptManifestDelegateConfig(k8sDeployRequest.getManifestDelegateConfig());
+      containerDeploymentDelegateBaseHelper.decryptK8sInfraDelegateConfig(k8sDeployRequest.getK8sInfraDelegateConfig());
+    } catch (IOException ioException) {
+      String msg = "Failure in Decryption";
+      throw new EncryptDecryptException(msg, ioException);
+    }
   }
 
   @Override

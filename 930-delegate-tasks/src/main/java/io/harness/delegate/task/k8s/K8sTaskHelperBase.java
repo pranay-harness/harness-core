@@ -2411,20 +2411,22 @@ public class K8sTaskHelperBase {
 
       return true;
     } catch (YamlException e) {
-      log.error("Failure in fetching files from git", ExceptionMessageSanitizer.sanitizeException(e));
-      executionLogCallback.saveExecutionLog("Failed to download manifest files from git. "
-              + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
-          ERROR, CommandExecutionStatus.FAILURE);
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("Failure in fetching files from git", sanitizedException);
+      executionLogCallback.saveExecutionLog(
+          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(sanitizedException), ERROR,
+          CommandExecutionStatus.FAILURE);
 
       throw new KubernetesTaskException(
           format("Failed while trying to fetch files from git connector: '%s' in manifest with identifier: %s",
               gitStoreDelegateConfig.getConnectorName(), gitStoreDelegateConfig.getManifestId()),
           e.getCause());
     } catch (Exception e) {
-      log.error("Failure in fetching files from git", ExceptionMessageSanitizer.sanitizeException(e));
-      executionLogCallback.saveExecutionLog("Failed to download manifest files from git. "
-              + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
-          ERROR, CommandExecutionStatus.FAILURE);
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("Failure in fetching files from git", sanitizedException);
+      executionLogCallback.saveExecutionLog(
+          "Failed to download manifest files from git. " + ExceptionUtils.getMessage(sanitizedException), ERROR,
+          CommandExecutionStatus.FAILURE);
 
       throw new KubernetesTaskException(
           format("Failed while trying to fetch files from git connector: '%s' in manifest with identifier: %s",
@@ -2494,11 +2496,12 @@ public class K8sTaskHelperBase {
 
       throw new HelmClientRuntimeException(e);
     } catch (Exception e) {
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
       String errorMsg = format("Failed to download manifest files from %s repo. ",
           manifestDelegateConfig.getStoreDelegateConfig().getType());
-      logCallback.saveExecutionLog(errorMsg + ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e)),
-          ERROR, CommandExecutionStatus.FAILURE);
-      throw new HelmClientException(errorMsg, ExceptionMessageSanitizer.sanitizeException(e), HelmCliCommandType.FETCH);
+      logCallback.saveExecutionLog(
+          errorMsg + ExceptionUtils.getMessage(sanitizedException), ERROR, CommandExecutionStatus.FAILURE);
+      throw new HelmClientException(errorMsg, sanitizedException, HelmCliCommandType.FETCH);
     }
 
     return true;

@@ -22,6 +22,7 @@ import io.harness.delegate.task.gcp.response.GcpListBucketsResponse;
 import io.harness.delegate.task.gcp.response.GcpResponse;
 import io.harness.errorhandling.NGErrorHelper;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.secret.SecretSanitizerThreadLocal;
 import io.harness.security.encryption.SecretDecryptionService;
 
 import software.wings.delegatetasks.ExceptionMessageSanitizer;
@@ -30,9 +31,8 @@ import com.google.api.services.storage.Storage;
 import com.google.api.services.storage.model.Buckets;
 import com.google.inject.Inject;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -55,6 +55,9 @@ public class GcpListBucketsTaskHandler implements TaskHandler {
       boolean useDelegate = gcpRequest.getGcpManualDetailsDTO() == null;
       decryptDTO(gcpRequest);
       serviceAccountKeyFileContent = getGcpServiceAccountKeyFileContent(gcpRequest);
+      if (isNotEmpty(serviceAccountKeyFileContent)) {
+        SecretSanitizerThreadLocal.addAll(Collections.singleton(String.valueOf(serviceAccountKeyFileContent)));
+      }
       Storage storageService = gcpHelperService.getGcsStorageService(serviceAccountKeyFileContent, useDelegate);
       String projectId = gcpHelperService.getProjectId(serviceAccountKeyFileContent, useDelegate);
       Storage.Buckets buckets = storageService.buckets();
@@ -64,14 +67,10 @@ public class GcpListBucketsTaskHandler implements TaskHandler {
           .buckets(listBuckets(buckets, projectId))
           .build();
     } catch (Exception e) {
-      if (isNotEmpty(serviceAccountKeyFileContent)) {
-        Set<String> secrets = new HashSet<>();
-        secrets.add(String.valueOf(serviceAccountKeyFileContent));
-        ExceptionMessageSanitizer.sanitizeException(e, secrets);
-      }
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
       return GcpListBucketsResponse.builder()
-          .errorMessage(ngErrorHelper.getErrorSummary(e.getMessage()))
-          .errorDetail(ngErrorHelper.createErrorDetail(e.getMessage()))
+          .errorMessage(ngErrorHelper.getErrorSummary(sanitizedException.getMessage()))
+          .errorDetail(ngErrorHelper.createErrorDetail(sanitizedException.getMessage()))
           .commandExecutionStatus(CommandExecutionStatus.FAILURE)
           .build();
     }

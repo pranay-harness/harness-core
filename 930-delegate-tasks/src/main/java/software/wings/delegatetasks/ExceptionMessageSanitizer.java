@@ -7,9 +7,9 @@
 
 package software.wings.delegatetasks;
 
+import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.expression.SecretString.SECRET_MASK;
 
-import static java.util.Objects.isNull;
 import static org.apache.commons.lang3.StringUtils.replaceEach;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -24,7 +24,7 @@ import lombok.SneakyThrows;
 @OwnedBy(HarnessTeam.CDP)
 public class ExceptionMessageSanitizer {
   public static Exception sanitizeException(Exception ex, Set<String> secrets) {
-    if (isNull(secrets)) {
+    if (isEmpty(secrets)) {
       return ex;
     }
     Exception exception = ex;
@@ -37,15 +37,7 @@ public class ExceptionMessageSanitizer {
 
   public static Exception sanitizeException(Exception ex) {
     Set<String> secrets = SecretSanitizerThreadLocal.get();
-    if (isNull(secrets)) {
-      return ex;
-    }
-    Exception exception = ex;
-    while (exception != null) {
-      sanitizeExceptionInternal(exception, secrets);
-      exception = (Exception) exception.getCause();
-    }
-    return ex;
+    return sanitizeException(ex, secrets);
   }
 
   @SneakyThrows

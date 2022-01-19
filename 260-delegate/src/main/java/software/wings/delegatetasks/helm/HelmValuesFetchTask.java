@@ -92,14 +92,13 @@ public class HelmValuesFetchTask extends AbstractDelegateRunnableTask {
           .mapK8sValuesLocationToContent(mapK8sValuesLocationToContent)
           .build();
     } catch (Exception e) {
-      log.error("HelmValuesFetchTask execution failed with exception ", ExceptionMessageSanitizer.sanitizeException(e));
-      executionLogCallback.saveExecutionLog(
-          ExceptionMessageSanitizer.sanitizeException(e).getMessage(), ERROR, CommandExecutionStatus.FAILURE);
+      Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
+      log.error("HelmValuesFetchTask execution failed with exception ", sanitizedException);
+      executionLogCallback.saveExecutionLog(sanitizedException.getMessage(), ERROR, CommandExecutionStatus.FAILURE);
 
       return HelmValuesFetchTaskResponse.builder()
           .commandExecutionStatus(FAILURE)
-          .errorMessage(
-              "Execution failed with Exception: " + ExceptionMessageSanitizer.sanitizeException(e).getMessage())
+          .errorMessage("Execution failed with Exception: " + sanitizedException.getMessage())
           .build();
     }
   }

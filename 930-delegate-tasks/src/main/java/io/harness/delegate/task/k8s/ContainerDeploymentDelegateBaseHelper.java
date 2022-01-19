@@ -46,6 +46,7 @@ import com.google.inject.Singleton;
 import io.fabric8.kubernetes.api.model.HasMetadata;
 import io.fabric8.kubernetes.api.model.Pod;
 import java.io.File;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -133,9 +134,8 @@ public class ContainerDeploymentDelegateBaseHelper {
   private char[] getGcpServiceAccountKeyFileContent(GcpConnectorCredentialDTO gcpCredentials) {
     if (gcpCredentials.getGcpCredentialType() == MANUAL_CREDENTIALS) {
       GcpManualDetailsDTO gcpCredentialSpecDTO = (GcpManualDetailsDTO) gcpCredentials.getConfig();
-      Set<String> secrets = new HashSet<>();
-      secrets.add(String.valueOf(gcpCredentialSpecDTO.getSecretKeyRef().getDecryptedValue()));
-      SecretSanitizerThreadLocal.addAll(secrets);
+      SecretSanitizerThreadLocal.addAll(
+          Collections.singleton(String.valueOf(gcpCredentialSpecDTO.getSecretKeyRef().getDecryptedValue())));
       return gcpCredentialSpecDTO.getSecretKeyRef().getDecryptedValue();
     }
     return null;
