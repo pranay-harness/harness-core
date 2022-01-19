@@ -23,7 +23,7 @@ xxxxxxxx
 #      validateCerts: false
 #  requestLog:
 #    appenders: []
-#  maxThreads: 1024
+#maxThreads : 1024
 
 allowedOrigins:
   - https://localhost:8181
@@ -120,6 +120,10 @@ auditServiceConfig:
 
   enableAuditService: true
 
+secretsConfiguration:
+  secretResolutionEnabled: false
+  gcpSecretManagerProject: harness-playground
+
 resourceGroupServiceConfig:
   resourceClients:
     ng-manager:
@@ -168,5 +172,7 @@ resourceGroupServiceConfig:
     baseUrl: http://localhost:9005/api/
     connectTimeOutSeconds: 15
     readTimeOutSeconds: 15
-  distributedLockImplementation: ${DISTRIBUTED_LOCK_IMPLEMENTATION:-MONGO}
-
+  distributedLockImplementation: ${
+DISTRIBUTED_LOCK_IMPLEMENTATION:
+  -MONGO
+}
