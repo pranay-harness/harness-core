@@ -1615,7 +1615,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File gzipDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(delegateFile, gzipDelegateFile);
-    sendTelemetryEvents(accountId, SHELL_SCRIPT, false, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, SHELL_SCRIPT, false, DELEGATE_CREATED_EVENT);
     return gzipDelegateFile;
   }
 
@@ -1716,7 +1716,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File gzipDockerDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(dockerDelegateFile, gzipDockerDelegateFile);
-    sendTelemetryEvents(accountId, DOCKER, false, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, DOCKER, false, DELEGATE_CREATED_EVENT);
     return gzipDockerDelegateFile;
   }
 
@@ -1775,7 +1775,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
-    sendTelemetryEvents(accountId, KUBERNETES, false, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, KUBERNETES, false, DELEGATE_CREATED_EVENT);
     return gzipKubernetesDelegateFile;
   }
 
@@ -1812,7 +1812,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File yaml = File.createTempFile(HARNESS_DELEGATE, YAML);
     saveProcessedTemplate(scriptParams, yaml, getCgK8SDelegateTemplate(accountId, true));
-    sendTelemetryEvents(accountId, CE_KUBERNETES, false, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, CE_KUBERNETES, false, DELEGATE_CREATED_EVENT);
     return new File(yaml.getAbsolutePath());
   }
 
@@ -1856,7 +1856,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File yaml = File.createTempFile(HARNESS_DELEGATE_VALUES_YAML, YAML);
     saveProcessedTemplate(params, yaml, "delegate-helm-values.yaml.ftl");
-    sendTelemetryEvents(accountId, HELM_DELEGATE, false, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, HELM_DELEGATE, false, DELEGATE_CREATED_EVENT);
     return yaml;
   }
 
@@ -1938,7 +1938,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File gzipEcsDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(ecsDelegateFile, gzipEcsDelegateFile);
-    sendTelemetryEvents(accountId, ECS, false, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, ECS, false, DELEGATE_CREATED_EVENT);
     return gzipEcsDelegateFile;
   }
 
@@ -2446,7 +2446,7 @@ public class DelegateServiceImpl implements DelegateService {
       DelegateRegisterResponse delegateRegisterResponse =
           registerResponseFromDelegate(handleEcsDelegateRequest(delegate));
       if (delegateRegisterResponse != null) {
-        sendTelemetryEvents(delegate.getAccountId(), ECS, delegate.isNg(), DELEGATE_REGISTERED_EVENT);
+        sendTelemetryTrackEvents(delegate.getAccountId(), ECS, delegate.isNg(), DELEGATE_REGISTERED_EVENT);
       }
       return delegateRegisterResponse;
     } else {
@@ -2472,7 +2472,7 @@ public class DelegateServiceImpl implements DelegateService {
       createAuditHeaderForDelegateRegistration(delegate.getHostName());
 
       registeredDelegate = add(delegate);
-      sendTelemetryEvents(
+      sendTelemetryTrackEvents(
           delegate.getAccountId(), delegate.getDelegateType(), delegate.isNg(), DELEGATE_REGISTERED_EVENT);
     } else {
       log.info("Delegate exists, updating: {}", delegate.getUuid());
@@ -3789,7 +3789,7 @@ public class DelegateServiceImpl implements DelegateService {
         managerHost, verificationServiceUrl, accountId, delegateSetupDetails.getName(), delegateSetupDetails, true);
 
     saveProcessedTemplate(scriptParams, composeYaml, HARNESS_NG_DELEGATE + "-docker-compose.yaml.ftl");
-    sendTelemetryEvents(accountId, DOCKER, true, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, DOCKER, true, DELEGATE_CREATED_EVENT);
     return composeYaml;
   }
 
@@ -3890,7 +3890,7 @@ public class DelegateServiceImpl implements DelegateService {
 
     File gzipKubernetesDelegateFile = File.createTempFile(DELEGATE_DIR, TAR_GZ);
     compressGzipFile(kubernetesDelegateFile, gzipKubernetesDelegateFile);
-    sendTelemetryEvents(accountId, KUBERNETES, true, DELEGATE_CREATED_EVENT);
+    sendTelemetryTrackEvents(accountId, KUBERNETES, true, DELEGATE_CREATED_EVENT);
     return gzipKubernetesDelegateFile;
   }
 
@@ -3961,7 +3961,7 @@ public class DelegateServiceImpl implements DelegateService {
         : "-Xmx1536m";
   }
 
-  private void sendTelemetryEvents(String accountId, String delegateType, boolean isNg, String eventName) {
+  private void sendTelemetryTrackEvents(String accountId, String delegateType, boolean isNg, String eventName) {
     HashMap<String, Object> properties = new HashMap<>();
     properties.put("NG", isNg);
     properties.put("Type", delegateType);

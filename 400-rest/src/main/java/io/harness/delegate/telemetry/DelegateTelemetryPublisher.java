@@ -82,27 +82,31 @@ public class DelegateTelemetryPublisher implements Handler<Account> {
   @Override
   public void handle(Account account) {
     try (AutoLogContext ignore0 = new AccountLogContext(account.getUuid(), OVERRIDE_ERROR)) {
-      log.info("DelegateTelemetryPublisher recordTelemetry execute started.");
+      log.info("DelegateTelemetryPublisher recordTelemetry execute started for account {}.", account.getUuid());
       try {
         String accountId = account.getUuid();
         if (EmptyPredicate.isNotEmpty(accountId) || !accountId.equals(GLOBAL_ACCOUNT_ID)) {
-          HashMap<String, Object> map = new HashMap<>();
-
-          map.put("group_type", ACCOUNT);
-          map.put("group_id", accountId);
-          map.put(COUNT_OF_CONNECTED_DELEGATES, delegateService.getCountOfConnectedDelegates(accountId));
-          map.put(COUNT_OF_REGISTERED_DELEGATES, delegateService.getCountOfRegisteredDelegates(accountId));
-          telemetryReporter.sendGroupEvent(accountId, null, map, Collections.singletonMap(AMPLITUDE, true),
-              TelemetryOption.builder().sendForCommunity(true).build());
-          log.info("Scheduled DelegateTelemetryPublisher event sent!");
+          sendTelemetryGroupEvents(accountId);
+          log.info("Scheduled DelegateTelemetryPublisher event sent for account {} !", account.getUuid());
         } else {
           log.info("There is no Account found!. Can not send scheduled DelegateTelemetryPublisher event.");
         }
       } catch (Exception e) {
-        log.error("DelegateTelemetryPublisher recordTelemetry execute failed.", e);
+        log.error("DelegateTelemetryPublisher recordTelemetry execute failed for account {} .", account.getUuid(), e);
       } finally {
-        log.info("DelegateTelemetryPublisher recordTelemetry execute finished.");
+        log.info("DelegateTelemetryPublisher recordTelemetry execute finished for account {} .", account.getUuid());
       }
     }
+  }
+
+  private void sendTelemetryGroupEvents(String accountId) {
+    HashMap<String, Object> map = new HashMap<>();
+
+    map.put("group_type", ACCOUNT);
+    map.put("group_id", accountId);
+    map.put(COUNT_OF_CONNECTED_DELEGATES, delegateService.getCountOfConnectedDelegates(accountId));
+    map.put(COUNT_OF_REGISTERED_DELEGATES, delegateService.getCountOfRegisteredDelegates(accountId));
+    telemetryReporter.sendGroupEvent(accountId, null, map, Collections.singletonMap(AMPLITUDE, true),
+        TelemetryOption.builder().sendForCommunity(true).build());
   }
 }
