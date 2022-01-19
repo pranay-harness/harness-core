@@ -123,4 +123,6 @@ public interface NodeExecutionService {
   List<String> fetchStageFqnFromStageIdentifiers(String planExecutionId, List<String> stageIdentifiers);
 
   Map<String, Node> mapNodeExecutionIdWithPlanNodeForGivenStageFQN(String planExecutionId, List<String> stageFQNs);
+
+  List<NodeExecution> fetchStageExecutionsWithEndTsAndStatusProjection(String planExecutionId);
 }

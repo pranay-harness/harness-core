@@ -163,7 +163,7 @@ public class CEAzureConnectorValidator extends io.harness.ccm.connectors.Abstrac
     }
 
     // Check for data at destination only when 24 hrs have elapsed since connector last modified at
-    if (connectorResponseDTO.getLastModifiedAt() < oneDayOld) {
+    if (connectorResponseDTO.getCreatedAt() < oneDayOld) {
       if (featuresEnabled.contains(CEFeatures.BILLING)
           && !ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AZURE,
               ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {

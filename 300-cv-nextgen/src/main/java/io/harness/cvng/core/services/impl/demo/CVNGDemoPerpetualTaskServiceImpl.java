@@ -121,12 +121,11 @@ public class CVNGDemoPerpetualTaskServiceImpl implements CVNGDemoPerpetualTaskSe
                                                       .serviceIdentifier(cvConfig.getServiceIdentifier())
                                                       .environmentIdentifier(cvConfig.getEnvIdentifier())
                                                       .build(),
-            dataCollectionTask.getEndTime(), dataCollectionTask.getEndTime().minus(Duration.ofMinutes(15)));
+            dataCollectionTask.getStartTime().minus(Duration.ofMinutes(15)), dataCollectionTask.getStartTime());
     return deploymentActivities.stream()
         .filter(deploymentActivity -> {
           if (deploymentActivity.getVerificationSummary() != null) {
-            return deploymentActivity.getVerificationSummary().getAggregatedStatus()
-                == ActivityVerificationStatus.VERIFICATION_FAILED;
+            return deploymentActivity.getAnalysisStatus() == ActivityVerificationStatus.VERIFICATION_FAILED;
           }
           return false;
         })
