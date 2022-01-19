@@ -33,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -40,12 +41,13 @@ public class CgCdLicenseUsageQueryHelper {
   @Inject private TimeScaleDBService timeScaleDBService;
   @Inject private WingsPersistence wingsPersistence;
 
+  @NonNull
   public List<String> fetchDistinctSvcIdUsedInDeployments(String accountId, int timePeriod) {
     int retry = 0;
     boolean successfulOperation = false;
     List<String> serviceIds = new ArrayList<>();
 
-    while (!successfulOperation && retry < MAX_RETRY) {
+    while (!successfulOperation && retry <= MAX_RETRY) {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
            PreparedStatement fetchStatement =
                dbConnection.prepareStatement(QUERY_FECTH_SERVICES_IN_LAST_N_DAYS_DEPLOYMENT)) {
@@ -72,12 +74,13 @@ public class CgCdLicenseUsageQueryHelper {
 
   private List<String> processResultSetToFetchServiceIds(ResultSet resultSet) throws SQLException {
     List<String> serviceIds = new ArrayList<>();
-    while (resultSet.next()) {
+    while (resultSet != null && resultSet.next()) {
       serviceIds.add(resultSet.getString(1));
     }
     return serviceIds;
   }
 
+  @NonNull
   public Map<String, CgServiceUsage> getPercentileInstanceForServices(
       String accountId, List<String> svcIds, int timePeriod, double percentile) {
     if (isEmpty(svcIds)) {
@@ -88,7 +91,7 @@ public class CgCdLicenseUsageQueryHelper {
     boolean successfulOperation = false;
     Map<String, CgServiceUsage> serviceUsageMap = new HashMap<>();
 
-    while (!successfulOperation && retry < MAX_RETRY) {
+    while (!successfulOperation && retry <= MAX_RETRY) {
       try (Connection dbConnection = timeScaleDBService.getDBConnection();
            PreparedStatement fetchStatement =
                dbConnection.prepareStatement(QUERY_FECTH_PERCENTILE_INSTANCE_COUNT_FOR_SERVICES)) {
@@ -115,14 +118,15 @@ public class CgCdLicenseUsageQueryHelper {
 
   private Map<String, CgServiceUsage> processResultSetToCreateServiceUsageMap(ResultSet resultSet) throws SQLException {
     Map<String, CgServiceUsage> serviceUsageMap = new HashMap<>();
-    while (resultSet.next()) {
-      serviceUsageMap.put(resultSet.getString(1),
-          CgServiceUsage.builder().serviceId(resultSet.getString(1)).instanceCount(resultSet.getInt(2)).build());
+    while (resultSet != null && resultSet.next()) {
+      String svcId = resultSet.getString(1);
+      serviceUsageMap.put(svcId, CgServiceUsage.builder().serviceId(svcId).instanceCount(resultSet.getInt(2)).build());
     }
 
     return serviceUsageMap;
   }
 
+  @NonNull
   public Map<String, String> fetchServicesNames(String accountId, List<String> serviceUuids) {
     if (isEmpty(serviceUuids)) {
       return Collections.emptyMap();

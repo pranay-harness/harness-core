@@ -14,8 +14,10 @@ import io.harness.annotations.dev.OwnedBy;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.FieldDefaults;
@@ -23,6 +25,7 @@ import lombok.experimental.FieldDefaults;
 @OwnedBy(HarnessTeam.CDP)
 @Data
 @Builder
+@AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(NON_NULL)
@@ -30,4 +33,10 @@ public class CgActiveServicesUsageInfo {
   List<CgServiceUsage> activeServiceUsage;
   long servicesConsumed;
   long serviceLicenseConsumed;
+
+  public CgActiveServicesUsageInfo() {
+    activeServiceUsage = Collections.emptyList();
+    servicesConsumed = 0L;
+    serviceLicenseConsumed = 0L;
+  }
 }

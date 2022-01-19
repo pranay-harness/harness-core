@@ -41,22 +41,11 @@ public class CgCdLicenseUsageServiceImpl implements CgCdLicenseUsageService {
     return buildCgActiveServicesUsageInfo(serviceIdsFromDeployments, percentileInstanceServicesUsageMap, servicesNames);
   }
 
-  private CgActiveServicesUsageInfo buildCgActiveServicesUsageInfo(List<String> serviceIdsFromDeployments,
-      Map<String, CgServiceUsage> percentileInstanceServicesUsageMap, Map<String, String> servicesNames) {
+  private CgActiveServicesUsageInfo buildCgActiveServicesUsageInfo(@NonNull List<String> serviceIdsFromDeployments,
+      @NonNull Map<String, CgServiceUsage> percentileInstanceServicesUsageMap,
+      @NonNull Map<String, String> servicesNames) {
     if (isEmpty(serviceIdsFromDeployments)) {
-      return CgActiveServicesUsageInfo.builder()
-          .serviceLicenseConsumed(0)
-          .activeServiceUsage(Collections.emptyList())
-          .servicesConsumed(0)
-          .build();
-    }
-
-    if (isEmpty(percentileInstanceServicesUsageMap) || isEmpty(servicesNames)) {
-      return CgActiveServicesUsageInfo.builder()
-          .serviceLicenseConsumed(serviceIdsFromDeployments.size())
-          .activeServiceUsage(Collections.emptyList())
-          .servicesConsumed(serviceIdsFromDeployments.size())
-          .build();
+      return new CgActiveServicesUsageInfo();
     }
 
     List<CgServiceUsage> activeServiceUsageList =
