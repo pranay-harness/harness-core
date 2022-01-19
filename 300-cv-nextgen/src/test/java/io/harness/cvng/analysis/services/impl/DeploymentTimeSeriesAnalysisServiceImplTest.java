@@ -717,6 +717,44 @@ public class DeploymentTimeSeriesAnalysisServiceImplTest extends CvNextGenTestBa
         .isEqualTo(1);
   }
 
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testGetTransactionNames() {
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+    List<String> transactionNameList =
+        deploymentTimeSeriesAnalysisService.getTransactionNames(accountId, verificationJobInstanceId);
+
+    assertThat(transactionNameList.size()).isEqualTo(2);
+    assertThat(transactionNameList.get(0)).isEqualTo("/todolist/inside");
+    assertThat(transactionNameList.get(1)).isEqualTo("/todolist/exception");
+  }
+
+  @Test
+  @Owner(developers = KAPIL)
+  @Category(UnitTests.class)
+  public void testNodeNames() {
+    verificationJobService.create(accountId, createCanaryVerificationJobDTO());
+    VerificationJobInstance verificationJobInstance = createVerificationJobInstance();
+    CVConfig cvConfig = verificationJobInstance.getCvConfigMap().values().iterator().next();
+    String verificationJobInstanceId = verificationJobInstanceService.create(verificationJobInstance);
+    String verificationTaskId = verificationTaskService.createDeploymentVerificationTask(
+        accountId, cvConfig.getUuid(), verificationJobInstanceId, cvConfig.getType());
+    deploymentTimeSeriesAnalysisService.save(createDeploymentTimeSeriesAnalysis(verificationTaskId));
+    List<String> nodeNameList = deploymentTimeSeriesAnalysisService.getNodeNames(accountId, verificationJobInstanceId);
+
+    assertThat(nodeNameList.size()).isEqualTo(3);
+    assertThat(nodeNameList.get(0)).isEqualTo("node2");
+    assertThat(nodeNameList.get(1)).isEqualTo("node3");
+    assertThat(nodeNameList.get(2)).isEqualTo("node1");
+  }
+
   private VerificationJobInstance createVerificationJobInstance() {
     VerificationJobInstance jobInstance = builderFactory.verificationJobInstanceBuilder().build();
     jobInstance.setAccountId(accountId);
