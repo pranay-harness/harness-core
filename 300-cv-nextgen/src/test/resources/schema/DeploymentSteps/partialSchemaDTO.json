@@ -2570,7 +2570,7 @@
             "type": {
               "type": "string",
               "enum": [
-                "VERIFY"
+                "Verify"
               ]
             },
             "when": {

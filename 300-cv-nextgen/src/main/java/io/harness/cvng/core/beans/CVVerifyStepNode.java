@@ -31,7 +31,7 @@ import lombok.NoArgsConstructor;
 @JsonTypeName(StepSpecTypeConstants.VERIFY)
 @OwnedBy(HarnessTeam.CV)
 public class CVVerifyStepNode extends AbstractStepNode {
-  @JsonProperty("type") @NotNull StepType type = StepType.VERIFY;
+  @JsonProperty("type") @NotNull StepType type = StepType.Verify;
   @JsonProperty("spec")
   @JsonTypeInfo(use = NAME, property = "type", include = EXTERNAL_PROPERTY, visible = true)
   CVNGStepInfo verifyStepInfo;
@@ -47,7 +47,7 @@ public class CVVerifyStepNode extends AbstractStepNode {
   }
 
   enum StepType {
-    VERIFY(StepSpecTypeConstants.VERIFY);
+    Verify(StepSpecTypeConstants.VERIFY);
     @Getter String name;
     StepType(String name) {
       this.name = name;
