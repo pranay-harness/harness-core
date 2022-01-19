@@ -191,7 +191,7 @@ public class EventConfigServiceImpl implements EventConfigService {
       throw new InvalidRequestException("For Event rule type Workflow choose all events or specify at least one event");
     }
 
-    if (!workflowRule.isAllEvents() && isEmpty(workflowRule.getWorkflowIds())) {
+    if (!workflowRule.isAllWorkflows() && isEmpty(workflowRule.getWorkflowIds())) {
       throw new InvalidRequestException(
           "For Event rule type workflow choose all workflows or specify at least one workflow");
     }
