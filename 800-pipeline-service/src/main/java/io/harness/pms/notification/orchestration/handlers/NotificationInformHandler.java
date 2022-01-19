@@ -9,6 +9,7 @@ package io.harness.pms.notification.orchestration.handlers;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.observers.EndObserverResult;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.logging.AutoLogContext;
 import io.harness.notification.PipelineEventType;
@@ -31,21 +32,21 @@ public class NotificationInformHandler implements AsyncInformObserver, Notificat
 
   @Override
   public void onSuccess(Ambiance ambiance) {
-    try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_SUCCESS, null, null);
     }
   }
 
   @Override
   public void onPause(Ambiance ambiance) {
-    try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_PAUSED, null, null);
     }
   }
 
   @Override
   public void onFailure(Ambiance ambiance) {
-    try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_FAILED, null, null);
     }
   }
@@ -56,9 +57,10 @@ public class NotificationInformHandler implements AsyncInformObserver, Notificat
   }
 
   @Override
-  public void onEnd(Ambiance ambiance) {
-    try (AutoLogContext autoLogContext = AmbianceUtils.autoLogContext(ambiance)) {
+  public EndObserverResult onEnd(Ambiance ambiance) {
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       notificationHelper.sendNotification(ambiance, PipelineEventType.PIPELINE_END, null, null);
+      return EndObserverResult.builder().successful(true).build();
     }
   }
 }

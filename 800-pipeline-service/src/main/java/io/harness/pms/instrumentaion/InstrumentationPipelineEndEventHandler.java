@@ -32,6 +32,7 @@ import io.harness.account.services.AccountService;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
+import io.harness.engine.observers.EndObserverResult;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.execution.NodeExecution;
 import io.harness.ng.core.dto.AccountDTO;
@@ -77,7 +78,7 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
   @Inject SdkStepHelper sdkStepHelper;
 
   @Override
-  public void onEnd(Ambiance ambiance) {
+  public EndObserverResult onEnd(Ambiance ambiance) {
     String planExecutionId = ambiance.getPlanExecutionId();
     String accountId = AmbianceUtils.getAccountId(ambiance);
     AccountDTO accountDTO = accountService.getAccount(accountId);
@@ -140,6 +141,7 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
         TelemetryOption.builder().sendForCommunity(false).build());
 
     sendNotificationEvents(notificationRulesList, ambiance, accountId, accountName);
+    return EndObserverResult.builder().successful(true).build();
   }
 
   // TODO: Handle forStages case in PipelineEvents

@@ -12,6 +12,10 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+
+import io.harness.concurrent.CompletableFutures;
 import lombok.NonNull;
 
 public class Subject<T> {
@@ -43,6 +47,11 @@ public class Subject<T> {
   @FunctionalInterface
   public interface Informant4<T, U1, U2, U3, U4> {
     void inform(T t, U1 u1, U2 u2, U3 u3, U4 u4);
+  }
+
+  @FunctionalInterface
+  public interface Informant5<R, T, U> {
+    R inform(T t, U u);
   }
 
   @FunctionalInterface
@@ -87,6 +96,18 @@ public class Subject<T> {
         func.inform(observer, arg);
       }
     });
+  }
+
+  public <R, U> CompletableFutures<R> fireInform(Informant5<R, T, U> func, U arg, ExecutorService executorService) {
+    CompletableFutures<R> cf = new CompletableFutures<>(executorService);
+    observers.forEach(observer -> {
+      if (observer instanceof AsyncInformObserver) {
+        cf.supplyAsync(() -> func.inform(observer, arg));
+      } else {
+        func.inform(observer, arg);
+      }
+    });
+    return cf;
   }
 
   public <U1, U2> void fireInform(Informant2<T, U1, U2> func, U1 arg1, U2 arg2) {

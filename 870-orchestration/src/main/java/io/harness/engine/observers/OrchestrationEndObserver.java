@@ -13,5 +13,5 @@ import io.harness.pms.contracts.ambiance.Ambiance;
 
 @OwnedBy(HarnessTeam.PIPELINE)
 public interface OrchestrationEndObserver {
-  void onEnd(Ambiance ambiance);
+  EndObserverResult onEnd(Ambiance ambiance);
 }

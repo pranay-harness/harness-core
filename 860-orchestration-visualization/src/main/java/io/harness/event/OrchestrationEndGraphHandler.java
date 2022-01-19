@@ -12,6 +12,7 @@ import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.OrchestrationGraph;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.EndObserverResult;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.observer.AsyncInformObserver;
@@ -45,7 +46,7 @@ public class OrchestrationEndGraphHandler implements AsyncInformObserver, Orches
   }
 
   @Override
-  public void onEnd(Ambiance ambiance) {
+  public EndObserverResult onEnd(Ambiance ambiance) {
     try {
       PlanExecution planExecution = planExecutionService.get(ambiance.getPlanExecutionId());
       // One last time try to update the graph to process any unprocessed logs
@@ -59,9 +60,10 @@ public class OrchestrationEndGraphHandler implements AsyncInformObserver, Orches
           graphGenerationService.getCachedOrchestrationGraph(ambiance.getPlanExecutionId());
       orchestrationGraph = orchestrationGraph.withStatus(planExecution.getStatus()).withEndTs(planExecution.getEndTs());
       graphGenerationService.cacheOrchestrationGraph(orchestrationGraph);
+      return EndObserverResult.builder().successful(true).build();
     } catch (Exception e) {
       log.error("Cannot update Orchestration graph for ORCHESTRATION_END");
-      throw e;
+      return EndObserverResult.builder().successful(false).build();
     }
   }
 

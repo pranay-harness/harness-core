@@ -9,6 +9,7 @@ package io.harness.engine.interrupts;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.engine.observers.EndObserverResult;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.logging.AutoLogContext;
 import io.harness.observer.AsyncInformObserver;
@@ -27,14 +28,15 @@ public class OrchestrationEndInterruptHandler implements AsyncInformObserver, Or
   @Inject @Named("EngineExecutorService") ExecutorService executorService;
 
   @Override
-  public void onEnd(Ambiance ambiance) {
+  public EndObserverResult onEnd(Ambiance ambiance) {
     try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
       long closedInterrupts = interruptService.closeActiveInterrupts(ambiance.getPlanExecutionId());
       if (closedInterrupts < 0) {
         log.error("Error Closing out the interrupts");
-        return;
+        return EndObserverResult.builder().successful(false).build();
       }
       log.info("Closed {} active interrupts", closedInterrupts);
+      return EndObserverResult.builder().successful(true).build();
     }
   }
 

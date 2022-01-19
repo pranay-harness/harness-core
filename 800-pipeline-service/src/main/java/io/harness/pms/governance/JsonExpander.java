@@ -17,7 +17,7 @@ import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
 import io.harness.pms.contracts.governance.ExpansionRequestProto;
 import io.harness.pms.contracts.governance.ExpansionResponseBatch;
 import io.harness.pms.contracts.governance.JsonExpansionServiceGrpc.JsonExpansionServiceBlockingStub;
-import io.harness.pms.utils.CompletableFutures;
+import io.harness.concurrent.CompletableFutures;
 import io.harness.pms.utils.PmsGrpcClientUtils;
 import io.harness.pms.yaml.YamlUtils;
 

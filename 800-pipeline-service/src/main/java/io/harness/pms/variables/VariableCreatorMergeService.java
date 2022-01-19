@@ -24,7 +24,7 @@ import io.harness.pms.contracts.plan.VariablesCreationResponse;
 import io.harness.pms.gitsync.PmsGitSyncHelper;
 import io.harness.pms.plan.creation.PlanCreatorServiceInfo;
 import io.harness.pms.sdk.PmsSdkHelper;
-import io.harness.pms.utils.CompletableFutures;
+import io.harness.concurrent.CompletableFutures;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 

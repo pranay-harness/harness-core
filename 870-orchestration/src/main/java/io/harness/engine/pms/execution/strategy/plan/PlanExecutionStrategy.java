@@ -11,11 +11,13 @@ import static io.harness.pms.contracts.execution.Status.ERRORED;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.concurrent.CompletableFutures;
 import io.harness.engine.GovernanceService;
 import io.harness.engine.OrchestrationEngine;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionMetadataService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.EndObserverResult;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.observers.OrchestrationStartObserver;
 import io.harness.engine.observers.beans.OrchestrationStartInfo;
@@ -40,7 +42,9 @@ import io.harness.springdata.TransactionHelper;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -124,7 +128,23 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
           ambiance.getPlanExecutionId(), ERRORED, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     }
     eventEmitter.emitEvent(buildEndEvent(ambiance, planExecution.getStatus()));
-    orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance);
+    handleEndObservers(ambiance);
+  }
+
+  private void handleEndObservers(Ambiance ambiance) {
+    CompletableFutures<EndObserverResult> cf =
+        orchestrationEndSubject.fireInform(OrchestrationEndObxxxxxxxx:onEnd, ambiance, executorService);
+    try {
+      List<EndObserverResult> results = cf.allOf().get(5, TimeUnit.SECONDS);
+      if (results.stream().anyMatch(r -> !r.isSuccessful())) {
+        log.error("Some of the end orchestration observers failed");
+      }
+    } catch (Exception ex) {
+      log.error("Error occurred while calling OrchestrationEndObservers", ex);
+    } finally {
+      // TODO: Make a call to archiver here
+      log.info("Orchestration Ended");
+    }
   }
 
   private OrchestrationEvent buildEndEvent(Ambiance ambiance, Status status) {

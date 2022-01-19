@@ -13,6 +13,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.events.OrchestrationEventEmitter;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.observers.EndObserverResult;
 import io.harness.engine.observers.OrchestrationEndObserver;
 import io.harness.engine.observers.PlanStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
@@ -77,7 +78,7 @@ public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserve
   }
 
   @Override
-  public void onEnd(Ambiance ambiance) {
+  public EndObserverResult onEnd(Ambiance ambiance) {
     Optional<PipelineExecutionSummaryEntity> pipelineExecutionSummaryEntity =
         pmsExecutionSummaryRepository
             .findByAccountIdAndOrgIdentifierAndProjectIdentifierAndPlanExecutionIdAndPipelineDeletedNot(
@@ -100,6 +101,7 @@ public class PipelineStatusUpdateEventHandler implements PlanStatusUpdateObserve
             pipelineExecutionSummaryEntity1.getModuleInfo().get(module), pipelineExecutionSummaryEntity1.getEndTs()));
       }
     }
+    return EndObserverResult.builder().successful(true).build();
   }
 
   private OrchestrationEvent buildEndEvent(
