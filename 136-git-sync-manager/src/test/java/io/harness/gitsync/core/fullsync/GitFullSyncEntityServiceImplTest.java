@@ -69,7 +69,6 @@ public class GitFullSyncEntityServiceImplTest extends GitSyncTestBase {
         .messageId(messageId)
         .entityDetail(entityDetailProtoToRestMapper.createEntityDetailDTO(entityForFullSync.getEntityDetail()))
         .syncStatus(syncStatus.toString())
-        .yamlGitConfigId(entityScopeInfo.getIdentifier())
         .retryCount(0)
         .build();
   }

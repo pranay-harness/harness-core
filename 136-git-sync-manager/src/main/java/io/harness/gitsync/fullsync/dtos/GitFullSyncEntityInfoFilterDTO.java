@@ -25,8 +25,8 @@ import lombok.experimental.FieldNameConstants;
 @Data
 @Builder
 @FieldNameConstants(innerTypeName = "GitFullSyncEntityInfoFilterKeys")
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 @Schema(name = "GitFullSyncEntityInfoFilter", description = "This contains filters for Git Full Sync")
 @OwnedBy(PL)
 public class GitFullSyncEntityInfoFilterDTO {
