@@ -13,6 +13,7 @@ import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.exception.ExceptionUtils.getMessage;
 
+import static software.wings.infra.RancherKubernetesInfrastructure.ClusterSelectionCriteriaEntry;
 import static software.wings.sm.StateType.RANCHER_RESOLVE;
 
 import io.harness.annotations.dev.BreakDependencyOn;
@@ -61,6 +62,7 @@ import software.wings.stencils.DefaultValue;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.Attributes;
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +141,8 @@ public class RancherResolveState extends State {
             .appId(context.getAppId())
             .build();
 
+    renderExpressionsInRancherResolveClustersTaskParameters(context, rancherResolveClustersTaskParameters);
+
     String waitId = generateUuid();
     DelegateTask delegateTask = DelegateTask.builder()
                                     .accountId(context.getApp().getAccountId())
@@ -161,6 +165,23 @@ public class RancherResolveState extends State {
         .correlationIds(Collections.singletonList(waitId))
         .stateExecutionData(executionData)
         .build();
+  }
+
+  private void renderExpressionsInRancherResolveClustersTaskParameters(
+      ExecutionContext context, RancherResolveClustersTaskParameters rancherResolveClustersTaskParameters) {
+    List<ClusterSelectionCriteriaEntry> clusterSelectionCriteria =
+        rancherResolveClustersTaskParameters.getClusterSelectionCriteria();
+    List<ClusterSelectionCriteriaEntry> renderedClusterSelectionCriteriaEntries = new ArrayList<>();
+
+    for (ClusterSelectionCriteriaEntry clusterSelectionCriteriaEntry : clusterSelectionCriteria) {
+      renderedClusterSelectionCriteriaEntries.add(
+          ClusterSelectionCriteriaEntry.builder()
+              .labelName(context.renderExpression(clusterSelectionCriteriaEntry.getLabelName()))
+              .labelValues(context.renderExpression(clusterSelectionCriteriaEntry.getLabelValues()))
+              .build());
+    }
+
+    rancherResolveClustersTaskParameters.setClusterSelectionCriteria(renderedClusterSelectionCriteriaEntries);
   }
 
   private long getTimeoutValue() {
