@@ -49,7 +49,8 @@ public class DashboardResourceImpl implements Resource {
   public Map<ScopeLevel, EnumSet<ValidatorType>> getSelectorKind() {
     return ImmutableMap.of(ScopeLevel.ACCOUNT,
         EnumSet.of(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE, BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES),
-        ScopeLevel.ORGANIZATION, EnumSet.of(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE));
+        ScopeLevel.ORGANIZATION,
+        EnumSet.of(BY_RESOURCE_IDENTIFIER, BY_RESOURCE_TYPE, BY_RESOURCE_TYPE_INCLUDING_CHILD_SCOPES));
   }
 
   @Override
