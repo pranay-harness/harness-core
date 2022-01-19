@@ -9,13 +9,13 @@ package io.harness.observer;
 
 import static java.util.stream.Collectors.toList;
 
+import io.harness.concurrent.CompletableFutures;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
-import io.harness.concurrent.CompletableFutures;
 import lombok.NonNull;
 
 public class Subject<T> {
