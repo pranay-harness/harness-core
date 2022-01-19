@@ -41,7 +41,6 @@ import com.codahale.metrics.annotation.Timed;
 import com.google.inject.Inject;
 import io.swagger.annotations.Api;
 import java.io.InputStream;
-import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -194,8 +193,8 @@ public class SSOResourceNG {
       secretManager.updateSecretText(accountId, cgSecretRefId, secretText, true);
       return cgSecretRefId;
     }
-    final SecretText secretText =
-        buildSecretTextForClientSecret(clientSecret, CLIENT_SECRET_NAME_PREFIX + accountId, secretManagerConfig.getUuid());
+    final SecretText secretText = buildSecretTextForClientSecret(
+        clientSecret, CLIENT_SECRET_NAME_PREFIX + accountId, secretManagerConfig.getUuid());
     return secretManager.saveSecretText(accountId, secretText, true);
   }
 
