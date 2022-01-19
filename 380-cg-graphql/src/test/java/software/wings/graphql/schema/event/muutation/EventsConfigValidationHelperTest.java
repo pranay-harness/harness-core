@@ -25,7 +25,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.rule.Owner;
 
 import software.wings.beans.Pipeline;
+import software.wings.beans.Pipeline.PipelineKeys;
 import software.wings.beans.Workflow;
+import software.wings.beans.Workflow.WorkflowKeys;
 import software.wings.dl.WingsPersistence;
 import software.wings.graphql.schema.mutation.event.EventsConfigValidationHelper;
 
@@ -75,10 +77,10 @@ public class EventsConfigValidationHelperTest extends CategoryTest {
   public void setUp() throws Exception {
     when(wingsPersistence.createQuery(Pipeline.class)).thenReturn(pipelineQuery);
     when(pipelineQuery.filter(any(), any())).thenReturn(pipelineQuery);
-    when(pipelineQuery.project(Mockito.eq(Pipeline.PipelineKeys.uuid), eq(true))).thenReturn(pipelineQuery);
+    when(pipelineQuery.project(Mockito.eq(PipelineKeys.uuid), eq(true))).thenReturn(pipelineQuery);
     when(wingsPersistence.createQuery(Workflow.class)).thenReturn(workflowQuery);
     when(workflowQuery.filter(any(), any())).thenReturn(workflowQuery);
-    when(workflowQuery.project(Mockito.eq(Workflow.WorkflowKeys.uuid), eq(true))).thenReturn(workflowQuery);
+    when(workflowQuery.project(Mockito.eq(WorkflowKeys.uuid), eq(true))).thenReturn(workflowQuery);
   }
 
   @Test
