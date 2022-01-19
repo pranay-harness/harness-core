@@ -27,6 +27,8 @@ public class PrincipalTypeProtoToPrincipalTypeMapper {
         return PrincipalType.SERVICE;
       case API_KEY:
         return PrincipalType.API_KEY;
+      case SERVICE_ACCOUNT:
+        return PrincipalType.SERVICE_ACCOUNT;
       default:
         throw new InvalidRequestException("Unknown principal type found");
     }
