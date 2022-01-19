@@ -30,7 +30,6 @@ import static org.mockito.Mockito.verify;
 
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.azure.client.AzureMonitorClient;
 import io.harness.azure.client.AzureWebClient;
 import io.harness.azure.context.AzureWebClientContext;
 import io.harness.azure.model.AzureAppServiceApplicationSetting;
@@ -43,7 +42,6 @@ import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.rule.Owner;
 
 import software.wings.WingsBaseTest;
-import software.wings.delegatetasks.azure.AzureTimeLimiter;
 import software.wings.delegatetasks.azure.appservice.deployment.context.AzureAppServiceDockerDeploymentContext;
 
 import com.microsoft.azure.management.appservice.DeploymentSlot;
