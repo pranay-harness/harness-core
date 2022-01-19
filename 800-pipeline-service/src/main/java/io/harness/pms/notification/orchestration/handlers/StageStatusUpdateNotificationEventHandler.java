@@ -16,7 +16,9 @@ import io.harness.execution.NodeExecution;
 import io.harness.notification.PipelineEventType;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.plancreator.beans.OrchestrationConstants;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.steps.SkipType;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.notification.NotificationHelper;
 import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
@@ -42,11 +44,14 @@ public class StageStatusUpdateNotificationEventHandler implements AsyncInformObs
               nodeExecution.getAmbiance(), eventType, nodeExecution, nodeUpdateInfo.getUpdatedTs()));
       return;
     }
-    if (Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STAGES.name())
-        || Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.PIPELINE.name())
-        || Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.EXECUTION.name())
-        || Objects.equals(nodeExecution.getNode().getGroup(), StepOutcomeGroup.STEP_GROUP.name())
-        || nodeExecution.getNode().getIdentifier().endsWith(OrchestrationConstants.ROLLBACK_NODE_NAME)) {
+
+    Level currentLevel = Objects.requireNonNull(AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance()));
+    String group = currentLevel.getGroup();
+    String identifier = currentLevel.getIdentifier();
+    if (Objects.equals(group, StepOutcomeGroup.STAGES.name()) || Objects.equals(group, StepOutcomeGroup.PIPELINE.name())
+        || Objects.equals(group, StepOutcomeGroup.EXECUTION.name())
+        || Objects.equals(group, StepOutcomeGroup.STEP_GROUP.name())
+        || identifier.endsWith(OrchestrationConstants.ROLLBACK_NODE_NAME)) {
       return;
     }
     if (!Objects.equals(nodeExecution.getNode().getSkipGraphType(), SkipType.SKIP_NODE)

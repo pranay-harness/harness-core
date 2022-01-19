@@ -42,7 +42,7 @@ public class OrchestrationUtils {
   }
 
   public static boolean isStageNode(NodeExecution nodeExecution) {
-    return nodeExecution.getNode().getStepCategory() == StepCategory.STAGE;
+    return AmbianceUtils.getCurrentStepType(nodeExecution.getAmbiance()).getStepCategory() == StepCategory.STAGE;
   }
 
   public static boolean isPipelineNode(NodeExecution nodeExecution) {

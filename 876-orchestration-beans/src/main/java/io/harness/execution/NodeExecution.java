@@ -38,6 +38,7 @@ import io.harness.pms.contracts.execution.skip.SkipInfo;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.data.OrchestrationMap;
 import io.harness.pms.data.stepparameters.PmsStepParameters;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.sdk.core.steps.io.StepParameters;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.pms.utils.OrchestrationMapBackwardCompatibilityUtils;
@@ -111,7 +112,7 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   @Wither @Version Long version;
 
   @Singular List<ExecutableResponse> executableResponses;
-  @Singular private List<InterruptEffect> interruptHistories;
+  @Singular List<InterruptEffect> interruptHistories;
   FailureInfo failureInfo;
   SkipInfo skipInfo;
   NodeRunInfo nodeRunInfo;
@@ -142,12 +143,12 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
 
   @Override
   public String getNodeId() {
-    return getNode().getUuid();
+    return AmbianceUtils.obtainCurrentSetupId(ambiance);
   }
 
   @Override
   public NodeType getNodeType() {
-    return getNode().getNodeType();
+    return NodeType.valueOf(AmbianceUtils.obtainNodeType(ambiance));
   }
 
   @UtilityClass
@@ -193,11 +194,6 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
 
     public NodeExecutionBuilder resolvedStepParameters(String jsonString) {
       this.resolvedStepParameters = RecastOrchestrationUtils.fromJson(jsonString);
-      return this;
-    }
-
-    public NodeExecutionBuilder resolvedStepInputs(String jsonString) {
-      this.resolvedStepInputs = RecastOrchestrationUtils.fromJson(jsonString);
       return this;
     }
 
@@ -279,7 +275,7 @@ public class NodeExecution implements PersistentEntity, UuidAccess, PmsNodeExecu
   }
 
   public ByteString getResolvedStepParametersBytes() {
-    if (this.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+    if (this.getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
       IdentityStepParameters build =
           IdentityStepParameters.builder()
               .originalNodeExecutionId(((IdentityPlanNode) this.getNode()).getOriginalNodeExecutionId())

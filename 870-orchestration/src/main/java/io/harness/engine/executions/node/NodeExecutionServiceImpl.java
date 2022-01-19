@@ -34,13 +34,11 @@ import io.harness.exception.UnexpectedException;
 import io.harness.execution.ExecutionModeUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.NodeExecution.NodeExecutionKeys;
-import io.harness.execution.NodeExecutionMapper;
 import io.harness.execution.PlanExecutionMetadata;
 import io.harness.interrupts.InterruptEffect;
 import io.harness.observer.Subject;
 import io.harness.plan.Node;
 import io.harness.pms.contracts.ambiance.Level;
-import io.harness.pms.contracts.execution.NodeExecutionProto;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent;
 import io.harness.pms.contracts.execution.events.OrchestrationEvent.Builder;
@@ -281,11 +279,6 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     } else {
       return mongoTemplate.save(nodeExecution);
     }
-  }
-
-  @Override
-  public NodeExecution save(NodeExecutionProto nodeExecution) {
-    return save(NodeExecutionMapper.fromNodeExecutionProto(nodeExecution));
   }
 
   /**

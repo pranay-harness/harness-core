@@ -17,6 +17,8 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.barriers.beans.BarrierExecutionInfo;
 import io.harness.pms.barriers.beans.BarrierExecutionInfo.BarrierExecutionInfoBuilder;
+import io.harness.pms.contracts.ambiance.Level;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.repositories.TimeoutInstanceRepository;
 import io.harness.steps.barriers.beans.BarrierExecutionInstance;
 import io.harness.steps.barriers.beans.BarrierSetupInfo;
@@ -28,6 +30,7 @@ import com.google.common.collect.Streams;
 import com.google.inject.Inject;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,8 +51,9 @@ public class PMSBarrierServiceImpl implements PMSBarrierService {
   @Override
   public List<BarrierExecutionInfo> getBarrierExecutionInfoList(String stageSetupId, String planExecutionId) {
     NodeExecution stageNodeExecution = nodeExecutionService.getByPlanNodeUuid(stageSetupId, planExecutionId);
+    Level currentLevel = Objects.requireNonNull(AmbianceUtils.obtainCurrentLevel(stageNodeExecution.getAmbiance()));
     List<BarrierExecutionInstance> barrierInstances = barrierService.findByStageIdentifierAndPlanExecutionIdAnsStateIn(
-        stageNodeExecution.getNode().getIdentifier(), planExecutionId, Sets.newHashSet(STANDING));
+        currentLevel.getIdentifier(), planExecutionId, Sets.newHashSet(STANDING));
 
     return barrierInstances.stream()
         .map(instance

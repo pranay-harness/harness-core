@@ -16,6 +16,7 @@ import io.harness.dto.GraphDelegateSelectionLogParams;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.IdentityPlanNode;
 import io.harness.plan.NodeType;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.data.PmsOutcome;
 import io.harness.pms.data.stepdetails.PmsStepDetails;
 import io.harness.pms.execution.utils.AmbianceUtils;
@@ -24,6 +25,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @OwnedBy(HarnessTeam.CDC)
 @Singleton
@@ -35,18 +37,19 @@ public class GraphVertexConverter {
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
 
-    String stepType = nodeExecution.getNode().getStepType().getType();
+    Level level = Objects.requireNonNull(AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance()));
+    String stepType = level.getStepType().getType();
 
     // This will help UI to identify the type of node and according to it will display the icon to the user.
-    if (nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+    if (level.getNodeType().equals(NodeType.IDENTITY_PLAN_NODE.toString())) {
       stepType = ((IdentityPlanNode) nodeExecution.getNode()).getOriginalStepType().getType();
     }
 
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
-        .planNodeId(nodeExecution.getNode().getUuid())
-        .identifier(nodeExecution.getNode().getIdentifier())
+        .planNodeId(level.getSetupId())
+        .identifier(level.getIdentifier())
         .name(nodeExecution.getNode().getName())
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
@@ -75,18 +78,19 @@ public class GraphVertexConverter {
         delegateInfoHelper.getDelegateInformationForGivenTask(nodeExecution.getExecutableResponses(),
             nodeExecution.getMode(), AmbianceUtils.getAccountId(nodeExecution.getAmbiance()));
 
-    String stepType = nodeExecution.getNode().getStepType().getType();
+    Level level = Objects.requireNonNull(AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance()));
+    String stepType = level.getStepType().getType();
 
     // This will help UI to identify the type of node and according to it will display the icon to the user.
-    if (nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+    if (level.getNodeType().equals(NodeType.IDENTITY_PLAN_NODE.toString())) {
       stepType = ((IdentityPlanNode) nodeExecution.getNode()).getOriginalStepType().getType();
     }
 
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
         .ambiance(nodeExecution.getAmbiance())
-        .planNodeId(nodeExecution.getNode().getUuid())
-        .identifier(nodeExecution.getNode().getIdentifier())
+        .planNodeId(level.getSetupId())
+        .identifier(level.getIdentifier())
         .name(nodeExecution.getNode().getName())
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())

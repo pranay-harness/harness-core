@@ -68,7 +68,7 @@ public class NotificationHelper {
 
   public void sendNotification(
       Ambiance ambiance, PipelineEventType pipelineEventType, NodeExecution nodeExecution, Long updatedAt) {
-    String identifier = nodeExecution != null ? nodeExecution.getNode().getIdentifier() : "";
+    String identifier = nodeExecution != null ? AmbianceUtils.obtainStepIdentifier(nodeExecution.getAmbiance()) : "";
     String accountId = AmbianceUtils.getAccountId(ambiance);
     String orgIdentifier = AmbianceUtils.getOrgIdentifier(ambiance);
     String projectIdentifier = AmbianceUtils.getProjectIdentifier(ambiance);
@@ -189,7 +189,7 @@ public class NotificationHelper {
       endTs = updatedAt / 1000;
       startDate = new Date(startTs * 1000).toString();
       endDate = new Date(endTs * 1000).toString();
-      stepIdentifier = nodeExecution.getNode().getIdentifier();
+      stepIdentifier = AmbianceUtils.obtainStepIdentifier(nodeExecution.getAmbiance());
     } else {
       userName = ambiance.getMetadata().getTriggerInfo().getTriggeredBy().getIdentifier();
       startTs = planExecution.getStartTs() / 1000;

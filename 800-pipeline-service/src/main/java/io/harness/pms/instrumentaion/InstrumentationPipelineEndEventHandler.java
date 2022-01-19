@@ -87,22 +87,25 @@ public class InstrumentationPipelineEndEventHandler implements OrchestrationEndO
     List<NodeExecution> nodeExecutionList = nodeExecutionService.fetchNodeExecutions(planExecutionId);
     Set<String> allSdkSteps = sdkStepHelper.getAllStepVisibleInUI();
 
-    List<String> stepTypes = nodeExecutionList.stream()
-                                 .map(nodeExecution -> nodeExecution.getNode().getStepType())
-                                 .filter(stepType -> stepType.getStepCategory() == StepCategory.STEP)
-                                 .map(StepType::getType)
-                                 .filter(allSdkSteps::contains)
-                                 .collect(Collectors.toList());
-    List<String> failedSteps = nodeExecutionList.stream()
-                                   .filter(o -> allSdkSteps.contains(o.getNode().getStepType().getType()))
-                                   .filter(o -> StatusUtils.brokeStatuses().contains(o.getStatus()))
-                                   .map(o -> o.getNode().getIdentifier())
-                                   .collect(Collectors.toList());
-    List<String> failedStepTypes = nodeExecutionList.stream()
-                                       .filter(o -> allSdkSteps.contains(o.getNode().getStepType().getType()))
-                                       .filter(o -> StatusUtils.brokeStatuses().contains(o.getStatus()))
-                                       .map(o -> o.getNode().getStepType().getType())
-                                       .collect(Collectors.toList());
+    List<String> stepTypes =
+        nodeExecutionList.stream()
+            .map(nodeExecution -> AmbianceUtils.getCurrentStepType(nodeExecution.getAmbiance()))
+            .filter(stepType -> stepType != null && stepType.getStepCategory() == StepCategory.STEP)
+            .map(StepType::getType)
+            .filter(allSdkSteps::contains)
+            .collect(Collectors.toList());
+    List<String> failedSteps =
+        nodeExecutionList.stream()
+            .filter(o -> allSdkSteps.contains(AmbianceUtils.getCurrentStepType(o.getAmbiance()).getType()))
+            .filter(o -> StatusUtils.brokeStatuses().contains(o.getStatus()))
+            .map(o -> AmbianceUtils.obtainCurrentLevel(o.getAmbiance()).getIdentifier())
+            .collect(Collectors.toList());
+    List<String> failedStepTypes =
+        nodeExecutionList.stream()
+            .filter(o -> allSdkSteps.contains(AmbianceUtils.getCurrentStepType(o.getAmbiance()).getType()))
+            .filter(o -> StatusUtils.brokeStatuses().contains(o.getStatus()))
+            .map(o -> AmbianceUtils.getCurrentStepType(o.getAmbiance()).getType())
+            .collect(Collectors.toList());
     String pipelineId = ambiance.getMetadata().getPipelineIdentifier();
     PipelineExecutionSummaryEntity pipelineExecutionSummaryEntity =
         pmsExecutionService.getPipelineExecutionSummaryEntity(accountId, orgId, projectId, planExecutionId, false);

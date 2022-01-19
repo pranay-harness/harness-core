@@ -68,8 +68,6 @@ public interface NodeExecutionService {
 
   NodeExecution save(NodeExecution nodeExecution);
 
-  NodeExecution save(NodeExecutionProto nodeExecution);
-
   NodeExecution updateStatusWithUpdate(@NotNull String nodeExecutionId, @NotNull Status status, Update ops,
       EnumSet<Status> overrideStatusSet, Set<String> includedFields, boolean shouldUseProjections);
 

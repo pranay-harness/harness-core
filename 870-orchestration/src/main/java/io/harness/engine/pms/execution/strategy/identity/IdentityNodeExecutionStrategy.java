@@ -32,6 +32,7 @@ import io.harness.plan.IdentityPlanNode;
 import io.harness.pms.contracts.advisers.AdviseType;
 import io.harness.pms.contracts.advisers.AdviserResponse;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.execution.start.NodeStartEvent;
 import io.harness.pms.contracts.steps.io.StepResponseProto;
@@ -196,12 +197,12 @@ public class IdentityNodeExecutionStrategy
     NodeExecution nodeExecution = nodeExecutionService.update(
         nodeExecutionId, ops -> ops.set(NodeExecutionKeys.endTs, System.currentTimeMillis()));
     if (isNotEmpty(nodeExecution.getNotifyId())) {
-      IdentityPlanNode planNode = nodeExecution.getNode();
+      Level level = AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance());
       StepResponseNotifyData responseData = StepResponseNotifyData.builder()
-                                                .nodeUuid(planNode.getUuid())
+                                                .nodeUuid(level.getSetupId())
                                                 .failureInfo(nodeExecution.getFailureInfo())
-                                                .identifier(planNode.getIdentifier())
-                                                .group(planNode.getGroup())
+                                                .identifier(level.getIdentifier())
+                                                .group(level.getGroup())
                                                 .status(nodeExecution.getStatus())
                                                 .adviserResponse(nodeExecution.getAdviserResponse())
                                                 .build();

@@ -15,6 +15,7 @@ import io.harness.execution.NodeExecution;
 import io.harness.observer.AsyncInformObserver;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.steps.barriers.BarrierSpecParameters;
 import io.harness.steps.barriers.BarrierStep;
@@ -40,7 +41,7 @@ public class BarrierDropper implements AsyncInformObserver, NodeStatusUpdateObse
     try {
       NodeExecution nodeExecution = nodeUpdateInfo.getNodeExecution();
       if (Status.ASYNC_WAITING != nodeExecution.getStatus()
-          || !BarrierStep.STEP_TYPE.equals(nodeExecution.getNode().getStepType())) {
+          || !BarrierStep.STEP_TYPE.equals(AmbianceUtils.getCurrentStepType(nodeExecution.getAmbiance()))) {
         return;
       }
       StepElementParameters stepElementParameters =

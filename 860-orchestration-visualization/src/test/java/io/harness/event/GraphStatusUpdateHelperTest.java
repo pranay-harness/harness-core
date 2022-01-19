@@ -36,12 +36,14 @@ import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.plan.PlanNode;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.contracts.execution.ExecutionMode;
 import io.harness.pms.contracts.execution.Status;
 import io.harness.pms.contracts.plan.PlanNodeProto;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.data.PmsOutcome;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.serializer.recaster.RecastOrchestrationUtils;
 import io.harness.rule.Owner;
 import io.harness.service.GraphGenerationService;
@@ -168,19 +170,24 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     planExecutionService.save(planExecution);
 
     // creating NodeExecution
+    StepType stepType = StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build();
+    PlanNode planNode = PlanNode.builder()
+                            .uuid(generateUuid())
+                            .name("name")
+                            .stepType(stepType)
+                            .identifier("identifier1")
+                            .serviceName("PIPELINE")
+                            .build();
     NodeExecution dummyStart =
         NodeExecution.builder()
             .uuid(generateUuid())
-            .ambiance(Ambiance.newBuilder().setPlanExecutionId(planExecution.getUuid()).build())
+            .ambiance(Ambiance.newBuilder()
+                          .setPlanExecutionId(planExecution.getUuid())
+                          .addLevels(Level.newBuilder().setStepType(stepType).setSetupId(planNode.getUuid()).build())
+                          .build())
             .mode(ExecutionMode.SYNC)
             .status(SUCCEEDED)
-            .planNode(PlanNode.builder()
-                          .uuid(generateUuid())
-                          .name("name")
-                          .stepType(StepType.newBuilder().setType("DUMMY").setStepCategory(StepCategory.STEP).build())
-                          .identifier("identifier1")
-                          .serviceName("PIPELINE")
-                          .build())
+            .planNode(planNode)
             .build();
     nodeExecutionService.save(dummyStart);
 
@@ -208,13 +215,12 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
     // creating outcome
     DummyVisualizationOutcome dummyVisualizationOutcome = new DummyVisualizationOutcome("outcome");
     Map<String, Object> doc = RecastOrchestrationUtils.toMap(dummyVisualizationOutcome);
-    OutcomeInstance outcome =
-        OutcomeInstance.builder()
-            .planExecutionId(planExecution.getUuid())
-            .producedBy(PmsLevelUtils.buildLevelFromNode(dummyStart.getUuid(), dummyStart.getNode()))
-            .createdAt(System.currentTimeMillis())
-            .outcomeValue(PmsOutcome.parse(doc))
-            .build();
+    OutcomeInstance outcome = OutcomeInstance.builder()
+                                  .planExecutionId(planExecution.getUuid())
+                                  .producedBy(PmsLevelUtils.buildLevelFromNode(dummyStart.getUuid(), planNode))
+                                  .createdAt(System.currentTimeMillis())
+                                  .outcomeValue(PmsOutcome.parse(doc))
+                                  .build();
     mongoTemplate.insert(outcome);
 
     OrchestrationGraph updatedGraph = eventHandlerV2.handleEvent(
@@ -236,15 +242,16 @@ public class GraphStatusUpdateHelperTest extends OrchestrationVisualizationTestB
   }
 
   private GraphVertex convertNodeExecutionWithStatusSucceeded(NodeExecution nodeExecution) {
+    Level level = AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance());
     return GraphVertex.builder()
         .uuid(nodeExecution.getUuid())
-        .planNodeId(nodeExecution.getNode().getUuid())
+        .planNodeId(level.getSetupId())
         .name(nodeExecution.getNode().getName())
         .startTs(nodeExecution.getStartTs())
         .endTs(nodeExecution.getEndTs())
         .initialWaitDuration(nodeExecution.getInitialWaitDuration())
         .lastUpdatedAt(nodeExecution.getLastUpdatedAt())
-        .stepType(nodeExecution.getNode().getStepType().getType())
+        .stepType(level.getStepType().getType())
         .status(SUCCEEDED)
         .failureInfo(nodeExecution.getFailureInfo())
         .stepParameters(nodeExecution.getPmsStepParameters())

@@ -13,7 +13,9 @@ import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
 import io.harness.plan.NodeType;
+import io.harness.pms.contracts.ambiance.Level;
 import io.harness.pms.execution.ExecutionStatus;
+import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
@@ -44,7 +46,7 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
     // This is done inorder to reduce the load while updating stageInfo. Here we will update only the status.
     for (NodeExecution nodeExecution : nodeExecutions) {
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
-              + nodeExecution.getNode().getUuid() + ".status",
+              + AmbianceUtils.obtainCurrentSetupId(nodeExecution.getAmbiance()) + ".status",
           ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
     }
 
@@ -82,7 +84,7 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
 
     // Update endTs at stage level
     if (OrchestrationUtils.isStageNode(nodeExecution)) {
-      String stageUuid = nodeExecution.getNode().getUuid();
+      String stageUuid = AmbianceUtils.obtainCurrentSetupId(nodeExecution.getAmbiance());
       if (nodeExecution.getEndTs() != null) {
         updated = true;
         update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".endTs",
@@ -122,10 +124,11 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
   }
 
   private void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
+    Level level = Objects.requireNonNull(AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance()));
     if (OrchestrationUtils.isStageNode(nodeExecution)
-        || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
+        || Objects.equals(level.getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       // This condition is for retry execution graph generation.
-      if (nodeExecution.getNode().getNodeType() == NodeType.IDENTITY_PLAN_NODE
+      if (level.getNodeType() == NodeType.IDENTITY_PLAN_NODE.toString()
           && StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
         updateStageOfIdentityType(planExecutionId);
         return;

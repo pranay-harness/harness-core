@@ -30,9 +30,9 @@ import org.springframework.data.mongodb.core.query.Update;
 @OwnedBy(HarnessTeam.PIPELINE)
 public class ExecutionSummaryUpdateUtils {
   public static void addStageUpdateCriteria(Update update, String planExecutionId, NodeExecution nodeExecution) {
-    String stageUuid = nodeExecution.getNode().getUuid();
+    Level level = Objects.requireNonNull(AmbianceUtils.obtainCurrentLevel(nodeExecution.getAmbiance()));
     ExecutionStatus status = ExecutionStatus.getExecutionStatus(nodeExecution.getStatus());
-    if (Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
+    if (Objects.equals(level.getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
       Optional<Level> stage = AmbianceUtils.getStageLevelFromAmbiance(nodeExecution.getAmbiance());
       stage.ifPresent(stageNode
           -> update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
@@ -44,7 +44,8 @@ public class ExecutionSummaryUpdateUtils {
     }
     // If the nodes is of type Identity, there is no need to update the status. We want to update the status only when
     // there is a PlanNode
-    if (!nodeExecution.getNode().getNodeType().equals(NodeType.IDENTITY_PLAN_NODE)) {
+    String stageUuid = level.getSetupId();
+    if (!level.getNodeType().equals(NodeType.IDENTITY_PLAN_NODE.toString())) {
       update.set(
           PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "." + stageUuid + ".status", status);
     }
