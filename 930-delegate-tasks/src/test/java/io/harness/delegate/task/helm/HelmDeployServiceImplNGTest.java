@@ -551,8 +551,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(helmClient)
         .deleteHelmRelease(HelmCommandDataMapperNG.getHelmCmdDataNG(helmInstallCommandRequestNG), true);
 
-    assertThatThrownBy(() -> helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequestNG, logCallback))
-        .isInstanceOf(IOException.class);
+    assertThatCode(() -> helmDeployService.deleteAndPurgeHelmRelease(helmInstallCommandRequestNG, logCallback))
+        .doesNotThrowAnyException();
   }
 
   private void initForRollback() throws Exception {
@@ -574,8 +574,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
              any(), eq("release"), eq("default"), eq(helmRollbackCommandRequestNG.getTimeoutInMillis())))
         .thenReturn(containerInfosDefault1);
 
-    when(k8sTaskHelperBase.doStatusCheckForAllResources(
-             any(Kubectl.class), anyListOf(KubernetesResourceId.class), any(), anyString(), any(), anyBoolean()))
+    when(k8sTaskHelperBase.doStatusCheckForAllResources(any(Kubectl.class), anyListOf(KubernetesResourceId.class),
+             any(), anyString(), any(), anyBoolean(), anyBoolean()))
         .thenReturn(true);
 
     return helmDeployService.rollback(helmRollbackCommandRequestNG);
@@ -640,9 +640,9 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(helmClient)
         .rollback(any(HelmCommandData.class), eq(true));
 
-    HelmCommandResponseNG helmCommandResponse = helmDeployService.rollback(helmRollbackCommandRequestNG);
-    assertThat(helmCommandResponse.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(helmCommandResponse.getOutput()).contains("Timed out");
+    assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
+        .isInstanceOf(UncheckedTimeoutException.class)
+        .hasMessageContaining("Timed out");
   }
 
   @Test
