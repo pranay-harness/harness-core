@@ -1392,7 +1392,7 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
 
     Map<ServiceEnvKey, RiskData> riskDataMap = heatMapService.getLatestHealthScore(
         builderFactory.getProjectParams(), Arrays.asList(serviceIdentifier), Arrays.asList(envIdentifier));
-    assertThat(riskDataMap.isEmpty());
+    assertThat(riskDataMap.isEmpty()).isEqualTo(true);
   }
 
   private void assertHealthScore(RiskData riskData, int val) {
