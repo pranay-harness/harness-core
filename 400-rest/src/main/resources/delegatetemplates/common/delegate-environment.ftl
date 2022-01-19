@@ -11,8 +11,6 @@
           value: ${delegateCheckLocation}
         - name: HELM_DESIRED_VERSION
           value: ""
-        - name: USE_CDN
-          value: "${useCdn}"
         - name: CDN_URL
           value: ${cdnUrl}
         - name: JRE_VERSION

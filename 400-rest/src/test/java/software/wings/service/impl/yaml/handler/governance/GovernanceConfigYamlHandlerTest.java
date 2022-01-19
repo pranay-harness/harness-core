@@ -154,7 +154,12 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     private final String GovernanceConfig13 = "governance_config13.yaml";
     // Start time less than End Time
     private final String GovernanceConfig15 = "governance_config15.yaml";
-    // Window time is shorter than 30 mins
+    // Freeze duration is more than 5 years
+    private final String GovernanceConfig16 = "governance_config16.yaml";
+    // Duration based
+    private final String GovernanceConfig17 = "governance_config17.yaml";
+    // Recurring Window
+    private final String GovernanceConfig18 = "governance_config18.yaml";
   }
 
   private ArgumentCaptor<GovernanceConfig> captor = ArgumentCaptor.forClass(GovernanceConfig.class);
@@ -226,6 +231,106 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
 
     doReturn(oldGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
     testCRUDGovernanceConfig(validGovernanceConfigFiles.GovernanceConfig1, applicationFilter, environmentFilter);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testCRUDGovernanceConfig_Expires() throws IOException, HarnessException {
+    List<Environment> testEnvs = new ArrayList<>();
+    Environment prodEnv = anEnvironment().name("prod").uuid("prod-id").build();
+    Environment qaEnv = anEnvironment().name("qa").uuid("qa-id").build();
+    testEnvs.add(prodEnv);
+    testEnvs.add(qaEnv);
+
+    Application testApp = Application.Builder.anApplication().name("test").uuid(APP_ID).environments(testEnvs).build();
+    CustomEnvFilter environmentFilter = new CustomEnvFilter(
+        EnvironmentFilterType.CUSTOM, testEnvs.stream().map(Environment::getUuid).collect(Collectors.toList()));
+    CustomAppFilter applicationFilter = new CustomAppFilter(
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
+
+    doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
+    doReturn(prodEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("prod"));
+    doReturn(qaEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("qa"));
+
+    doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
+    doReturn(testEnvs).when(environmentService).getEnvironmentsFromIds(eq(ACCOUNT_ID), any());
+
+    GovernanceConfig oldGovernanceConfig = GovernanceConfig.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .deploymentFreeze(false)
+                                               .timeRangeBasedFreezeConfigs(null)
+                                               .build();
+
+    doReturn(oldGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
+    testUpsertForExpires(validGovernanceConfigFiles.GovernanceConfig16, applicationFilter, environmentFilter);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testCRUDGovernanceConfig_DurationBasedExpires() throws IOException, HarnessException {
+    List<Environment> testEnvs = new ArrayList<>();
+    Environment prodEnv = anEnvironment().name("prod").uuid("prod-id").build();
+    Environment qaEnv = anEnvironment().name("qa").uuid("qa-id").build();
+    testEnvs.add(prodEnv);
+    testEnvs.add(qaEnv);
+
+    Application testApp = Application.Builder.anApplication().name("test").uuid(APP_ID).environments(testEnvs).build();
+    CustomEnvFilter environmentFilter = new CustomEnvFilter(
+        EnvironmentFilterType.CUSTOM, testEnvs.stream().map(Environment::getUuid).collect(Collectors.toList()));
+    CustomAppFilter applicationFilter = new CustomAppFilter(
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
+
+    doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
+    doReturn(prodEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("prod"));
+    doReturn(qaEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("qa"));
+
+    doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
+    doReturn(testEnvs).when(environmentService).getEnvironmentsFromIds(eq(ACCOUNT_ID), any());
+
+    GovernanceConfig oldGovernanceConfig = GovernanceConfig.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .deploymentFreeze(false)
+                                               .timeRangeBasedFreezeConfigs(null)
+                                               .build();
+
+    doReturn(oldGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
+    testUpsertForExpires(validGovernanceConfigFiles.GovernanceConfig17, applicationFilter, environmentFilter);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testCRUDGovernanceConfig_RecurringWindowExpires() throws IOException, HarnessException {
+    List<Environment> testEnvs = new ArrayList<>();
+    Environment prodEnv = anEnvironment().name("prod").uuid("prod-id").build();
+    Environment qaEnv = anEnvironment().name("qa").uuid("qa-id").build();
+    testEnvs.add(prodEnv);
+    testEnvs.add(qaEnv);
+
+    Application testApp = Application.Builder.anApplication().name("test").uuid(APP_ID).environments(testEnvs).build();
+    CustomEnvFilter environmentFilter = new CustomEnvFilter(
+        EnvironmentFilterType.CUSTOM, testEnvs.stream().map(Environment::getUuid).collect(Collectors.toList()));
+    CustomAppFilter applicationFilter = new CustomAppFilter(
+        BlackoutWindowFilterType.CUSTOM, environmentFilter, Collections.singletonList(testApp.getUuid()), null);
+
+    doReturn(testApp).when(appService).getAppByName(anyString(), anyString());
+    doReturn(prodEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("prod"));
+    doReturn(qaEnv).when(environmentService).getEnvironmentByName(eq(APP_ID), eq("qa"));
+
+    doReturn(Collections.singletonList(testApp)).when(appService).getAppsByIds(any());
+    doReturn(testEnvs).when(environmentService).getEnvironmentsFromIds(eq(ACCOUNT_ID), any());
+
+    GovernanceConfig oldGovernanceConfig = GovernanceConfig.builder()
+                                               .accountId(ACCOUNT_ID)
+                                               .deploymentFreeze(false)
+                                               .timeRangeBasedFreezeConfigs(null)
+                                               .build();
+
+    doReturn(oldGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
+    testUpsertForRecurringWindowExpires(
+        validGovernanceConfigFiles.GovernanceConfig18, applicationFilter, environmentFilter);
   }
 
   @Test
@@ -618,6 +723,58 @@ public class GovernanceConfigYamlHandlerTest extends YamlHandlerTestBase {
     verify(governanceConfigService).upsert(eq(ACCOUNT_ID), captor.capture());
     GovernanceConfig savedGovernanceConfig = captor.getValue();
     doReturn(savedGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
+
+    assertThat(savedGovernanceConfig).isNotNull();
+    assertThat(applicationFilter)
+        .isEqualTo(savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0));
+    assertThat(environmentFilter)
+        .isEqualTo(
+            savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).getEnvSelection());
+  }
+
+  private void testUpsertForExpires(String yamlFileName, ApplicationFilter applicationFilter,
+      EnvironmentFilter environmentFilter) throws IOException, HarnessException {
+    File yamlFile = null;
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
+    assertThat(yamlFile).isNotNull();
+    String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
+    ChangeContext<GovernanceConfig.Yaml> changeContext = getChangeContext(yamlString);
+    GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) getYaml(yamlString, GovernanceConfig.Yaml.class);
+    changeContext.setYaml(yaml);
+
+    handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    verify(governanceConfigService).upsert(eq(ACCOUNT_ID), captor.capture());
+    GovernanceConfig savedGovernanceConfig = captor.getValue();
+    doReturn(savedGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
+    assertThat(savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getTimeRange().isExpires())
+        .isEqualTo(false);
+
+    assertThat(savedGovernanceConfig).isNotNull();
+    assertThat(applicationFilter)
+        .isEqualTo(savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0));
+    assertThat(environmentFilter)
+        .isEqualTo(
+            savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getAppSelections().get(0).getEnvSelection());
+  }
+
+  private void testUpsertForRecurringWindowExpires(String yamlFileName, ApplicationFilter applicationFilter,
+      EnvironmentFilter environmentFilter) throws IOException, HarnessException {
+    File yamlFile = null;
+    yamlFile = new File(resourcePath + PATH_DELIMITER + yamlFileName);
+
+    assertThat(yamlFile).isNotNull();
+    String yamlString = FileUtils.readFileToString(yamlFile, "UTF-8");
+    ChangeContext<GovernanceConfig.Yaml> changeContext = getChangeContext(yamlString);
+    GovernanceConfig.Yaml yaml = (GovernanceConfig.Yaml) getYaml(yamlString, GovernanceConfig.Yaml.class);
+    changeContext.setYaml(yaml);
+
+    handler.upsertFromYaml(changeContext, Arrays.asList(changeContext));
+    verify(governanceConfigService).upsert(eq(ACCOUNT_ID), captor.capture());
+    GovernanceConfig savedGovernanceConfig = captor.getValue();
+    doReturn(savedGovernanceConfig).when(governanceConfigService).get(eq(ACCOUNT_ID));
+    assertThat(savedGovernanceConfig.getTimeRangeBasedFreezeConfigs().get(0).getTimeRange().isExpires())
+        .isEqualTo(true);
 
     assertThat(savedGovernanceConfig).isNotNull();
     assertThat(applicationFilter)

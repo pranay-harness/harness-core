@@ -137,15 +137,15 @@ ciExecutionServiceConfig:
       entrypoint:
         - /bin/drone-s3
     artifactoryUploadConfig:
-      image: plugins/artifactory:1.0.2
+      image: plugins/artifactory:1.0.4
       entrypoint:
         - /bin/plugin
     cacheGCSConfig:
-      image: plugins/cache:1.3.3
+      image: plugins/cache:1.3.5
       entrypoint:
         - /bin/drone-cache
     cacheS3Config:
-      image: plugins/cache:1.3.3
+      image: plugins/cache:1.3.5
       entrypoint:
         - /bin/drone-cache
 
@@ -157,9 +157,9 @@ ciExecutionServiceConfig:
       buildAndPushGCR: plugins/gcr:latest
       gcsUpload: plugins/gcs:1.2.4
       s3Upload: plugins/s3:1.0.3
-      artifactoryUpload: plugins/artifactory:1.0.2
-      cacheGCS: plugins/cache:1.3.4
-      cacheS3: plugins/cache:1.3.4
+      artifactoryUpload: plugins/artifactory:1.0.4
+      cacheGCS: plugins/cache:1.3.5
+      cacheS3: plugins/cache:1.3.5
 
 pmsSdkExecutionPoolConfig:
   corePoolSize: ${PMS_SDK_EXECUTION_POOL_CORE_SIZE:-50}

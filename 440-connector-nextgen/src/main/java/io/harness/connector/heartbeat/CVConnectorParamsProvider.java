@@ -6,7 +6,6 @@
  */
 
 package io.harness.connector.heartbeat;
-
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 
 import io.harness.annotations.dev.HarnessTeam;
@@ -19,6 +18,7 @@ import io.harness.delegate.beans.connector.cvconnector.CVConnectorValidationPara
 import io.harness.security.encryption.EncryptedDataDetail;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
 import java.util.List;
 
 @OwnedBy(HarnessTeam.CV)
@@ -30,17 +30,18 @@ public class CVConnectorParamsProvider implements ConnectorValidationParamsProvi
       String accountIdentifier, String orgIdentifier, String projectIdentifier) {
     final List<DecryptableEntity> decryptableEntityList =
         connectorInfoDTO.getConnectorConfig().getDecryptableEntities();
-    DecryptableEntity decryptableEntity = null;
+    final List<List<EncryptedDataDetail>> encryptionDetails = new ArrayList<>();
+
     if (isNotEmpty(decryptableEntityList)) {
-      decryptableEntity = decryptableEntityList.get(0);
+      decryptableEntityList.forEach(decryptableEntity
+          -> encryptionDetails.add(encryptionHelper.getEncryptionDetail(
+              decryptableEntity, accountIdentifier, orgIdentifier, projectIdentifier)));
     }
-    final List<EncryptedDataDetail> encryptionDetail =
-        encryptionHelper.getEncryptionDetail(decryptableEntity, accountIdentifier, orgIdentifier, projectIdentifier);
 
     return CVConnectorValidationParams.builder()
         .connectorConfigDTO(connectorInfoDTO.getConnectorConfig())
         .connectorName(connectorName)
-        .encryptedDataDetails(encryptionDetail)
+        .encryptedDataDetails(encryptionDetails)
         .connectorType(connectorInfoDTO.getConnectorType())
         .build();
   }

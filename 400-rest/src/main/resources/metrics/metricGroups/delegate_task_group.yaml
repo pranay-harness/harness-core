@@ -2,9 +2,6 @@ name: DelegateTask
 identifier: delegate_task
 labels:
   - accountId
-  - delegateId
-  - status
-  - version
   - ng
   - taskType
   - async

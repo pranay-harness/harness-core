@@ -25,6 +25,9 @@ import org.hibernate.validator.constraints.NotBlank;
 @FieldNameConstants(innerTypeName = "PrincipalKeys")
 public abstract class Principal {
   @NotNull protected PrincipalType type;
+  /*
+  identifier of the principal
+   */
   @NotBlank protected String name;
 
   public abstract Map<String, String> getJWTClaims();

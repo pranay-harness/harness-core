@@ -81,7 +81,8 @@ public final class MonitoredService
   String orgIdentifier;
   String projectIdentifier;
   String serviceIdentifier;
-  String environmentIdentifier;
+  @Deprecated String environmentIdentifier;
+  List<String> environmentIdentifierList;
   MonitoredServiceType type;
   List<String> healthSourceIdentifiers;
   List<String> changeSourceIdentifiers;

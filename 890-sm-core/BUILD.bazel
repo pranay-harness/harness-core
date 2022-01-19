@@ -83,7 +83,6 @@ java_library(
     deps = [
         ":module",
         "//:lombok",
-        "//940-feature-flag:tests",
         "//950-delegate-tasks-beans:module",
         "//955-delegate-beans:module",
         "//960-persistence:module",
