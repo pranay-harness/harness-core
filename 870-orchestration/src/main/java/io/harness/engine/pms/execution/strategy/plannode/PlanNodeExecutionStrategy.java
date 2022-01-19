@@ -150,6 +150,9 @@ public class PlanNodeExecutionStrategy
 
   @Override
   public void processFacilitationResponse(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
+    String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+    nodeExecutionService.updateV2(
+        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
     ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
         ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
     if (!check.isProceed()) {
