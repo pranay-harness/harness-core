@@ -12,9 +12,9 @@ import static io.harness.rule.OwnerRule.MOHIT_GARG;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.harness.SMCoreTestBase;
+import io.harness.beans.SecretKey;
 import io.harness.category.element.UnitTests;
 import io.harness.rule.Owner;
-import io.harness.security.encryption.SecretKeyDTO;
 
 import com.google.inject.Inject;
 import java.util.Optional;
@@ -35,7 +35,7 @@ public class AESSecretKeyServiceTest extends SMCoreTestBase {
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
   public void testCreateAESSecretKey() {
-    SecretKeyDTO secretKey = aesSecretKeyService.createSecretKey();
+    SecretKey secretKey = aesSecretKeyService.createSecretKey();
     assertThat(secretKey.getSecretKeySpec().getAlgorithm()).isEqualTo(aesSecretKeyService.getAlgorithm());
   }
 
@@ -43,8 +43,8 @@ public class AESSecretKeyServiceTest extends SMCoreTestBase {
   @Owner(developers = MOHIT_GARG)
   @Category(UnitTests.class)
   public void testGetAESSecretKey() {
-    SecretKeyDTO createdSecretKey = aesSecretKeyService.createSecretKey();
-    Optional<SecretKeyDTO> fetchedSecretKey = aesSecretKeyService.getSecretKey(createdSecretKey.getUuid());
+    SecretKey createdSecretKey = aesSecretKeyService.createSecretKey();
+    Optional<SecretKey> fetchedSecretKey = aesSecretKeyService.getSecretKey(createdSecretKey.getUuid());
     assertThat(fetchedSecretKey.isPresent()).isTrue();
   }
 }

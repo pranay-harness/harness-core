@@ -49,7 +49,7 @@ import org.mongodb.morphia.annotations.Transient;
 @HarnessEntity(exportable = true)
 @OwnedBy(HarnessTeam.DEL)
 public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, AccountAccess, PersistentRegularIterable {
-  public static final Duration TTL = ofDays(30);
+  public static final Duration TTL = ofDays(7);
 
   public static List<MongoIndex> mongoIndexes() {
     return ImmutableList.<MongoIndex>builder()

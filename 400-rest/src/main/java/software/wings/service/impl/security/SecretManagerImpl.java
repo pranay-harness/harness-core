@@ -56,7 +56,6 @@ import io.harness.beans.SecretUsageLog;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
-import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.persistence.HIterator;
 import io.harness.secretmanagers.SecretManagerConfigService;
 import io.harness.secrets.SecretService;
@@ -146,7 +145,6 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
   @Inject private SecretService secretService;
   @Inject private SecretYamlHandler secretYamlHandler;
   @Inject private SecretsDao secretsDao;
-  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @Override
   public EncryptionType getEncryptionType(String accountId) {
@@ -235,7 +233,6 @@ public class SecretManagerImpl implements SecretManager, EncryptedSettingAttribu
       // fail.
       if (encryptedRecordData.getEncryptionType() == LOCAL) {
         encryptionConfig = localSecretManagerService.getEncryptionConfig(accountId);
-        localEncryptorHelper.populateConfigForDecryption(encryptedRecordData, encryptionConfig);
       }
       // TODO {karan} {piyush} revisit this to check if there is a need to send encryption config if conversion to local
       // failed

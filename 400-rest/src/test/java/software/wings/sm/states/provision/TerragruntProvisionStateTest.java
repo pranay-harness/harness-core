@@ -69,7 +69,6 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -154,7 +153,6 @@ public class TerragruntProvisionStateTest extends WingsBaseTest {
   @Mock private TerragruntStateHelper terragruntStateHelper;
   @InjectMocks private TerragruntProvisionState state = new TerragruntApplyState("tg");
   @InjectMocks private TerragruntProvisionState destroyProvisionState = new TerragruntDestroyState("tg");
-  @Mock private LocalEncryptorHelper localEncryptorHelper;
 
   private final Answer<String> answer = invocation -> invocation.getArgumentAt(0, String.class) + "-rendered";
   private final GitConfig gitConfig = GitConfig.builder().branch("master").build();

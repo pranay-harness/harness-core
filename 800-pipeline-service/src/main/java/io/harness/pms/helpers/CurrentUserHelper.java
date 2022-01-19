@@ -18,6 +18,7 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.user.UserInfo;
 import io.harness.remote.client.RestClientUtils;
 import io.harness.security.SourcePrincipalContextBuilder;
+import io.harness.security.dto.Principal;
 import io.harness.security.dto.ServiceAccountPrincipal;
 import io.harness.security.dto.UserPrincipal;
 import io.harness.user.remote.UserClient;
@@ -77,5 +78,12 @@ public class CurrentUserHelper {
           .email(email)
           .build();
     }
+  }
+
+  public Principal getPrincipalFromSecurityContext() {
+    if (SourcePrincipalContextBuilder.getSourcePrincipal() == null) {
+      throw new InvalidRequestException("Unable to fetch current user");
+    }
+    return SourcePrincipalContextBuilder.getSourcePrincipal();
   }
 }

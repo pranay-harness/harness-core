@@ -17,21 +17,5 @@ import lombok.Value;
 @Builder
 @EqualsAndHashCode
 public class AdditionalMetadata {
-  public static final String SECRET_KEY_UUID_KEY = "SecretKey";
-  public static final String AWS_ENCRYPTED_SECRET = "AwsEncryptedSecret";
-
   @Singular private Map<String, Object> values;
-
-  public Map<String, Object> addValues(Map<String, Object> newValues) {
-    newValues.forEach(values::put);
-    return values;
-  }
-
-  public String getSecretKeyUuid() {
-    return (String) values.get(SECRET_KEY_UUID_KEY);
-  }
-
-  public byte[] getAwsEncryptedSecret() {
-    return (byte[]) values.get(AWS_ENCRYPTED_SECRET);
-  }
 }

@@ -13,6 +13,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.persistence.PersistentEntity;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import javax.crypto.spec.SecretKeySpec;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldNameConstants;
@@ -31,4 +32,8 @@ public class SecretKey implements PersistentEntity {
   @Id @org.mongodb.morphia.annotations.Id private String uuid;
   private byte[] key;
   private String algorithm;
+
+  public SecretKeySpec getSecretKeySpec() {
+    return new SecretKeySpec(key, algorithm);
+  }
 }

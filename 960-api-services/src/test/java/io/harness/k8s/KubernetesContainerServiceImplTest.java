@@ -1381,4 +1381,78 @@ public class KubernetesContainerServiceImplTest extends CategoryTest {
 
     assertThat(kubernetesContainerService.fetchReleaseHistoryValue(compressedSecret)).isEqualTo(DUMMY_RELEASE_HISTORY);
   }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldCreateService() throws Exception {
+    V1Service service = new V1ServiceBuilder()
+                            .withNewMetadata()
+                            .withName("service1")
+                            .withNamespace(KUBERNETES_CONFIG.getNamespace())
+                            .endMetadata()
+                            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Service.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), service));
+
+    V1Service result = kubernetesContainerService.createService(KUBERNETES_CONFIG, service);
+    assertThat(result).isNotNull();
+    assertThat(result.getMetadata().getName()).isEqualTo("service1");
+
+    verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Service.class).getType());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testCreateServiceInvalidRequestException() throws Exception {
+    V1Service service = new V1ServiceBuilder()
+                            .withNewMetadata()
+                            .withName("service1")
+                            .withNamespace(KUBERNETES_CONFIG.getNamespace())
+                            .endMetadata()
+                            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Service.class).getType()))
+        .thenThrow(new ApiException(404, "Service not found"));
+    kubernetesContainerService.createService(KUBERNETES_CONFIG, service);
+  }
+
+  @Test
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testShouldReplaceService() throws Exception {
+    V1Service service = new V1ServiceBuilder()
+                            .withNewMetadata()
+                            .withName("service1")
+                            .withNamespace(KUBERNETES_CONFIG.getNamespace())
+                            .endMetadata()
+                            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Service.class).getType()))
+        .thenReturn(new ApiResponse<>(200, emptyMap(), service));
+
+    V1Service result = kubernetesContainerService.replaceService(KUBERNETES_CONFIG, service);
+    assertThat(result).isNotNull();
+    assertThat(result.getMetadata().getName()).isEqualTo("service1");
+
+    verify(k8sApiClient, times(1)).execute(k8sApiCall, TypeToken.get(V1Service.class).getType());
+  }
+
+  @Test(expected = InvalidRequestException.class)
+  @Owner(developers = ACASIAN)
+  @Category(UnitTests.class)
+  public void testReplaceServiceInvalidRequestException() throws Exception {
+    V1Service service = new V1ServiceBuilder()
+                            .withNewMetadata()
+                            .withName("service1")
+                            .withNamespace(KUBERNETES_CONFIG.getNamespace())
+                            .endMetadata()
+                            .build();
+
+    when(k8sApiClient.execute(k8sApiCall, TypeToken.get(V1Service.class).getType()))
+        .thenThrow(new ApiException(404, "Service not found"));
+    kubernetesContainerService.replaceService(KUBERNETES_CONFIG, service);
+  }
 }

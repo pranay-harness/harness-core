@@ -43,4 +43,6 @@ public interface PMSInputSetService {
       Criteria criteria, Pageable pageable, String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   void deleteInputSetsOnPipelineDeletion(PipelineEntity pipelineEntity);
+
+  InputSetEntity updateGitFilePath(InputSetEntity inputSetEntity, String newFilePath);
 }

@@ -150,16 +150,22 @@ public class PlanNodeExecutionStrategy
 
   @Override
   public void processFacilitationResponse(Ambiance ambiance, FacilitatorResponseProto facilitatorResponse) {
-    String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    nodeExecutionService.updateV2(
-        nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
-    ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
-        ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
-    if (!check.isProceed()) {
-      log.info("Not Proceeding with Execution : {}", check.getReason());
-      return;
+    try (AutoLogContext ignore = AmbianceUtils.autoLogContext(ambiance)) {
+      String nodeExecutionId = Objects.requireNonNull(AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      nodeExecutionService.updateV2(
+          nodeExecutionId, ops -> ops.set(NodeExecutionKeys.mode, facilitatorResponse.getExecutionMode()));
+      ExecutionCheck check = interruptService.checkInterruptsPreInvocation(
+          ambiance.getPlanExecutionId(), AmbianceUtils.obtainCurrentRuntimeId(ambiance));
+      if (!check.isProceed()) {
+        log.info("Not Proceeding with Execution : {}", check.getReason());
+        return;
+      }
+      startHelper.startNode(ambiance, facilitatorResponse);
+    } catch (Exception exception) {
+      log.error("Exception Occurred while processing facilitation response NodeExecutionId : {}, PlanExecutionId: {}",
+          AmbianceUtils.obtainCurrentRuntimeId(ambiance), ambiance.getPlanExecutionId(), exception);
+      handleError(ambiance, exception);
     }
-    startHelper.startNode(ambiance, facilitatorResponse);
   }
 
   @Override
