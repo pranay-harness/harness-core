@@ -38,9 +38,6 @@ import io.harness.app.GraphQLModule;
 import io.harness.artifact.ArtifactCollectionPTaskServiceClient;
 import io.harness.cache.CacheModule;
 import io.harness.capability.CapabilityModule;
-import io.harness.capability.CapabilitySubjectPermissionCrudObserver;
-import io.harness.capability.service.CapabilityService;
-import io.harness.capability.service.CapabilityServiceImpl;
 import io.harness.ccm.CEPerpetualTaskHandler;
 import io.harness.ccm.KubernetesClusterHandler;
 import io.harness.ccm.cluster.ClusterRecordHandler;
@@ -66,8 +63,7 @@ import io.harness.delegate.beans.StartupMode;
 import io.harness.delegate.event.handler.DelegateProfileEventHandler;
 import io.harness.delegate.eventstream.EntityCRUDConsumer;
 import io.harness.delegate.resources.DelegateTaskResource;
-import io.harness.delegate.task.executioncapability.BlockingCapabilityPermissionsRecordHandler;
-import io.harness.delegate.task.executioncapability.DelegateCapabilitiesRecordHandler;
+import io.harness.delegate.telemetry.DelegateTelemetryPublisher;
 import io.harness.dms.DmsModule;
 import io.harness.event.EventsModule;
 import io.harness.event.listener.EventListener;
@@ -142,6 +138,7 @@ import io.harness.queue.QueuePublisher;
 import io.harness.queue.TimerScheduledExecutorService;
 import io.harness.redis.RedisConfig;
 import io.harness.reflection.HarnessReflections;
+import io.harness.request.RequestContextFilter;
 import io.harness.scheduler.PersistentScheduler;
 import io.harness.secret.ConfigSecretUtils;
 import io.harness.secrets.SecretMigrationEventListener;
@@ -571,17 +568,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                                     .build());
             remoteObservers.add(RemoteObserver.builder()
                                     .subjectCLass(DelegateServiceImpl.class)
-                                    .observerClass(DelegateObserver.class)
-                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
-                                    .observer(PerpetualTaskServiceImpl.class)
-                                    .build());
-            remoteObservers.add(RemoteObserver.builder()
-                                    .subjectCLass(DelegateProfileServiceImpl.class)
-                                    .observerClass(DelegateObserver.class)
-                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
-                                    .build());
-            remoteObservers.add(RemoteObserver.builder()
-                                    .subjectCLass(DelegateServiceImpl.class)
                                     .observerClass(DelegateProfileObserver.class)
                                     .observer(DelegateProfileEventHandler.class)
                                     .build());
@@ -599,11 +585,6 @@ public class WingsApplication extends Application<MainConfiguration> {
                                     .subjectCLass(PerpetualTaskServiceImpl.class)
                                     .observerClass(PerpetualTaskStateObserver.class)
                                     .observer(DelegateInsightsServiceImpl.class)
-                                    .build());
-            remoteObservers.add(RemoteObserver.builder()
-                                    .subjectCLass(CapabilityServiceImpl.class)
-                                    .observerClass(CapabilitySubjectPermissionCrudObserver.class)
-                                    .observer(BlockingCapabilityPermissionsRecordHandler.class)
                                     .build());
             remoteObservers.add(RemoteObserver.builder()
                                     .subjectCLass(PerpetualTaskServiceImpl.class)
@@ -713,7 +694,7 @@ public class WingsApplication extends Application<MainConfiguration> {
     // Authentication/Authorization filters
     registerAuthFilters(configuration, environment, injector);
     registerCorrelationFilter(environment, injector);
-
+    registerRequestContextFilter(environment);
     // Register collection iterators
     if (configuration.isEnableIterators()) {
       if (isManager()) {
@@ -1192,6 +1173,10 @@ public class WingsApplication extends Application<MainConfiguration> {
     environment.jersey().register(injector.getInstance(CorrelationFilter.class));
   }
 
+  private void registerRequestContextFilter(Environment environment) {
+    environment.jersey().register(new RequestContextFilter());
+  }
+
   private void registerQueueListeners(MainConfiguration configuration, Injector injector) {
     log.info("Initializing queue listeners...");
 
@@ -1333,9 +1318,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     delegateTaskService.getDelegateTaskStatusObserverSubject().register(
         injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
 
-    delegateServiceImpl.getSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
-
     DelegateProfileServiceImpl delegateProfileService =
         (DelegateProfileServiceImpl) injector.getInstance(Key.get(DelegateProfileService.class));
     DelegateProfileEventHandler delegateProfileEventHandler =
@@ -1351,11 +1333,6 @@ public class WingsApplication extends Application<MainConfiguration> {
     perpetualTaskService.getPerpetualTaskStateObserverSubject().register(
         injector.getInstance(Key.get(DelegateInsightsServiceImpl.class)));
     delegateServiceImpl.getSubject().register(perpetualTaskService);
-
-    CapabilityServiceImpl capabilityService =
-        (CapabilityServiceImpl) injector.getInstance(Key.get(CapabilityService.class));
-    capabilityService.getCapSubjectPermissionTaskCrudSubject().register(
-        injector.getInstance(Key.get(BlockingCapabilityPermissionsRecordHandler.class)));
 
     ClusterRecordHandler clusterRecordHandler = injector.getInstance(Key.get(ClusterRecordHandler.class));
     SettingsServiceImpl settingsService = (SettingsServiceImpl) injector.getInstance(Key.get(SettingsService.class));
@@ -1418,16 +1395,12 @@ public class WingsApplication extends Application<MainConfiguration> {
   }
 
   public static void registerIteratorsDelegateService(IteratorsConfig iteratorsConfig, Injector injector) {
-    injector.getInstance(DelegateCapabilitiesRecordHandler.class)
-        .registerIterators(iteratorsConfig.getDelegateCapabilitiesRecordIteratorConfig().getThreadPoolSize());
-    injector.getInstance(BlockingCapabilityPermissionsRecordHandler.class)
-        .registerIterators(
-            iteratorsConfig.getBlockingCapabilityPermissionsRecordHandlerIteratorConfig().getThreadPoolSize());
     injector.getInstance(PerpetualTaskRecordHandler.class)
         .registerIterators(iteratorsConfig.getPerpetualTaskAssignmentIteratorConfig().getThreadPoolSize(),
             iteratorsConfig.getPerpetualTaskRebalanceIteratorConfig().getThreadPoolSize());
     injector.getInstance(DelegateTaskExpiryCheckIterator.class)
         .registerIterators(iteratorsConfig.getDelegateTaskExpiryCheckIteratorConfig().getThreadPoolSize());
+    injector.getInstance(DelegateTelemetryPublisher.class).registerIterators();
   }
 
   public static void registerIteratorsManager(IteratorsConfig iteratorsConfig, Injector injector) {
