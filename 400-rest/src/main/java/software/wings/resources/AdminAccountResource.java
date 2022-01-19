@@ -195,6 +195,13 @@ public class AdminAccountResource {
   }
 
   @PUT
+  @Path("/{accountId}/users/{userIdOrEmail}/account-admin")
+  public RestResponse<Boolean> assignAdminRoleToUserInNG(
+      @PathParam("accountId") String accountId, @PathParam("userIdOrEmail") String userIdOrEmail) {
+    return new RestResponse<>(adminUserService.assignAdminRoleToUserInNG(accountId, userIdOrEmail));
+  }
+
+  @PUT
   @Path("/{accountId}/cloudCost")
   public RestResponse<Boolean> enableOrDisableCloudCost(
       @PathParam("accountId") String accountId, @QueryParam("enable") boolean enabled) {
