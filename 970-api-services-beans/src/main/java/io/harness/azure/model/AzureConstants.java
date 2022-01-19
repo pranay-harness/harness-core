@@ -207,6 +207,7 @@ public interface AzureConstants {
   String SAVE_EXISTING_CONFIGURATIONS = "Save App Service Configurations";
   String STOP_DEPLOYMENT_SLOT = "Stop Slot";
   String UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS = "Update Slot Configuration Settings";
+  String DEPLOY_ARTIFACT = "Deploy Artifact";
   String UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS = "Update Slot Container Settings";
   String START_DEPLOYMENT_SLOT = "Start Slot";
   String SLOT_TRAFFIC_PERCENTAGE = "Update Slot Traffic Percentage";

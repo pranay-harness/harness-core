@@ -1,3 +1,10 @@
+/*
+ * Copyright 2021 Harness Inc. All rights reserved.
+ * Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+ * that can be found in the licenses directory at the root of this repository, also available at
+ * https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+ */
+
 package io.harness.azure.utility;
 
 import java.util.Optional;
@@ -18,9 +25,8 @@ public class AzureLogParser {
       Pattern.compile("initialized successfully and is ready to serve requests\\.", Pattern.CASE_INSENSITIVE);
   private static final Pattern welcomeLogPattern =
       Pattern.compile("Welcome, you are now connected to log-streaming service.*", Pattern.CASE_INSENSITIVE);
-  private static final Pattern failureContainerLogPattern = Pattern.compile(
-      "ERROR - Container .* didn't respond to HTTP pings on port: 9200, failing site start. See container logs for debugging.",
-      Pattern.CASE_INSENSITIVE);
+  private static final Pattern failureContainerLogPattern =
+      Pattern.compile("ERROR - Container .* didn't respond to HTTP pings on port:", Pattern.CASE_INSENSITIVE);
   private static final Pattern timestampPattern = Pattern.compile(timestampRegex, Pattern.CASE_INSENSITIVE);
 
   public boolean checkIsSuccessDeployment(String log, boolean containerDeployment) {

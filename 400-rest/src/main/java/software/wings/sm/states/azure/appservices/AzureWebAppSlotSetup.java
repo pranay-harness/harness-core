@@ -285,7 +285,7 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
+  protected List<CommandUnit> commandUnits(boolean isNonDocker, boolean isGitFetch) {
     List<CommandUnit> commandUnits = new ArrayList<>();
     if (isGitFetch) {
       commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.FETCH_FILES));
@@ -293,7 +293,8 @@ public class AzureWebAppSlotSetup extends AbstractAzureAppServiceState {
     commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.SAVE_EXISTING_CONFIGURATIONS));
     commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT));
     commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS));
-    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS));
+    commandUnits.add(new AzureWebAppCommandUnit(
+        isNonDocker ? AzureConstants.DEPLOY_ARTIFACT : AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS));
     commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT));
     commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
     return commandUnits;

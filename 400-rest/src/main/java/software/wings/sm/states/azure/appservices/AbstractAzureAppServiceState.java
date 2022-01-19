@@ -143,18 +143,19 @@ public abstract class AbstractAzureAppServiceState extends State {
     }
     Activity activity;
     Artifact artifact = azureVMSSStateHelper.getWebAppNonContainerArtifact(context, isRollback());
+    boolean isNonDocker = azureVMSSStateHelper.isWebAppNonContainerDeployment(context);
     if (supportRemoteManifest() && !isGitFetchDone(context)) {
       Map<String, ApplicationManifest> appServiceConfigurationRemoteManifests = getAppServiceConfiguration(context);
       Map<String, ApplicationManifest> remoteManifest =
           azureAppServiceManifestUtils.filterOutRemoteManifest(appServiceConfigurationRemoteManifests);
       if (!isEmpty(remoteManifest)) {
         activity = azureVMSSStateHelper.createAndSaveActivity(
-            context, artifact, getStateType(), commandType(), commandUnitType(), commandUnits(true));
+            context, artifact, getStateType(), commandType(), commandUnitType(), commandUnits(isNonDocker, true));
         return executeRemoteGITFetchTask(context, activity, appServiceConfigurationRemoteManifests, remoteManifest);
       }
     }
     activity = azureVMSSStateHelper.createAndSaveActivity(
-        context, artifact, getStateType(), commandType(), commandUnitType(), commandUnits(false));
+        context, artifact, getStateType(), commandType(), commandUnitType(), commandUnits(isNonDocker, false));
 
     AzureAppServiceStateData azureAppServiceStateData = azureVMSSStateHelper.populateAzureAppServiceData(context);
     AzureTaskExecutionRequest executionRequest = buildTaskExecutionRequest(context, azureAppServiceStateData, activity);
@@ -381,7 +382,7 @@ public abstract class AbstractAzureAppServiceState extends State {
     return null;
   }
 
-  protected abstract List<CommandUnit> commandUnits(boolean isGitFetch);
+  protected abstract List<CommandUnit> commandUnits(boolean isNonDocker, boolean isGitFetch);
 
   @NotNull protected abstract CommandUnitType commandUnitType();
 

@@ -25,6 +25,7 @@ import software.wings.sm.ExecutionResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.reinert.jjschema.SchemaIgnore;
 import com.google.common.collect.ImmutableList;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -135,12 +136,15 @@ public class AzureWebAppSlotRollback extends AzureWebAppSlotSetup {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
-    return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT),
-        new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS),
-        new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS),
-        new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT),
-        new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE),
-        new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
+  protected List<CommandUnit> commandUnits(boolean isNonDocker, boolean isGitFetch) {
+    List<CommandUnit> commandUnits = new ArrayList<>();
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.STOP_DEPLOYMENT_SLOT));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS));
+    commandUnits.add(new AzureWebAppCommandUnit(
+        isNonDocker ? AzureConstants.DEPLOY_ARTIFACT : AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.START_DEPLOYMENT_SLOT));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE));
+    commandUnits.add(new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
+    return commandUnits;
   }
 }

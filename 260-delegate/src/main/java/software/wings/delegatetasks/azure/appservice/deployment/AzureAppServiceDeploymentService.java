@@ -7,15 +7,7 @@
 
 package software.wings.delegatetasks.azure.appservice.deployment;
 
-import static io.harness.azure.model.AzureConstants.SLOT_STARTING_STATUS_CHECK_INTERVAL;
-import static io.harness.azure.model.AzureConstants.SLOT_STOPPING_STATUS_CHECK_INTERVAL;
-import static io.harness.azure.model.AzureConstants.SLOT_SWAP;
-import static io.harness.azure.model.AzureConstants.SLOT_TRAFFIC_PERCENTAGE;
-import static io.harness.azure.model.AzureConstants.START_DEPLOYMENT_SLOT;
-import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
-import static io.harness.azure.model.AzureConstants.SUCCESS_REQUEST;
-import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS;
-import static io.harness.azure.model.AzureConstants.UPDATE_DEPLOYMENT_SLOT_CONTAINER_SETTINGS;
+import static io.harness.azure.model.AzureConstants.*;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
@@ -348,7 +340,7 @@ public class AzureAppServiceDeploymentService {
   private void deployArtifactFile(AzureAppServicePackageDeploymentContext context) {
     String slotName = context.getSlotName();
     ILogStreamingTaskClient logStreamingTaskClient = context.getLogStreamingTaskClient();
-    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(UPDATE_DEPLOYMENT_SLOT_CONFIGURATION_SETTINGS);
+    LogCallback logCallback = logStreamingTaskClient.obtainLogCallback(DEPLOY_ARTIFACT);
 
     logCallback.saveExecutionLog("Start deploying artifact file");
     uploadStartupScript(context.getAzureWebClientContext(), slotName, context.getStartupCommand(), logCallback);
@@ -356,6 +348,7 @@ public class AzureAppServiceDeploymentService {
     Completable deployment = deployPackage(context.getAzureWebClientContext(), slotName, context.getArtifactFile(),
         context.getArtifactType(), logCallback);
     deployment.await(context.getSteadyStateTimeoutInMin(), TimeUnit.MINUTES);
+    logCallback.saveExecutionLog("Deployment is complete", INFO, SUCCESS);
   }
 
   private void uploadStartupScript(

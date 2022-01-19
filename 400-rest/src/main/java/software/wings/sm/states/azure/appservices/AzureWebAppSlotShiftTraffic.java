@@ -110,7 +110,7 @@ public class AzureWebAppSlotShiftTraffic extends AbstractAzureAppServiceState {
   }
 
   @Override
-  protected List<CommandUnit> commandUnits(boolean isGitFetch) {
+  protected List<CommandUnit> commandUnits(boolean isNonDocker, boolean isGitFetch) {
     return ImmutableList.of(new AzureWebAppCommandUnit(AzureConstants.SLOT_TRAFFIC_PERCENTAGE),
         new AzureWebAppCommandUnit(AzureConstants.DEPLOYMENT_STATUS));
   }

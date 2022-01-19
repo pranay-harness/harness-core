@@ -78,7 +78,8 @@ public class AzureSecretHelper {
 
   public void decryptAzureAppServiceTaskParameters(AzureAppServiceTaskParameters azureAppServiceTaskParameters) {
     if (AzureAppServiceTaskType.SLOT_SETUP == azureAppServiceTaskParameters.getCommandType()
-        && azureAppServiceTaskParameters instanceof AzureWebAppSlotSetupParameters) {
+        && azureAppServiceTaskParameters instanceof AzureWebAppSlotSetupParameters
+        && ((AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters).getAzureRegistryType() != null) {
       decryptAzureWebAppSlotSetupParameters((AzureWebAppSlotSetupParameters) azureAppServiceTaskParameters);
     }
 
@@ -166,7 +167,7 @@ public class AzureSecretHelper {
     SettingValue settingValue = artifactStreamAttributes.getServerSetting().getValue();
     List<EncryptedDataDetail> artifactServerEncryptedDataDetails =
         artifactStreamAttributes.getArtifactServerEncryptedDataDetails();
-    secretDecryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails);
+    secretDecryptionService.decrypt((EncryptableSetting) settingValue, artifactServerEncryptedDataDetails, false);
     return artifactStreamAttributes;
   }
 }
