@@ -52,8 +52,8 @@ public enum ConnectorType implements EntitySubtype {
   @JsonProperty("SumoLogic") SUMOLOGIC("SumoLogic"),
   @JsonProperty("PagerDuty") PAGER_DUTY("PagerDuty"),
   @JsonProperty("CustomHealth") CUSTOM_HEALTH("CustomHealth"),
-  @JsonProperty("ServiceNow") SERVICENOW("ServiceNow");
-
+  @JsonProperty("ServiceNow") SERVICENOW("ServiceNow"),
+  @JsonProperty("ErrorTracking") ERROR_TRACKING("ErrorTracking");
   private final String displayName;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

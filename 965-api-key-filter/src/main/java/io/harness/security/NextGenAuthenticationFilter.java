@@ -118,7 +118,8 @@ public class NextGenAuthenticationFilter extends JWTAuthenticationFilter {
         }
         Principal principal = null;
         if (tokenDTO.getApiKeyType() == ApiKeyType.SERVICE_ACCOUNT) {
-          principal = new ServiceAccountPrincipal(tokenDTO.getParentIdentifier());
+          principal =
+              new ServiceAccountPrincipal(tokenDTO.getParentIdentifier(), tokenDTO.getEmail(), tokenDTO.getUsername());
         }
         if (tokenDTO.getApiKeyType() == ApiKeyType.USER) {
           principal = new UserPrincipal(tokenDTO.getParentIdentifier(), tokenDTO.getEmail(), tokenDTO.getUsername(),

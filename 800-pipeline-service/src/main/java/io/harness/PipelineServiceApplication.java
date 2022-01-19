@@ -14,6 +14,7 @@ import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.pms.async.plan.PlanNotifyEventConsumer.PMS_PLAN_CREATION;
+import static io.harness.pms.contracts.plan.ExpansionRequestType.KEY;
 import static io.harness.waiter.PmsNotifyEventListener.PMS_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -81,6 +82,7 @@ import io.harness.pms.approval.ApprovalInstanceExpirationJob;
 import io.harness.pms.approval.ApprovalInstanceHandler;
 import io.harness.pms.async.plan.PlanNotifyEventConsumer;
 import io.harness.pms.async.plan.PlanNotifyEventPublisher;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.event.PMSEventConsumerService;
 import io.harness.pms.event.webhookevent.WebhookEventStreamConsumer;
 import io.harness.pms.events.base.PipelineEventConsumerController;
@@ -111,7 +113,7 @@ import io.harness.pms.sdk.PmsSdkInitHelper;
 import io.harness.pms.sdk.PmsSdkInstanceCacheMonitor;
 import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
-import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandlerInfo;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -589,9 +591,16 @@ public class PipelineServiceApplication extends Application<PipelineServiceConfi
     return aliases;
   }
 
-  private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
-    Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
-    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
+  private List<JsonExpansionHandlerInfo> getJsonExpansionHandlers() {
+    List<JsonExpansionHandlerInfo> jsonExpansionHandlers = new ArrayList<>();
+    JsonExpansionInfo connectorRefExpansionInfo =
+        JsonExpansionInfo.newBuilder().setKey(YAMLFieldNameConstants.CONNECTOR_REF).setExpansionType(KEY).build();
+    JsonExpansionHandlerInfo connectorRefExpansionHandlerInfo =
+        JsonExpansionHandlerInfo.builder()
+            .jsonExpansionInfo(connectorRefExpansionInfo)
+            .expansionHandler(DefaultConnectorRefExpansionHandler.class)
+            .build();
+    jsonExpansionHandlers.add(connectorRefExpansionHandlerInfo);
     return jsonExpansionHandlers;
   }
 

@@ -12,17 +12,13 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.execution.NodeExecution;
-import io.harness.plan.NodeType;
 import io.harness.pms.execution.ExecutionStatus;
-import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.beans.PipelineExecutionSummaryEntity;
 import io.harness.repositories.executions.PmsExecutionSummaryRespository;
-import io.harness.steps.StepSpecTypeConstants;
 
 import com.google.inject.Inject;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -37,21 +33,19 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
    * Updates all the fields in the stage graph from nodeExecutions.
    * @param planExecutionId
    */
-  public void updateStageOfIdentityType(String planExecutionId) {
-    List<NodeExecution> nodeExecutions = nodeExecutionService.fetchStageExecutions(planExecutionId);
-    Update update = new Update();
+  public void updateStageOfIdentityType(String planExecutionId, Update update) {
+    List<NodeExecution> nodeExecutions =
+        nodeExecutionService.fetchStageExecutionsWithEndTsAndStatusProjection(planExecutionId);
 
     // This is done inorder to reduce the load while updating stageInfo. Here we will update only the status.
     for (NodeExecution nodeExecution : nodeExecutions) {
       update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
               + nodeExecution.getNode().getUuid() + ".status",
           ExecutionStatus.getExecutionStatus(nodeExecution.getStatus()));
+      update.set(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.layoutNodeMap + "."
+              + nodeExecution.getNode().getUuid() + ".endTs",
+          nodeExecution.getEndTs());
     }
-
-    Criteria criteria =
-        Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
-    Query query = new Query(criteria);
-    pmsExecutionSummaryRepository.update(query, update);
   }
 
   @Override
@@ -100,7 +94,6 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
   @Override
   public void update(String planExecutionId, NodeExecution nodeExecution) {
     updatePipelineLevelInfo(planExecutionId, nodeExecution);
-    updateStageLevelInfo(planExecutionId, nodeExecution);
   }
 
   @Override
@@ -114,25 +107,6 @@ public class PmsExecutionSummaryServiceImpl implements PmsExecutionSummaryServic
     if (OrchestrationUtils.isPipelineNode(nodeExecution)) {
       Update update = new Update();
       ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(update, planExecutionId, nodeExecution);
-      Criteria criteria =
-          Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
-      Query query = new Query(criteria);
-      pmsExecutionSummaryRepository.update(query, update);
-    }
-  }
-
-  private void updateStageLevelInfo(String planExecutionId, NodeExecution nodeExecution) {
-    if (OrchestrationUtils.isStageNode(nodeExecution)
-        || Objects.equals(nodeExecution.getNode().getStepType().getType(), StepSpecTypeConstants.BARRIER)) {
-      // This condition is for retry execution graph generation.
-      if (nodeExecution.getNode().getNodeType() == NodeType.IDENTITY_PLAN_NODE
-          && StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
-        updateStageOfIdentityType(planExecutionId);
-        return;
-      }
-
-      Update update = new Update();
-      ExecutionSummaryUpdateUtils.addStageUpdateCriteria(update, planExecutionId, nodeExecution);
       Criteria criteria =
           Criteria.where(PipelineExecutionSummaryEntity.PlanExecutionSummaryKeys.planExecutionId).is(planExecutionId);
       Query query = new Query(criteria);

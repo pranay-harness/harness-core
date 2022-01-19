@@ -8,6 +8,8 @@
 package io.harness.pms.sdk;
 
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.pms.contracts.plan.ExpansionRequestType.KEY;
+import static io.harness.pms.contracts.plan.ExpansionRequestType.LOCAL_FQN;
 import static io.harness.rule.OwnerRule.NAMAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -18,12 +20,16 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.governance.ExpansionRequestMetadata;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
+import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
 import io.harness.pms.sdk.core.governance.ExpansionResponse;
 import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandlerInfo;
 import io.harness.rule.Owner;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,24 +42,41 @@ public class PmsSdkInitHelperTest extends CategoryTest {
   @Test
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
-  public void testGetExpandableFields() {
+  public void testGetJsonExpansionInfo() {
     PmsSdkConfiguration sdkConfigurationWithNull = PmsSdkConfiguration.builder().moduleType(ModuleType.CD).build();
-    assertThat(PmsSdkInitHelper.getExpandableFields(sdkConfigurationWithNull)).isEmpty();
+    assertThat(PmsSdkInitHelper.getJsonExpansionInfo(sdkConfigurationWithNull)).isEmpty();
     PmsSdkConfiguration sdkConfigurationWithEmpty =
-        PmsSdkConfiguration.builder().moduleType(ModuleType.CD).jsonExpansionHandlers(Collections.emptyMap()).build();
-    assertThat(PmsSdkInitHelper.getExpandableFields(sdkConfigurationWithEmpty)).isEmpty();
+        PmsSdkConfiguration.builder().moduleType(ModuleType.CD).jsonExpansionHandlers(Collections.emptyList()).build();
+    assertThat(PmsSdkInitHelper.getJsonExpansionInfo(sdkConfigurationWithEmpty)).isEmpty();
 
-    Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
-    jsonExpansionHandlers.put("connectorRef", Dummy1.class);
-    jsonExpansionHandlers.put("serviceRef", Dummy1.class);
-    jsonExpansionHandlers.put("image", Dummy1.class);
-    jsonExpansionHandlers.put("abc", Dummy1.class);
+    List<JsonExpansionHandlerInfo> jsonExpansionHandlers = new ArrayList<>();
+    JsonExpansionHandlerInfo connectorRefExpansionHandlerInfo =
+        JsonExpansionHandlerInfo.builder()
+            .jsonExpansionInfo(JsonExpansionInfo.newBuilder().setKey("connectorRef").setExpansionType(KEY).build())
+            .expansionHandler(Dummy1.class)
+            .build();
+    jsonExpansionHandlers.add(connectorRefExpansionHandlerInfo);
+    JsonExpansionHandlerInfo abcExpansionHandlerInfo =
+        JsonExpansionHandlerInfo.builder()
+            .jsonExpansionInfo(JsonExpansionInfo.newBuilder().setKey("abc").setExpansionType(KEY).build())
+            .expansionHandler(Dummy1.class)
+            .build();
+    jsonExpansionHandlers.add(abcExpansionHandlerInfo);
+    JsonExpansionHandlerInfo defExpansionHandlerInfo =
+        JsonExpansionHandlerInfo.builder()
+            .jsonExpansionInfo(JsonExpansionInfo.newBuilder()
+                                   .setKey("def")
+                                   .setExpansionType(LOCAL_FQN)
+                                   .setStageType(StepType.getDefaultInstance())
+                                   .build())
+            .expansionHandler(Dummy1.class)
+            .build();
+    jsonExpansionHandlers.add(defExpansionHandlerInfo);
 
     PmsSdkConfiguration sdkConfiguration =
         PmsSdkConfiguration.builder().moduleType(ModuleType.CD).jsonExpansionHandlers(jsonExpansionHandlers).build();
-    List<String> expandableFields = PmsSdkInitHelper.getExpandableFields(sdkConfiguration);
-    assertThat(expandableFields).hasSize(4);
-    assertThat(expandableFields).contains("connectorRef", "serviceRef", "image", "abc");
+    List<JsonExpansionInfo> jsonExpansionInfo = PmsSdkInitHelper.getJsonExpansionInfo(sdkConfiguration);
+    assertThat(jsonExpansionInfo).hasSize(3);
   }
 
   @Test
@@ -62,8 +85,7 @@ public class PmsSdkInitHelperTest extends CategoryTest {
   public void testGetSupportedSdkFunctorsList() {
     PmsSdkConfiguration sdkConfigurationWithNull = PmsSdkConfiguration.builder().moduleType(ModuleType.CD).build();
     assertThat(PmsSdkInitHelper.getSupportedSdkFunctorsList(sdkConfigurationWithNull)).isEmpty();
-    PmsSdkConfiguration sdkConfigurationWithEmpty =
-        PmsSdkConfiguration.builder().moduleType(ModuleType.CD).jsonExpansionHandlers(Collections.emptyMap()).build();
+    PmsSdkConfiguration sdkConfigurationWithEmpty = PmsSdkConfiguration.builder().moduleType(ModuleType.CD).build();
     assertThat(PmsSdkInitHelper.getSupportedSdkFunctorsList(sdkConfigurationWithEmpty)).isEmpty();
 
     Map<String, Class<? extends SdkFunctor>> functors = new HashMap<>();

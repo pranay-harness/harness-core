@@ -129,7 +129,7 @@ public class RedisPersistentLocker implements PersistentLocker, HealthMonitor, M
       RLock lock = client.getLock(name);
       boolean locked = lock.tryLock(waitTime.toMillis(), -1, TimeUnit.MILLISECONDS);
       if (locked) {
-        return RedisAcquiredLock.builder().lock(lock).build();
+        return RedisAcquiredLock.builder().lock(lock).isLeaseInfinite(true).build();
       }
     } catch (Exception ex) {
       throw new UnexpectedException(format(ERROR_MESSAGE, name), ex);

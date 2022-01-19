@@ -84,10 +84,12 @@ public class AggregatorPrimarySyncController extends AggregatorBaseSyncControlle
           debeziumEngine.close();
           TimeUnit.SECONDS.sleep(10);
         }
-      } catch (IOException exception) {
-        log.error("Failed to close debezium engine", exception);
+      } catch (IOException e) {
+        log.error("Failed to close debezium engine due to IO exception", e);
       } catch (InterruptedException e) {
         log.warn("Interrupted while waiting for debezium engine to close", e);
+      } catch (Exception e) {
+        log.error("Failed to close debezium engine due to unexpected exception", e);
       }
     }
   }

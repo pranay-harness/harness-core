@@ -33,4 +33,6 @@ public interface CVNGStepTaskService {
       String accountId, String callBackId, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter);
   PageResponse<LogAnalysisClusterDTO> getDeploymentActivityLogAnalysisResult(String accountId, String callBackId,
       Integer label, DeploymentLogAnalysisFilter deploymentLogAnalysisFilter, PageParams pageParams);
+  List<String> getTransactionNames(String accountId, String callBackId);
+  List<String> getNodeNames(String accountId, String callBackId);
 }

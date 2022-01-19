@@ -51,6 +51,8 @@ public class AccessControlManagementJob {
     } catch (InterruptedException e) {
       log.error(String.format("Interrupted while trying to acquire %s", ACCESS_CONTROL_CONFIG_MANAGEMENT_LOCK), e);
       Thread.currentThread().interrupt();
+    } catch (IllegalMonitorStateException e) {
+      log.error(String.format("Error while releasing the lock %s", ACCESS_CONTROL_CONFIG_MANAGEMENT_LOCK), e);
     }
   }
 

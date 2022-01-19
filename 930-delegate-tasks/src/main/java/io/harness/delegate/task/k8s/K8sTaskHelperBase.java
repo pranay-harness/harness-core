@@ -242,6 +242,7 @@ public class K8sTaskHelperBase {
   public static final String patchFieldName = "patchesStrategicMerge";
   public static final String patchYaml = "patches-%d.yaml";
   public static final String kustomizePatchesDirPrefix = "kustomizePatches-";
+  public static final String VALUE_MISSING_REPLACEMENT = "<no value>";
 
   @Inject private TimeLimiter timeLimiter;
   @Inject private KubernetesContainerService kubernetesContainerService;
@@ -1871,12 +1872,21 @@ public class K8sTaskHelperBase {
               USER);
         }
 
-        result.add(
-            FileData.builder().fileName(manifestFile.getFileName()).fileContent(processResult.outputUTF8()).build());
+        String fileContent = processResult.outputUTF8();
+        logIfRenderHasValuesMissing(executionLogCallback, fileContent);
+        result.add(FileData.builder().fileName(manifestFile.getFileName()).fileContent(fileContent).build());
       }
     }
 
     return result;
+  }
+
+  private void logIfRenderHasValuesMissing(LogCallback executionLogCallback, String fileContent) {
+    if (fileContent.contains(VALUE_MISSING_REPLACEMENT)) {
+      log.debug("Rendered template value missing, replaced with {}!", VALUE_MISSING_REPLACEMENT);
+      String logLine = "Rendered template is missing values (replaced with " + VALUE_MISSING_REPLACEMENT + ")!";
+      executionLogCallback.saveExecutionLog(color(logLine, Yellow, Bold), WARN);
+    }
   }
 
   public String generateResourceIdentifier(KubernetesResourceId resourceId) {

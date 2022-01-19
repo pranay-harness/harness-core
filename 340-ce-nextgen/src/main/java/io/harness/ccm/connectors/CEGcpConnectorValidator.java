@@ -75,7 +75,7 @@ public class CEGcpConnectorValidator extends io.harness.ccm.connectors.AbstractC
       } else {
         // 4. Check for data at destination only when 24 hrs have elapsed since connector last modified at
         long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
-        if (connectorResponseDTO.getLastModifiedAt() < now) {
+        if (connectorResponseDTO.getCreatedAt() < now) {
           if (featuresEnabled.contains(CEFeatures.BILLING)
               && !ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier,
                   ConnectorType.GCP_CLOUD_COST, ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {

@@ -16,9 +16,10 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import javax.annotation.Nullable;
 
 public class BigQueryHelper {
-  @Inject @Named("gcpConfig") GcpConfig config;
+  @Inject @Nullable @Named("gcpConfig") GcpConfig config;
 
   public static final String DATA_SET_NAME_TEMPLATE = "BillingReport_%s";
   public static final String UNIFIED_TABLE = "unifiedTable";
