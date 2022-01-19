@@ -57,6 +57,7 @@ import io.harness.encryption.SecretRefHelper;
 import io.harness.encryptors.DelegateTaskUtils;
 import io.harness.eraro.ErrorCode;
 import io.harness.exception.AzureServiceException;
+import io.harness.exception.DelegateServiceDriverException;
 import io.harness.exception.SecretManagementDelegateException;
 import io.harness.exception.SecretManagementException;
 import io.harness.exception.WingsException;
@@ -601,6 +602,8 @@ public class NGVaultServiceImpl implements NGVaultService {
           throw e;
         }
         sleep(ofMillis(1000));
+      } catch (DelegateServiceDriverException ex) {
+        throw new WingsException(ex.getCause().getMessage(), ex);
       }
     }
   }
