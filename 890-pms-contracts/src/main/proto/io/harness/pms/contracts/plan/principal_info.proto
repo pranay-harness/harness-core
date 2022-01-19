@@ -21,4 +21,5 @@ enum PrincipalType {
   USER_GROUP = 2;
   API_KEY = 3;
   SERVICE = 4;
+  SERVICE_ACCOUNT = 5;
 }

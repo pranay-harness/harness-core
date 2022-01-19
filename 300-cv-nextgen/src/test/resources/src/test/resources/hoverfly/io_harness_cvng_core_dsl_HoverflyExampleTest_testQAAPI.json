@@ -1,0 +1,56 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/api/version"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "qa.harness.io"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAGWPywrCMBBF/2XWVdNKUbLzsXGhG8GNuBjtqIG8yCRSkf67qVIQXN4758CdFxiKuMaIIF9dAYHYpXChnOBBgZWzG3t1PxEklGMxnk1rMYUCzknpZpcBGJqbiitnjIogbdL6UywD2ss9Q4E0IdOEEXmSjbbNRlSGOKLxGagqUZbzkahqkS8e40cTQkC/LtmeHRb5oAyGJ8gYEhVDPPzvHPV+AQ157Z5b1+T3YL9Y7KH7vuydZdoSM96IQR5P3RvnwTphGAEAAA==",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Cf-Cache-Status" : [ "DYNAMIC" ],
+          "Cf-Ray" : [ "6cf6f5825c9a1da1-BLR" ],
+          "Connection" : [ "keep-alive" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Type" : [ "application/json;charset=utf-8" ],
+          "Date" : [ "Tue, 18 Jan 2022 09:57:25 GMT" ],
+          "Expect-Ct" : [ "max-age=604800, report-uri=\"https://report-uri.cloudflare.com/cdn-cgi/beacon/expect-ct\"" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Server" : [ "cloudflare" ],
+          "Strict-Transport-Security" : [ "max-age=15724800; includeSubDomains" ],
+          "Vary" : [ "Accept-Encoding" ],
+          "Via" : [ "1.1 google" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2022-01-18T09:57:25Z"
+  }
+}

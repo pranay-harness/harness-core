@@ -14,6 +14,28 @@ replace_key_value () {
   fi
 }
 
+write_mongo_params() {
+  IFS='&' read -ra PARAMS <<< "$2"
+  for PARAM_PAIR in "${PARAMS[@]}"; do
+    NAME=$(cut -d= -f 1 <<< "$PARAM_PAIR")
+    VALUE=$(cut -d= -f 2 <<< "$PARAM_PAIR")
+    yq write -i $CONFIG_FILE $1.params.$NAME "$VALUE"
+  done
+}
+
+write_mongo_hosts_and_ports() {
+  IFS=',' read -ra HOST_AND_PORT <<< "$2"
+  for INDEX in "${!HOST_AND_PORT[@]}"; do
+    HOST=$(cut -d: -f 1 <<< "${HOST_AND_PORT[$INDEX]}")
+    PORT=$(cut -d: -f 2 -s <<< "${HOST_AND_PORT[$INDEX]}")
+
+    yq write -i $CONFIG_FILE $1.hosts[$INDEX].host "$HOST"
+    if [[ "" != "$PORT" ]]; then
+      yq write -i $CONFIG_FILE $1.hosts[$INDEX].port "$PORT"
+    fi
+  done
+}
+
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
@@ -129,10 +151,10 @@ if [[ "" != "$GRPC_MANAGER_AUTHORITY" ]]; then
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$AUDIT_MONGO_URI" ]]; then
@@ -216,7 +238,40 @@ if [[ "" != "$LOCK_CONFIG_REDIS_SENTINELS" ]]; then
   done
 fi
 
+if [[ "" != "$NOTIFICATION_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE notificationServiceConfig.mongo.uri
+  write_mongo_hosts_and_ports notificationServiceConfig.mongo "$NOTIFICATION_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params notificationServiceConfig.mongo "$NOTIFICATION_MONGO_PARAMS"
+fi
+
+if [[ "" != "$AUDIT_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE auditServiceConfig.mongo.uri
+  write_mongo_hosts_and_ports auditServiceConfig.mongo "$AUDIT_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params auditServiceConfig.mongo "$AUDIT_MONGO_PARAMS"
+fi
+
+if [[ "" != "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS" ]]; then
+  yq delete -i $CONFIG_FILE resourceGroupServiceConfig.mongo.uri
+  write_mongo_hosts_and_ports resourceGroupServiceConfig.mongo "$RESOURCE_GROUP_MONGO_HOSTS_AND_PORTS"
+  write_mongo_params resourceGroupServiceConfig.mongo "$RESOURCE_GROUP_MONGO_PARAMS"
+fi
+
 replace_key_value ngManagerClientConfig.baseUrl "$NG_MANAGER_CLIENT_BASEURL"
+
+replace_key_value resourceGroupServiceConfig.mongo.username "$RESOURCE_GROUP_MONGO_USERNAME"
+replace_key_value resourceGroupServiceConfig.mongo.password "$RESOURCE_GROUP_MONGO_PASSWORD"
+replace_key_value resourceGroupServiceConfig.mongo.schema "$RESOURCE_GROUP_MONGO_SCHEMA"
+replace_key_value resourceGroupServiceConfig.mongo.database "$RESOURCE_GROUP_MONGO_DATABASE"
+
+replace_key_value auditServiceConfig.mongo.username "$AUDIT_MONGO_USERNAME"
+replace_key_value auditServiceConfig.mongo.password "$AUDIT_MONGO_PASSWORD"
+replace_key_value auditServiceConfig.mongo.schema "$AUDIT_MONGO_SCHEMA"
+replace_key_value auditServiceConfig.mongo.database "$AUDIT_MONGO_DATABASE"
+
+replace_key_value notificationServiceConfig.mongo.username "$NOTIFICATION_MONGO_USERNAME"
+replace_key_value notificationServiceConfig.mongo.password "$NOTIFICATION_MONGO_PASSWORD"
+replace_key_value notificationServiceConfig.mongo.schema "$NOTIFICATION_MONGO_SCHEMA"
+replace_key_value notificationServiceConfig.mongo.database "$NOTIFICATION_MONGO_DATABASE"
 
 replace_key_value resourceGroupServiceConfig.redisLockConfig.redisUrl "$LOCK_CONFIG_REDIS_URL"
 
@@ -257,6 +312,10 @@ replace_key_value resourceGroupServiceConfig.resourceClients.pipeline-service.se
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.baseUrl "$MANAGER_CLIENT_BASEURL"
 
 replace_key_value resourceGroupServiceConfig.resourceClients.manager.secret "$NEXT_GEN_MANAGER_SECRET"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.baseUrl "$RESOURCE_GROUP_CLIENT_BASEURL"
+
+replace_key_value resourceGroupServiceConfig.resourceClients.resourceGroup.secret "$RESOURCE_GROUP_SECRET"
 
 replace_key_value resourceGroupServiceConfig.mongo.uri "${RESOURCE_GROUP_MONGO_URI//\\&/&}"
 

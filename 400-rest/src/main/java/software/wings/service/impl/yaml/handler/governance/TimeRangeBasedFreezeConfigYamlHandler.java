@@ -43,6 +43,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
   @Inject EnvironmentService environmentService;
   @Inject UserGroupService userGroupService;
   @Inject GovernanceConfigService governanceConfigService;
+  private static final long FREEZE_WINDOW_TIME = 157680000000L;
 
   @Override
   public Yaml toYaml(TimeRangeBasedFreezeConfig bean, String accountId) {
@@ -152,6 +153,7 @@ public class TimeRangeBasedFreezeConfigYamlHandler
     long to;
     Long duration = null;
     Long endTime = null;
+    boolean expires = true;
     TimeRangeOccurrence freezeOccurrence = null;
     boolean durationBased = timeRangeYaml.isDurationBased();
     try {
@@ -177,7 +179,16 @@ public class TimeRangeBasedFreezeConfigYamlHandler
             "Invalid occurrence for TimeRange. Please enter valid value: %s", TimeRangeOccurrence.values()));
       }
     }
+    /*
+     Setting the expires as false if the freeze window time is more than 5 years
+     */
+    if (timeRangeYaml.getEndTime() != null
+        && Long.parseLong(timeRangeYaml.getEndTime()) - Long.parseLong(timeRangeYaml.getFrom()) >= FREEZE_WINDOW_TIME) {
+      expires = false;
+    } else if (timeRangeYaml.getFreezeOccurrence() == null) {
+      expires = false;
+    }
     // time zone from DB document
-    return new TimeRange(from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, false);
+    return new TimeRange(from, to, timeZone, durationBased, duration, endTime, freezeOccurrence, expires);
   }
 }

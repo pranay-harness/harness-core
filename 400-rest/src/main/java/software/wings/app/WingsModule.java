@@ -157,7 +157,7 @@ import io.harness.logstreaming.LogStreamingServiceClientFactory;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
-import io.harness.metrics.impl.DelegateTaskMetricsPublisher;
+import io.harness.metrics.impl.DelegateMetricsPublisher;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.MongoConfig;
@@ -1430,7 +1430,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
 
     install(new MetricsModule());
-    bind(MetricsPublisher.class).to(DelegateTaskMetricsPublisher.class).in(Scopes.SINGLETON);
+    bind(MetricsPublisher.class).to(DelegateMetricsPublisher.class).in(Scopes.SINGLETON);
   }
 
   private void registerOutboxEventHandlers() {
