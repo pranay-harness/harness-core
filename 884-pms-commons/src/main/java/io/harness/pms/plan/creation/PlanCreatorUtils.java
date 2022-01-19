@@ -10,12 +10,16 @@ package io.harness.pms.plan.creation;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
+import io.harness.exception.YamlException;
+import io.harness.pms.contracts.plan.YamlUpdates;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
 
 import com.google.common.base.Preconditions;
+
+import java.io.IOException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -144,5 +148,14 @@ public class PlanCreatorUtils {
         .map(el -> el.getField(YAMLFieldNameConstants.STAGE))
         .filter(Objects::nonNull)
         .collect(Collectors.toList());
+  }
+
+  public static YamlUpdates.Builder setYamlUpdate(YamlField yamlField, YamlUpdates.Builder yamlUpdates) {
+    try {
+      return yamlUpdates.putFqnToYaml(yamlField.getYamlPath(), YamlUtils.writeYamlString(yamlField));
+    } catch (IOException e) {
+      throw new YamlException(
+          "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
+    }
   }
 }

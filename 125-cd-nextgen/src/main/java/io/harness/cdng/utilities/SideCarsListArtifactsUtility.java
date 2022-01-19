@@ -13,7 +13,7 @@ import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
 import io.harness.pms.contracts.plan.YamlUpdates;
-import io.harness.pms.utilities.PlanCreatorsUtility;
+import io.harness.pms.plan.creation.PlanCreatorUtils;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -62,7 +62,7 @@ public class SideCarsListArtifactsUtility {
     }
 
     sideCarsYamlField = createSideCarsYamlFieldUnderArtifacts(artifactField);
-    PlanCreatorsUtility.setYamlUpdate(sideCarsYamlField, yamlUpdates);
+    PlanCreatorUtils.setYamlUpdate(sideCarsYamlField, yamlUpdates);
     return sideCarsYamlField;
   }
 

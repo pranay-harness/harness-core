@@ -72,7 +72,7 @@ public class SideCarPlanCreatorTest extends CDNGTestBase {
     HashMap<String, ByteString> metadataDependency = new HashMap<>();
     String uuid = UUIDGenerator.generateUuid();
     String identifier = "sidecar1";
-    ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
+    ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().identifier(identifier).build();
 
     metadataDependency.put(YamlTypes.UUID, ByteString.copyFrom(kryoSerializer.asDeflatedBytes(uuid)));
     metadataDependency.put(
