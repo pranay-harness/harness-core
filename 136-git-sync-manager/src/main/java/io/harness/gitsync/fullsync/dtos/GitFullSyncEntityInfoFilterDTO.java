@@ -16,11 +16,17 @@ import io.harness.gitsync.sdk.GitSyncApiConstants;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import javax.ws.rs.QueryParam;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.experimental.FieldNameConstants;
 
 @Data
 @Builder
+@FieldNameConstants(innerTypeName = "GitFullSyncEntityInfoFilterKeys")
+@AllArgsConstructor
+@NoArgsConstructor
 @Schema(name = "GitFullSyncEntityInfoFilter", description = "This contains filters for Git Full Sync")
 @OwnedBy(PL)
 public class GitFullSyncEntityInfoFilterDTO {

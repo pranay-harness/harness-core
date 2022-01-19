@@ -215,6 +215,7 @@ public class GitFullSyncResource {
   @Operation(operationId = "listFullSyncFiles", summary = "List files in full sync along with their status",
       responses =
       { @io.swagger.v3.oas.annotations.responses.ApiResponse(description = "A list of files involved in full sync") })
+  @NGAccessControlCheck(resourceType = ResourceTypes.PROJECT, permission = VIEW_PROJECT_PERMISSION)
   public ResponseDTO<PageResponse<GitFullSyncEntityInfoDTO>>
   listFiles(
       @RequestBody(description = "Details of Page including: size, index, sort") @BeanParam PageRequest pageRequest,
