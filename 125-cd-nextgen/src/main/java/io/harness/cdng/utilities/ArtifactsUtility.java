@@ -11,8 +11,8 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.YamlException;
 import io.harness.pms.contracts.plan.YamlUpdates;
+import io.harness.pms.utilities.PlanCreatorsUtility;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -51,24 +51,15 @@ public class ArtifactsUtility {
 
     if (stageOverrideField == null) {
       YamlField stageOverridesYamlField = fetchOverridesYamlField(serviceField);
-      setYamlUpdate(stageOverridesYamlField, yamlUpdates);
+      PlanCreatorsUtility.setYamlUpdate(stageOverridesYamlField, yamlUpdates);
       return stageOverridesYamlField.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
     }
     if (stageOverrideField.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG) == null) {
       YamlField artifactsYamlField = fetchArtifactYamlFieldUnderStageOverride(stageOverrideField);
-      setYamlUpdate(artifactsYamlField, yamlUpdates);
+      PlanCreatorsUtility.setYamlUpdate(artifactsYamlField, yamlUpdates);
       return artifactsYamlField;
     }
     return stageOverrideField.getNode().getField(YamlTypes.ARTIFACT_LIST_CONFIG);
-  }
-
-  private static YamlUpdates.Builder setYamlUpdate(YamlField yamlField, YamlUpdates.Builder yamlUpdates) {
-    try {
-      return yamlUpdates.putFqnToYaml(yamlField.getYamlPath(), YamlUtils.writeYamlString(yamlField));
-    } catch (IOException e) {
-      throw new YamlException(
-          "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
-    }
   }
 
   private YamlField fetchArtifactYamlFieldUnderStageOverride(YamlField stageOverride) {

@@ -11,7 +11,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.helpers.artifact.SidecarWrapperArtifactVisitorHelper;
 import io.harness.walktree.visitor.SimpleVisitorHelper;
-import io.harness.walktree.visitor.Visitable;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import java.util.List;
@@ -24,7 +23,7 @@ import org.springframework.data.annotation.TypeAlias;
 @Builder
 @SimpleVisitorHelper(helperClass = SidecarWrapperArtifactVisitorHelper.class)
 @TypeAlias("sidecarArtifactWrapper")
-public class SidecarsListWrapper implements Visitable {
+public class SidecarsListWrapper {
   List<SidecarArtifactWrapper> sidecars;
 
   @JsonCreator(mode = JsonCreator.Mode.DELEGATING)

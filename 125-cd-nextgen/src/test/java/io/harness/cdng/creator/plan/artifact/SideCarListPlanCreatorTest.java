@@ -63,12 +63,10 @@ public class SideCarListPlanCreatorTest extends CDNGTestBase {
     String uuid = UUIDGenerator.generateUuid();
     ArtifactStepParameters artifactStepParameters = ArtifactStepParameters.builder().build();
     Map<String, ByteString> metadataDependency =
-        sidecarListPlanCreator.prepareMetadataForIndividualSideCarListArtifactPlanCreator(
-            uuid, artifactStepParameters, "identifier");
-    assertThat(metadataDependency.size()).isEqualTo(3);
+        sidecarListPlanCreator.prepareMetadataForIndividualSideCarListPlanCreator(uuid, artifactStepParameters);
+    assertThat(metadataDependency.size()).isEqualTo(2);
     assertThat(metadataDependency.containsKey(YamlTypes.UUID)).isEqualTo(true);
     assertThat(metadataDependency.containsKey(PlanCreatorConstants.SIDECAR_STEP_PARAMETERS)).isEqualTo(true);
-    assertThat(metadataDependency.containsKey(PlanCreatorConstants.IDENTIFIER)).isEqualTo(true);
   }
 
   @Test

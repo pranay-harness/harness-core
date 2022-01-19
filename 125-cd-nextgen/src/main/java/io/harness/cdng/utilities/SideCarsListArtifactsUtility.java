@@ -12,8 +12,8 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.cdng.visitor.YamlTypes;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.exception.InvalidRequestException;
-import io.harness.exception.YamlException;
 import io.harness.pms.contracts.plan.YamlUpdates;
+import io.harness.pms.utilities.PlanCreatorsUtility;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlNode;
 import io.harness.pms.yaml.YamlUtils;
@@ -44,12 +44,10 @@ public class SideCarsListArtifactsUtility {
     return sideCarsYamlField.getNode().getCurrJsonNode();
   }
 
-  public YamlField createIndividualSideCarsArtifactYamlFieldAndSetYamlUpdate(
-      YamlField sideCarsYamlField, String sideCarIdentifier, Map<String, YamlNode> mapIdentifierWithYamlNode) {
-    if (mapIdentifierWithYamlNode.containsKey(sideCarIdentifier)) {
-      return new YamlField(mapIdentifierWithYamlNode.get(sideCarIdentifier))
-          .getNode()
-          .getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
+  public YamlField fetchIndividualSideCarYamlField(
+      YamlField sideCarsYamlField, String sideCarIdentifier, Map<String, YamlNode> sidecarIdentifierToYamlNodeMap) {
+    if (sidecarIdentifierToYamlNodeMap.containsKey(sideCarIdentifier)) {
+      return sidecarIdentifierToYamlNodeMap.get(sideCarIdentifier).getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
     }
 
     return sideCarsYamlField.getNode().asArray().get(0).getField(YamlTypes.SIDECAR_ARTIFACT_CONFIG);
@@ -64,17 +62,8 @@ public class SideCarsListArtifactsUtility {
     }
 
     sideCarsYamlField = createSideCarsYamlFieldUnderArtifacts(artifactField);
-    setYamlUpdate(sideCarsYamlField, yamlUpdates);
+    PlanCreatorsUtility.setYamlUpdate(sideCarsYamlField, yamlUpdates);
     return sideCarsYamlField;
-  }
-
-  private static YamlUpdates.Builder setYamlUpdate(YamlField yamlField, YamlUpdates.Builder yamlUpdates) {
-    try {
-      return yamlUpdates.putFqnToYaml(yamlField.getYamlPath(), YamlUtils.writeYamlString(yamlField));
-    } catch (IOException e) {
-      throw new YamlException(
-          "Yaml created for yamlField at " + yamlField.getYamlPath() + " could not be converted into a yaml string");
-    }
   }
 
   private YamlField createSideCarsYamlFieldUnderArtifacts(YamlField artifacts) {
