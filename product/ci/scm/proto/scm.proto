@@ -430,6 +430,7 @@ message PRFile {
   bool added = 2;
   bool renamed = 3;
   bool deleted = 4;
+  string prev_file_path = 5;
 }
 
 message FindFilesInPRResponse {
