@@ -1,5 +1,6 @@
 package software.wings.service.impl.yaml.handler.setting.cloudprovider;
 
+import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static software.wings.beans.RancherConfig.Yaml;
 
 import io.harness.beans.EncryptedData;
@@ -47,8 +48,10 @@ public class RancherConfigYamlHandler extends CloudProviderYamlHandler<Yaml, Ran
 
     RancherConfig rancherConfig = RancherConfig.builder().accountId(accountId).build();
     rancherConfig.setRancherUrl(yaml.getRancherUrl());
-    EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef(yaml.getBearerToken(), accountId);
-    rancherConfig.setEncryptedBearerToken(encryptedData.getUuid());
+    if (isNotEmpty(yaml.getBearerToken())) {
+      EncryptedData encryptedData = secretManager.getEncryptedDataFromYamlRef(yaml.getBearerToken(), accountId);
+      rancherConfig.setEncryptedBearerToken(encryptedData.getUuid());
+    }
 
     return buildSettingAttribute(accountId, changeContext.getChange().getFilePath(), uuid, rancherConfig);
   }
