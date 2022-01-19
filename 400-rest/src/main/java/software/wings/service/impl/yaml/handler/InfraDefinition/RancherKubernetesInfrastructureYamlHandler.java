@@ -7,7 +7,6 @@
 
 package software.wings.service.impl.yaml.handler.InfraDefinition;
 
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.validation.Validator.notNullCheck;
 
 import static java.lang.String.format;
@@ -35,14 +34,9 @@ public class RancherKubernetesInfrastructureYamlHandler
                     .releaseName(bean.getReleaseName())
                     .cloudProviderName(cloudProvider.getName())
                     .type(InfrastructureType.RANCHER_KUBERNETES)
-                    .expressions(bean.getExpressions())
                     .clusterSelectionCriteria(bean.getClusterSelectionCriteria())
                     .build();
 
-    // To prevent default release name from showing in yaml when provisioner
-    if (isNotEmpty(bean.getExpressions())) {
-      yaml.setReleaseName(null);
-    }
     return yaml;
   }
 
@@ -63,7 +57,6 @@ public class RancherKubernetesInfrastructureYamlHandler
     bean.setClusterName(yaml.getClusterName());
     bean.setNamespace(yaml.getNamespace());
     bean.setReleaseName(yaml.getReleaseName());
-    bean.setExpressions(yaml.getExpressions());
     bean.setClusterSelectionCriteria(yaml.getClusterSelectionCriteria());
   }
 
