@@ -1074,7 +1074,7 @@ public class DelegateSetupResourceV3 {
   public Response
   generateKubernetesYamlUsingNgToken(@Context HttpServletRequest request,
       @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @QueryParam(
-          NGCommonEntityConstants.ACCOUNT_KEY) @NotEmpty String accountId,
+          "accountId") @NotEmpty String accountId,
       @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.ORG_KEY) String orgId,
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
