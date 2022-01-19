@@ -7,6 +7,7 @@
 
 package io.harness.pms.execution.utils;
 
+import static io.harness.pms.contracts.execution.Status.APPROVAL_REJECTED;
 import static io.harness.pms.contracts.execution.Status.APPROVAL_WAITING;
 import static io.harness.pms.contracts.execution.Status.ASYNC_WAITING;
 import static io.harness.pms.contracts.execution.Status.EXPIRED;
@@ -249,13 +250,13 @@ public class StatusUtilsTest extends CategoryTest {
   @Category(UnitTests.class)
   public void testCalculateStatusApprovalRejected() {
     List<Status> statuses = Arrays.asList(Status.SUCCEEDED, Status.SKIPPED, Status.IGNORE_FAILED, Status.SUCCEEDED,
-        Status.SUSPENDED, Status.RUNNING, Status.TASK_WAITING, Status.APPROVAL_REJECTED);
+        Status.SUSPENDED, Status.RUNNING, Status.TASK_WAITING, APPROVAL_REJECTED);
 
     Status status = StatusUtils.calculateStatus(statuses, "PLAN_EXECUTION_ID");
-    assertThat(status).isEqualTo(Status.APPROVAL_REJECTED);
+    assertThat(status).isEqualTo(APPROVAL_REJECTED);
 
     status = StatusUtils.calculateStatusForNode(statuses, "NODE_EXECUTION_ID");
-    assertThat(status).isEqualTo(Status.APPROVAL_REJECTED);
+    assertThat(status).isEqualTo(APPROVAL_REJECTED);
   }
 
   @Test
@@ -291,7 +292,7 @@ public class StatusUtilsTest extends CategoryTest {
   public void testNodeAllowedStartSet() {
     assertThat(StatusUtils.nodeAllowedStartSet(Status.RUNNING))
         .containsExactlyInAnyOrder(QUEUED, ASYNC_WAITING, APPROVAL_WAITING, RESOURCE_WAITING, TASK_WAITING,
-            TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
+            TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING, APPROVAL_REJECTED);
     assertThat(StatusUtils.nodeAllowedStartSet(Status.INTERVENTION_WAITING)).isEqualTo(StatusUtils.brokeStatuses());
     assertThat(StatusUtils.nodeAllowedStartSet(Status.TIMED_WAITING)).containsExactlyInAnyOrder(QUEUED, RUNNING);
     assertThat(StatusUtils.nodeAllowedStartSet(Status.ASYNC_WAITING)).containsExactlyInAnyOrder(QUEUED, RUNNING);
@@ -303,18 +304,18 @@ public class StatusUtilsTest extends CategoryTest {
     assertThat(StatusUtils.nodeAllowedStartSet(Status.PAUSED)).containsExactlyInAnyOrder(QUEUED, RUNNING, PAUSING);
     assertThat(StatusUtils.nodeAllowedStartSet(Status.DISCONTINUING))
         .containsExactlyInAnyOrder(RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
-            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED, EXPIRED);
+            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED, EXPIRED, APPROVAL_REJECTED);
     assertThat(StatusUtils.nodeAllowedStartSet(Status.QUEUED)).containsExactlyInAnyOrder(PAUSED, PAUSING);
     assertThat(StatusUtils.nodeAllowedStartSet(Status.ABORTED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.nodeAllowedStartSet(Status.ERRORED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.nodeAllowedStartSet(Status.SUSPENDED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.nodeAllowedStartSet(Status.FAILED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.nodeAllowedStartSet(Status.EXPIRED)).isEqualTo(StatusUtils.finalizableStatuses());
-    assertThat(StatusUtils.nodeAllowedStartSet(Status.APPROVAL_REJECTED)).isEqualTo(StatusUtils.finalizableStatuses());
+    assertThat(StatusUtils.nodeAllowedStartSet(APPROVAL_REJECTED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.nodeAllowedStartSet(Status.SUCCEEDED))
         .containsExactlyInAnyOrder(INTERVENTION_WAITING, RUNNING, QUEUED);
     assertThat(StatusUtils.nodeAllowedStartSet(Status.IGNORE_FAILED))
-        .containsExactlyInAnyOrder(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING);
+        .containsExactlyInAnyOrder(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING, APPROVAL_REJECTED);
     assertThatThrownBy(() -> StatusUtils.nodeAllowedStartSet(Status.UNRECOGNIZED))
         .isInstanceOf(IllegalStateException.class);
   }
@@ -331,7 +332,7 @@ public class StatusUtilsTest extends CategoryTest {
         .containsExactlyInAnyOrder(PAUSING, INTERVENTION_WAITING, RUNNING);
     assertThat(StatusUtils.planAllowedStartSet(Status.RUNNING))
         .containsExactlyInAnyOrder(QUEUED, ASYNC_WAITING, APPROVAL_WAITING, RESOURCE_WAITING, TASK_WAITING,
-            TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING);
+            TIMED_WAITING, INTERVENTION_WAITING, PAUSED, PAUSING, APPROVAL_REJECTED);
     assertThat(StatusUtils.planAllowedStartSet(Status.TIMED_WAITING)).containsExactlyInAnyOrder(QUEUED, RUNNING);
     assertThat(StatusUtils.planAllowedStartSet(Status.ASYNC_WAITING)).containsExactlyInAnyOrder(QUEUED, RUNNING);
     assertThat(StatusUtils.planAllowedStartSet(Status.APPROVAL_WAITING)).containsExactlyInAnyOrder(QUEUED, RUNNING);
@@ -341,16 +342,16 @@ public class StatusUtilsTest extends CategoryTest {
     assertThat(StatusUtils.planAllowedStartSet(Status.SKIPPED)).containsExactlyInAnyOrder(QUEUED, RUNNING);
     assertThat(StatusUtils.planAllowedStartSet(Status.DISCONTINUING))
         .containsExactlyInAnyOrder(RUNNING, INTERVENTION_WAITING, TIMED_WAITING, ASYNC_WAITING, TASK_WAITING, PAUSING,
-            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED, EXPIRED);
+            RESOURCE_WAITING, APPROVAL_WAITING, QUEUED, PAUSED, FAILED, SUSPENDED, EXPIRED, APPROVAL_REJECTED);
     assertThat(StatusUtils.planAllowedStartSet(Status.QUEUED)).containsExactlyInAnyOrder(PAUSED, PAUSING);
     assertThat(StatusUtils.planAllowedStartSet(Status.ABORTED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.planAllowedStartSet(Status.ERRORED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.planAllowedStartSet(Status.SUSPENDED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.planAllowedStartSet(Status.FAILED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.planAllowedStartSet(Status.EXPIRED)).isEqualTo(StatusUtils.finalizableStatuses());
-    assertThat(StatusUtils.planAllowedStartSet(Status.APPROVAL_REJECTED)).isEqualTo(StatusUtils.finalizableStatuses());
+    assertThat(StatusUtils.planAllowedStartSet(APPROVAL_REJECTED)).isEqualTo(StatusUtils.finalizableStatuses());
     assertThat(StatusUtils.planAllowedStartSet(Status.IGNORE_FAILED))
-        .containsExactlyInAnyOrder(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING);
+        .containsExactlyInAnyOrder(EXPIRED, FAILED, INTERVENTION_WAITING, RUNNING, APPROVAL_REJECTED);
     assertThatThrownBy(() -> StatusUtils.planAllowedStartSet(Status.UNRECOGNIZED))
         .isInstanceOf(IllegalStateException.class);
   }

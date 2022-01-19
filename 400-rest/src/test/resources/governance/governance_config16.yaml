@@ -1,0 +1,26 @@
+harnessApiVersion: '1.0'
+type: GOVERNANCE_CONFIG
+disableAllDeployments: false
+timeRangeBasedFreezeConfigs:
+  - type: TIME_RANGE_BASED_FREEZE_CONFIG
+    appSelections:
+      - apps:
+          - test
+        envSelection:
+          - environments:
+              - prod
+              - qa
+            filterType: CUSTOM
+        filterType: CUSTOM
+    applicable: false
+    description: git sync
+    name: customAppAllEnv
+    timeRange:
+      durationBased: false
+      endTime: '1863431805000'
+      freezeOccurrence: DAILY
+      from: '1705579005000'
+      to: '1708257405000'
+      timeZone: Asia/Calcutta
+    userGroups:
+      - Account Administrator

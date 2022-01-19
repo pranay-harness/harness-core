@@ -33,7 +33,6 @@ import io.harness.encryptors.KmsEncryptor;
 import io.harness.encryptors.KmsEncryptorsRegistry;
 import io.harness.encryptors.VaultEncryptor;
 import io.harness.encryptors.VaultEncryptorsRegistry;
-import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.persistence.HPersistence;
 import io.harness.queue.QueuePublisher;
 import io.harness.rule.Owner;
@@ -87,7 +86,6 @@ public class SecretTextTest extends SMCoreTestBase {
   private SecretsFileService mockSecretsFileService;
   private SecretsAuditService mockSecretsAuditService;
   private SecretService secretService;
-  @Inject private LocalEncryptorHelper localEncryptorHelper;
 
   @Before
   public void setup() {
@@ -103,7 +101,7 @@ public class SecretTextTest extends SMCoreTestBase {
         new SecretSetupUsageServiceImpl(secretsDao, mockSecretManagerConfigService, secretSetupUsageBuilderRegistry);
     secretService = new SecretServiceImpl(kryoSerializer, secretsDao, mockSecretsRBACService, secretSetupUsageService,
         mockSecretsFileService, mockSecretManagerConfigService, secretValidatorsRegistry, mockSecretsAuditService,
-        kmsEncryptorsRegistry, vaultEncryptorsRegistry, customEncryptorsRegistry, queuePublisher, localEncryptorHelper);
+        kmsEncryptorsRegistry, vaultEncryptorsRegistry, customEncryptorsRegistry, queuePublisher);
   }
 
   private SecretTextBuilder getBaseSecretText() {

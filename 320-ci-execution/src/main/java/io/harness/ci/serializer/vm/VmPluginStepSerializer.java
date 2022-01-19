@@ -17,6 +17,7 @@ import io.harness.beans.steps.stepinfo.PluginStepInfo;
 import io.harness.beans.yaml.extended.reports.JUnitTestReport;
 import io.harness.beans.yaml.extended.reports.UnitTestReportType;
 import io.harness.ci.config.CIExecutionServiceConfig;
+import io.harness.ci.integrationstage.IntegrationStageUtils;
 import io.harness.ci.serializer.SerializerUtils;
 import io.harness.delegate.beans.ci.pod.ConnectorDetails;
 import io.harness.delegate.beans.ci.vm.steps.VmJunitTestReport;
@@ -72,10 +73,11 @@ public class VmPluginStepSerializer {
     // if the plugin type is git clone use default harnessImage Connector
     // else if the connector is given in plugin, use that.
     if (identifier.equals(GIT_CLONE_STEP_ID) && pluginStepInfo.isHarnessManagedImage()) {
-      image = ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getGitClone();
-      pluginStepBuilder.image(image);
+      String gitImage = ciExecutionServiceConfig.getStepConfig().getVmImageConfig().getGitClone();
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
       ConnectorDetails connectorDetails = connectorUtils.getDefaultInternalConnector(ngAccess);
+      image = IntegrationStageUtils.getFullyQualifiedImageName(gitImage, connectorDetails);
+      pluginStepBuilder.image(image);
       pluginStepBuilder.imageConnector(connectorDetails);
     } else if (!StringUtils.isEmpty(image) && !StringUtils.isEmpty(connectorIdentifier)) {
       NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);

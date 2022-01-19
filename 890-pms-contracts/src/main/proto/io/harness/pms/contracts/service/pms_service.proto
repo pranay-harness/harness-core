@@ -33,7 +33,7 @@ message InitializeSdkRequest {
   ConsumerConfig planCreationEventConsumerConfig = 14;
   map<string, string> staticAliases = 15;
   repeated string sdkFunctors = 16;
-  repeated string expandableFields = 17;
+  repeated JsonExpansionInfo jsonExpansionInfo = 18;
 }
 
 message InitializeSdkResponse {}
@@ -54,4 +54,16 @@ message ConsumerConfig {
 message Redis {
   string topicName = 1;
   // We should add more redis config details here but for now assuming the redis config is same for all omitting this
+}
+
+message JsonExpansionInfo {
+  string key = 1;
+  ExpansionRequestType expansionType = 2;
+  string expansionKey = 3;
+  io.harness.pms.contracts.steps.StepType stageType = 4;
+}
+
+enum ExpansionRequestType {
+  LOCAL_FQN = 0;
+  KEY = 1;
 }

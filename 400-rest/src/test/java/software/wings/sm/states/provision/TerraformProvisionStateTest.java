@@ -86,7 +86,6 @@ import io.harness.delegate.beans.FileBucket;
 import io.harness.delegate.beans.FileMetadata;
 import io.harness.exception.InvalidRequestException;
 import io.harness.ff.FeatureFlagService;
-import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.provision.TfVarScriptRepositorySource;
 import io.harness.rule.Owner;
 import io.harness.secretmanagers.SecretManagerConfigService;
@@ -186,7 +185,6 @@ public class TerraformProvisionStateTest extends WingsBaseTest {
   @Mock private SettingsService settingsService;
   @InjectMocks private TerraformProvisionState state = new ApplyTerraformProvisionState("tf");
   @InjectMocks private TerraformProvisionState destroyProvisionState = new DestroyTerraformProvisionState("tf");
-  @Mock private LocalEncryptorHelper localEncryptorHelper;
 
   private final Answer<String> answer = invocation -> invocation.getArgumentAt(0, String.class) + "-rendered";
 

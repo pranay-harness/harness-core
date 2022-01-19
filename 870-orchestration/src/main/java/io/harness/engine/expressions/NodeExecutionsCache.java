@@ -14,6 +14,7 @@ import io.harness.data.structure.EmptyPredicate;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.execution.NodeExecution;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.execution.utils.NodeProjectionUtils;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -50,7 +51,8 @@ public class NodeExecutionsCache {
       return map.get(nodeExecutionId);
     }
 
-    NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
+    NodeExecution nodeExecution =
+        nodeExecutionService.getWithFieldsIncluded(nodeExecutionId, NodeProjectionUtils.fieldsForExpressionEngine);
     map.put(nodeExecutionId, nodeExecution);
     return nodeExecution;
   }
@@ -76,8 +78,8 @@ public class NodeExecutionsCache {
       return ids.stream().map(map::get).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    List<NodeExecution> childExecutions =
-        nodeExecutionService.fetchChildrenNodeExecutions(ambiance.getPlanExecutionId(), parentId);
+    List<NodeExecution> childExecutions = nodeExecutionService.fetchChildrenNodeExecutions(
+        ambiance.getPlanExecutionId(), parentId, NodeProjectionUtils.fieldsForExpressionEngine);
     if (EmptyPredicate.isEmpty(childExecutions)) {
       childrenMap.put(parentId, Collections.emptyList());
       return Collections.emptyList();
@@ -89,6 +91,7 @@ public class NodeExecutionsCache {
   }
 
   public List<NodeExecution> findAllChildren(String parentId) {
-    return nodeExecutionService.findAllChildren(ambiance.getPlanExecutionId(), parentId, false);
+    return nodeExecutionService.findAllChildren(
+        ambiance.getPlanExecutionId(), parentId, false, NodeProjectionUtils.fieldsForExpressionEngine);
   }
 }
