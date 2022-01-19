@@ -8,13 +8,11 @@
 package software.wings.delegatetasks.azure.appservice.deployment;
 
 import static io.harness.azure.model.AzureConstants.IMAGE_AND_TAG_BLANK_ERROR_MSG;
-import static io.harness.azure.model.AzureConstants.SLOT_NAME_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.SLOT_STARTING_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.SLOT_STOPPING_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.SLOT_SWAP;
 import static io.harness.azure.model.AzureConstants.START_DEPLOYMENT_SLOT;
 import static io.harness.azure.model.AzureConstants.STOP_DEPLOYMENT_SLOT;
-import static io.harness.azure.model.AzureConstants.WEB_APP_NAME_BLANK_ERROR_MSG;
 import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.TMACARI;
 
