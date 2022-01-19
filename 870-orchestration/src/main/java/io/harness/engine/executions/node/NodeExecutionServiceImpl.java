@@ -603,6 +603,31 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public List<NodeExecution> fetchStageExecutionsWithEndTsAndStatusProjection(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.IdentityNodeStepCategory).is(StepCategory.STAGE));
+
+    Query query = new Query().addCriteria(criteria);
+    query.fields()
+        .include(NodeExecutionKeys.uuid)
+        .include(NodeExecutionKeys.status)
+        .include(NodeExecutionKeys.endTs)
+        .include(NodeExecutionKeys.createdAt)
+        .include(NodeExecutionKeys.mode)
+        .include(NodeExecutionKeys.parentId)
+        .include(NodeExecutionKeys.oldRetry)
+        .include(NodeExecutionKeys.planNode);
+
+    query.with(by(NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
   public Map<String, String> fetchNodeExecutionFromNodeUuidsAndPlanExecutionId(
       List<String> identifierOfSkipStages, String planExecutionId) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))

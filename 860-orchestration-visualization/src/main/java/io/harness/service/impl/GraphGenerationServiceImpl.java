@@ -24,6 +24,7 @@ import io.harness.dto.OrchestrationGraphDTO;
 import io.harness.dto.converter.OrchestrationGraphDTOConverter;
 import io.harness.engine.executions.node.NodeExecutionService;
 import io.harness.engine.executions.plan.PlanExecutionService;
+import io.harness.engine.utils.OrchestrationUtils;
 import io.harness.event.GraphStatusUpdateHelper;
 import io.harness.event.PlanExecutionStatusUpdateEventHandler;
 import io.harness.event.StepDetailsUpdateEventHandler;
@@ -31,7 +32,9 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.execution.NodeExecution;
 import io.harness.execution.PlanExecution;
 import io.harness.generator.OrchestrationAdjacencyListGenerator;
+import io.harness.plan.NodeType;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.execution.utils.StatusUtils;
 import io.harness.pms.plan.execution.ExecutionSummaryUpdateUtils;
 import io.harness.pms.plan.execution.service.PmsExecutionSummaryService;
 import io.harness.repositories.orchestrationEventLog.OrchestrationEventLogRepository;
@@ -104,9 +107,16 @@ public class GraphGenerationServiceImpl implements GraphGenerationService {
             }
             processedNodeExecutionIds.add(nodeExecutionId);
             NodeExecution nodeExecution = nodeExecutionService.get(nodeExecutionId);
-            ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(
-                executionSummaryUpdate, planExecutionId, nodeExecution);
-            ExecutionSummaryUpdateUtils.addStageUpdateCriteria(executionSummaryUpdate, planExecutionId, nodeExecution);
+            if (OrchestrationUtils.isStageNode(nodeExecution)
+                && nodeExecution.getNode().getNodeType() == NodeType.IDENTITY_PLAN_NODE
+                && StatusUtils.isFinalStatus(nodeExecution.getStatus())) {
+              pmsExecutionSummaryService.updateStageOfIdentityType(planExecutionId, executionSummaryUpdate);
+            } else {
+              ExecutionSummaryUpdateUtils.addPipelineUpdateCriteria(
+                  executionSummaryUpdate, planExecutionId, nodeExecution);
+              ExecutionSummaryUpdateUtils.addStageUpdateCriteria(
+                  executionSummaryUpdate, planExecutionId, nodeExecution);
+            }
             orchestrationGraph = graphStatusUpdateHelper.handleEventV2(
                 planExecutionId, nodeExecution, orchestrationEventType, orchestrationGraph);
           }
