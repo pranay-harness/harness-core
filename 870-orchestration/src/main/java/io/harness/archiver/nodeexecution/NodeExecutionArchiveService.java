@@ -1,6 +1,4 @@
-package io.harness.archiver;
-
-import io.harness.archiver.beans.NodeExecutionArchive;
+package io.harness.archiver.nodeexecution;
 
 import java.util.List;
 

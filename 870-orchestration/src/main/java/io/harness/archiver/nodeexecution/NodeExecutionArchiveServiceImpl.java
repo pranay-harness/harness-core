@@ -1,7 +1,6 @@
-package io.harness.archiver;
+package io.harness.archiver.nodeexecution;
 
 import com.google.inject.Inject;
-import io.harness.archiver.beans.NodeExecutionArchive;
 import io.harness.repositories.NodeExecutionArchiveRepository;
 
 import java.util.List;
