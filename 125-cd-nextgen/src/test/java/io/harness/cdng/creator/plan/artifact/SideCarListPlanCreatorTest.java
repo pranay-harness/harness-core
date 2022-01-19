@@ -91,7 +91,7 @@ public class SideCarListPlanCreatorTest extends CDNGTestBase {
       PlanCreationResponse planCreationResponse, String nodeUuid) {
     assertThat(planCreationResponse.getDependencies().getDependenciesMap().containsKey(nodeUuid)).isEqualTo(true);
     assertThat(planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().size())
-        .isEqualTo(3);
+        .isEqualTo(2);
     assertThat(
         planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
             YamlTypes.UUID))
@@ -99,10 +99,6 @@ public class SideCarListPlanCreatorTest extends CDNGTestBase {
     assertThat(
         planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
             PlanCreatorConstants.SIDECAR_STEP_PARAMETERS))
-        .isEqualTo(true);
-    assertThat(
-        planCreationResponse.getDependencies().getDependencyMetadataMap().get(nodeUuid).getMetadataMap().containsKey(
-            PlanCreatorConstants.IDENTIFIER))
         .isEqualTo(true);
   }
 
