@@ -60,6 +60,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 
 @Singleton
 @Slf4j
@@ -537,6 +538,23 @@ public class NGTemplateServiceImpl implements NGTemplateService {
       String templateIdentifier, String versionLabel) {
     return !templateRepository.existsByAccountIdAndOrgIdAndProjectIdAndIdentifierAndVersionLabel(
         accountIdentifier, orgIdentifier, projectIdentifier, templateIdentifier, versionLabel);
+  }
+
+  @Override
+  public TemplateEntity updateGitFilePath(TemplateEntity templateEntity, String newFilePath) {
+    Criteria criteria = Criteria.where(TemplateEntityKeys.accountId)
+                            .is(templateEntity.getAccountId())
+                            .and(TemplateEntityKeys.orgIdentifier)
+                            .is(templateEntity.getOrgIdentifier())
+                            .and(TemplateEntityKeys.projectIdentifier)
+                            .is(templateEntity.getProjectIdentifier())
+                            .and(TemplateEntityKeys.identifier)
+                            .is(templateEntity.getIdentifier())
+                            .and(TemplateEntityKeys.version)
+                            .is(templateEntity.getVersionLabel());
+
+    Update update = new Update().set(TemplateEntityKeys.filePath, newFilePath);
+    return templateRepository.update(criteria, update);
   }
 
   private void assureThatTheProjectAndOrgExists(String accountId, String orgId, String projectId) {

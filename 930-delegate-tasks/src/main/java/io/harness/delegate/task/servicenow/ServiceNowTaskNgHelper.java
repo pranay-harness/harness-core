@@ -169,6 +169,9 @@ public class ServiceNowTaskNgHelper {
       response = request.execute();
       handleResponse(response, "Failed to validate ServiceNow credentials");
       return ServiceNowTaskNGResponse.builder().build();
+    } catch (ServiceNowException se) {
+      log.error("Failed to authenticate to servicenow: {}", se.getMessage());
+      throw se;
     } catch (Exception e) {
       log.error("Failed to authenticate to servicenow. ");
       throw new ServiceNowException(ExceptionUtils.getMessage(e), SERVICENOW_ERROR, USER, e);

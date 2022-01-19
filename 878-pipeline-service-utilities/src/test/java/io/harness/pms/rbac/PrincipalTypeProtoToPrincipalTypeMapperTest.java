@@ -10,6 +10,8 @@ package io.harness.pms.rbac;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.NAMAN;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
@@ -30,7 +32,9 @@ public class PrincipalTypeProtoToPrincipalTypeMapperTest extends CategoryTest {
       if (principalType == PrincipalType.UNRECOGNIZED || principalType == PrincipalType.UNKNOWN) {
         continue;
       }
-      PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(principalType);
+      io.harness.accesscontrol.principals.PrincipalType principalTypeDto =
+          PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(principalType);
+      assertThat(principalTypeDto).isNotNull();
     }
   }
 }

@@ -11,9 +11,11 @@
 #   sources-shield.txt      ->  Polyform Shield
 #
 
-POLYFORM_SHIELD_FILE=".license-files-polyform-shield.txt"
-POLYFORM_FREE_TRIAL_FILE=".license-files-polyform-free-trial.txt"
-SUPPORTED_EXTENSIONS_FILE=".license-extensions.txt"
+SCRIPT_DIR=$(dirname "$0")
+
+POLYFORM_SHIELD_FILE="$SCRIPT_DIR/.license-files-polyform-shield.txt"
+POLYFORM_FREE_TRIAL_FILE="$SCRIPT_DIR/.license-files-polyform-free-trial.txt"
+SUPPORTED_EXTENSIONS_FILE="$SCRIPT_DIR/.license-extensions.txt"
 
 FILE_EXTENSIONS=$(awk 'NR>1 {print $1}' "$SUPPORTED_EXTENSIONS_FILE" | paste -s -d '|' -)
 

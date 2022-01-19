@@ -97,7 +97,8 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
       }
 
       if (featuresEnabled.contains(CEFeatures.BILLING)) {
-        log.info("Destination bucket: {}", configuration.getAwsConfig().getDestinationBucket());
+        log.info("Getting required CUR policy for destination bucket: {}",
+            configuration.getAwsConfig().getDestinationBucket());
         final Policy curPolicy = getRequiredCurPolicy(
             awsCurAttributesDTO.getS3BucketName(), configuration.getAwsConfig().getDestinationBucket());
         errorList.addAll(validateIfPolicyIsCorrect(
@@ -155,7 +156,7 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
     }
     // Check for data at destination only when 24 hrs have elapsed since connector last modified at
     long now = Instant.now().toEpochMilli() - 24 * 60 * 60 * 1000;
-    if (featuresEnabled.contains(CEFeatures.BILLING) && connectorResponseDTO.getLastModifiedAt() < now) {
+    if (featuresEnabled.contains(CEFeatures.BILLING) && connectorResponseDTO.getCreatedAt() < now) {
       if (!ceConnectorsHelper.isDataSyncCheck(accountIdentifier, connectorIdentifier, ConnectorType.CE_AWS,
               ceConnectorsHelper.JOB_TYPE_CLOUDFUNCTION)) {
         // Issue with CFs
@@ -175,7 +176,7 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
   private Collection<ErrorDetail> validateIfPolicyIsCorrect(AWSCredentialsProvider credentialsProvider,
       String crossAccountRoleArn, CEFeatures feature, @NotNull Policy policy) {
     List<ErrorDetail> errorDetails = new ArrayList<>();
-
+    log.info("Verifying policy for features enabled {}", feature.name());
     for (Statement statement : policy.getStatements()) {
       List<String> actions = statement.getActions().stream().map(Action::getActionName).collect(Collectors.toList());
       List<String> resources = statement.getResources().stream().map(Resource::getId).collect(Collectors.toList());
@@ -194,6 +195,9 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
                              .code(403)
                              .build());
       }
+    }
+    if (0 == errorDetails.size()) {
+      log.info("Policy verification successful for features enabled {}", feature.name());
     }
     return errorDetails;
   }
@@ -227,6 +231,7 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
 
   private void validateReport(
       @NotNull ReportDefinition report, @NotNull String s3BucketName, final List<ErrorDetail> errorList) {
+    log.info("Validating S3 report definition at source");
     if (!report.getS3Bucket().equals(s3BucketName)) {
       lastErrorSummary = String.format("Provided s3Bucket Name: %s, Actual s3bucket associated with the report: %s",
           s3BucketName, report.getS3Bucket());
@@ -368,8 +373,8 @@ public class CEAWSConnectorValidator extends io.harness.ccm.connectors.AbstractC
         + "        \"s3:PutObjectAcl\""
         + "      ],"
         + "      \"Resource\": ["
-        + "        \"arn:aws:s3:::" + destinationBucketName + "\","
-        + "        \"arn:aws:s3:::" + destinationBucketName + "/*\""
+        + "        \"arn:aws:s3:::" + destinationBucketName + "*\","
+        + "        \"arn:aws:s3:::" + destinationBucketName + "*/*\""
         + "      ],"
         + "      \"Effect\": \"Allow\","
         + "      \"Sid\": \"harnessS3Policy20200505\""

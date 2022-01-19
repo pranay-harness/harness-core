@@ -176,6 +176,14 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   }
 
   @Override
+  public InputSetYamlDTO updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
+    InputSetEntity inputSetEntity = PMSInputSetElementMapper.toInputSetEntity(accountIdentifier, yaml);
+    validateInputSetEntity(accountIdentifier, inputSetEntity);
+    InputSetEntity updatedEntity = pmsInputSetService.updateGitFilePath(inputSetEntity, newFilePath);
+    return InputSetYamlDTOMapper.toDTO(updatedEntity);
+  }
+
+  @Override
   public InputSetYamlDTO fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
     try (GlobalContextManager.GlobalContextGuard ignore = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));

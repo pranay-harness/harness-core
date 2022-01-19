@@ -14,6 +14,7 @@ import io.harness.app.datafetcher.apiKey.CreateApiKeyDataFetcher;
 import io.harness.app.datafetcher.apiKey.DeleteApiKeyDataFetcher;
 import io.harness.app.datafetcher.apiKey.UpdateApiKeyDataFetcher;
 import io.harness.app.datafetcher.delegate.AddDelegateScopeDataFetcher;
+import io.harness.app.datafetcher.delegate.AttachAllScopesToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.AttachScopeToDelegateDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateApprovalDataFetcher;
 import io.harness.app.datafetcher.delegate.DelegateListDataFetcher;
@@ -126,6 +127,7 @@ public class GraphQLModule extends AbstractModule {
     bindDataFetcherWithAnnotation(DelegateListDataFetcher.class);
     bindDataFetcherWithAnnotation(AddDelegateScopeDataFetcher.class);
     bindDataFetcherWithAnnotation(AttachScopeToDelegateDataFetcher.class);
+    bindDataFetcherWithAnnotation(AttachAllScopesToDelegateDataFetcher.class);
     bindDataFetcherWithAnnotation(CreateEventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(DeleteEventsConfigDataFetcher.class);
     bindDataFetcherWithAnnotation(EventsConfigConnectionDataFetcher.class);

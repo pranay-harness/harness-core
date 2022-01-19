@@ -25,6 +25,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.utils.FeatureRestrictionsGetter;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
@@ -66,16 +67,19 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
   private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   private final AccountClient accountClient;
+  private final FeatureRestrictionsGetter featureRestrictionsGetter;
 
   @Inject
   public CIYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      List<YamlSchemaRootClass> yamlSchemaRootClasses, AccountClient accountClient) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, AccountClient accountClient,
+      FeatureRestrictionsGetter featureRestrictionsGetter) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
     this.accountClient = accountClient;
+    this.featureRestrictionsGetter = featureRestrictionsGetter;
   }
 
   @Override
@@ -134,13 +138,16 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
             .filter(FeatureFlag::isEnabled)
             .map(FeatureFlag::getName)
             .collect(Collectors.toSet());
+    Map<String, Boolean> featureRestrictionsMap =
+        featureRestrictionsGetter.getFeatureRestrictionsAvailability(stepSchemaWithDetails, accountIdentifier);
     // Should be after this modifyRefsNamespace call.
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(integrationStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(
+            yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags, featureRestrictionsMap),
         CI_NAMESPACE);
     if (stepSchemaWithDetails != null) {
-      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
-          integrationStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags);
+      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(integrationStageSchema.get(DEFINITIONS_NODE),
+          stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags, featureRestrictionsMap);
     }
 
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();

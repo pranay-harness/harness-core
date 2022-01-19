@@ -17,7 +17,6 @@ import io.harness.exception.InvalidRequestException;
 import io.harness.validation.OneOfField;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Preconditions;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
@@ -31,6 +30,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.validator.constraints.NotBlank;
 
 @Data
 @Builder
@@ -42,7 +42,7 @@ import lombok.experimental.FieldDefaults;
 @ApiModel("ServiceNowConnector")
 @OneOfField(fields = {"username", "usernameRef"})
 public class ServiceNowConnectorDTO extends ConnectorConfigDTO implements DecryptableEntity, DelegateSelectable {
-  @NotNull String serviceNowUrl;
+  @NotNull @NotBlank String serviceNowUrl;
   String username;
   @ApiModelProperty(dataType = "string") @SecretReference SecretRefData usernameRef;
   @ApiModelProperty(dataType = "string") @NotNull @SecretReference SecretRefData passwordRef;
@@ -55,7 +55,6 @@ public class ServiceNowConnectorDTO extends ConnectorConfigDTO implements Decryp
 
   @Override
   public void validate() {
-    Preconditions.checkState(EmptyPredicate.isNotEmpty(serviceNowUrl), "ServiceNow URL cannot be empty");
     if (EmptyPredicate.isEmpty(username) && (usernameRef == null || usernameRef.isNull())) {
       throw new InvalidRequestException("Username cannot be empty");
     }

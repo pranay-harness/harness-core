@@ -23,6 +23,7 @@ import io.harness.plancreator.steps.ParallelStepElementConfig;
 import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.remote.client.RestClientUtils;
+import io.harness.utils.FeatureRestrictionsGetter;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
@@ -64,18 +65,20 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
   private final YamlSchemaProvider yamlSchemaProvider;
   private final YamlSchemaGenerator yamlSchemaGenerator;
   private final AccountClient accountClient;
-
+  private final FeatureRestrictionsGetter featureRestrictionsGetter;
   private final Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes;
   private final List<YamlSchemaRootClass> yamlSchemaRootClasses;
   @Inject
   public CdYamlSchemaServiceImpl(YamlSchemaProvider yamlSchemaProvider, YamlSchemaGenerator yamlSchemaGenerator,
       @Named("yaml-schema-subtypes") Map<Class<?>, Set<Class<?>>> yamlSchemaSubtypes,
-      List<YamlSchemaRootClass> yamlSchemaRootClasses, AccountClient accountClient) {
+      List<YamlSchemaRootClass> yamlSchemaRootClasses, AccountClient accountClient,
+      FeatureRestrictionsGetter featureRestrictionsGetter) {
     this.yamlSchemaProvider = yamlSchemaProvider;
     this.yamlSchemaGenerator = yamlSchemaGenerator;
     this.yamlSchemaSubtypes = yamlSchemaSubtypes;
     this.yamlSchemaRootClasses = yamlSchemaRootClasses;
     this.accountClient = accountClient;
+    this.featureRestrictionsGetter = featureRestrictionsGetter;
   }
 
   @Override
@@ -137,13 +140,16 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
             .map(FeatureFlag::getName)
             .collect(Collectors.toSet());
 
+    Map<String, Boolean> featureRestrictionsMap =
+        featureRestrictionsGetter.getFeatureRestrictionsAvailability(stepSchemaWithDetails, accountIdentifier);
     // Should be after this modifyRefsNamespace call.
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(
+            yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags, featureRestrictionsMap),
         CD_NAMESPACE);
     if (stepSchemaWithDetails != null) {
-      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(
-          deploymentStageSchema.get(DEFINITIONS_NODE), stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags);
+      YamlSchemaUtils.addOneOfInExecutionWrapperConfig(deploymentStageSchema.get(DEFINITIONS_NODE),
+          stepSchemaWithDetails, ModuleType.CD, enabledFeatureFlags, featureRestrictionsMap);
     }
     ObjectMapper mapper = SchemaGeneratorUtils.getObjectMapperForSchemaGeneration();
     JsonNode node = mapper.createObjectNode().set(CD_NAMESPACE, definitions);

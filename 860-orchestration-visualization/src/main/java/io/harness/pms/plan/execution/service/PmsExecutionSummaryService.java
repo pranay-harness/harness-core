@@ -21,7 +21,7 @@ public interface PmsExecutionSummaryService {
   void updateEndTs(String planExecutionId, NodeExecution nodeExecution);
   void update(String planExecutionId, NodeExecution nodeExecution);
   void update(String planExecutionId, Update update);
-
+  void updateStageOfIdentityType(String planExecutionId, Update update);
   Optional<PipelineExecutionSummaryEntity> getPipelineExecutionSummary(
       String accountId, String orgId, String projectId, String planExecutionId);
 }

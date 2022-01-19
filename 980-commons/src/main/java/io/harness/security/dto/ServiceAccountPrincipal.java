@@ -8,8 +8,10 @@
 package io.harness.security.dto;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.security.SecurityContextBuilder.EMAIL;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_NAME;
 import static io.harness.security.SecurityContextBuilder.PRINCIPAL_TYPE;
+import static io.harness.security.SecurityContextBuilder.USERNAME;
 import static io.harness.security.dto.PrincipalType.SERVICE_ACCOUNT;
 
 import io.harness.annotations.dev.OwnedBy;
@@ -30,9 +32,14 @@ import org.springframework.data.annotation.TypeAlias;
 @JsonTypeName("SERVICE_ACCOUNT")
 @TypeAlias("ServiceAccountPrincipal")
 public class ServiceAccountPrincipal extends Principal {
-  public ServiceAccountPrincipal(String name) {
+  String email;
+  String username;
+
+  public ServiceAccountPrincipal(String name, String email, String username) {
     this.type = SERVICE_ACCOUNT;
     this.name = name;
+    this.email = email;
+    this.username = username;
   }
 
   @Override
@@ -40,11 +47,15 @@ public class ServiceAccountPrincipal extends Principal {
     Map<String, String> claims = new HashMap<>();
     claims.put(PRINCIPAL_TYPE, getType().toString());
     claims.put(PRINCIPAL_NAME, getName());
+    claims.put(EMAIL, getEmail());
+    claims.put(USERNAME, getUsername());
     return claims;
   }
 
   public static ServiceAccountPrincipal getPrincipal(Map<String, Claim> claims) {
     return new ServiceAccountPrincipal(
-        claims.get(PRINCIPAL_NAME) == null ? null : claims.get(PRINCIPAL_NAME).asString());
+        claims.get(PRINCIPAL_NAME) == null ? null : claims.get(PRINCIPAL_NAME).asString(),
+        claims.get(EMAIL) == null ? null : claims.get(EMAIL).asString(),
+        claims.get(USERNAME) == null ? null : claims.get(USERNAME).asString());
   }
 }

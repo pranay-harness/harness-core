@@ -26,11 +26,6 @@ import com.azure.storage.common.sas.SasProtocol;
 import com.google.common.collect.Lists;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.vavr.CheckedFunction0;
 import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -39,7 +34,6 @@ import java.util.concurrent.TimeoutException;
 import lombok.extern.slf4j.Slf4j;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
-import org.zeroturnaround.exec.ProcessResult;
 import org.zeroturnaround.exec.stream.slf4j.Slf4jStream;
 
 /**
@@ -65,18 +59,6 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
 
     String destinationPathWithToken = "";
     String sourcePathWithToken = "";
-
-    // Retry class config to retry aws commands
-    RetryConfig config = RetryConfig.custom()
-                             .maxAttempts(5)
-                             .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 2))
-                             .retryExceptions(TimeoutException.class, InterruptedException.class, IOException.class)
-                             .build();
-    RetryRegistry registry = RetryRegistry.of(config);
-    Retry retry = registry.retry("azcopy", config);
-    Retry.EventPublisher publisher = retry.getEventPublisher();
-    publisher.onRetry(event -> log.info(event.toString()));
-    publisher.onSuccess(event -> log.info(event.toString()));
 
     try {
       // generate SAS token for source
@@ -127,22 +109,12 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
       log.info("azcopy sync source {}, destination {}", sourcePath, destinationPath);
       final ArrayList<String> cmd =
           Lists.newArrayList("azcopy", "sync", sourcePathWithToken, destinationPathWithToken, "--recursive");
-      log.debug("azcopy sync cmd: {}", cmd);
-      // Wrap azcopy sync with a retry mechanism.
-      CheckedFunction0<ProcessResult> retryingAzcopySync =
-          Retry.decorateCheckedSupplier(retry, () -> trySyncStorage(cmd));
-      try {
-        retryingAzcopySync.apply();
-      } catch (Throwable throwable) {
-        log.error("Exception during azcopy sync {}", throwable);
-        // throw new BatchProcessingException("azcopy sync failed", throwable);
-        return false;
-      }
-      log.info("azcopy sync completed");
-    } catch (InvalidExitValueException | JsonSyntaxException e) {
+      trySyncStorage(cmd);
+    } catch (InvalidExitValueException e) {
+      log.error("output: {}", e.getResult().outputUTF8(), e);
+      return false;
+    } catch (JsonSyntaxException | InterruptedException | TimeoutException | IOException e) {
       log.error(e.getMessage(), e);
-      log.info("Exception during azcopy sync for src={}, dest={} exception={}", sourcePath, destinationPath, e);
-      // throw new BatchProcessingException("azcopy sync failed {}", e);
       return false;
     }
     return true;
@@ -182,19 +154,16 @@ public class AzureStorageSyncServiceImpl implements AzureStorageSyncService {
     return blobContainerClient.generateUserDelegationSas(builder, userDelegationKey);
   }
 
-  public ProcessResult trySyncStorage(ArrayList<String> cmd)
-      throws InterruptedException, TimeoutException, IOException {
-    log.info("Running the azcopy sync command...");
-    ProcessResult pr = getProcessExecutor()
-                           .command(cmd)
-                           .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-                           .redirectError(Slf4jStream.of(log).asError())
-                           .redirectOutput(Slf4jStream.of(log).asInfo())
-                           .exitValue(0)
-                           .readOutput(true)
-                           .execute();
-    log.info(pr.getOutput().getUTF8());
-    return pr;
+  public void trySyncStorage(ArrayList<String> cmd) throws InterruptedException, TimeoutException, IOException {
+    log.info("Running the azcopy sync command {}...", String.join(" ", cmd));
+    getProcessExecutor()
+        .command(cmd)
+        .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+        .redirectOutput(Slf4jStream.of(log).asInfo())
+        .exitValue(0)
+        .readOutput(true)
+        .execute();
+    log.info("azcopy sync completed");
   }
 
   ProcessExecutor getProcessExecutor() {

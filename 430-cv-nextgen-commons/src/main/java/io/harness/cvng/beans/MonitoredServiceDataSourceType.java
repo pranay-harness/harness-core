@@ -20,6 +20,7 @@ public enum MonitoredServiceDataSourceType {
   @JsonProperty("Splunk") SPLUNK,
   @JsonProperty("DatadogMetrics") DATADOG_METRICS,
   @JsonProperty("DatadogLog") DATADOG_LOG,
+  @JsonProperty("ErrorTracking") ERROR_TRACKING,
   @JsonProperty("CustomHealth") CUSTOM_HEALTH;
 
   public static Map<DataSourceType, MonitoredServiceDataSourceType> dataSourceTypeMonitoredServiceDataSourceTypeMap =
@@ -34,6 +35,7 @@ public enum MonitoredServiceDataSourceType {
           put(DataSourceType.DATADOG_METRICS, DATADOG_METRICS);
           put(DataSourceType.DATADOG_LOG, DATADOG_LOG);
           put(DataSourceType.CUSTOM_HEALTH, CUSTOM_HEALTH);
+          put(DataSourceType.ERROR_TRACKING, ERROR_TRACKING);
         }
       };
 }

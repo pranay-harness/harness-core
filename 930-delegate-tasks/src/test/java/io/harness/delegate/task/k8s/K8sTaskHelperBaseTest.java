@@ -34,12 +34,14 @@ import static io.harness.k8s.model.Kind.Namespace;
 import static io.harness.k8s.model.Kind.Service;
 import static io.harness.logging.LogLevel.ERROR;
 import static io.harness.logging.LogLevel.INFO;
+import static io.harness.logging.LogLevel.WARN;
 import static io.harness.rule.OwnerRule.ABHINAV2;
 import static io.harness.rule.OwnerRule.ABOSII;
 import static io.harness.rule.OwnerRule.ACASIAN;
 import static io.harness.rule.OwnerRule.ADWAIT;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARVIND;
+import static io.harness.rule.OwnerRule.BOGDAN;
 import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.SAHIL;
 import static io.harness.rule.OwnerRule.SATYAM;
@@ -49,6 +51,10 @@ import static io.harness.rule.OwnerRule.UTSAV;
 import static io.harness.rule.OwnerRule.VAIBHAV_SI;
 import static io.harness.rule.OwnerRule.YOGESH;
 import static io.harness.state.StateConstants.DEFAULT_STEADY_STATE_TIMEOUT;
+
+import static software.wings.beans.LogColor.Yellow;
+import static software.wings.beans.LogHelper.color;
+import static software.wings.beans.LogWeight.Bold;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -1750,6 +1756,33 @@ public class K8sTaskHelperBaseTest extends CategoryTest {
               FileData.builder().fileContent("template").fileName("template.yaml").build()),
           values, executionLogCallback, 10000);
       assertThat(result.stream().map(FileData::getFileContent)).containsExactly("rendered");
+    } finally {
+      deleteDirectoryAndItsContentIfExists(temp.toString());
+    }
+  }
+
+  @Test
+  @Owner(developers = BOGDAN)
+  @Category(UnitTests.class)
+  public void shouldLogIfValuesMissing() throws Exception {
+    Path temp = Files.createTempDirectory("testRenderManifestFilesForGoTemplate");
+    try {
+      String renderedTemplate = "field: <no value>";
+      List<String> values = singletonList("field: value");
+      K8sDelegateTaskParams params =
+          K8sDelegateTaskParams.builder().goTemplateClientPath("go-template").workingDirectory(temp.toString()).build();
+
+      doReturn(new ProcessResult(0, new ProcessOutput(renderedTemplate.getBytes())))
+          .when(spyK8sTaskHelperBase)
+          .executeShellCommand(anyString(), eq("go-template -t template.yaml  -f values-0.yaml"), any(), anyLong());
+
+      spyK8sTaskHelperBase.renderManifestFilesForGoTemplate(params,
+          asList(FileData.builder().fileContent("values").fileName(values_filename).build(),
+              FileData.builder().fileContent("template").fileName("template.yaml").build()),
+          values, executionLogCallback, 10000);
+
+      String expectedLogLine = "Rendered template is missing values (replaced with <no value>)!";
+      verify(executionLogCallback, times(1)).saveExecutionLog(eq(color(expectedLogLine, Yellow, Bold)), eq(WARN));
     } finally {
       deleteDirectoryAndItsContentIfExists(temp.toString());
     }

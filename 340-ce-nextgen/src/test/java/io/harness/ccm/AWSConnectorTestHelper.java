@@ -95,6 +95,7 @@ public class AWSConnectorTestHelper {
     return ConnectorResponseDTO.builder()
         .connector(ConnectorInfoDTO.builder().connectorConfig(ceAwsConnectorDTO).build())
         .lastModifiedAt(0L)
+        .createdAt(0L)
         .build();
   }
 

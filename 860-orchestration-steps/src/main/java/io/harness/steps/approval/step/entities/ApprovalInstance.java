@@ -9,10 +9,12 @@ package io.harness.steps.approval.step.entities;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
+import static io.harness.eraro.ErrorCode.GENERAL_ERROR;
 import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.annotation.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.eraro.Level;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
@@ -23,6 +25,9 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.plancreator.steps.common.StepElementParameters;
 import io.harness.pms.contracts.ambiance.Ambiance;
+import io.harness.pms.contracts.execution.failure.FailureData;
+import io.harness.pms.contracts.execution.failure.FailureInfo;
+import io.harness.pms.contracts.execution.failure.FailureType;
 import io.harness.pms.execution.utils.AmbianceUtils;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.steps.approval.step.beans.ApprovalStatus;
@@ -154,5 +159,18 @@ public abstract class ApprovalInstance implements PersistentEntity, PersistentRe
       throw new InvalidArgumentsException(String.format("Invalid timeout: '%s'", timeoutField.fetchFinalValue()));
     }
     return System.currentTimeMillis() + timeout.getTimeoutInMillis();
+  }
+
+  public FailureInfo getFailureInfo() {
+    if (status == ApprovalStatus.REJECTED) {
+      FailureData failureData = FailureData.newBuilder()
+                                    .addFailureTypes(FailureType.UNKNOWN_FAILURE)
+                                    .setLevel(Level.ERROR.name())
+                                    .setCode(GENERAL_ERROR.name())
+                                    .setMessage("Approval Step has been Rejected")
+                                    .build();
+      return FailureInfo.newBuilder().addFailureData(failureData).build();
+    }
+    return null;
   }
 }
