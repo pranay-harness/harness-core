@@ -28,10 +28,15 @@ public class DatadogMetricHealthDefinition extends HealthSourceMetricDefinition 
   String serviceInstanceIdentifierTag;
   List<String> metricTags;
   boolean isManualQuery;
+  boolean isCustomCreatedMetric;
 
   @JsonProperty(value = "isManualQuery")
   public boolean isManualQuery() {
     return isManualQuery;
+  }
+  @JsonProperty(value = "isCustomCreatedMetric")
+  public boolean isCustomCreatedMetric() {
+    return isCustomCreatedMetric;
   }
 
   public String getServiceInstanceIdentifierTag() {

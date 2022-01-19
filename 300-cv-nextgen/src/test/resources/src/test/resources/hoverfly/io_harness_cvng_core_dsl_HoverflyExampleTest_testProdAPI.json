@@ -1,0 +1,52 @@
+{
+  "data" : {
+    "pairs" : [ {
+      "request" : {
+        "path" : [ {
+          "matcher" : "exact",
+          "value" : "/api/version"
+        } ],
+        "method" : [ {
+          "matcher" : "exact",
+          "value" : "GET"
+        } ],
+        "destination" : [ {
+          "matcher" : "exact",
+          "value" : "app.harness.io"
+        } ],
+        "scheme" : [ {
+          "matcher" : "exact",
+          "value" : "https"
+        } ],
+        "body" : [ {
+          "matcher" : "exact",
+          "value" : ""
+        } ]
+      },
+      "response" : {
+        "status" : 200,
+        "body" : "H4sIAAAAAAAAAGWPywrCMBBF/2XWVVMV1Ox8bFzUTcGNuBjtqIG8yCSiSP/dVCkILu/lnOHOCwxF3GBEkK+2gEDsUjhTTnCnwMrZrb24nwgSyqEYziZTMYcCTknpZpcB6JurimtnjIogbdL6U6wC2vMtQ4E0IdOIEXmUjccjG1EZ4ojGZ2A8FmU5G5SLSXfLY/xoQgjo1iXbsf0iH5TB8AQZQ6Kij/v/nYPOL6Ahr92zck1+D+rlsob2+7J3lqkiZrwSgzwc2zdjkVWPGAEAAA==",
+        "encodedBody" : true,
+        "templated" : false,
+        "headers" : {
+          "Alt-Svc" : [ "h3=\":443\"; ma=2592000,h3-29=\":443\"; ma=2592000" ],
+          "Content-Encoding" : [ "gzip" ],
+          "Content-Type" : [ "application/json;charset=utf-8" ],
+          "Date" : [ "Tue, 18 Jan 2022 09:57:26 GMT" ],
+          "Hoverfly" : [ "Was-Here" ],
+          "Strict-Transport-Security" : [ "max-age=15724800; includeSubDomains" ],
+          "Vary" : [ "Accept-Encoding" ],
+          "Via" : [ "1.1 google" ]
+        }
+      }
+    } ],
+    "globalActions" : {
+      "delays" : [ ]
+    }
+  },
+  "meta" : {
+    "schemaVersion" : "v5",
+    "hoverflyVersion" : "v1.1.5",
+    "timeExported" : "2022-01-18T09:57:26Z"
+  }
+}

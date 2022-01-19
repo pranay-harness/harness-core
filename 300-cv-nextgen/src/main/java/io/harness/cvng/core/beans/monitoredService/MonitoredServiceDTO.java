@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.swagger.annotations.ApiModelProperty;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.Valid;
@@ -41,6 +42,7 @@ public class MonitoredServiceDTO implements YamlDTO {
   String description;
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String serviceRef;
   @ApiModelProperty(required = true) @NotNull @EntityIdentifier String environmentRef;
+  List<String> environmentRefList;
   @ApiModelProperty(required = true) @NotNull @Size(max = 128) Map<String, String> tags;
   @Valid Sources sources;
   @Valid Set<ServiceDependencyDTO> dependencies;

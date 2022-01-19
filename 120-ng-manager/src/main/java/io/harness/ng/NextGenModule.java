@@ -209,9 +209,6 @@ import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.resourcegroupclient.ResourceGroupClientModule;
 import io.harness.scim.service.ScimGroupService;
 import io.harness.scim.service.ScimUserService;
-import io.harness.secretkey.AESSecretKeyServiceImpl;
-import io.harness.secretkey.SecretKeyConstants;
-import io.harness.secretkey.SecretKeyService;
 import io.harness.secretmanagerclient.SecretManagementClientModule;
 import io.harness.secrets.SecretNGManagerClientModule;
 import io.harness.security.ServiceTokenGenerator;
@@ -724,11 +721,6 @@ public class NextGenModule extends AbstractModule {
         .bind(KmsEncryptor.class)
         .annotatedWith(Names.named(Encryptors.GLOBAL_GCP_KMS_ENCRYPTOR.getName()))
         .to(GcpKmsEncryptor.class);
-
-    binder()
-        .bind(SecretKeyService.class)
-        .annotatedWith(Names.named(SecretKeyConstants.AES_SECRET_KEY))
-        .to(AESSecretKeyServiceImpl.class);
   }
 
   private void registerOutboxEventHandlers() {

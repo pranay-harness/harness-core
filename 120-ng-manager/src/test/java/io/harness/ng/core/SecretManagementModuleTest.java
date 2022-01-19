@@ -26,7 +26,6 @@ import io.harness.connector.services.NGConnectorSecretManagerService;
 import io.harness.eventsframework.EventsFrameworkConfiguration;
 import io.harness.ff.FeatureFlagService;
 import io.harness.govern.ProviderModule;
-import io.harness.helpers.LocalEncryptorHelper;
 import io.harness.ng.ConnectorServiceImpl;
 import io.harness.ng.core.activityhistory.service.NGActivityService;
 import io.harness.ng.core.api.NGSecretManagerService;
@@ -200,13 +199,6 @@ public class SecretManagementModuleTest extends CategoryTest {
       @Named(CONNECTOR_DECORATOR_SERVICE)
       ConnectorService registerConnecterService() {
         return mock(ConnectorServiceImpl.class);
-      }
-    });
-    modules.add(new ProviderModule() {
-      @Provides
-      @Singleton
-      LocalEncryptorHelper registerLocalEncryptorHelperService() {
-        return mock(LocalEncryptorHelper.class);
       }
     });
     modules.add(secretManagementModule);

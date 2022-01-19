@@ -165,14 +165,14 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
   @VisibleForTesting
   static void publishClusterSyncEvent(DefaultK8sMetricsClient client, EventPublisher eventPublisher,
       K8sWatchTaskParams watchTaskParams, Instant pollTime) throws ApiException {
-    Map<String, String> nodeUidNameMap = client.listNode(null, null, null, null, null, null, null, null, null, null)
+    Map<String, String> nodeUidNameMap = client.listNode(null, null, null, null, null, null, null, null, null)
                                              .getItems()
                                              .stream()
                                              .map(V1Node::getMetadata)
                                              .collect(Collectors.toMap(V1ObjectMeta::getUid, V1ObjectMeta::getName));
 
     Map<String, String> podUidNameMap =
-        client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null, null)
+        client.listPodForAllNamespaces(null, null, null, null, null, null, null, null, null)
             .getItems()
             .stream()
             .filter(pod -> "Running".equals(pod.getStatus().getPhase()))
@@ -182,7 +182,7 @@ public class K8SWatchTaskExecutor implements PerpetualTaskExecutor {
     Map<String, String> pvUidNameMap = new HashMap<>();
     // optional as of now, will remove when the permission is mandatory.
     try {
-      pvUidNameMap.putAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null, null)
+      pvUidNameMap.putAll(client.listPersistentVolume(null, null, null, null, null, null, null, null, null)
                               .getItems()
                               .stream()
                               .map(V1PersistentVolume::getMetadata)

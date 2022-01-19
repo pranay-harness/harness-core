@@ -10,6 +10,7 @@ package io.harness.filter.dto;
 import static io.harness.annotations.dev.HarnessTeam.DX;
 import static io.harness.filter.dto.FilterVisibility.EVERYONE;
 
+import io.harness.NGCommonEntityConstants;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.validator.EntityIdentifier;
 import io.harness.persistence.PersistentEntity;
@@ -33,12 +34,14 @@ import lombok.experimental.FieldNameConstants;
 @FieldNameConstants(innerTypeName = "FilterKeys")
 @JsonIgnoreProperties(ignoreUnknown = true)
 @OwnedBy(DX)
-@Schema(name = "Filter", description = "This is the view of the Filter entity defined in Harness")
+@Schema(name = "Filter", description = "This has details of the Filter entity defined in Harness")
 public class FilterDTO implements PersistentEntity {
-  @NotNull String name;
-  @NotNull @EntityIdentifier String identifier;
-  String orgIdentifier;
-  String projectIdentifier;
+  @Schema(description = "Name of the Filter.") @NotNull String name;
+  @NotNull @EntityIdentifier @Schema(description = "Identifier of the Filter.") String identifier;
+  @Schema(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) String orgIdentifier;
+  @Schema(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) String projectIdentifier;
   @NotNull FilterPropertiesDTO filterProperties;
-  @Builder.Default FilterVisibility filterVisibility = EVERYONE;
+  @Builder.Default
+  @Schema(description = "This indicates visibility of Filter, by default it is Everyone.")
+  FilterVisibility filterVisibility = EVERYONE;
 }

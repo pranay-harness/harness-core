@@ -69,13 +69,13 @@ public class DelegateRequestRateLimiter {
       boolean globalRateLimitReached = globalRateLimiter.overLimitWhenIncremented(Account.GLOBAL_ACCOUNT_ID);
       if (globalRateLimitReached) {
         log.info("Global Delegate Acquire Task limit reached");
-        delegateMetricsService.recordDelegateTaskMetrics(accountId, delegateId, DELEGATE_TASK_ACQUIRE_LIMIT_EXCEEDED);
+        delegateMetricsService.recordDelegateTaskMetrics(accountId, DELEGATE_TASK_ACQUIRE_LIMIT_EXCEEDED);
         return true;
       } else if (isNotEmpty(accountId)) {
         boolean rateLimitReached = getAccountRateLimiter(accountId).overLimitWhenIncremented(delegateId);
         if (rateLimitReached) {
           log.info("Delegate Acquire Task limit reached");
-          delegateMetricsService.recordDelegateTaskMetrics(accountId, delegateId, DELEGATE_TASK_ACQUIRE_LIMIT_EXCEEDED);
+          delegateMetricsService.recordDelegateTaskMetrics(accountId, DELEGATE_TASK_ACQUIRE_LIMIT_EXCEEDED);
           return true;
         }
       }

@@ -20,6 +20,7 @@ import io.harness.plancreator.steps.StepElementConfig;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
+import io.harness.utils.FeatureRestrictionsGetter;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -48,6 +50,7 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
   @Inject private PmsYamlSchemaHelper pmsYamlSchemaHelper;
   @Inject private YamlSchemaGenerator yamlSchemaGenerator;
   @Inject private List<YamlSchemaRootClass> yamlSchemaRootClasses;
+  @Inject private FeatureRestrictionsGetter featureRestrictionsGetter;
 
   @Override
   public PartialSchemaDTO getFeatureFlagYamlSchema(String accountIdentifier, String projectIdentifier,
@@ -71,8 +74,11 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
 
     Set<String> enabledFeatureFlags =
         pmsYamlSchemaHelper.getEnabledFeatureFlags(accountIdentifier, yamlSchemaWithDetailsList);
+    Map<String, Boolean> featureRestrictionsMap =
+        featureRestrictionsGetter.getFeatureRestrictionsAvailability(yamlSchemaWithDetailsList, accountIdentifier);
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(featureFlagStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(
+            yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags, featureRestrictionsMap),
         "");
 
     yamlSchemaGenerator.modifyRefsNamespace(featureFlagStageSchema, FEATURE_FLAG_NAMESPACE);

@@ -39,4 +39,10 @@ public class NGResourceFilterConstants {
   public static final String TIME_GROUP_BY_TYPE = "timeGroupByType";
   public static final String GROUP_BY = "groupBy";
   public static final String SORT_BY = "sortBy";
+  public static final String IDENTIFIER_LIST =
+      "This is the list of Entity Identifiers on which the filter will be applied.";
+  public static final String TYPE_LIST = "This is the list of the ENTITY types on which the filter will be applied.";
+  public static final String SEARCH_TERM = "Text to search/filter the Entity.";
+  public static final String IGNORE_CASE =
+      "This is true if the case of the searched phrase should be ignored when filtering the Entity. Else, it is false.";
 }

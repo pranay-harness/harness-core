@@ -9,6 +9,7 @@ package io.harness.cvng.analysis.beans;
 
 import io.harness.cvng.beans.DataSourceType;
 
+import java.util.Map;
 import java.util.SortedSet;
 import lombok.Builder;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class TransactionMetricInfo {
   private String connectorName;
   private DataSourceType dataSourceType;
   private SortedSet<DeploymentTimeSeriesAnalysisDTO.HostData> nodes;
+  private Map<Risk, Integer> nodeCountByRiskStatusMap;
 
   @Value
   @Builder
