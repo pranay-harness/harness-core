@@ -16,7 +16,7 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.data.structure.EmptyPredicate;
 import io.harness.data.validator.Trimmed;
 import io.harness.mongo.index.CompoundMongoIndex;
-import io.harness.mongo.index.FdIndex;
+import io.harness.mongo.index.FdTtlIndex;
 import io.harness.mongo.index.MongoIndex;
 import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
@@ -77,7 +77,7 @@ public class ExecutionSweepingOutputInstance implements PersistentEntity, UuidAc
   PmsSweepingOutput valueOutput;
   @Wither @CreatedDate Long createdAt;
 
-  @FdIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
+  @FdTtlIndex @Builder.Default Date validUntil = Date.from(OffsetDateTime.now().plus(TTL).toInstant());
 
   @Wither @Version Long version;
 

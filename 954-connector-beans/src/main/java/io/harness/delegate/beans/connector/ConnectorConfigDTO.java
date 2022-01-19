@@ -24,6 +24,7 @@ import io.harness.delegate.beans.connector.customhealthconnector.CustomHealthCon
 import io.harness.delegate.beans.connector.datadog.DatadogConnectorDTO;
 import io.harness.delegate.beans.connector.docker.DockerConnectorDTO;
 import io.harness.delegate.beans.connector.dynatrace.DynatraceConnectorDTO;
+import io.harness.delegate.beans.connector.errortracking.ErrorTrackingConnectorDTO;
 import io.harness.delegate.beans.connector.gcpccm.GcpCloudCostConnectorDTO;
 import io.harness.delegate.beans.connector.gcpconnector.GcpConnectorDTO;
 import io.harness.delegate.beans.connector.gcpkmsconnector.GcpKmsConnectorDTO;
@@ -85,7 +86,8 @@ import java.util.List;
       @JsonSubTypes.Type(value = HttpHelmConnectorDTO.class, name = "HttpHelmRepo"),
       @JsonSubTypes.Type(value = PagerDutyConnectorDTO.class, name = "PagerDuty"),
       @JsonSubTypes.Type(value = CustomHealthConnectorDTO.class, name = "CustomHealth"),
-      @JsonSubTypes.Type(value = ServiceNowConnectorDTO.class, name = "ServiceNow")
+      @JsonSubTypes.Type(value = ServiceNowConnectorDTO.class, name = "ServiceNow"),
+      @JsonSubTypes.Type(value = ErrorTrackingConnectorDTO.class, name = "ErrorTracking")
 })
 @OwnedBy(DX)
 @Schema(name = "ConnectorConfig", description = "This is the view of the ConnectorConfig entity defined in Harness")

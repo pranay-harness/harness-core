@@ -161,6 +161,7 @@ public class Account extends Base implements PersistentRegularIterable {
   @FdIndex private Long secretManagerValidationIterator;
   @FdIndex private Long ceLicenseExpiryIteration;
   @FdIndex private Long resourceLookupSyncIteration;
+  @FdIndex private long delegateTelemetryPublisherIteration;
 
   @Getter private boolean cloudCostEnabled;
   @Getter @Setter private boolean ceAutoCollectK8sEvents;
@@ -467,6 +468,10 @@ public class Account extends Base implements PersistentRegularIterable {
       return;
     }
 
+    else if (AccountKeys.delegateTelemetryPublisherIteration.equals(fieldName)) {
+      this.delegateTelemetryPublisherIteration = nextIteration;
+    }
+
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
   }
 
@@ -510,6 +515,10 @@ public class Account extends Base implements PersistentRegularIterable {
 
     else if (AccountKeys.resourceLookupSyncIteration.equals(fieldName)) {
       return this.resourceLookupSyncIteration;
+    }
+
+    else if (AccountKeys.delegateTelemetryPublisherIteration.equals(fieldName)) {
+      return this.delegateTelemetryPublisherIteration;
     }
 
     throw new IllegalArgumentException("Invalid fieldName " + fieldName);
@@ -809,6 +818,7 @@ public class Account extends Base implements PersistentRegularIterable {
     public static final String subdomainUrl = "subdomainUrl";
     public static final String gitSyncExpiryCheckIteration = "gitSyncExpiryCheckIteration";
     public static final String ceLicenseExpiryIteration = "ceLicenseExpiryIteration";
+    public static final String delegateTelemetryPublisherIteration = "delegateTelemetryPublisherIteration";
     public static final String ceLicenseInfo = "ceLicenseInfo";
     public static final String isHarnessSupportAccessAllowed = "isHarnessSupportAccessAllowed";
     public static final String resourceLookupSyncIteration = "resourceLookupSyncIteration";

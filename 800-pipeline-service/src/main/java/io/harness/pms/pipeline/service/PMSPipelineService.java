@@ -79,4 +79,6 @@ public interface PMSPipelineService {
 
   String fetchExpandedPipelineJSONFromYaml(
       String accountId, String orgIdentifier, String projectIdentifier, String pipelineYaml);
+
+  PipelineEntity updateGitFilePath(PipelineEntity pipelineEntity, String newFilePath);
 }
