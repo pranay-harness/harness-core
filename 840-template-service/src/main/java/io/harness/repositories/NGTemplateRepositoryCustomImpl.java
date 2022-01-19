@@ -9,6 +9,8 @@ package io.harness.repositories;
 
 import static io.harness.annotations.dev.HarnessTeam.CDC;
 
+import static org.springframework.data.mongodb.core.query.Query.query;
+
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.helper.EntityDistinctElementHelper;
@@ -32,8 +34,10 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.mongodb.core.FindAndModifyOptions;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.data.repository.support.PageableExecutionUtils;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE, onConstructor = @__({ @Inject }))
@@ -177,6 +181,12 @@ public class NGTemplateRepositoryCustomImpl implements NGTemplateRepositoryCusto
                                           .and(TemplateEntityKeys.versionLabel)
                                           .is(versionLabel),
         projectIdentifier, orgIdentifier, accountId, TemplateEntity.class);
+  }
+
+  @Override
+  public TemplateEntity update(Criteria criteria, Update update) {
+    return mongoTemplate.findAndModify(
+        query(criteria), update, FindAndModifyOptions.options().returnNew(true), TemplateEntity.class);
   }
 
   boolean shouldLogAudits(String accountId, String orgIdentifier, String projectIdentifier) {

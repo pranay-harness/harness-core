@@ -21,8 +21,8 @@ fi
 
 yq write -i $CONFIG_FILE server.adminConnectors "[]"
 
-yq delete -i $CONFIG_FILE grpcServerConfig.connectors[0]
-yq delete -i $CONFIG_FILE gitSdkConfiguration.gitSdkGrpcServerConfig.connectors[0]
+yq delete -i $CONFIG_FILE 'grpcServerConfig.connectors.(secure==true)'
+yq delete -i $CONFIG_FILE 'gitSdkConfiguration.gitSdkGrpcServerConfig.connectors.(secure==true)'
 
 if [[ "" != "$LOGGING_LEVEL" ]]; then
     yq write -i $CONFIG_FILE logging.level "$LOGGING_LEVEL"
@@ -210,10 +210,10 @@ if [[ "" != "$PMS_API_BASE_URL" ]]; then
 fi
 
 if [[ "$STACK_DRIVER_LOGGING_ENABLED" == "true" ]]; then
-  yq delete -i $CONFIG_FILE logging.appenders[0]
-  yq write -i $CONFIG_FILE logging.appenders[0].stackdriverLogEnabled "true"
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==console)'
+  yq write -i $CONFIG_FILE 'logging.appenders.(type==gke-console).stackdriverLogEnabled' "true"
 else
-  yq delete -i $CONFIG_FILE logging.appenders[1]
+  yq delete -i $CONFIG_FILE 'logging.appenders.(type==gke-console)'
 fi
 
 if [[ "" != "$JWT_AUTH_SECRET" ]]; then
@@ -284,7 +284,7 @@ if [[ "" != "$CACHE_CONFIG_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$CACHE_CONFIG_REDIS_SENTINELS"
   INDEX=0
   for REDIS_SENTINEL_URL in "${SENTINEL_URLS[@]}"; do
-    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[+] "${REDIS_SENTINEL_URL}"
+    yq write -i $REDISSON_CACHE_FILE sentinelServersConfig.sentinelAddresses.[$INDEX] "${REDIS_SENTINEL_URL}"
     INDEX=$(expr $INDEX + 1)
   done
 fi
@@ -334,12 +334,12 @@ replace_key_value logStreamingServiceConfig.baseUrl "$LOG_STREAMING_SERVICE_BASE
 
 replace_key_value logStreamingServiceConfig.serviceToken "$LOG_STREAMING_SERVICE_TOKEN"
 
+replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
+replace_key_value iteratorsConfig.approvalInstanceIteratorConfig.targetIntervalInSeconds "$APPROVAL_INSTANCE_ITERATOR_INTERVAL_SEC"
 replace_key_value orchestrationStepConfig.ffServerBaseUrl "$FF_SERVER_BASE_URL"
 replace_key_value orchestrationStepConfig.ffServerApiKey "$FF_SERVER_API_KEY"
 
 replace_key_value shouldDeployWithGitSync "$ENABLE_GIT_SYNC"
-replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
-
 
 replace_key_value enableAudit "$ENABLE_AUDIT"
 replace_key_value auditClientConfig.baseUrl "$AUDIT_SERVICE_BASE_URL"
@@ -351,6 +351,12 @@ replace_key_value triggerConfig.customBaseUrl "$CUSTOM_TRIGGER_BASEURL"
 replace_key_value opaServerConfig.baseUrl "$OPA_SERVER_BASEURL"
 replace_key_value opaServerConfig.secret "$OPA_SERVER_SECRET"
 
+replace_key_value delegatePollingConfig.syncDelay "$POLLING_SYNC_DELAY"
+replace_key_value delegatePollingConfig.asyncDelay "$POLLING_ASYNC_DELAY"
+replace_key_value delegatePollingConfig.progressDelay "$POLLING_PROGRESS_DELAY"
+
+replace_key_value segmentConfiguration.enabled "$SEGMENT_ENABLED"
+replace_key_value segmentConfiguration.apiKey "$SEGMENT_APIKEY"
 
 #Iterators Configuration
 replace_key_value iteratorsConfig.approvalInstance.enabled "$APPROVAL_INSTANCE_ITERATOR_ENABLED"
@@ -395,4 +401,7 @@ replace_key_value pipelineEventConsumersConfig.partialPlanResponse.threads "$PAR
 replace_key_value pipelineEventConsumersConfig.createPlan.threads "$CREATE_PLAN_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.planNotify.threads "$PLAN_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
 replace_key_value pipelineEventConsumersConfig.pmsNotify.threads "$PMS_NOTIFY_EVENT_CONSUMER_THREAD_COUNT"
+replace_key_value pipelineEventConsumersConfig.webhookEvent.threads "$PMS_WEBHOOK_EVENT_CONSUMER_THREAD_COUNT"
+
+replace_key_value enforcementClientConfiguration.enforcementCheckEnabled "$ENFORCEMENT_CHECK_ENABLED"
 replace_key_value segmentConfiguration.url "$SEGMENT_URL"

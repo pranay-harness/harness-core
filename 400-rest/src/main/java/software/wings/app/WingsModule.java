@@ -11,6 +11,9 @@ import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
 import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
+import static io.harness.audit.ResourceTypeConstants.DELEGATE;
+import static io.harness.audit.ResourceTypeConstants.DELEGATE_TOKEN;
+import static io.harness.audit.ResourceTypeConstants.USER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
@@ -154,7 +157,7 @@ import io.harness.logstreaming.LogStreamingServiceClientFactory;
 import io.harness.logstreaming.LogStreamingServiceRestClient;
 import io.harness.marketplace.gcp.procurement.CDProductHandler;
 import io.harness.marketplace.gcp.procurement.GcpProductHandler;
-import io.harness.metrics.impl.DelegateTaskMetricsPublisher;
+import io.harness.metrics.impl.DelegateMetricsPublisher;
 import io.harness.metrics.modules.MetricsModule;
 import io.harness.metrics.service.api.MetricsPublisher;
 import io.harness.mongo.MongoConfig;
@@ -259,6 +262,8 @@ import software.wings.cloudprovider.gke.GkeClusterService;
 import software.wings.cloudprovider.gke.GkeClusterServiceImpl;
 import software.wings.common.WingsExpressionProcessorFactory;
 import software.wings.core.managerConfiguration.ConfigurationController;
+import software.wings.core.outbox.UserEventHandler;
+import software.wings.core.outbox.WingsOutboxEventHandler;
 import software.wings.dl.WingsMongoPersistence;
 import software.wings.dl.WingsPersistence;
 import software.wings.dl.exportimport.WingsMongoExportImport;
@@ -1418,13 +1423,22 @@ public class WingsModule extends AbstractModule implements ServersModule {
         this.configuration.isEnableAudit()));
     install(new TransactionOutboxModule(DEFAULT_OUTBOX_POLL_CONFIGURATION, MANAGER.getServiceId(), false));
 
-    bind(OutboxEventHandler.class).to(DelegateOutboxEventHandler.class);
+    registerOutboxEventHandlers();
+    bind(OutboxEventHandler.class).to(WingsOutboxEventHandler.class);
     install(new CVCommonsServiceModule());
     bind(CDChangeSourceIntegrationService.class).to(CDChangeSourceIntegrationServiceImpl.class);
     bind(FeatureFlagHelperService.class).to(CGFeatureFlagHelperServiceImpl.class);
 
     install(new MetricsModule());
-    bind(MetricsPublisher.class).to(DelegateTaskMetricsPublisher.class).in(Scopes.SINGLETON);
+    bind(MetricsPublisher.class).to(DelegateMetricsPublisher.class).in(Scopes.SINGLETON);
+  }
+
+  private void registerOutboxEventHandlers() {
+    MapBinder<String, OutboxEventHandler> outboxEventHandlerMapBinder =
+        MapBinder.newMapBinder(binder(), String.class, OutboxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(DELEGATE).to(DelegateOutboxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(DELEGATE_TOKEN).to(DelegateOutboxEventHandler.class);
+    outboxEventHandlerMapBinder.addBinding(USER).to(UserEventHandler.class);
   }
 
   private void bindFeatures() {

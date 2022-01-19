@@ -79,7 +79,6 @@ import software.wings.sm.StateType;
 import java.io.IOException;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.Mock;
@@ -422,7 +421,6 @@ public class PluginServiceTest extends CategoryTest {
   @Test
   @Owner(developers = RAGHU)
   @Category(UnitTests.class)
-  @Ignore("Not required now, since this is not used")
   public void shouldGetPluginSettingSchema() throws Exception {
     assertThat(pluginService.getPluginSettingSchema(accountId))
         .hasSize(37)

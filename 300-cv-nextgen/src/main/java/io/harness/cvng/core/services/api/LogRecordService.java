@@ -8,6 +8,7 @@
 package io.harness.cvng.core.services.api;
 
 import io.harness.cvng.beans.LogRecordDTO;
+import io.harness.cvng.core.beans.demo.DemoTemplate;
 import io.harness.cvng.core.entities.LogRecord;
 
 import java.io.IOException;
@@ -23,5 +24,5 @@ public interface LogRecordService {
   List<LogRecord> getLogRecords(String verificationTaskId, Instant startTime, Instant endTime);
 
   void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException;
+      DemoTemplate demoTemplate, Instant startTime, Instant endTime) throws IOException;
 }

@@ -539,10 +539,6 @@ public class DelegateAgentServiceImpl implements DelegateAgentService {
             DELEGATE_TYPE, DELEGATE_GROUP_NAME, supportedTasks);
       }
 
-      log.info("Delegate configs: type: [{}], use_cdn: [{}], USE_CDN: [{}]",
-          isNotBlank(DELEGATE_TYPE) ? DELEGATE_TYPE : "UNKNOWN TYPE", delegateConfiguration.isUseCdn(),
-          System.getenv().get("USE_CDN"));
-
       if (isNotEmpty(delegateTokenName)) {
         log.info("Registering Delegate with Token: {}", delegateTokenName);
       }

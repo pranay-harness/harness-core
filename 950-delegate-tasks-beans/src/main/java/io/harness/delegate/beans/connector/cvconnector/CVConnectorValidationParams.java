@@ -6,7 +6,6 @@
  */
 
 package io.harness.delegate.beans.connector.cvconnector;
-
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.delegate.beans.connector.ConnectorConfigDTO;
@@ -26,7 +25,7 @@ import lombok.experimental.SuperBuilder;
 @OwnedBy(HarnessTeam.CV)
 public class CVConnectorValidationParams implements ConnectorValidationParams, ExecutionCapabilityDemander {
   ConnectorConfigDTO connectorConfigDTO;
-  List<EncryptedDataDetail> encryptedDataDetails;
+  List<List<EncryptedDataDetail>> encryptedDataDetails;
   String connectorName;
   ConnectorType connectorType;
 

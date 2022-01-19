@@ -76,6 +76,7 @@ import io.harness.cvng.core.entities.CustomHealthCVConfig.CustomHealthCVConfigUp
 import io.harness.cvng.core.entities.DataCollectionTask.Type;
 import io.harness.cvng.core.entities.DatadogLogCVConfig.DatadogLogCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.DatadogMetricCVConfig.DatadogMetricCVConfigUpdatableEntity;
+import io.harness.cvng.core.entities.ErrorTrackingCVConfig.ErrorTrackingCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.NewRelicCVConfig.NewRelicCVConfigUpdatableEntity;
 import io.harness.cvng.core.entities.PrometheusCVConfig.PrometheusUpdatableEntity;
 import io.harness.cvng.core.entities.SplunkCVConfig.SplunkCVConfigUpdatableEntity;
@@ -201,6 +202,7 @@ import io.harness.cvng.core.utils.monitoredService.CVConfigToHealthSourceTransfo
 import io.harness.cvng.core.utils.monitoredService.CustomHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.DatadogLogHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.DatadogMetricHealthSourceSpecTransformer;
+import io.harness.cvng.core.utils.monitoredService.ErrorTrackingHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.NewRelicHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.PrometheusHealthSourceSpecTransformer;
 import io.harness.cvng.core.utils.monitoredService.SplunkHealthSourceSpecTransformer;
@@ -416,6 +418,8 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.CUSTOM_HEALTH)
         .to(CustomHealthSourceSpecTransformer.class)
         .in(Scopes.SINGLETON);
+    dataSourceTypeToHealthSourceTransformerMapBinder.addBinding(DataSourceType.ERROR_TRACKING)
+        .to(ErrorTrackingHealthSourceSpecTransformer.class);
     MapBinder<DataSourceType, DataCollectionInfoMapper> dataSourceTypeDataCollectionInfoMapperMapBinder =
         MapBinder.newMapBinder(binder(), DataSourceType.class, DataCollectionInfoMapper.class);
     dataSourceTypeDataCollectionInfoMapperMapBinder.addBinding(DataSourceType.APP_DYNAMICS)
@@ -554,6 +558,8 @@ public class CVServiceModule extends AbstractModule {
     dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.DATADOG_LOG)
         .to(DatadogLogCVConfigUpdatableEntity.class)
         .in(Scopes.SINGLETON);
+    dataSourceTypeCVConfigMapBinder.addBinding(DataSourceType.ERROR_TRACKING)
+        .to(ErrorTrackingCVConfigUpdatableEntity.class);
 
     MapBinder<SLIMetricType, ServiceLevelIndicatorUpdatableEntity> serviceLevelIndicatorMapBinder =
         MapBinder.newMapBinder(binder(), SLIMetricType.class, ServiceLevelIndicatorUpdatableEntity.class);
