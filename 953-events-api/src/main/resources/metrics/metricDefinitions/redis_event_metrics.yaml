@@ -6,3 +6,7 @@ metrics:
     metricDefinition: redis push event metric
     type: Count
     unit: "1"
+  - metricName: redis_pull_event_metric
+    metricDefinition: redis pull event metric
+    type: Count
+    unit: "1"

@@ -9,10 +9,13 @@ package io.harness.eventsframework.impl.redis;
 
 import static io.harness.annotations.dev.HarnessTeam.PL;
 
+import com.google.inject.Inject;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.eventsframework.api.AbstractConsumer;
 import io.harness.eventsframework.api.EventsFrameworkDownException;
 import io.harness.eventsframework.consumer.Message;
+import io.harness.eventsframework.impl.redis.monitoring.dto.RedisEventMetricDTOMapper;
+import io.harness.eventsframework.impl.redis.monitoring.publisher.RedisEventMetricPublisher;
 import io.harness.redis.RedisConfig;
 
 import io.github.resilience4j.core.IntervalFunction;
@@ -37,12 +40,14 @@ import org.redisson.client.RedisException;
 @OwnedBy(PL)
 @Slf4j
 public abstract class RedisAbstractConsumer extends AbstractConsumer {
+  private static final String REDIS_PULL_EVENT_METRIC = "redis_pull_event_metric";
   protected RStream<String, String> stream;
   protected RStream<String, String> deadLetterQueue;
   protected RedissonClient redissonClient;
   protected Duration maxProcessingTime;
   protected int batchSize;
   private Retry retry;
+  @Inject RedisEventMetricPublisher redisEventMetricPublisher;
 
   public RedisAbstractConsumer(
       String topicName, String groupName, @NotNull RedisConfig redisConfig, Duration maxProcessingTime, int batchSize) {
@@ -178,7 +183,12 @@ public abstract class RedisAbstractConsumer extends AbstractConsumer {
   private List<Message> getNewMessagesInternal(Duration maxWaitTime) {
     Map<StreamMessageId, Map<String, String>> result =
         stream.readGroup(getGroupName(), getName(), batchSize, maxWaitTime.toMillis(), TimeUnit.MILLISECONDS);
-    return RedisUtils.getMessageObject(result);
+    List<Message> messages = RedisUtils.getMessageObject(result);
+    for (Message message : messages) {
+      redisEventMetricPublisher.sendMetricWithEventContext(
+              RedisEventMetricDTOMapper.prepareRedisEventMetricDTO(message.getMessage(), getTopicName()), REDIS_PULL_EVENT_METRIC);
+    }
+    return messages;
   }
 
   protected List<Message> getMessages(boolean processUnackedMessagesBeforeNewMessages, Duration maxWaitTime) {
