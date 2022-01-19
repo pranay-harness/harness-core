@@ -43,6 +43,7 @@ import static io.harness.govern.Switch.unhandled;
 import static io.harness.threading.Morpheus.quietSleep;
 import static io.harness.validation.Validator.notNullCheck;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.waiter.SMNotifyEventListener.STATE_MACHINE_ORCHESTRATION;
 
 import static software.wings.beans.ExecutionScope.WORKFLOW;
 import static software.wings.beans.NotificationRule.NotificationRuleBuilder.aNotificationRule;
@@ -764,7 +765,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           OldNotifyCallback callback = new StateMachineResumeCallback(stateExecutionInstance.getAppId(),
               stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid());
           waitNotifyEngine.waitForAllOn(
-              ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
+                  STATE_MACHINE_ORCHESTRATION, callback, executionResponse.getCorrelationIds().toArray(new String[0]));
           log.info("Created a state machine resume callback and updated to wait notify engine");
         }
 
@@ -1012,6 +1013,7 @@ public class StateMachineExecutor implements StateInspectionListener {
           log.info("Retry Wait Interval : {}", executionEventAdvice.getWaitInterval());
           String resumeId = delayEventHelper.delay(executionEventAdvice.getWaitInterval(), Collections.emptyMap());
           waitNotifyEngine.waitForAllOn(ORCHESTRATION,
+
               new ExecutionWaitRetryCallback(stateExecutionInstance.getAppId(),
                   stateExecutionInstance.getExecutionUuid(), stateExecutionInstance.getUuid()),
               resumeId);

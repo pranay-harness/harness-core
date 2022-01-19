@@ -19,6 +19,7 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.microservice.NotifyEngineTarget.GENERAL;
 import static io.harness.time.DurationUtils.durationTillDayTime;
 import static io.harness.waiter.OrchestrationNotifyEventListener.ORCHESTRATION;
+import static io.harness.waiter.SMNotifyEventListener.STATE_MACHINE_ORCHESTRATION;
 
 import static software.wings.common.VerificationConstants.CV_24X7_METRIC_LABELS;
 import static software.wings.common.VerificationConstants.CV_META_DATA;
@@ -177,6 +178,7 @@ import io.harness.waiter.NotifyQueuePublisherRegister;
 import io.harness.waiter.NotifyResponseCleaner;
 import io.harness.waiter.OrchestrationNotifyEventListener;
 import io.harness.waiter.ProgressUpdateService;
+import io.harness.waiter.SMNotifyEventListener;
 import io.harness.workers.background.critical.iterator.ArtifactCollectionHandler;
 import io.harness.workers.background.critical.iterator.EventDeliveryHandler;
 import io.harness.workers.background.critical.iterator.ResourceConstraintBackupHandler;
@@ -1186,6 +1188,7 @@ public class WingsApplication extends Application<MainConfiguration> {
         injector.getInstance(NotifyQueuePublisherRegister.class);
     notifyQueuePublisherRegister.register(GENERAL, payload -> publisher.send(asList(GENERAL), payload));
     notifyQueuePublisherRegister.register(ORCHESTRATION, payload -> publisher.send(asList(ORCHESTRATION), payload));
+    notifyQueuePublisherRegister.register(STATE_MACHINE_ORCHESTRATION, payload -> publisher.send(asList(STATE_MACHINE_ORCHESTRATION), payload));
   }
 
   private void registerCorrelationFilter(Environment environment, Injector injector) {
@@ -1216,6 +1219,8 @@ public class WingsApplication extends Application<MainConfiguration> {
         configuration.getEventListenersCountConfig().getGeneralNotifyEventListenerCount());
     queueListenerController.register(injector.getInstance(OrchestrationNotifyEventListener.class),
         configuration.getEventListenersCountConfig().getOrchestrationNotifyEventListenerCount());
+    queueListenerController.register(injector.getInstance(SMNotifyEventListener.class),
+            configuration.getEventListenersCountConfig().getOrchestrationNotifyEventListenerCount());
     queueListenerController.register(injector.getInstance(PruneEntityListener.class), 1);
   }
 
