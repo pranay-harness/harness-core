@@ -394,9 +394,11 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
     boolean isDeleted = yamlGitConfigRepository.deleteByAccountIdAndOrgIdentifierAndProjectIdentifier(
                             accountIdentifier, orgIdentifier, projectIdentifier)
         > 0;
-    gitSyncSettingsService.delete(accountIdentifier, orgIdentifier, projectIdentifier);
-    deleteExistingSetupUsages(yamlGitConfigDTOS);
-    deleteBranches(yamlGitConfigDTOS);
+    if (isDeleted) {
+      gitSyncSettingsService.delete(accountIdentifier, orgIdentifier, projectIdentifier);
+      deleteExistingSetupUsages(yamlGitConfigDTOS);
+      deleteBranches(yamlGitConfigDTOS);
+    }
     return isDeleted;
   }
 
@@ -568,16 +570,19 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       try {
         setupUsageEventProducer.send(
             Message.newBuilder()
-                .putAllMetadata(ImmutableMap.of("accountId", gitSyncConfigDTO.getAccountIdentifier(),
-                    EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE, EntityTypeProtoEnum.CONNECTORS.name(),
-                    EventsFrameworkMetadataConstants.ACTION, EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
+                .putAllMetadata(ImmutableMap.of(EventsFrameworkMetadataConstants.ACCOUNT_IDENTIFIER_METRICS_KEY,
+                    gitSyncConfigDTO.getAccountIdentifier(), EventsFrameworkMetadataConstants.REFERRED_ENTITY_TYPE,
+                    EntityTypeProtoEnum.CONNECTORS.name(), EventsFrameworkMetadataConstants.ACTION,
+                    EventsFrameworkMetadataConstants.FLUSH_CREATE_ACTION))
                 .setData(entityReferenceDTO.toByteString())
                 .build());
       } catch (Exception ex) {
         log.error(
-            "Error deleting the setup usages for the YamlGitConfigs with the identifier {} in project {} in org {}",
-            gitSyncConfigDTO.getIdentifier(), gitSyncConfigDTO.getProjectIdentifier(),
-            gitSyncConfigDTO.getOrganizationIdentifier());
+            String.format(
+                "Error deleting the setup usages for the YamlGitConfigs with the identifier {} in project {} in org {}",
+                gitSyncConfigDTO.getIdentifier(), gitSyncConfigDTO.getProjectIdentifier(),
+                gitSyncConfigDTO.getOrganizationIdentifier()),
+            ex);
       }
     }
   }
@@ -587,7 +592,7 @@ public class YamlGitConfigServiceImpl implements YamlGitConfigService {
       List<YamlGitConfigDTO> yamlGitConfigDTOList =
           getByAccountAndRepo(gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getRepo());
       if (yamlGitConfigDTOList.size() == 0) {
-        gitBranchService.deleteAll(gitSyncConfigDTO.getRepo(), gitSyncConfigDTO.getAccountIdentifier());
+        gitBranchService.deleteAll(gitSyncConfigDTO.getAccountIdentifier(), gitSyncConfigDTO.getRepo());
       }
     }
   }

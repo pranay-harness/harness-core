@@ -34,6 +34,8 @@ import io.harness.gitsync.common.helper.GitEnabledHelper;
 import io.harness.gitsync.common.service.HarnessToGitHelperService;
 import io.harness.gitsync.common.service.YamlGitConfigService;
 import io.harness.gitsync.sdk.GitSyncApiConstants;
+import io.harness.ng.core.OrgIdentifier;
+import io.harness.ng.core.ProjectIdentifier;
 import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.security.annotations.InternalApi;
@@ -60,6 +62,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import lombok.AllArgsConstructor;
+import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 @Api("/git-sync")
@@ -111,9 +114,12 @@ public class YamlGitConfigResource {
   @InternalApi
   @ApiOperation(value = "Disable git experience", nickname = "disableGitSync")
   public boolean putGitExperience(
-      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam("projectId") String projectIdentifier,
-      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam("organizationId") String orgIdentifier,
-      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @QueryParam("accountId") @NotEmpty String accountId) {
+      @Parameter(description = ACCOUNT_PARAM_MESSAGE) @NotBlank @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @io.harness.accesscontrol.AccountIdentifier String accountId,
+      @Parameter(description = ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @io.harness.accesscontrol.OrgIdentifier @OrgIdentifier String orgIdentifier,
+      @Parameter(description = PROJECT_PARAM_MESSAGE) @QueryParam(NGCommonEntityConstants.PROJECT_KEY) @io.
+      harness.accesscontrol.ProjectIdentifier @ProjectIdentifier String projectIdentifier) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
         Resource.of(ResourceTypes.PROJECT, projectIdentifier), EDIT_PROJECT_PERMISSION);
     return yamlGitConfigService.deleteAll(accountId, orgIdentifier, projectIdentifier);

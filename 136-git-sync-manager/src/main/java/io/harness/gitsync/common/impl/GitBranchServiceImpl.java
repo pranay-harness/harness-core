@@ -220,7 +220,7 @@ public class GitBranchServiceImpl implements GitBranchService {
   }
 
   @Override
-  public DeleteResult deleteAll(String repoUrl, String accountIdentifier) {
+  public DeleteResult deleteAll(String accountIdentifier, String repoUrl) {
     final Criteria criteria =
         Criteria.where(GitBranchKeys.accountIdentifier).is(accountIdentifier).and(GitBranchKeys.repoURL).is(repoUrl);
     return gitBranchesRepository.delete(criteria);

@@ -41,5 +41,5 @@ public interface GitBranchService {
 
   DeleteResult delete(String repoUrl, String branchName, String accountIdentifier);
 
-  DeleteResult deleteAll(String repoUrl, String accountIdentifier);
+  DeleteResult deleteAll(String accountIdentifier, String repoUrl);
 }
