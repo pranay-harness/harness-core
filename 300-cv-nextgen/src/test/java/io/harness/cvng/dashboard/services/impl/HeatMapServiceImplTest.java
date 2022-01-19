@@ -1372,6 +1372,29 @@ public class HeatMapServiceImplTest extends CvNextGenTestBase {
     assertThat(latestRiskScoreByServiceMap.get(serviceEnvKey).getRiskStatus()).isEqualTo(Risk.NEED_ATTENTION);
   }
 
+  @Test
+  @Owner(developers = KANHAIYA)
+  @Category(UnitTests.class)
+  public void testGetLatestHealthScoreWithHeatMapHavingNoHeatMapRiskAttached() {
+    Instant endTime = roundDownTo5MinBoundary(clock.instant());
+    Instant startTime = endTime.minus(4, ChronoUnit.HOURS);
+    HeatMap heatMap = builderFactory.heatMapBuilder()
+                          .heatMapResolution(FIVE_MIN)
+                          .heatMapBucketStartTime(startTime)
+                          .heatMapBucketEndTime(endTime)
+                          .heatMapRisks(Arrays.asList(HeatMapRisk.builder()
+                                                          .riskScore(-1)
+                                                          .startTime(endTime.minus(5, ChronoUnit.MINUTES))
+                                                          .endTime(endTime)
+                                                          .build()))
+                          .build();
+    hPersistence.save(heatMap);
+
+    Map<ServiceEnvKey, RiskData> riskDataMap = heatMapService.getLatestHealthScore(
+        builderFactory.getProjectParams(), Arrays.asList(serviceIdentifier), Arrays.asList(envIdentifier));
+    assertThat(riskDataMap.isEmpty());
+  }
+
   private void assertHealthScore(RiskData riskData, int val) {
     assertThat(riskData.getHealthScore()).isEqualTo(val);
     assertThat(getHealthScoreRiskStatus(riskData.getHealthScore())).isEqualTo(riskData.getRiskStatus());

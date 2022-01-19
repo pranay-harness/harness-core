@@ -467,10 +467,12 @@ public class HeatMapServiceImpl implements HeatMapService {
     heatMapMap.forEach((key, value) -> {
       SortedSet<HeatMapRisk> risks = new TreeSet<>(
           value.getHeatMapRisks().stream().filter(x -> x.getRiskScore() != -1).collect(Collectors.toList()));
-      HeatMapRisk last = risks.last();
-      if (last.getEndTime().isAfter(bucketEndTime)) {
-        value.setHeatMapRisks(Lists.newArrayList(last));
-        uniqueHeatMaps.add(value);
+      if (isNotEmpty(risks)) {
+        HeatMapRisk last = risks.last();
+        if (last.getEndTime().isAfter(bucketEndTime)) {
+          value.setHeatMapRisks(Lists.newArrayList(last));
+          uniqueHeatMaps.add(value);
+        }
       }
     });
     return uniqueHeatMaps;
