@@ -14,6 +14,8 @@ targets:
 
 import_run_configurations:
   project/run-configurations/Analyser_Service.xml
+  project/run-configurations/WingsApp.xml
+  project/run-configurations/DelegateApp.xml
   project/run-configurations/CIManagerApplication.xml
   project/run-configurations/NextGenManager.xml
   project/run-configurations/PlatformMicroservice.xml

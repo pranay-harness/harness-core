@@ -7,7 +7,6 @@
 
 package io.harness.steps.approval.step.harness;
 
-import static io.harness.annotations.dev.HarnessTeam.CDC;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 
 import static com.fasterxml.jackson.annotation.JsonTypeInfo.As.EXTERNAL_PROPERTY;
@@ -17,7 +16,6 @@ import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.plancreator.steps.http.PmsAbstractStepNode;
 import io.harness.steps.StepSpecTypeConstants;
-import io.harness.steps.jira.update.JiraUpdateStepInfo;
 import io.harness.yaml.core.StepSpecType;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,7 +33,7 @@ import org.springframework.data.annotation.TypeAlias;
 @EqualsAndHashCode(callSuper = true)
 @JsonTypeName(StepSpecTypeConstants.HARNESS_APPROVAL)
 @TypeAlias("HarnessApprovalStepNode")
-@OwnedBy(CDC)
+@OwnedBy(PIPELINE)
 @RecasterAlias("io.harness.steps.approval.step.harness.HarnessApprovalStepNode")
 public class HarnessApprovalStepNode extends PmsAbstractStepNode {
   @JsonProperty("type") @NotNull StepType type = StepType.HarnessApproval;

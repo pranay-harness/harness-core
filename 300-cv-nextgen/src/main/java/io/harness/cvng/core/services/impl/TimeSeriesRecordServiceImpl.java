@@ -29,6 +29,7 @@ import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecord
 import io.harness.cvng.beans.TimeSeriesDataCollectionRecord.TimeSeriesDataRecordMetricValue;
 import io.harness.cvng.beans.TimeSeriesMetricType;
 import io.harness.cvng.core.beans.TimeSeriesMetricDefinition;
+import io.harness.cvng.core.beans.demo.DemoTemplate;
 import io.harness.cvng.core.entities.CVConfig;
 import io.harness.cvng.core.entities.MetricCVConfig;
 import io.harness.cvng.core.entities.MetricPack;
@@ -61,6 +62,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -558,11 +560,12 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
 
   @Override
   public void createDemoAnalysisData(String accountId, String verificationTaskId, String dataCollectionWorkerId,
-      String demoTemplateIdentifier, Instant startTime, Instant endTime) throws IOException {
+      DemoTemplate demoTemplate, Instant startTime, Instant endTime) throws IOException {
     Instant time = startTime;
 
-    String demoTemplatePath = getDemoTemplate(demoTemplateIdentifier);
-    Map<String, ArrayList<Long>> metricToRiskScore = getDemoRiskScoreForAllTheMetrics(demoTemplateIdentifier);
+    String demoTemplatePath = getDemoTemplate(demoTemplate.getDemoTemplateIdentifier());
+    Map<String, ArrayList<Long>> metricToRiskScore =
+        getDemoRiskScoreForAllTheMetrics(demoTemplate.getDemoTemplateIdentifier());
     // todo: check the metrics have the same size
     int index = cvngDemoDataIndexService.readIndexForDemoData(accountId, dataCollectionWorkerId, verificationTaskId);
     List<TimeSeriesDataCollectionRecord> timeSeriesDataCollectionRecords = new ArrayList<>();
@@ -584,7 +587,9 @@ public class TimeSeriesRecordServiceImpl implements TimeSeriesRecordService {
             if (index >= metricToRiskScore.get(fileName).size()) {
               index = index % metricToRiskScore.get(fileName).size();
             }
-            timeSeriesDataRecordGroupValue.setValue(metricToRiskScore.get(fileName).get(index));
+            timeSeriesDataRecordGroupValue.setValue(demoTemplate.isHighRisk()
+                    ? (metricToRiskScore.get(fileName).get(index) + 1) * (new Random().nextInt(20) + 5)
+                    : metricToRiskScore.get(fileName).get(index));
           }
         }
       }

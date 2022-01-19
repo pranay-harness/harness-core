@@ -167,8 +167,20 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   @Override
   public List<NodeExecution> fetchNodeExecutionsWithoutOldRetriesAndStatusIn(
       String planExecutionId, EnumSet<Status> statuses) {
+    return fetchNodeExecutionsWithoutOldRetriesAndStatusIn(planExecutionId, statuses, false, new HashSet<>());
+  }
+
+  @Override
+  public List<NodeExecution> fetchNodeExecutionsWithoutOldRetriesAndStatusIn(
+      String planExecutionId, EnumSet<Status> statuses, boolean shouldUseProjections, Set<String> fieldsToBeIncluded) {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.oldRetry).is(false));
+    if (shouldUseProjections) {
+      fieldsToBeIncluded.addAll(DEFAULT_FIELDS);
+      for (String field : fieldsToBeIncluded) {
+        query.fields().include(field);
+      }
+    }
     if (isNotEmpty(statuses)) {
       query.addCriteria(where(NodeExecutionKeys.status).in(statuses));
     }
@@ -180,6 +192,19 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
     Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
                       .addCriteria(where(NodeExecutionKeys.parentId).is(parentId))
                       .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
+  public List<NodeExecution> fetchChildrenNodeExecutions(
+      String planExecutionId, String parentId, Set<String> fieldsToBeIncluded) {
+    fieldsToBeIncluded.addAll(DEFAULT_FIELDS);
+    Query query = query(where(NodeExecutionKeys.planExecutionId).is(planExecutionId))
+                      .addCriteria(where(NodeExecutionKeys.parentId).is(parentId))
+                      .with(Sort.by(Direction.DESC, NodeExecutionKeys.createdAt));
+    for (String field : fieldsToBeIncluded) {
+      query.fields().include(field);
+    }
     return mongoTemplate.find(query, NodeExecution.class);
   }
 
@@ -428,6 +453,16 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
   }
 
   @Override
+  public List<NodeExecution> findAllChildrenWithStatusIn(String planExecutionId, String parentId,
+      EnumSet<Status> flowingStatuses, boolean includeParent, boolean shouldUseProjections,
+      Set<String> fieldsToBeIncluded) {
+    List<NodeExecution> finalList = new ArrayList<>();
+    List<NodeExecution> allExecutions =
+        fetchNodeExecutionsWithoutOldRetriesAndStatusIn(planExecutionId, flowingStatuses, true, fieldsToBeIncluded);
+    return extractChildExecutions(parentId, includeParent, finalList, allExecutions);
+  }
+
+  @Override
   public List<NodeExecution> findAllChildrenWithStatusIn(
       String planExecutionId, String parentId, EnumSet<Status> flowingStatuses, boolean includeParent) {
     List<NodeExecution> finalList = new ArrayList<>();
@@ -563,6 +598,31 @@ public class NodeExecutionServiceImpl implements NodeExecutionService {
                                 Criteria.where(NodeExecutionKeys.IdentityNodeStepCategory).is(StepCategory.STAGE));
 
     Query query = new Query().addCriteria(criteria);
+    query.with(by(NodeExecutionKeys.createdAt));
+    return mongoTemplate.find(query, NodeExecution.class);
+  }
+
+  @Override
+  public List<NodeExecution> fetchStageExecutionsWithEndTsAndStatusProjection(String planExecutionId) {
+    Criteria criteria = Criteria.where(NodeExecutionKeys.planExecutionId)
+                            .is(planExecutionId)
+                            .and(NodeExecutionKeys.status)
+                            .ne(Status.SKIPPED.name())
+                            .orOperator(Criteria.where(NodeExecutionKeys.stepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.planNodeStepCategory).is(StepCategory.STAGE),
+                                Criteria.where(NodeExecutionKeys.IdentityNodeStepCategory).is(StepCategory.STAGE));
+
+    Query query = new Query().addCriteria(criteria);
+    query.fields()
+        .include(NodeExecutionKeys.uuid)
+        .include(NodeExecutionKeys.status)
+        .include(NodeExecutionKeys.endTs)
+        .include(NodeExecutionKeys.createdAt)
+        .include(NodeExecutionKeys.mode)
+        .include(NodeExecutionKeys.parentId)
+        .include(NodeExecutionKeys.oldRetry)
+        .include(NodeExecutionKeys.planNode);
+
     query.with(by(NodeExecutionKeys.createdAt));
     return mongoTemplate.find(query, NodeExecution.class);
   }

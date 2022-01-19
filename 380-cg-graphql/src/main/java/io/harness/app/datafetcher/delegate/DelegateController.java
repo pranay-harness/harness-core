@@ -12,7 +12,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.app.schema.mutation.delegate.input.QLAddDelegateScopeInput;
-import io.harness.app.schema.type.delegate.QLDelegate;
 import io.harness.app.schema.type.delegate.QLDelegate.QLDelegateBuilder;
 import io.harness.app.schema.type.delegate.QLDelegateScope;
 import io.harness.app.schema.type.delegate.QLDelegateScope.QLDelegateScopeBuilder;
@@ -23,6 +22,7 @@ import io.harness.delegate.beans.DelegateScope;
 import io.harness.delegate.beans.DelegateScope.DelegateScopeBuilder;
 import io.harness.delegate.beans.TaskGroup;
 
+import software.wings.beans.DelegateConnection;
 import software.wings.graphql.schema.type.QLEnvironmentType;
 
 import java.util.ArrayList;
@@ -43,7 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 public class DelegateController {
   private static final Map<String, TaskGroup> taskGroupMapping = taskGroupMapping();
 
-  public static void populateQLDelegate(Delegate delegate, QLDelegateBuilder qlDelegateBuilder) {
+  public static void populateQLDelegate(
+      Delegate delegate, QLDelegateBuilder qlDelegateBuilder, List<DelegateConnection> delegateConnections) {
     qlDelegateBuilder.accountId(delegate.getAccountId())
         .delegateName(delegate.getDelegateName())
         .delegateType(delegate.getDelegateType())
@@ -57,17 +58,12 @@ public class DelegateController {
         .version(delegate.getVersion())
         .pollingModeEnabled(delegate.isPolllingModeEnabled())
         .lastHeartBeat(delegate.getLastHeartBeat())
+        .includeScopes(delegate.getIncludeScopes())
+        .excludeScopes(delegate.getExcludeScopes())
+        .supportedTasks(delegate.getSupportedTaskTypes())
+        .tags(delegate.getTags())
+        .connections(delegateConnections)
         .build();
-  }
-
-  public static List<QLDelegate> populateQLDelegateList(List<Delegate> delegateList) {
-    List<QLDelegate> qlDelegateList = new ArrayList<>();
-    for (Delegate delegate : delegateList) {
-      QLDelegateBuilder qlDelegateBuilder = QLDelegate.builder();
-      populateQLDelegate(delegate, qlDelegateBuilder);
-      qlDelegateList.add(qlDelegateBuilder.build());
-    }
-    return qlDelegateList;
   }
 
   public static Map<String, TaskGroup> taskGroupMapping() {

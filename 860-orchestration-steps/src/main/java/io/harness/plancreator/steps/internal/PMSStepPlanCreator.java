@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class PMSStepPlanCreator extends GenericStepPMSPlanCreator {
   @Override
   public Set<String> getSupportedStepTypes() {
-    return Sets.newHashSet(StepSpecTypeConstants.BARRIER, StepSpecTypeConstants.FLAG_CONFIGURATION);
+    return Sets.newHashSet(StepSpecTypeConstants.FLAG_CONFIGURATION);
   }
 
   @Override

@@ -418,19 +418,18 @@ public class DelegateAgentResourceTest extends CategoryTest {
                                           .stopScript("stopScript")
                                           .build();
     when(delegateService.getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, "KUBERNETES"))
+             subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null))
         .thenReturn(delegateScripts);
 
-    RestResponse<DelegateScripts> restResponse =
-        RESOURCES.client()
-            .target("/agent/delegates/delegateScriptsNg?accountId=" + ACCOUNT_ID + "&delegateVersion=" + delegateVersion
-                + "&delegateType=KUBERNETES")
-            .request()
-            .get(new GenericType<RestResponse<DelegateScripts>>() {});
+    RestResponse<DelegateScripts> restResponse = RESOURCES.client()
+                                                     .target("/agent/delegates/delegateScriptsNg?accountId="
+                                                         + ACCOUNT_ID + "&delegateVersion=" + delegateVersion)
+                                                     .request()
+                                                     .get(new GenericType<RestResponse<DelegateScripts>>() {});
 
     verify(delegateService, atLeastOnce())
         .getDelegateScriptsNg(ACCOUNT_ID, delegateVersion,
-            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, "KUBERNETES");
+            subdomainUrlHelper.getManagerUrl(httpServletRequest, ACCOUNT_ID), verificationUrl, null);
     assertThat(restResponse.getResource()).isInstanceOf(DelegateScripts.class).isNotNull().isEqualTo(delegateScripts);
   }
 

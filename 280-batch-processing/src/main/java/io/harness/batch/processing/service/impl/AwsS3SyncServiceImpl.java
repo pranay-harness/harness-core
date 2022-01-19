@@ -19,11 +19,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import com.google.inject.Inject;
-import io.github.resilience4j.core.IntervalFunction;
-import io.github.resilience4j.retry.Retry;
-import io.github.resilience4j.retry.RetryConfig;
-import io.github.resilience4j.retry.RetryRegistry;
-import io.vavr.CheckedFunction0;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
@@ -51,18 +46,6 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
   @SuppressWarnings("PMD")
   public boolean syncBuckets(S3SyncRecord s3SyncRecord) {
     AwsS3SyncConfig awsCredentials = configuration.getAwsS3SyncConfig();
-
-    // Retry class config to retry aws commands
-    RetryConfig config = RetryConfig.custom()
-                             .maxAttempts(5)
-                             .intervalFunction(IntervalFunction.ofExponentialBackoff(1000, 2))
-                             .retryExceptions(TimeoutException.class, InterruptedException.class, IOException.class)
-                             .build();
-    RetryRegistry registry = RetryRegistry.of(config);
-    Retry retry = registry.retry("awsS3", config);
-    Retry.EventPublisher publisher = retry.getEventPublisher();
-    publisher.onRetry(event -> log.info(event.toString()));
-    publisher.onSuccess(event -> log.info(event.toString()));
 
     ImmutableMap<String, String> envVariables = ImmutableMap.of(AWS_ACCESS_KEY_ID, awsCredentials.getAwsAccessKey(),
         AWS_SECRET_ACCESS_KEY, awsCredentials.getAwsSecretKey(), AWS_DEFAULT_REGION, awsCredentials.getRegion());
@@ -95,26 +78,13 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
       final ArrayList<String> cmd =
           Lists.newArrayList("aws", "s3", "sync", s3SyncRecord.getBillingBucketPath(), destinationBucketPath,
               "--source-region", s3SyncRecord.getBillingBucketRegion(), "--acl", "bucket-owner-full-control");
-      log.info("cmd: {}", cmd);
-
-      // Wrap s3 sync with a retry mechanism.
-      CheckedFunction0<ProcessResult> retryingAwsS3Sync =
-          Retry.decorateCheckedSupplier(retry, () -> trySyncBucket(cmd, roleEnvVariables));
-      try {
-        retryingAwsS3Sync.apply();
-      } catch (Throwable throwable) {
-        log.error("Exception during s3 sync {}", throwable);
-        return false;
-        // throw new BatchProcessingException("S3 sync failed", throwable);
-      }
-      log.info("sync completed");
-    } catch (IOException | TimeoutException | InvalidExitValueException | JsonSyntaxException e) {
-      log.error(e.getMessage(), e);
-      log.info("Exception during s3 sync for src={}, srcRegion={}, dest={}, role-arn={}",
-          s3SyncRecord.getBillingBucketPath(), s3SyncRecord.getBillingBucketRegion(), destinationBucketPath,
-          s3SyncRecord.getRoleArn());
+      trySyncBucket(cmd, roleEnvVariables);
+    } catch (InvalidExitValueException e) {
+      log.error("output: {}", e.getResult().outputUTF8());
       return false;
-      // throw new BatchProcessingException("S3 sync failed", e);
+    } catch (IOException | TimeoutException | JsonSyntaxException e) {
+      log.error("An error has occured in sync", e);
+      return false;
     } catch (InterruptedException e) {
       log.error(e.getMessage(), e);
       Thread.currentThread().interrupt();
@@ -123,19 +93,18 @@ public class AwsS3SyncServiceImpl implements AwsS3SyncService {
     return true;
   }
 
-  public ProcessResult trySyncBucket(ArrayList<String> cmd, ImmutableMap<String, String> roleEnvVariables)
+  public void trySyncBucket(ArrayList<String> cmd, ImmutableMap<String, String> roleEnvVariables)
       throws InterruptedException, TimeoutException, IOException {
-    log.info("Running the s3 sync command...");
-    ProcessResult pr = getProcessExecutor()
-                           .command(cmd)
-                           .environment(roleEnvVariables)
-                           .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
-                           .redirectError(Slf4jStream.of(log).asError())
-                           .exitValue(0)
-                           .readOutput(true)
-                           .execute();
-    log.info(pr.getOutput().getUTF8());
-    return pr;
+    log.info("Running the s3 sync command '{}'...", String.join(" ", cmd));
+    getProcessExecutor()
+        .command(cmd)
+        .environment(roleEnvVariables)
+        .timeout(SYNC_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+        .redirectOutput(Slf4jStream.of(log).asInfo())
+        .exitValue(0) // Throws exception when a non zero return code is found
+        .readOutput(true)
+        .execute();
+    log.info("s3 sync completed");
   }
 
   ProcessExecutor getProcessExecutor() {

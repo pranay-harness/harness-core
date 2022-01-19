@@ -91,6 +91,8 @@ io.harness.plancreator.steps.http.HttpStepNode
 io.harness.steps.jira.create.JiraCreateStepNode
 io.harness.steps.jira.update.JiraUpdateStepNode
 io.harness.steps.approval.step.jira.JiraApprovalStepNode
+io.harness.steps.approval.step.harness.HarnessApprovalStepNode
+io.harness.plancreator.steps.barrier.BarrierStepNode
 io.harness.steps.shellscript.ShellScriptStepNode
 io.harness.steps.template.TemplateStepNode
 io.harness.ci.stdvars.BuildStandardVariables

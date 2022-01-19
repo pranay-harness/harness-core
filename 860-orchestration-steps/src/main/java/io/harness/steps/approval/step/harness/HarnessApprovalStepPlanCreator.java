@@ -11,7 +11,6 @@ import io.harness.plancreator.steps.internal.PMSStepPlanCreatorV2;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationContext;
 import io.harness.pms.sdk.core.plan.creation.beans.PlanCreationResponse;
 import io.harness.steps.StepSpecTypeConstants;
-import io.harness.steps.jira.update.JiraUpdateStepNode;
 
 import com.google.common.collect.Sets;
 import java.util.Set;

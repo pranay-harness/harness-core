@@ -24,6 +24,12 @@ import software.wings.beans.security.UserGroup;
 import software.wings.beans.sso.SSOType;
 import software.wings.service.intfc.ownership.OwnedByAccount;
 import software.wings.service.intfc.ownership.OwnedByApplication;
+import software.wings.service.intfc.ownership.OwnedByEnvironment;
+import software.wings.service.intfc.ownership.OwnedByInfrastructureProvisioner;
+import software.wings.service.intfc.ownership.OwnedByPipeline;
+import software.wings.service.intfc.ownership.OwnedByService;
+import software.wings.service.intfc.ownership.OwnedByTemplate;
+import software.wings.service.intfc.ownership.OwnedByWorkflow;
 
 import java.util.Collection;
 import java.util.List;
@@ -38,7 +44,9 @@ import org.hibernate.validator.constraints.NotEmpty;
  */
 @OwnedBy(PL)
 @TargetModule(_950_NG_AUTHENTICATION_SERVICE)
-public interface UserGroupService extends OwnedByAccount, OwnedByApplication {
+public interface UserGroupService
+    extends OwnedByAccount, OwnedByApplication, OwnedByService, OwnedByEnvironment, OwnedByPipeline, OwnedByWorkflow,
+            OwnedByInfrastructureProvisioner, OwnedByTemplate {
   /**
    * Save.
    *

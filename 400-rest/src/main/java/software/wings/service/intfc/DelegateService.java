@@ -199,4 +199,8 @@ public interface DelegateService extends OwnedByAccount {
       String verificationServiceUrl, MediaType fileFormat) throws IOException;
 
   DelegateSetupDetails validateKubernetesYamlNg(String accountId, DelegateSetupDetails delegateSetupDetails);
+
+  long getCountOfRegisteredDelegates(String accountId);
+
+  long getCountOfConnectedDelegates(String accountId);
 }

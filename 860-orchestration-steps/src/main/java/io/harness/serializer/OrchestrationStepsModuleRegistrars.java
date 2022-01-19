@@ -14,6 +14,7 @@ import io.harness.ModuleType;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.plancreator.pipeline.PipelineConfig;
+import io.harness.plancreator.steps.barrier.BarrierStepNode;
 import io.harness.plancreator.steps.http.HttpStepNode;
 import io.harness.plancreator.steps.internal.PMSStepInfo;
 import io.harness.pms.contracts.steps.StepCategory;
@@ -198,6 +199,17 @@ public class OrchestrationStepsModuleRegistrars {
                    .availableAtOrgLevel(false)
                    .availableAtAccountLevel(false)
                    .clazz(HarnessApprovalStepNode.class)
+                   .yamlSchemaMetadata(YamlSchemaMetadata.builder()
+                                           .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
+                                           .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
+                                           .build())
+                   .build())
+          .add(YamlSchemaRootClass.builder()
+                   .entityType(EntityType.BARRIER_STEP)
+                   .availableAtProjectLevel(true)
+                   .availableAtOrgLevel(false)
+                   .availableAtAccountLevel(false)
+                   .clazz(BarrierStepNode.class)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
                                            .modulesSupported(Arrays.asList(ModuleType.CD, ModuleType.PMS))
                                            .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())

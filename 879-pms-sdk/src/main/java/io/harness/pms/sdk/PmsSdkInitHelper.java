@@ -27,6 +27,7 @@ import io.harness.metrics.jobs.RecordMetricsJob;
 import io.harness.metrics.service.api.MetricService;
 import io.harness.pms.contracts.plan.ConsumerConfig;
 import io.harness.pms.contracts.plan.InitializeSdkRequest;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.contracts.plan.PmsServiceGrpc;
 import io.harness.pms.contracts.plan.Redis;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
@@ -35,6 +36,7 @@ import io.harness.pms.contracts.steps.SdkStep;
 import io.harness.pms.contracts.steps.StepInfo;
 import io.harness.pms.contracts.steps.StepType;
 import io.harness.pms.events.base.PmsEventCategory;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandlerInfo;
 import io.harness.pms.sdk.core.plan.creation.creators.PartialPlanCreator;
 import io.harness.pms.sdk.core.plan.creation.creators.PipelineServiceInfoProvider;
 import io.harness.pms.sdk.core.registries.StepRegistry;
@@ -142,7 +144,7 @@ public class PmsSdkInitHelper {
         .setFacilitatorEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.FACILITATOR_EVENT))
         .putAllStaticAliases(CollectionUtils.emptyIfNull(sdkConfiguration.getStaticAliases()))
         .addAllSdkFunctors(PmsSdkInitHelper.getSupportedSdkFunctorsList(sdkConfiguration))
-        .addAllExpandableFields(getExpandableFields(sdkConfiguration))
+        .addAllJsonExpansionInfo(getJsonExpansionInfo(sdkConfiguration))
         .setNodeStartEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_START))
         .setProgressEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.PROGRESS_EVENT))
         .setNodeAdviseEventConsumerConfig(buildConsumerConfig(eventsConfig, PmsEventCategory.NODE_ADVISE))
@@ -151,20 +153,20 @@ public class PmsSdkInitHelper {
         .build();
   }
 
+  static List<JsonExpansionInfo> getJsonExpansionInfo(PmsSdkConfiguration sdkConfiguration) {
+    List<JsonExpansionHandlerInfo> expansionHandlers = sdkConfiguration.getJsonExpansionHandlers();
+    if (EmptyPredicate.isEmpty(expansionHandlers)) {
+      return new ArrayList<>();
+    }
+    return expansionHandlers.stream().map(JsonExpansionHandlerInfo::getJsonExpansionInfo).collect(Collectors.toList());
+  }
+
   @VisibleForTesting
   static List<String> getSupportedSdkFunctorsList(PmsSdkConfiguration sdkConfiguration) {
     if (sdkConfiguration.getSdkFunctors() == null) {
       return new ArrayList<>();
     }
     return new ArrayList<>(sdkConfiguration.getSdkFunctors().keySet());
-  }
-
-  @VisibleForTesting
-  static List<String> getExpandableFields(PmsSdkConfiguration sdkConfiguration) {
-    if (EmptyPredicate.isEmpty(sdkConfiguration.getJsonExpansionHandlers())) {
-      return new ArrayList<>();
-    }
-    return new ArrayList<>(sdkConfiguration.getJsonExpansionHandlers().keySet());
   }
 
   private static List<SdkStep> mapToSdkStep(List<StepType> stepTypeList, List<StepInfo> stepInfos) {

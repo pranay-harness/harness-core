@@ -56,6 +56,8 @@ public interface TemplateService extends OwnedByAccount, OwnedByApplication {
 
   boolean delete(String accountId, String templateUuid);
 
+  void pruneDescendingEntities(String appId, String templateId);
+
   //  @Deprecated should not be used in future code,
   void loadDefaultTemplates(TemplateType templateType, @NotEmpty String accountId, @NotEmpty String accountName);
 

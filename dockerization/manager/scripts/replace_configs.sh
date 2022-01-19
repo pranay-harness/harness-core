@@ -908,6 +908,10 @@ if [[ "" != "$ENABLE_AUDIT" ]]; then
   yq write -i $CONFIG_FILE enableAudit $ENABLE_AUDIT
 fi
 
+if [[ "" != "$AUDIT_CLIENT_BASEURL" ]]; then
+  yq write -i $CONFIG_FILE auditClientConfig.baseUrl "$AUDIT_CLIENT_BASEURL"
+fi
+
 if [[ "" != "$EVENTS_FRAMEWORK_REDIS_SENTINELS" ]]; then
   IFS=',' read -ra SENTINEL_URLS <<< "$EVENTS_FRAMEWORK_REDIS_SENTINELS"
   INDEX=0
@@ -930,6 +934,7 @@ replace_key_value eventsFramework.redis.sslConfig.CATrustStorePassword $EVENTS_F
 replace_key_value ngAuthUIEnabled "$HARNESS_ENABLE_NG_AUTH_UI_PLACEHOLDER"
 replace_key_value portal.gatewayPathPrefix "$GATEWAY_PATH_PREFIX"
 replace_key_value portal.zendeskBaseUrl "$ZENDESK_BASE_URL"
+replace_key_value deployVariant "$DEPLOY_VERSION"
 
 if [[ "" != "$NG_MANAGER_BASE_URL" ]]; then
   yq write -i $CONFIG_FILE ngManagerServiceHttpClientConfig.baseUrl "$NG_MANAGER_BASE_URL"
@@ -981,4 +986,12 @@ fi
 
 if [[ "" != "$SEGMENT_VERIFY_CERT_NG" ]]; then
   yq write -i $CONFIG_FILE segmentConfiguration.certValidationRequired "$SEGMENT_VERIFY_CERT_NG"
+fi
+
+if [[ "" != "$SECOPS_EMAIL" ]]; then
+ yq write -i config.yml totp.secOpsEmail "$SECOPS_EMAIL"
+fi
+
+if [[ "" != "$INCORRECT_ATTEMPTS_UNTIL_SECOPS_NOTIFIED" ]]; then
+ yq write -i config.yml totp.incorrectAttemptsUntilSecOpsNotified "$INCORRECT_ATTEMPTS_UNTIL_SECOPS_NOTIFIED"
 fi

@@ -245,7 +245,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(mainConfiguration.getPortal()).thenReturn(portal);
     when(portal.getDelegateDockerImage()).thenReturn(null);
 
-    final String actual = delegateService.getDelegateDockerImage();
+    final String actual = delegateService.getDelegateDockerImage("accountId");
     assertThat(actual).isEqualTo("harness/delegate:latest");
   }
 
@@ -257,7 +257,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(mainConfiguration.getPortal()).thenReturn(portal);
     when(portal.getUpgraderDockerImage()).thenReturn(null);
 
-    final String actual = delegateService.getUpgraderDockerImage();
+    final String actual = delegateService.getUpgraderDockerImage("accountId");
     assertThat(actual).isEqualTo("harness/upgrader:latest");
   }
 
@@ -270,7 +270,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(mainConfiguration.getPortal()).thenReturn(portal);
     when(portal.getDelegateDockerImage()).thenReturn(delegateImage);
 
-    final String actual = delegateService.getDelegateDockerImage();
+    final String actual = delegateService.getDelegateDockerImage("accountId");
     assertThat(actual).isEqualTo(delegateImage);
   }
 
@@ -283,7 +283,7 @@ public class DelegateServiceImplTest extends WingsBaseTest {
     when(mainConfiguration.getPortal()).thenReturn(portal);
     when(portal.getUpgraderDockerImage()).thenReturn(upgraderImage);
 
-    final String actual = delegateService.getUpgraderDockerImage();
+    final String actual = delegateService.getUpgraderDockerImage("accountId");
     assertThat(actual).isEqualTo(upgraderImage);
   }
 

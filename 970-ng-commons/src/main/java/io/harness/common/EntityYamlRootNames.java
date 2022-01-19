@@ -55,4 +55,5 @@ public class EntityYamlRootNames {
   public static String SERVICENOW_APPROVAL = "ServiceNowApproval";
   public static String JIRA_APPROVAL = "JiraApproval";
   public static String HARNESS_APPROVAL = "HarnessApproval";
+  public static String BARRIER = "Barrier";
 }
