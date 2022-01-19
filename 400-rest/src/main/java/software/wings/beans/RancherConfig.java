@@ -12,8 +12,6 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import io.harness.annotations.dev.HarnessModule;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
-import io.harness.ccm.config.CCMConfig;
-import io.harness.ccm.config.CloudCostAware;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.task.mixin.HttpConnectionExecutionCapabilityGenerator;
 import io.harness.encryption.Encrypted;
@@ -27,8 +25,6 @@ import software.wings.settings.SettingValue;
 import software.wings.settings.SettingVariableTypes;
 import software.wings.yaml.setting.CloudProviderYaml;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonTypeName;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.github.reinert.jjschema.Attributes;
@@ -49,25 +45,22 @@ import org.hibernate.validator.constraints.NotEmpty;
 @EqualsAndHashCode(callSuper = false)
 @OwnedBy(CDP)
 @TargetModule(HarnessModule._970_API_SERVICES_BEANS)
-public class RancherConfig extends SettingValue implements EncryptableSetting, CloudCostAware {
+public class RancherConfig extends SettingValue implements EncryptableSetting {
   @Attributes(title = "Rancher URL") private String rancherUrl;
   @Attributes(title = "Bearer Token") @Encrypted(fieldName = "bearer_token") private char[] bearerToken;
   @JsonView(JsonViews.Internal.class) @SchemaIgnore private String encryptedBearerToken;
   @SchemaIgnore @NotEmpty private String accountId; // internal
-  @JsonInclude(Include.NON_NULL) @SchemaIgnore private CCMConfig ccmConfig;
 
   public RancherConfig() {
     super(SettingVariableTypes.RANCHER.name());
   }
 
-  public RancherConfig(
-      String rancherUrl, char[] bearerToken, String encryptedBearerToken, String accountId, CCMConfig ccmConfig) {
+  public RancherConfig(String rancherUrl, char[] bearerToken, String encryptedBearerToken, String accountId) {
     this();
     this.rancherUrl = rancherUrl;
     this.bearerToken = bearerToken == null ? null : bearerToken.clone();
     this.encryptedBearerToken = encryptedBearerToken;
     this.accountId = accountId;
-    this.ccmConfig = ccmConfig;
   }
 
   @Override

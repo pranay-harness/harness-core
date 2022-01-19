@@ -854,7 +854,8 @@ public class InfrastructureDefinitionServiceImpl implements InfrastructureDefini
     deploymentCloudProviderOptions.put(DeploymentType.SSH,
         asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS, SettingVariableTypes.AZURE));
     deploymentCloudProviderOptions.put(KUBERNETES,
-        asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
+        asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER,
+            SettingVariableTypes.RANCHER));
     deploymentCloudProviderOptions.put(
         HELM, asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
     deploymentCloudProviderOptions.put(ECS, asList(SettingVariableTypes.AWS));

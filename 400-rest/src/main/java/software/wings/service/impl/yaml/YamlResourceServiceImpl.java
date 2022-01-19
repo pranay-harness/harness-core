@@ -596,6 +596,7 @@ public class YamlResourceServiceImpl implements YamlResourceService {
       case PHYSICAL_DATA_CENTER:
       case PCF:
       case SPOT_INST:
+      case RANCHER:
         return yamlHandlerFactory.getYamlHandler(YamlType.CLOUD_PROVIDER, settingVariableType.name());
 
       // artifact servers - these don't have separate folders

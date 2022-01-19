@@ -3912,6 +3912,7 @@ public class WorkflowServiceImpl implements WorkflowService, DataProvider {
       }
     } else if (orchestrationWorkflow.getOrchestrationWorkflowType() == BLUE_GREEN) {
       if (!(InfrastructureMappingType.DIRECT_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
+              || InfrastructureMappingType.RANCHER_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.GCP_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.AZURE_KUBERNETES.name().equals(infrastructureMapping.getInfraMappingType())
               || InfrastructureMappingType.PCF_PCF.name().equals(infrastructureMapping.getInfraMappingType())

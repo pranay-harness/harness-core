@@ -24,6 +24,7 @@ import static software.wings.beans.InfrastructureType.GCP_KUBERNETES_ENGINE;
 import static software.wings.beans.InfrastructureType.PCF_INFRASTRUCTURE;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA;
 import static software.wings.beans.InfrastructureType.PHYSICAL_INFRA_WINRM;
+import static software.wings.beans.InfrastructureType.RANCHER_KUBERNETES;
 
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.annotations.dev.TargetModule;
@@ -44,6 +45,7 @@ import software.wings.infra.GoogleKubernetesEngine;
 import software.wings.infra.PcfInfraStructure;
 import software.wings.infra.PhysicalInfra;
 import software.wings.infra.PhysicalInfraWinrm;
+import software.wings.infra.RancherKubernetesInfrastructure;
 import software.wings.yaml.BaseYamlWithType;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
@@ -69,7 +71,8 @@ import lombok.NoArgsConstructor;
       @JsonSubTypes.Type(value = PhysicalInfraWinrm.Yaml.class, name = PHYSICAL_INFRA_WINRM),
       @JsonSubTypes.Type(value = AzureVMSSInfra.Yaml.class, name = AZURE_VMSS),
       @JsonSubTypes.Type(value = AzureWebAppInfra.Yaml.class, name = AZURE_WEBAPP),
-      @JsonSubTypes.Type(value = CustomInfrastructure.Yaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE)
+      @JsonSubTypes.Type(value = CustomInfrastructure.Yaml.class, name = InfrastructureType.CUSTOM_INFRASTRUCTURE),
+      @JsonSubTypes.Type(value = RancherKubernetesInfrastructure.Yaml.class, name = RANCHER_KUBERNETES)
 })
 @OwnedBy(CDP)
 @TargetModule(_955_CG_YAML)

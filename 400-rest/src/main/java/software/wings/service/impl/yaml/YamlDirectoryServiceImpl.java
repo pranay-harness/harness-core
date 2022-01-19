@@ -2199,6 +2199,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
     doCloudProviderType(accountId, cloudProvidersFolder, PHYSICAL_DATA_CENTER, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.PCF, directoryPath.clone());
     doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.SPOT_INST, directoryPath.clone());
+    doCloudProviderType(accountId, cloudProvidersFolder, SettingVariableTypes.RANCHER, directoryPath.clone());
     sort(cloudProvidersFolder.getChildren(), new DirectoryComparator());
     return cloudProvidersFolder;
   }
@@ -2810,6 +2811,7 @@ public class YamlDirectoryServiceImpl implements YamlDirectoryService {
       case PHYSICAL_DATA_CENTER:
       case SPOT_INST:
       case PCF:
+      case RANCHER:
         sb.append(CLOUD_PROVIDERS_FOLDER);
         if (featureFlagService.isEnabled(FeatureName.ARTIFACT_STREAM_REFACTOR, settingAttribute.getAccountId())) {
           sb.append(PATH_DELIMITER);

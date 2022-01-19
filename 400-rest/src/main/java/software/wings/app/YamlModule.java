@@ -27,6 +27,7 @@ import static software.wings.beans.InfrastructureMappingType.GCP_KUBERNETES;
 import static software.wings.beans.InfrastructureMappingType.PCF_PCF;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_SSH;
 import static software.wings.beans.InfrastructureMappingType.PHYSICAL_DATA_CENTER_WINRM;
+import static software.wings.beans.InfrastructureMappingType.RANCHER_KUBERNETES;
 import static software.wings.beans.InfrastructureType.AWS_INSTANCE;
 import static software.wings.beans.InfrastructureType.AZURE_SSH;
 import static software.wings.beans.InfrastructureType.AZURE_VMSS;
@@ -90,6 +91,7 @@ import software.wings.service.impl.yaml.handler.InfraDefinition.GoogleKubernetes
 import software.wings.service.impl.yaml.handler.InfraDefinition.PcfInfraStructureYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraWinrmYamlHandler;
 import software.wings.service.impl.yaml.handler.InfraDefinition.PhysicalInfraYamlHandler;
+import software.wings.service.impl.yaml.handler.InfraDefinition.RancherKubernetesInfrastructureYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
 import software.wings.service.impl.yaml.handler.artifactstream.AcrArtifactStreamYamlHandler;
 import software.wings.service.impl.yaml.handler.artifactstream.AmazonS3ArtifactStreamYamlHandler;
@@ -139,6 +141,7 @@ import software.wings.service.impl.yaml.handler.inframapping.InfraMappingYamlHan
 import software.wings.service.impl.yaml.handler.inframapping.PcfInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingWinRmYamlHandler;
 import software.wings.service.impl.yaml.handler.inframapping.PhysicalInfraMappingYamlHandler;
+import software.wings.service.impl.yaml.handler.inframapping.RancherKubernetesInfraMappingYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.ARMInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.CloudFormationInfrastructureProvisionerYamlHandler;
 import software.wings.service.impl.yaml.handler.infraprovisioner.InfrastructureProvisionerYamlHandler;
@@ -167,6 +170,7 @@ import software.wings.service.impl.yaml.handler.setting.cloudprovider.GcpConfigY
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.KubernetesClusterConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PcfConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.cloudprovider.PhysicalDataCenterConfigYamlHandler;
+import software.wings.service.impl.yaml.handler.setting.cloudprovider.RancherConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.CollaborationProviderYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.JiraConfigYamlHandler;
 import software.wings.service.impl.yaml.handler.setting.collaborationprovider.ServiceNowConfigYamlHandler;
@@ -300,6 +304,8 @@ public class YamlModule extends CommandLibrarySharedModule {
     infraMappingYamlHelperMapBinder.addBinding(AWS_AMI.name()).to(AwsAmiInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(DIRECT_KUBERNETES.name())
         .to(DirectKubernetesInfraMappingYamlHandler.class);
+    infraMappingYamlHelperMapBinder.addBinding(RANCHER_KUBERNETES.name())
+        .to(RancherKubernetesInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(AWS_ECS.name()).to(EcsInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(GCP_KUBERNETES.name()).to(GcpKubernetesInfraMappingYamlHandler.class);
     infraMappingYamlHelperMapBinder.addBinding(AZURE_KUBERNETES.name())
@@ -329,6 +335,8 @@ public class YamlModule extends CommandLibrarySharedModule {
         .to(CodeDeployInfrastructureYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.DIRECT_KUBERNETES)
         .to(DirectKubernetesInfrastructureYamlHandler.class);
+    cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(InfrastructureType.RANCHER_KUBERNETES)
+        .to(RancherKubernetesInfrastructureYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(GCP_KUBERNETES_ENGINE)
         .to(GoogleKubernetesEngineYamlHandler.class);
     cloudProviderInfrastructureYamlHandlerMapBinder.addBinding(PCF_INFRASTRUCTURE)
@@ -461,6 +469,7 @@ public class YamlModule extends CommandLibrarySharedModule {
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.AZURE.name()).to(AzureConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.KUBERNETES_CLUSTER.name())
         .to(KubernetesClusterConfigYamlHandler.class);
+    cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.RANCHER.name()).to(RancherConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PHYSICAL_DATA_CENTER.name())
         .to(PhysicalDataCenterConfigYamlHandler.class);
     cloudProviderYamlHelperMapBinder.addBinding(SettingVariableTypes.PCF.name()).to(PcfConfigYamlHandler.class);

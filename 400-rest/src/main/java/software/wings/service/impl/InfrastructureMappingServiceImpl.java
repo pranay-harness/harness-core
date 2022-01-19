@@ -126,6 +126,7 @@ import software.wings.beans.PcfInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMapping;
 import software.wings.beans.PhysicalInfrastructureMappingBase;
 import software.wings.beans.PhysicalInfrastructureMappingWinRm;
+import software.wings.beans.RancherKubernetesInfrastructureMapping;
 import software.wings.beans.SSHVaultConfig;
 import software.wings.beans.Service;
 import software.wings.beans.ServiceInstance;
@@ -349,6 +350,13 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
           awsInfrastructureMapping.setHostConnectionType(awsInfrastructureMapping.isUsePublicDns()
                   ? HostConnectionType.PUBLIC_DNS.name()
                   : HostConnectionType.PRIVATE_DNS.name());
+        }
+        break;
+      case InfrastructureType.RANCHER_KUBERNETES:
+        RancherKubernetesInfrastructureMapping rancherKubernetesInfrastructureMapping =
+            (RancherKubernetesInfrastructureMapping) infraMapping;
+        if (isBlank(rancherKubernetesInfrastructureMapping.getNamespace())) {
+          rancherKubernetesInfrastructureMapping.setNamespace(DEFAULT);
         }
         break;
       default:
@@ -2444,7 +2452,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
       switch (service.getDeploymentType()) {
         case KUBERNETES:
           infraTypes.put(KUBERNETES,
-              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
+              asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER,
+                  SettingVariableTypes.RANCHER));
           break;
         case HELM:
           infraTypes.put(HELM,
@@ -2495,7 +2504,8 @@ public class InfrastructureMappingServiceImpl implements InfrastructureMappingSe
     if (artifactType == ArtifactType.DOCKER) {
       infraTypes.put(ECS, asList(SettingVariableTypes.AWS));
       infraTypes.put(KUBERNETES,
-          asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
+          asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER,
+              SettingVariableTypes.RANCHER));
       infraTypes.put(
           HELM, asList(SettingVariableTypes.GCP, SettingVariableTypes.AZURE, SettingVariableTypes.KUBERNETES_CLUSTER));
       infraTypes.put(SSH, asList(SettingVariableTypes.PHYSICAL_DATA_CENTER, SettingVariableTypes.AWS));

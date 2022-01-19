@@ -495,6 +495,15 @@ public class SettingValidationService {
   private boolean validateRancherConfig(
       SettingAttribute settingAttribute, List<EncryptedDataDetail> encryptedDataDetails) {
     RancherConfig rancherConfig = (RancherConfig) settingAttribute.getValue();
+
+    if (isEmpty(rancherConfig.getRancherUrl())) {
+      throw new InvalidRequestException("Rancher url cannot be empty", USER);
+    }
+
+    if (isEmpty(rancherConfig.getEncryptedBearerToken())) {
+      throw new InvalidRequestException("Rancher bearer token cannot be empty", USER);
+    }
+
     try {
       rancherHelperService.validateRancherConfig(rancherConfig, encryptedDataDetails);
     } catch (Exception e) {
