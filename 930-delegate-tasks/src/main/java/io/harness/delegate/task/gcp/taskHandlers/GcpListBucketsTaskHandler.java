@@ -49,12 +49,11 @@ public class GcpListBucketsTaskHandler implements TaskHandler {
           request.getClass().getSimpleName(), GcpListBucketsRequest.class.getSimpleName()));
     }
 
-    char[] serviceAccountKeyFileContent = new char[0];
     try {
       GcpListBucketsRequest gcpRequest = (GcpListBucketsRequest) request;
       boolean useDelegate = gcpRequest.getGcpManualDetailsDTO() == null;
       decryptDTO(gcpRequest);
-      serviceAccountKeyFileContent = getGcpServiceAccountKeyFileContent(gcpRequest);
+      char[] serviceAccountKeyFileContent = getGcpServiceAccountKeyFileContent(gcpRequest);
       if (isNotEmpty(serviceAccountKeyFileContent)) {
         SecretSanitizerThreadLocal.addAll(Collections.singleton(String.valueOf(serviceAccountKeyFileContent)));
       }
