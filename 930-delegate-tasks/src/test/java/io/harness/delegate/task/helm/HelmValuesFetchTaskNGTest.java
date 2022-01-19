@@ -11,16 +11,19 @@ import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.delegate.beans.TaskData.DEFAULT_ASYNC_CALL_TIMEOUT;
 import static io.harness.delegate.beans.connector.awsconnector.AwsCredentialType.MANUAL_CREDENTIALS;
 import static io.harness.delegate.beans.connector.helm.HttpHelmAuthType.USER_PASSWORD;
-import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACASIAN;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.spy;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.OwnedBy;
@@ -42,8 +45,10 @@ import io.harness.delegate.beans.logstreaming.ILogStreamingTaskClient;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.HttpHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.S3HelmStoreDelegateConfig;
+import io.harness.delegate.exception.TaskNGDataException;
 import io.harness.delegate.task.k8s.HelmChartManifestDelegateConfig;
 import io.harness.encryption.SecretRefData;
+import io.harness.logging.LogCallback;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.SecretDecryptionService;
 
@@ -61,6 +66,7 @@ public class HelmValuesFetchTaskNGTest extends CategoryTest {
   @Mock private SecretDecryptionService decryptionService;
   @Mock DecryptableEntity decryptableEntity;
   @Mock private ILogStreamingTaskClient logStreamingTaskClient;
+  @Mock private LogCallback logCallback;
 
   @InjectMocks
   HelmValuesFetchTaskNG helmValuesFetchTaskNG =
@@ -205,6 +211,7 @@ public class HelmValuesFetchTaskNGTest extends CategoryTest {
   @Owner(developers = ACASIAN)
   @Category(UnitTests.class)
   public void shouldReturnErrorResponse() throws Exception {
+    HelmValuesFetchTaskNG spyHelmValuesFetchTaskNG = spy(helmValuesFetchTaskNG);
     HttpHelmConnectorDTO connectorDTO =
         HttpHelmConnectorDTO.builder()
             .auth(HttpHelmAuthenticationDTO.builder()
@@ -228,6 +235,8 @@ public class HelmValuesFetchTaskNGTest extends CategoryTest {
     doThrow(new RuntimeException("Something went wrong"))
         .when(helmTaskHelperBase)
         .fetchValuesYamlFromChart(eq(manifestDelegateConfig), eq(DEFAULT_ASYNC_CALL_TIMEOUT), any());
+    doReturn(logCallback).when(spyHelmValuesFetchTaskNG).getLogCallback(any());
+    doNothing().when(logCallback).saveExecutionLog(anyString(), any(), any());
 
     HelmValuesFetchRequest request = HelmValuesFetchRequest.builder()
                                          .timeout(DEFAULT_ASYNC_CALL_TIMEOUT)
@@ -235,10 +244,9 @@ public class HelmValuesFetchTaskNGTest extends CategoryTest {
                                          .accountId("test")
                                          .build();
 
-    HelmValuesFetchResponse response = (HelmValuesFetchResponse) helmValuesFetchTaskNG.run(request);
-    assertThat(response).isNotNull();
-    assertThat(response.getCommandExecutionStatus()).isEqualTo(FAILURE);
-    assertThat(response.getValuesFileContent()).isNull();
-    assertThat(response.getUnitProgressData()).isNotNull();
+    assertThatThrownBy(() -> spyHelmValuesFetchTaskNG.run(request))
+        .isInstanceOf(TaskNGDataException.class)
+        .getRootCause()
+        .hasMessageContaining("Something went wrong");
   }
 }

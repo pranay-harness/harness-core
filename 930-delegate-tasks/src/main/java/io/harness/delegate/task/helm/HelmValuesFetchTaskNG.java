@@ -62,8 +62,7 @@ public class HelmValuesFetchTaskNG extends AbstractDelegateRunnableTask {
     CommandUnitsProgress commandUnitsProgress = CommandUnitsProgress.builder().build();
     log.info(format("Running HelmValuesFetchTaskNG for account %s", helmValuesFetchRequest.getAccountId()));
 
-    LogCallback logCallback = new NGDelegateLogCallback(
-        getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true, commandUnitsProgress);
+    LogCallback logCallback = getLogCallback(commandUnitsProgress);
     HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
         helmValuesFetchRequest.getHelmChartManifestDelegateConfig();
     try {
@@ -88,5 +87,10 @@ public class HelmValuesFetchTaskNG extends AbstractDelegateRunnableTask {
       logCallback.saveExecutionLog(msg, INFO, FAILURE);
       throw new TaskNGDataException(UnitProgressDataMapper.toUnitProgressData(commandUnitsProgress), e);
     }
+  }
+
+  public LogCallback getLogCallback(CommandUnitsProgress commandUnitsProgress) {
+    return new NGDelegateLogCallback(
+        getLogStreamingTaskClient(), K8sCommandUnitConstants.FetchFiles, true, commandUnitsProgress);
   }
 }
