@@ -2601,7 +2601,8 @@
     }
   },
   "nodeType": "Verify",
-  "nodeName": "CVNGStepInfo",
+  "nodeName": "CVNGStageInfo",
   "namespace": "cvng",
-  "moduleType": "CV"
+  "moduleType": "CV",
+  "skipStageSchema": true
 }
