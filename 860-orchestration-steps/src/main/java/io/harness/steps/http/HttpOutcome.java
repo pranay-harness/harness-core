@@ -11,7 +11,9 @@ import static io.harness.annotations.dev.HarnessTeam.CDC;
 
 import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.SweepingOutput;
 import io.harness.logging.CommandExecutionStatus;
+import io.harness.pms.sdk.core.data.ExecutionSweepingOutput;
 import io.harness.pms.sdk.core.data.Outcome;
 
 import java.util.Map;
@@ -22,7 +24,7 @@ import lombok.Value;
 @Builder
 @OwnedBy(CDC)
 @RecasterAlias("io.harness.steps.http.HttpOutcome")
-public class HttpOutcome implements Outcome {
+public class HttpOutcome implements Outcome, ExecutionSweepingOutput {
   String httpUrl;
   String httpMethod;
   int httpResponseCode;

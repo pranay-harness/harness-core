@@ -30,6 +30,10 @@ import io.harness.pms.contracts.execution.failure.FailureInfo;
 import io.harness.pms.contracts.execution.tasks.TaskRequest;
 import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.contracts.steps.StepType;
+import io.harness.pms.expression.EngineExpressionService;
+import io.harness.pms.sdk.core.data.HttpStepSweepingOutput;
+import io.harness.pms.sdk.core.plan.creation.yaml.StepOutcomeGroup;
+import io.harness.pms.sdk.core.resolver.outputs.ExecutionSweepingOutputService;
 import io.harness.pms.sdk.core.steps.io.StepInputPackage;
 import io.harness.pms.sdk.core.steps.io.StepResponse;
 import io.harness.pms.sdk.core.steps.io.StepResponse.StepOutcome;
@@ -58,6 +62,8 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
 
   @Inject private KryoSerializer kryoSerializer;
   @Inject private LogStreamingStepClientFactory logStreamingStepClientFactory;
+  @Inject private EngineExpressionService engineExpressionService;
+  @Inject ExecutionSweepingOutputService executionSweepingOutputService;
 
   @Override
   public Class<StepElementParameters> getStepParametersClass() {
@@ -123,8 +129,6 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
         httpStepParameters.getOutputVariables() == null ? null : httpStepParameters.getOutputVariables().getValue();
     Map<String, String> outputVariablesEvaluated = evaluateOutputVariables(outputVariables, httpStepResponse);
 
-    logCallback.saveExecutionLog("Validating the assertions...");
-    boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters);
     HttpOutcome executionData = HttpOutcome.builder()
                                     .httpUrl(httpStepParameters.getUrl().getValue())
                                     .httpMethod(httpStepParameters.getMethod().getValue())
@@ -134,7 +138,11 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
                                     .errorMsg(httpStepResponse.getErrorMessage())
                                     .outputVariables(outputVariablesEvaluated)
                                     .build();
+    executionSweepingOutputService.consume(
+        ambiance, YAMLFieldNameConstants.OUTPUT, executionData, StepOutcomeGroup.STEP.name());
 
+    logCallback.saveExecutionLog("Validating the assertions...");
+    boolean assertionSuccessful = validateAssertions(httpStepResponse, httpStepParameters, ambiance);
     if (!assertionSuccessful) {
       responseBuilder.status(Status.FAILED);
       responseBuilder.failureInfo(FailureInfo.newBuilder().setErrorMessage("assertion failed").build());
@@ -143,13 +151,12 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
       responseBuilder.status(Status.SUCCEEDED);
       logCallback.saveExecutionLog("Assertions passed");
     }
-    responseBuilder.stepOutcome(
-        StepOutcome.builder().name(YAMLFieldNameConstants.OUTPUT).outcome(executionData).build());
 
     return responseBuilder.build();
   }
 
-  public static boolean validateAssertions(HttpStepResponse httpStepResponse, HttpStepParameters stepParameters) {
+  public boolean validateAssertions(
+      HttpStepResponse httpStepResponse, HttpStepParameters stepParameters, Ambiance ambiance) {
     if (ParameterField.isNull(stepParameters.getAssertion())) {
       return true;
     }
@@ -161,7 +168,7 @@ public class HttpStep extends TaskExecutableWithRollback<HttpStepResponse> {
     }
 
     try {
-      Object value = evaluator.evaluateExpression(assertion);
+      Object value = engineExpressionService.evaluateExpression(ambiance, assertion);
       if (!(value instanceof Boolean)) {
         throw new InvalidRequestException(String.format(
             "Expected boolean assertion, got %s value", value == null ? "null" : value.getClass().getSimpleName()));
