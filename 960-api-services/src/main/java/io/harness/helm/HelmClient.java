@@ -30,7 +30,8 @@ public interface HelmClient {
    * Install helm command response.
    *
    * @param helmCommandData the command request
-   * @param isErrorFrameworkEnabled
+   * @param isErrorFrameworkEnabled -- as HelmClient is shared by both CG and NG, this boolean is set to true in case of
+   *     NG to enable error handling
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
@@ -43,7 +44,8 @@ public interface HelmClient {
    * Upgrade helm command response.
    *
    * @param helmCommandData the command request
-   * @param isErrorFrameworkEnabled
+   * @param isErrorFrameworkEnabled -- as HelmClient is shared by both CG and NG, this boolean is set to true in case of
+   *     NG to enable error handling
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
@@ -56,7 +58,8 @@ public interface HelmClient {
    * Rollback helm command response.
    *
    * @param helmCommandData the command request
-   * @param isErrorFrameworkEnabled
+   * @param isErrorFrameworkEnabled -- as HelmClient is shared by both CG and NG, this boolean is set to true in case of
+   *     NG to enable error handling
    * @return the helm command response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
@@ -70,7 +73,8 @@ public interface HelmClient {
    * List releases helm cli response.
    *
    * @param helmCommandData the command request
-   * @param isErrorFrameworkEnabled
+   * @param isErrorFrameworkEnabled -- as HelmClient is shared by both CG and NG, this boolean is set to true in case of
+   *     NG to enable error handling
    * @return the helm cli response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
@@ -82,7 +86,8 @@ public interface HelmClient {
    * Gets client and server version.
    *
    * @param helmCommandData the helm command request
-   * @param isErrorFrameworkEnabled
+   * @param isErrorFrameworkEnabled -- as HelmClient is shared by both CG and NG, this boolean is set to true in case of
+   *     NG to enable error handling
    * @return the client and server version
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception
@@ -114,7 +119,8 @@ public interface HelmClient {
    * @param chartLocation
    * @param namespace
    * @param valuesOverrides
-   * @param isErrorFrameworkEnabled
+   * @param isErrorFrameworkEnabled -- as HelmClient is shared by both CG and NG, this boolean is set to true in case of
+   *     NG to enable error handling
    * @return HelmCliResponse the helm cli response
    * @throws InterruptedException the interrupted exception
    * @throws TimeoutException     the timeout exception

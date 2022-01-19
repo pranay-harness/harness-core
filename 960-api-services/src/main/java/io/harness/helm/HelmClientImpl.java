@@ -422,14 +422,14 @@ public class HelmClientImpl implements HelmClient {
     ProcessResult processResult = processExecutor.execute();
     CommandExecutionStatus status = processResult.getExitValue() == 0 ? SUCCESS : FAILURE;
 
-    String streamInput = "";
+    String streamOutput = "";
     if (errorStream != null) {
       if (errorStream instanceof LogErrorStream) {
-        streamInput = ((LogErrorStream) errorStream).getInput();
+        streamOutput = ((LogErrorStream) errorStream).getOutput();
       }
 
       if (errorStream instanceof ErrorActivityOutputStream) {
-        streamInput = ((ErrorActivityOutputStream) errorStream).getInput();
+        streamOutput = ((ErrorActivityOutputStream) errorStream).getOutput();
       }
     }
 
@@ -437,7 +437,7 @@ public class HelmClientImpl implements HelmClient {
 
     return HelmCliResponse.builder()
         .commandExecutionStatus(status)
-        .output(isNotEmpty(streamInput) ? streamInput.concat(output) : output)
+        .output(isNotEmpty(streamOutput) ? streamOutput.concat(output) : output)
         .build();
   }
 
@@ -551,19 +551,19 @@ public class HelmClientImpl implements HelmClient {
   @RequiredArgsConstructor
   static class ErrorActivityOutputStream extends LogOutputStream {
     @NonNull private final LogCallback logCallback;
-    @Getter private String input;
+    @Getter private String output;
     @Override
     protected void processLine(String s) {
-      input = s;
+      output = s;
       logCallback.saveExecutionLog(s, ERROR);
     }
   }
 
   static class LogErrorStream extends LogOutputStream {
-    @Getter private String input;
+    @Getter private String output;
     @Override
     protected void processLine(String s) {
-      input = s;
+      output = s;
       log.error(s);
     }
   }

@@ -21,5 +21,4 @@ public class K8sDelegateTaskParams {
   String ocPath;
   String kustomizeBinaryPath;
   boolean useVarSupportForKustomize;
-  boolean isErrorFrameworkEnabled;
 }

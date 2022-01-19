@@ -229,12 +229,6 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
       logCallback = markDoneAndStartNew(commandRequest, logCallback, WrapUp);
 
-      if (checkIfReleasePurgingNeeded(commandRequest)) {
-        logCallback.saveExecutionLog("Deployment failed.");
-        deleteAndPurgeHelmRelease(commandRequest, logCallback);
-      }
-      cleanUpWorkingDirectory(commandRequest.getWorkingDir());
-
       return commandResponse;
 
     } catch (UncheckedTimeoutException e) {
@@ -249,6 +243,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       String msg = "Exception in deploying helm chart: " + exceptionMessage;
       logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       throw new HelmNGException(prevVersion, e, isInstallUpgrade);
+    } finally {
+      if (checkIfReleasePurgingNeeded(commandRequest)) {
+        logCallback.saveExecutionLog("Deployment failed.");
+        deleteAndPurgeHelmRelease(commandRequest, logCallback);
+      }
+      cleanUpWorkingDirectory(commandRequest.getWorkingDir());
     }
   }
 
@@ -298,13 +298,20 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
   }
 
-  void deleteAndPurgeHelmRelease(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback) throws Exception {
-    String message = "Cleaning up. Deleting the release, freeing it up for later use";
-    logCallback.saveExecutionLog(message);
+  void deleteAndPurgeHelmRelease(HelmInstallCommandRequestNG commandRequest, LogCallback logCallback) {
+    try {
+      String message = "Cleaning up. Deleting the release, freeing it up for later use";
+      logCallback.saveExecutionLog(message);
 
-    HelmCliResponse deleteResponse =
-        helmClient.deleteHelmRelease(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest), true);
-    logCallback.saveExecutionLog(deleteResponse.getOutput());
+      HelmCliResponse deleteResponse =
+          helmClient.deleteHelmRelease(HelmCommandDataMapperNG.getHelmCmdDataNG(commandRequest), true);
+      logCallback.saveExecutionLog(deleteResponse.getOutput());
+    } catch (Exception e) {
+      String exceptionMessage = ExceptionUtils.getMessage(e);
+      String msg = "Helm delete failed: " + exceptionMessage;
+      log.error(msg, e);
+      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
+    }
   }
 
   private boolean checkIfReleasePurgingNeeded(HelmInstallCommandRequestNG commandRequest) {
@@ -377,9 +384,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
             .ocPath(ocPath)
             .workingDirectory(workingDir)
             .kubeconfigPath(kubeconfigPath)
-            .isErrorFrameworkEnabled(true)
             .build(),
-        namespace, executionLogCallback, false);
+        namespace, executionLogCallback, false, true);
   }
 
   private Collection<? extends ContainerInfo> fetchContainerInfo(
@@ -486,14 +492,12 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     } catch (UncheckedTimeoutException e) {
       log.error(TIMED_OUT_IN_STEADY_STATE, e);
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
-      return new HelmCommandResponseNG(CommandExecutionStatus.FAILURE, ExceptionUtils.getMessage(e));
+      throw e;
     } catch (Exception e) {
       String msg = e.getMessage() == null ? ExceptionUtils.getMessage(e) : e.getMessage();
       log.error("Helm rollback failed: " + msg, e);
+      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
       throw e;
-      //      return new HelmCommandResponseNG(
-      //          CommandExecutionStatus.FAILURE, e.getMessage() == null ? ExceptionUtils.getMessage(e) :
-      //          e.getMessage());
     } finally {
       cleanUpWorkingDirectory(commandRequest.getWorkingDir());
     }

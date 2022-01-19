@@ -80,7 +80,6 @@ public class HelmValuesFetchTaskNG extends AbstractDelegateRunnableTask {
           .valuesFileContent(valuesFileContent)
           .build();
     } catch (Exception e) {
-      // TODO: IMPORTANT! Verify if this doesn't adversely affect K8s steps
       String exceptionMsg = e.getMessage() == null ? ExceptionUtils.getMessage(e) : e.getMessage();
       String msg = "HelmValuesFetchTaskNG execution failed with exception " + exceptionMsg;
       log.error(msg, e);

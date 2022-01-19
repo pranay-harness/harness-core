@@ -157,7 +157,7 @@ public class HelmRollbackStep extends TaskExecutableWithRollbackAndRbac<HelmCmdE
     }
 
     NativeHelmDeployOutcome nativeHelmDeployOutcome = (NativeHelmDeployOutcome) helmDeployOptionalOutput.getOutput();
-    if (!nativeHelmDeployOutcome.isInstallUpgrade()) {
+    if (!nativeHelmDeployOutcome.isHasInstallUpgradeStarted()) {
       return TaskRequest.newBuilder()
           .setSkipTaskRequest(SkipTaskRequest.newBuilder()
                                   .setMessage("Helm install/upgrade was not executed. Skipping rollback.")

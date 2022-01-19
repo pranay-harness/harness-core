@@ -1429,8 +1429,8 @@ public class K8sTaskHelperBase {
   public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,
       K8sDelegateTaskParams k8sDelegateTaskParams, String namespace, LogCallback executionLogCallback,
       boolean denoteOverallSuccess) throws Exception {
-    return doStatusCheckForAllResources(client, resourceIds, k8sDelegateTaskParams, namespace, executionLogCallback,
-        denoteOverallSuccess, k8sDelegateTaskParams.isErrorFrameworkEnabled());
+    return doStatusCheckForAllResources(
+        client, resourceIds, k8sDelegateTaskParams, namespace, executionLogCallback, denoteOverallSuccess, false);
   }
 
   public boolean doStatusCheckForAllResources(Kubectl client, List<KubernetesResourceId> resourceIds,

@@ -132,12 +132,12 @@ public class HelmRollbackStepTest extends CategoryTest {
     OptionalSweepingOutput releaseOutput =
         OptionalSweepingOutput.builder()
             .found(true)
-            .output(NativeHelmDeployOutcome.builder().isInstallUpgrade(true).releaseName("test").build())
+            .output(NativeHelmDeployOutcome.builder().hasInstallUpgradeStarted(true).releaseName("test").build())
             .build();
     OptionalSweepingOutput deploymentOutput =
         OptionalSweepingOutput.builder()
             .found(true)
-            .output(NativeHelmDeployOutcome.builder().isInstallUpgrade(true).releaseName("test").build())
+            .output(NativeHelmDeployOutcome.builder().hasInstallUpgradeStarted(true).releaseName("test").build())
             .build();
 
     testRollback(releaseOutput, deploymentOutput, "test");
