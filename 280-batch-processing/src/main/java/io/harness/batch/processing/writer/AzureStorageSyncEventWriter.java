@@ -65,8 +65,12 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
   public void write(List<? extends SettingAttribute> dummySettingAttributeList) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     boolean areAllSyncSuccessful = true;
-    areAllSyncSuccessful = areAllSyncSuccessful && syncCurrentGenAzureContainers(accountId);
-    areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
+    boolean isSuccessfulSync = syncCurrentGenAzureContainers(accountId);
+    log.info("areAllSyncSuccessful (CG): {}", isSuccessfulSync);
+    areAllSyncSuccessful = areAllSyncSuccessful && isSuccessfulSync;
+    isSuccessfulSync = syncNextGenContainers(accountId);
+    log.info("areAllSyncSuccessful (NG): {}", isSuccessfulSync);
+    areAllSyncSuccessful = areAllSyncSuccessful && isSuccessfulSync;
 
     if (!areAllSyncSuccessful) {
       throw new BatchProcessingException("Azure sync failed", null);
@@ -145,10 +149,10 @@ public class AzureStorageSyncEventWriter extends EventWriter implements ItemWrit
                 .reportName(ceAzureConnectorDTO.getBillingExportSpec().getReportName())
                 .build();
         log.info("azureStorageSyncRecord {}", azureStorageSyncRecord);
-        areAllSyncSuccessful = areAllSyncSuccessful && azureStorageSyncService.syncContainer(azureStorageSyncRecord);
+        boolean isSuccessfulSync = azureStorageSyncService.syncContainer(azureStorageSyncRecord);
+        areAllSyncSuccessful = areAllSyncSuccessful && isSuccessfulSync;
       }
     }
-    log.info("syncAzureContainers areAllSyncSuccessful: {}", areAllSyncSuccessful);
     return areAllSyncSuccessful;
   }
 }

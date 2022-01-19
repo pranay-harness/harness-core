@@ -69,8 +69,9 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
   public void write(List<? extends SettingAttribute> dummySettingAttributeList) {
     String accountId = parameters.getString(CCMJobConstants.ACCOUNT_ID);
     boolean areAllSyncSuccessful = true;
-    areAllSyncSuccessful = areAllSyncSuccessful && syncCurrentGenAwsContainers(accountId);
-    areAllSyncSuccessful = areAllSyncSuccessful && syncNextGenContainers(accountId);
+    areAllSyncSuccessful = syncCurrentGenAwsContainers(accountId);
+    boolean isSuccessfulSync = syncNextGenContainers(accountId);
+    areAllSyncSuccessful = areAllSyncSuccessful && isSuccessfulSync;
     if (!areAllSyncSuccessful) {
       throw new BatchProcessingException("AWS S3 sync failed", null);
     }
@@ -179,7 +180,8 @@ public class S3SyncEventWriter extends EventWriter implements ItemWriter<Setting
                                         .roleArn(crossAccountAccess.getCrossAccountRoleArn())
                                         .destinationBucket(destinationBucket)
                                         .build();
-        areAllSyncSuccessful = areAllSyncSuccessful && awsS3SyncService.syncBuckets(s3SyncRecord);
+        boolean isSuccessfulSync = awsS3SyncService.syncBuckets(s3SyncRecord);
+        areAllSyncSuccessful = areAllSyncSuccessful && isSuccessfulSync;
       }
     }
     log.info("syncAwsContainers  areAllSyncSuccessful: {}, isNextGen: {}", areAllSyncSuccessful, isNextGen);
