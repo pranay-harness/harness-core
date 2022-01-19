@@ -16,9 +16,6 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.secret.SecretSanitizerThreadLocal;
 
-import software.wings.service.intfc.security.EncryptionService;
-
-import com.google.inject.Inject;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Set;
@@ -26,8 +23,6 @@ import lombok.SneakyThrows;
 
 @OwnedBy(HarnessTeam.CDP)
 public class ExceptionMessageSanitizer {
-  @Inject private EncryptionService encryptionService;
-
   public static Exception sanitizeException(Exception ex, Set<String> secrets) {
     if (isNull(secrets)) {
       return ex;
@@ -82,14 +77,4 @@ public class ExceptionMessageSanitizer {
       detailMessageField.setAccessible(false);
     }
   }
-
-  /*  public static Set<String> storeSecrets(List<EncryptedDataDetail> encryptedDataDetailList) {
-      Set<String> secrets = new HashSet<>();
-      if (isNotEmpty(encryptedDataDetailList)) {
-        for (EncryptedDataDetail encryptedDataDetail : encryptedDataDetailList) {
-          secrets.add(String.valueOf(encryptionService.getDecryptedValue(encryptedDataDetail, false)));
-        }
-      }
-      return secrets;
-    }*/
 }
