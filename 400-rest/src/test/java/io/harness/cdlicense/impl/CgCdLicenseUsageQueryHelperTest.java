@@ -155,9 +155,4 @@ public class CgCdLicenseUsageQueryHelperTest extends CategoryTest {
                    .collect(Collectors.toList()))
         .containsExactlyInAnyOrder(1L, 2L);
   }
-
-  @Test
-  @Owner(developers = OwnerRule.TATHAGAT)
-  @Category(UnitTests.class)
-  public void testFetchServicesNames() {}
 }
