@@ -17,6 +17,7 @@ import io.harness.ng.DbAliases;
 import io.harness.persistence.PersistentEntity;
 import io.harness.persistence.UuidAware;
 import io.harness.pms.contracts.plan.ConsumerConfig;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.contracts.plan.SdkModuleInfo;
 import io.harness.pms.contracts.steps.SdkStep;
 
@@ -58,7 +59,7 @@ public class PmsSdkInstance implements PersistentEntity, UuidAware {
   Map<String, String> staticAliases;
   List<String> sdkFunctors;
   List<SdkStep> supportedSdkSteps;
-  List<String> expandableFields;
+  List<JsonExpansionInfo> jsonExpansionInfo;
 
   SdkModuleInfo sdkModuleInfo;
 

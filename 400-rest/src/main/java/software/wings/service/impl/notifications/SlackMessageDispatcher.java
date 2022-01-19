@@ -98,12 +98,8 @@ public class SlackMessageDispatcher {
 
     List<String> messages = new ArrayList<>();
 
-    boolean slackMessageThroughDelegate =
-        featureFlagService.isEnabled(FeatureName.SEND_SLACK_NOTIFICATION_FROM_DELEGATE, accountId);
-
     for (Notification notification : notifications) {
-      if (notification.getNotificationTemplateVariables().containsKey(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER)
-          && !slackMessageThroughDelegate) {
+      if (notification.getNotificationTemplateVariables().containsKey(SlackApprovalMessageKeys.MESSAGE_IDENTIFIER)) {
         boolean isChannelNameEmpty = true;
         // Fetch Channel and add to Notification Template Variables
         String slackChannel = stripToEmpty(slackConfig.getName());

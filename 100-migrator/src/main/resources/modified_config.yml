@@ -177,8 +177,8 @@ smtp:
   port: 465
   fromAddress: noreply@harness.io
   useSSL: true
-  username: apikey
-  password: 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
+  username: smtp_username_placeholder
+  password: "smtp_password_placeholder"
 
 globalWhitelistConfig:
   filters: 127.0.0.1/8
