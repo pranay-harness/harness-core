@@ -40,6 +40,7 @@ enum ExpansionPlacementStrategy {
   REPLACE = 0;
   PARALLEL = 1;
   MOVE_UP = 2;
+  APPEND = 3;
 }
 
 message ExpansionRequestMetadata {
