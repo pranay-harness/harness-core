@@ -346,7 +346,7 @@ enforcementClientConfiguration:
 shouldUseInstanceCache: ${SHOULD_USE_INSTANCE_CACHE:-true}
 
 secretsConfiguration:
-  secretResolutionEnabled: false
+  secretResolutionEnabled: true
   gcpSecretManagerProject: harness-playground
 
 
