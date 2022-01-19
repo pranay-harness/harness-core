@@ -9,15 +9,11 @@ package io.harness.pms.utilities;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.exception.InvalidRequestException;
 import io.harness.exception.YamlException;
 import io.harness.pms.contracts.plan.YamlUpdates;
-import io.harness.pms.utils.PmsConstants;
-import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlField;
 import io.harness.pms.yaml.YamlUtils;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import lombok.experimental.UtilityClass;
 
