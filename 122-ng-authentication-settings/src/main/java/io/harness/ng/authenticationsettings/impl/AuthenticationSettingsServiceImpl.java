@@ -9,6 +9,7 @@ package io.harness.ng.authenticationsettings.impl;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.remote.client.RestClientUtils.getResponse;
 
 import io.harness.accesscontrol.AccountIdentifier;
@@ -165,7 +166,7 @@ public class AuthenticationSettingsServiceImpl implements AuthenticationSettings
         }
         if (isNotEmpty(samlSettings.getClientId()) && isNotEmpty(samlSettings.getEncryptedClientSecret())) {
           samlSettingsBuilt.setClientId(samlSettings.getClientId());
-          samlSettingsBuilt.setClientSecret("********"); // setting to a masked value for clientSecret
+          samlSettingsBuilt.setClientSecret(SECRET_MASK); // setting to a masked value for clientSecret
         } else if (isNotEmpty(samlSettings.getClientId()) && isEmpty(samlSettings.getEncryptedClientSecret())
             || isEmpty(samlSettings.getClientId()) && isNotEmpty(samlSettings.getEncryptedClientSecret())) {
           throw new InvalidRequestException(

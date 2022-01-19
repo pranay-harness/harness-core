@@ -13,6 +13,7 @@ import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.beans.TaskData.DEFAULT_SYNC_CALL_TIMEOUT;
 import static io.harness.eraro.ErrorCode.USER_NOT_AUTHORIZED;
 import static io.harness.exception.WingsException.USER;
+import static io.harness.expression.SecretString.SECRET_MASK;
 import static io.harness.ng.core.account.AuthenticationMechanism.LDAP;
 import static io.harness.ng.core.account.AuthenticationMechanism.OAUTH;
 import static io.harness.ng.core.account.AuthenticationMechanism.SAML;
@@ -150,7 +151,7 @@ public class SSOServiceImpl implements SSOService {
         displayName = settings.getDisplayName();
       }
       if (isNotEmpty(clientId) && isNotEmpty(clientSecret)
-          && "********".equals(String.valueOf(clientSecret))) { // suggests only clientId updated
+          && SECRET_MASK.equals(String.valueOf(clientSecret))) { // suggests only clientId updated
         // set the old cg secret ref
         final String oldClientSecretRef = settings.getEncryptedClientSecret();
         clientSecret = isNotEmpty(oldClientSecretRef) ? oldClientSecretRef.toCharArray() : clientSecret;

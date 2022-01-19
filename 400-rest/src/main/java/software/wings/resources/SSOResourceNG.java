@@ -9,6 +9,7 @@ package software.wings.resources;
 
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.expression.SecretString.SECRET_MASK;
 
 import static software.wings.security.PermissionAttribute.PermissionType.LOGGED_IN;
 
@@ -177,7 +178,7 @@ public class SSOResourceNG {
     if (isEmpty(clientSecret)) {
       return null;
     }
-    if (!isCreateCall && isNotEmpty(clientId) && "********".equals(clientSecret)) {
+    if (!isCreateCall && isNotEmpty(clientId) && SECRET_MASK.equals(clientSecret)) {
       return clientSecret;
     } else if (!isCreateCall && isEmpty(clientId) && isNotEmpty(clientSecret)) {
       throw new InvalidRequestException(validationErrorMsg, WingsException.USER);
