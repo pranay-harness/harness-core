@@ -32,6 +32,7 @@ import org.springframework.data.mongodb.core.query.Query;
 @Slf4j
 public class MongoOffsetBackingStore extends MemoryOffsetBackingStore {
   private MongoTemplate mongoTemplate;
+  private MongoClient mongoClient;
   private String collectionName;
 
   @Override
@@ -48,7 +49,8 @@ public class MongoOffsetBackingStore extends MemoryOffsetBackingStore {
                                                        .readPreference(ReadPreference.primary())
                                                        .build();
     MongoClientURI uri = new MongoClientURI(connectionUri, MongoClientOptions.builder(primaryMongoClientOptions));
-    mongoTemplate = new MongoTemplate(new MongoClient(uri), Objects.requireNonNull(uri.getDatabase()));
+    mongoClient = new MongoClient(uri);
+    mongoTemplate = new MongoTemplate(mongoClient, Objects.requireNonNull(uri.getDatabase()));
   }
 
   @Override
@@ -73,8 +75,18 @@ public class MongoOffsetBackingStore extends MemoryOffsetBackingStore {
 
   @Override
   public void stop() {
-    super.stop();
     log.info("Stopped Mongo offset backing store...");
+    try {
+      super.stop();
+    } catch (Exception e) {
+      log.error("Failed to stop mongo offset backing store", e);
+    } finally {
+      try {
+        mongoClient.close();
+      } catch (Exception e) {
+        log.error("Failed to close the mongo client for Aggregator offset backing store.");
+      }
+    }
   }
 
   @Override

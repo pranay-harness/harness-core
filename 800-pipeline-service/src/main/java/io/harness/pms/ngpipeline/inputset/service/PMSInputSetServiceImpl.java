@@ -154,7 +154,7 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
 
     Update update = new Update();
     update.set(InputSetEntityKeys.isInvalid, isInvalid);
-    InputSetEntity inputSetEntity = inputSetRepository.switchValidationFlag(criteria, update);
+    InputSetEntity inputSetEntity = inputSetRepository.update(criteria, update);
     return inputSetEntity != null;
   }
 
@@ -257,5 +257,22 @@ public class PMSInputSetServiceImpl implements PMSInputSetService {
           "InputSets for Pipeline [%s] under Project[%s], Organization [%s] couldn't be deleted.",
           pipelineEntity.getIdentifier(), pipelineEntity.getProjectIdentifier(), pipelineEntity.getOrgIdentifier()));
     }
+  }
+
+  @Override
+  public InputSetEntity updateGitFilePath(InputSetEntity inputSetEntity, String newFilePath) {
+    Criteria criteria = Criteria.where(InputSetEntityKeys.accountId)
+                            .is(inputSetEntity.getAccountId())
+                            .and(InputSetEntityKeys.orgIdentifier)
+                            .is(inputSetEntity.getOrgIdentifier())
+                            .and(InputSetEntityKeys.projectIdentifier)
+                            .is(inputSetEntity.getProjectIdentifier())
+                            .and(InputSetEntityKeys.pipelineIdentifier)
+                            .is(inputSetEntity.getPipelineIdentifier())
+                            .and(InputSetEntityKeys.identifier)
+                            .is(inputSetEntity.getIdentifier());
+
+    Update update = new Update().set(InputSetEntityKeys.filePath, newFilePath);
+    return inputSetRepository.update(criteria, update);
   }
 }

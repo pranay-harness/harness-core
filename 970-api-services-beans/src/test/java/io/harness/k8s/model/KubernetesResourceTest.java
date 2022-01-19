@@ -688,7 +688,7 @@ public class KubernetesResourceTest extends CategoryTest {
     String resultContents = Resources.toString(resultUrl, Charsets.UTF_8);
 
     org.yaml.snakeyaml.Yaml yaml =
-        new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(Object.class), new BooleanPatchedRepresenter());
+        new org.yaml.snakeyaml.Yaml(new Yaml.CustomConstructor(), new BooleanPatchedRepresenter());
 
     assertThat(yaml.dump(k8sResource)).isEqualTo(resultContents);
   }

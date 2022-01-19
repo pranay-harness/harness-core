@@ -1,0 +1,22 @@
+Var resultsUrl = concat(Env:baseUrl, "?serviceId=", Env:sid, "&applicationId=", Env:serviceId, "&versionId=", Env:versionId, "&environmentId=", Env:environmentId, "&fromDateTime=", Env:startTimeSeconds, "&toDateTime=", Env:endTimeSeconds)
+Var rawResults = sync-call-with-code(url=Var:resultsUrl, header=Env:commonHeaders)
+Var respCode = Var:rawResults[1]
+Var httpOk = 200
+while Var:respCode not equal to Var:httpOk {
+  sleep(1000)
+  rawResults = sync-call-with-code(url=Var:resultsUrl, header=Env:commonHeaders)
+  respCode = Var:rawResults[1]
+  sleep(1000)
+}
+Var hostname = "errortracking"
+Var resultData = Var:rawResults[0]
+Var results = extract(Var:resultData,$.results)
+Var logs = []
+foreach rawLog in Var:results {
+    Var log = extract(Var:rawLog, $.logMsg)
+    Var timestamp = extract(Var:rawLog, $.time)
+    Var format = "yyyy-MM-dd'T'HH:mm:ss.SSSXXX"
+    Var logToReturn = new LogDataRecord(log=Var:log, timestamp=Var:timestamp, timestampFormat=Var:format, host=Var:hostname)
+    Var:logs.append(Var:logToReturn)
+}
+return Var:logs

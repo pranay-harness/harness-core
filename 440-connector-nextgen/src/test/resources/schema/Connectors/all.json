@@ -1347,7 +1347,8 @@
             "SumoLogic",
             "PagerDuty",
             "CustomHealth",
-            "ServiceNow"
+            "ServiceNow",
+            "ErrorTracking"
           ]
         }
       },
@@ -1597,6 +1598,22 @@
           "if": {
             "properties": {
               "type": {
+                "const": "ErrorTracking"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ErrorTrackingConnectorDTO"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Gcp"
               }
             }
@@ -1821,22 +1838,22 @@
           "if": {
             "properties": {
               "type": {
-                "const":"ServiceNow"
+                "const": "ServiceNow"
               }
             }
           },
-          "then":{
-            "properties":{
-              "spec":{
-                "$ref":"#/definitions/ServiceNowConnector"
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/ServiceNowConnector"
               }
             }
           }
         },
         {
-          "if":{
-            "properties":{
-              "type":{
+          "if": {
+            "properties": {
+              "type": {
                 "const": "Splunk"
               }
             }
@@ -2142,6 +2159,40 @@
               "items": {
                 "type": "string"
               }
+            },
+            "url": {
+              "type": "string"
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ErrorTrackingConnectorDTO": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/ConnectorConfigDTO"
+        },
+        {
+          "type": "object",
+          "required": [
+            "apiKeyRef",
+            "sid",
+            "url"
+          ],
+          "properties": {
+            "apiKeyRef": {
+              "type": "string"
+            },
+            "delegateSelectors": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "type": "string"
+              }
+            },
+            "sid": {
+              "type": "string"
             },
             "url": {
               "type": "string"

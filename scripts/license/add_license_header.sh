@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Copyright 2022 Harness Inc. All rights reserved.
-# Use of this source code is governed by the PolyForm Free Trial 1.0.0 license
+# Use of this source code is governed by the PolyForm Shield 1.0.0 license
 # that can be found in the licenses directory at the root of this repository, also available at
-# https://polyformproject.org/wp-content/uploads/2020/05/PolyForm-Free-Trial-1.0.0.txt.
+# https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
 
 function usage {
   echo "Script to add license header to files"
@@ -234,13 +234,6 @@ function write_file_double_hyphen {
 ##  Execution Functions   ##
 ############################
 
-function print_possible_alternates {
-  POTENTIAL_ALTERNATE=$(find . -name "$(basename "$FILE")")
-  if [ ! -z "$POTENTIAL_ALTERNATE" ]; then
-    echo "Has the file been moved to         $POTENTIAL_ALTERNATE"
-  fi
-}
-
 function handle_directory {
   FILE_EXTENSIONS=$(awk 'NR>1 {print $1}' "$SUPPORTED_EXTENSIONS_FILE" | paste -s -d '|' -)
   FILES_IN_DIR=$(find "$FILE" -type f | grep -E "\.($FILE_EXTENSIONS)$")
@@ -267,7 +260,8 @@ function handle_file_based_on_extension {
 
 FILE_COUNT=0
 LINE_COUNT=0
-SUPPORTED_EXTENSIONS_FILE=".license-extensions.txt"
+SCRIPT_DIR=$(dirname "$0")
+SUPPORTED_EXTENSIONS_FILE="$SCRIPT_DIR/.license-extensions.txt"
 LICENSE_TEXT=$(cat $PATH_TO_LICENSE)
 if [ ! -z "$PATH_TO_INPUT" ]; then
   SOURCE_FILES=$(cat $PATH_TO_INPUT)
@@ -276,9 +270,7 @@ PREVIOUSLY_OVERWRITTEN_HEADER=""
 
 while read -r FILE; do
   if [ ! -e "$FILE" ]; then
-    echo "ERROR: Skipping file as it does not exist $FILE"
-    print_possible_alternates
-    echo
+    debug "Skipping file as it does not exist $FILE"
     continue
   elif [ -d "$FILE" ]; then
     handle_directory

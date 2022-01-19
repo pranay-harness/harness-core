@@ -34,7 +34,6 @@ import io.harness.persistence.UuidAware;
 import io.harness.secretmanagerclient.NGEncryptedDataMetadata;
 import io.harness.security.encryption.AdditionalMetadata;
 import io.harness.security.encryption.EncryptedDataParams;
-import io.harness.security.encryption.EncryptedMech;
 import io.harness.security.encryption.EncryptedRecord;
 import io.harness.security.encryption.EncryptionType;
 import io.harness.validation.Update;
@@ -202,10 +201,6 @@ public class EncryptedData implements EncryptedRecord, PersistentEntity, UuidAwa
   @JsonIgnore private NGEncryptedDataMetadata ngMetadata;
 
   private boolean hideFromListing;
-
-  private EncryptedMech encryptedMech;
-
-  private byte[] encryptedValueBytes;
 
   public String getKmsId() {
     if (encryptionType == LOCAL) {

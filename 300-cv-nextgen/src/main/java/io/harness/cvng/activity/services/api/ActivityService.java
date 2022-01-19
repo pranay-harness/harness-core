@@ -85,4 +85,6 @@ public interface ActivityService {
   Long getCount(ProjectParams projectParams, List<String> serviceIdentifiers, List<String> environmentIdentifiers,
       Instant startTime, Instant endTime, List<ActivityType> activityTypes);
   @Deprecated String createActivityForDemo(DeploymentActivity activity, ActivityVerificationStatus verificationStatus);
+  List<DeploymentActivity> getDemoDeploymentActivity(
+      ServiceEnvironmentParams serviceEnvironmentParams, Instant startTime, Instant endTime);
 }

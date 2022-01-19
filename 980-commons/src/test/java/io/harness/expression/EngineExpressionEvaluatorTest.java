@@ -138,7 +138,6 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     validateExpression(evaluator, "bVal2.cVal1.strVal", "c21");
     validateExpression(evaluator, "bVal2.cVal2.strVal", "finalC22", true);
     validateExpression(evaluator, "bVal2.strVal1", "finalB21", true);
-    validateSingleExpression(evaluator, "bVal2.strVal2", "<+bVal2.strVal2>", true);
     validateSingleExpression(evaluator,
         "obj."
             + "bVal2.strVal2",
@@ -377,8 +376,8 @@ public class EngineExpressionEvaluatorTest extends CategoryTest {
     assertThat(evaluator.evaluateExpression("<+b>")).isEqualTo(null);
 
     assertThat(evaluator.renderExpression("<+a> + <+d>")).isEqualTo("5 + 5");
-    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>")).isEqualTo("5 + <+b> + abc + 5");
-    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>", true)).isEqualTo("5 + <+b> + abc + 5");
+    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>")).isEqualTo("5 + null + abc + 5");
+    assertThat(evaluator.renderExpression("<+a> + <+b> + <+c> + <+d>", true)).isEqualTo("5 + null + abc + 5");
   }
 
   @Value

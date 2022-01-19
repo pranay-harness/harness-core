@@ -7,7 +7,6 @@
 
 package io.harness.cvng.core.dsl;
 
-import static io.harness.CvNextGenTestBase.getResourceFilePath;
 import static io.harness.rule.OwnerRule.KAMAL;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -16,34 +15,25 @@ import io.harness.category.element.UnitTests;
 import io.harness.cvng.HoverflyTestBase;
 import io.harness.rule.Owner;
 
-import io.specto.hoverfly.junit.core.SimulationSource;
 import io.specto.hoverfly.junit.core.SslConfigurer;
 import java.io.IOException;
-import java.nio.file.Paths;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
 /**
  * Sample test to use Hoverfly with OkHttpClient.
  */
+@Slf4j
 public class HoverflyExampleTest extends HoverflyTestBase {
-  // TODO: This is just zero external dependency basic example for Hoverfly. Can be used to quickly try out Hoverfly
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testQAAPI() throws IOException {
-    HOVERFLY_RULE.simulate(SimulationSource.file(
-        Paths.get(getResourceFilePath("src/test/resources/hoverfly/qa-api-version-test-file.json"))));
-    // This needs to be done to run tests faster. uncomment following line to capture the actual request.
-    // HOVERFLY_RULE.capture("qa-api-version-test-file.json");
-
     SslConfigurer sslConfigurer = HOVERFLY_RULE.getSslConfigurer();
-
     OkHttpClient client =
         new OkHttpClient()
             .newBuilder()
@@ -57,14 +47,8 @@ public class HoverflyExampleTest extends HoverflyTestBase {
   @Test
   @Owner(developers = KAMAL)
   @Category(UnitTests.class)
-  @Ignore("https://harness.atlassian.net/browse/CVNG-1599")
   public void testProdAPI() throws IOException {
-    HOVERFLY_RULE.simulate(SimulationSource.file(
-        Paths.get(getResourceFilePath("src/test/resources/hoverfly/prod-api-version-test-file.json"))));
-    // This needs to be done to run tests faster. uncomment following line to capture the actual request.
-    // HOVERFLY_RULE.capture("prod-api-version-test-file.json");
     SslConfigurer sslConfigurer = HOVERFLY_RULE.getSslConfigurer();
-
     OkHttpClient client =
         new OkHttpClient()
             .newBuilder()

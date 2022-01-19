@@ -137,7 +137,7 @@ public class PMSInputSetRepositoryCustomImpl implements PMSInputSetRepositoryCus
   }
 
   @Override
-  public InputSetEntity switchValidationFlag(Criteria criteria, Update update) {
+  public InputSetEntity update(Criteria criteria, Update update) {
     Query query = new Query(criteria);
     RetryPolicy<Object> retryPolicy = getRetryPolicy(
         "[Retrying]: Failed updating Input Set; attempt: {}", "[Failed]: Failed updating Input Set; attempt: {}");

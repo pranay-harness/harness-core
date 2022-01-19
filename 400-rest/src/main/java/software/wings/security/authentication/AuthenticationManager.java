@@ -350,7 +350,7 @@ public class AuthenticationManager {
       if (e.getCode() == ErrorCode.DOMAIN_WHITELIST_FILTER_CHECK_FAILED) {
         throw new WingsException(DOMAIN_WHITELIST_FILTER_CHECK_FAILED, USER);
       } else if (e.getCode() == ErrorCode.USER_DOES_NOT_EXIST) {
-        throw new InvalidCredentialsException(INVALID_CREDENTIAL.name(), USER, e);
+        throw new InvalidCredentialsException(INVALID_CREDENTIAL.name(), USER);
       }
       throw e;
     } catch (Exception e) {
@@ -399,6 +399,7 @@ public class AuthenticationManager {
         List<String> accountIds = user.getAccountIds();
         User loggedInUser = authService.generateBearerTokenForUser(user);
         authService.auditLogin(accountIds, loggedInUser);
+        authService.auditLoginToNg(accountIds, loggedInUser);
         return loggedInUser;
       }
 
@@ -408,6 +409,7 @@ public class AuthenticationManager {
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
         authService.auditUnsuccessfulLogin(accountId, user);
+        authService.auditUnsuccessfulLoginToNg(accountId, user);
       }
       throw we;
     } catch (Exception e) {
@@ -416,6 +418,7 @@ public class AuthenticationManager {
       if (Objects.nonNull(user)) {
         String accountId = user.getDefaultAccountId();
         authService.auditUnsuccessfulLogin(accountId, user);
+        authService.auditUnsuccessfulLoginToNg(accountId, user);
       }
       throw new WingsException(INVALID_CREDENTIAL, USER);
     }
@@ -425,7 +428,7 @@ public class AuthenticationManager {
     String[] decryptedData = decryptBasicToken(basicToken);
     User user = defaultLoginInternal(decryptedData[0], decryptedData[1], false, AuthenticationMechanism.USER_PASSWORD);
     if (user == null) {
-      throw new WingsException(USER_DOES_NOT_EXIST);
+      throw new WingsException(INVALID_CREDENTIAL, USER);
     }
 
     if (user.isDisabled()) {
@@ -468,6 +471,7 @@ public class AuthenticationManager {
 
         User loggedInUser = authService.generateBearerTokenForUser(user);
         authService.auditLogin(accountIds, loggedInUser);
+        authService.auditLoginToNg(accountIds, loggedInUser);
         return loggedInUser;
       }
     } catch (Exception e) {
