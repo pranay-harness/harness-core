@@ -11,6 +11,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.git.model.ChangeType;
 import io.harness.gitsync.common.dtos.GitDiffResultFileDTO;
+import io.harness.gitsync.common.dtos.GitDiffResultFileDTO.GitDiffResultFileDTOBuilder;
 import io.harness.gitsync.common.dtos.GitDiffResultFileListDTO;
 import io.harness.product.ci.scm.proto.PRFile;
 
@@ -23,7 +24,7 @@ import lombok.experimental.UtilityClass;
 public class PRFileListMapper {
   public GitDiffResultFileListDTO toGitDiffResultFileListDTO(List<PRFile> prFileList) {
     List<GitDiffResultFileDTO> gitDiffResultFileDTOList = new ArrayList<>();
-    GitDiffResultFileDTO.GitDiffResultFileDTOBuilder gitDiffResultFileDTOBuilder = GitDiffResultFileDTO.builder();
+    GitDiffResultFileDTOBuilder gitDiffResultFileDTOBuilder = GitDiffResultFileDTO.builder();
     if (prFileList != null) {
       prFileList.forEach(prFile -> {
         ChangeType changeType = ChangeType.MODIFY;
