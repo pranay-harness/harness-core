@@ -13,25 +13,25 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.lock.AcquiredLock;
 
 import lombok.Builder;
-import lombok.Getter;
+import lombok.Value;
 import org.redisson.api.RLock;
 
 @OwnedBy(PL)
+@Value
 @Builder
 public class RedisAcquiredLock implements AcquiredLock<RLock> {
-  @Getter RLock lock;
+  RLock lock;
+  boolean isLeaseInfinite;
 
   @Override
   public void release() {
-    if (lock != null && lock.isLocked()) {
+    if (lock != null && (lock.isLocked() || isLeaseInfinite)) {
       lock.unlock();
     }
   }
 
   @Override
   public void close() {
-    if (lock != null && lock.isLocked()) {
-      lock.unlock();
-    }
+    release();
   }
 }

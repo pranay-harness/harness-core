@@ -70,6 +70,8 @@ public class ResourceGroupsManagementJob {
     } catch (InterruptedException e) {
       log.error(String.format("Interrupted while trying to acquire %s", RESOURCE_GROUP_CONFIG_MANAGEMENT_LOCK), e);
       Thread.currentThread().interrupt();
+    } catch (IllegalMonitorStateException e) {
+      log.error(String.format("Error while releasing the lock %s", RESOURCE_GROUP_CONFIG_MANAGEMENT_LOCK), e);
     }
   }
 
