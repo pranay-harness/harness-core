@@ -310,7 +310,6 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       String exceptionMessage = ExceptionUtils.getMessage(e);
       String msg = "Helm delete failed: " + exceptionMessage;
       log.error(msg, e);
-      logCallback.saveExecutionLog(msg, LogLevel.ERROR);
     }
   }
 
