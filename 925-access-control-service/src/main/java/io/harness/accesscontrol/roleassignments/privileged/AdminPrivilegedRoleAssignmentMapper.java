@@ -33,7 +33,7 @@ public class AdminPrivilegedRoleAssignmentMapper {
           .of(new AbstractMap.SimpleEntry<>("_account_admin", "_super_account_admin"),
               new AbstractMap.SimpleEntry<>("_organization_admin", "_super_organization_admin"))
           .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-  public static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources";
+  public static final String ALL_RESOURCES_RESOURCE_GROUP = "_all_resources_including_child_scopes";
   public static final List<String> MANAGED_RESOURCE_GROUP_IDENTIFIERS =
       ImmutableList.of(DEFAULT_RESOURCE_GROUP_IDENTIFIER, DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER,
           DEFAULT_ORGANIZATION_LEVEL_RESOURCE_GROUP_IDENTIFIER, DEFAULT_PROJECT_LEVEL_RESOURCE_GROUP_IDENTIFIER);

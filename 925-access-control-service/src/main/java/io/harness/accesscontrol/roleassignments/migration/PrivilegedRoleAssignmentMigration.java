@@ -24,6 +24,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.mongodb.MongoException;
+import java.util.Arrays;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -62,10 +63,11 @@ public class PrivilegedRoleAssignmentMigration implements NGMigration {
     int pageSize = 1000;
     int pageIndex = 0;
     Pageable pageable = PageRequest.of(pageIndex, pageSize);
-    Criteria criteria = Criteria.where(RoleAssignmentDBOKeys.roleIdentifier)
-                            .in(AdminPrivilegedRoleAssignmentMapper.roleToPrivilegedRole.keySet())
-                            .and(RoleAssignmentDBOKeys.resourceGroupIdentifier)
-                            .in(AdminPrivilegedRoleAssignmentMapper.ALL_RESOURCES_RESOURCE_GROUP);
+    Criteria criteria =
+        Criteria.where(RoleAssignmentDBOKeys.roleIdentifier)
+            .in(AdminPrivilegedRoleAssignmentMapper.roleToPrivilegedRole.keySet())
+            .and(RoleAssignmentDBOKeys.resourceGroupIdentifier)
+            .in(Arrays.asList(AdminPrivilegedRoleAssignmentMapper.ALL_RESOURCES_RESOURCE_GROUP, "_all_resources"));
     long totalPages = roleAssignmentRepository.findAll(criteria, pageable).getTotalPages();
     do {
       pageable = PageRequest.of(pageIndex, pageSize);

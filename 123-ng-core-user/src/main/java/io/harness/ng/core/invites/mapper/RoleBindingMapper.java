@@ -23,6 +23,7 @@ import io.harness.accesscontrol.principals.PrincipalType;
 import io.harness.accesscontrol.roleassignments.api.RoleAssignmentDTO;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.Scope;
+import io.harness.exception.InvalidRequestException;
 import io.harness.ng.core.invites.dto.RoleBinding;
 
 import java.util.ArrayList;
@@ -77,6 +78,19 @@ public class RoleBindingMapper {
           RoleBindingMapper.getDefaultResourceGroupIdentifier(orgIdentifier, projectIdentifier));
       roleBinding.setResourceGroupName(RoleBindingMapper.getDefaultResourceGroupName(orgIdentifier, projectIdentifier));
     }
+  }
+
+  public static void validateRoleBindings(
+      List<RoleBinding> roleBindings, String orgIdentifier, String projectIdentifier) {
+    if (isEmpty(roleBindings)) {
+      return;
+    }
+    roleBindings.forEach(roleBinding -> {
+      if ("_all_resources".equals(roleBinding.getResourceGroupIdentifier())) {
+        throw new InvalidRequestException(
+            String.format("_all_resources is deprecated, please use %s", DEFAULT_RESOURCE_GROUP_IDENTIFIER));
+      }
+    });
   }
 
   public static String getDefaultResourceGroupIdentifier(String orgIdentifier, String projectIdentifier) {

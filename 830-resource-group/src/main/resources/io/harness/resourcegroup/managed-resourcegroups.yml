@@ -35,3 +35,12 @@ resourceGroups:
         includeChildScopes: false
     allowedScopeLevels:
       - project
+  - identifier: _all_resources_including_child_scopes
+    name: All Resources Including Child Scopes
+    description: All the resources in this scope as well as the child scopes are included in this resource group.
+    resourceSelectors:
+      - type: ResourceSelectorByScope
+        includeChildScopes: true
+    allowedScopeLevels:
+      - account
+      - organization
