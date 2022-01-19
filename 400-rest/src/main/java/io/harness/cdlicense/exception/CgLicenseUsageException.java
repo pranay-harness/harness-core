@@ -8,7 +8,6 @@
 package io.harness.cdlicense.exception;
 
 import static io.harness.eraro.ErrorCode.CG_LICENSE_USAGE_ERROR;
-import static io.harness.eraro.ErrorCode.DEPLOYMENT_MIGRATION_ERROR;
 
 import io.harness.eraro.Level;
 import io.harness.exception.WingsException;

@@ -19,6 +19,7 @@ import io.harness.cdlicense.exception.CgLicenseUsageException;
 import io.harness.timescaledb.TimeScaleDBService;
 
 import software.wings.beans.Service;
+import software.wings.beans.Service.ServiceKeys;
 import software.wings.dl.WingsPersistence;
 
 import com.google.inject.Inject;
@@ -128,11 +129,11 @@ public class CgCdLicenseUsageQueryHelper {
     }
     serviceUuids = serviceUuids.stream().distinct().collect(toList());
     List<Service> services = wingsPersistence.createQuery(Service.class)
-                                 .filter(Service.ServiceKeys.accountId, accountId)
-                                 .field(Service.ServiceKeys.uuid)
+                                 .filter(ServiceKeys.accountId, accountId)
+                                 .field(ServiceKeys.uuid)
                                  .in(serviceUuids)
-                                 .project(Service.ServiceKeys.uuid, true)
-                                 .project(Service.ServiceKeys.name, true)
+                                 .project(ServiceKeys.uuid, true)
+                                 .project(ServiceKeys.name, true)
                                  .asList();
     return services.stream().collect(Collectors.toMap(Service::getUuid, Service::getName));
   }
