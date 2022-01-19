@@ -7,7 +7,6 @@
 
 package software.wings.delegatetasks.azure.appservice.deployment;
 
-import static io.harness.azure.model.AzureConstants.IMAGE_AND_TAG_BLANK_ERROR_MSG;
 import static io.harness.azure.model.AzureConstants.SLOT_STARTING_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.SLOT_STOPPING_STATUS_CHECK_INTERVAL;
 import static io.harness.azure.model.AzureConstants.SLOT_SWAP;
@@ -17,7 +16,6 @@ import static io.harness.rule.OwnerRule.ANIL;
 import static io.harness.rule.OwnerRule.TMACARI;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
@@ -40,7 +38,6 @@ import io.harness.azure.model.AzureAppServiceConnectionString;
 import io.harness.azure.model.AzureConfig;
 import io.harness.category.element.UnitTests;
 import io.harness.delegate.task.azure.appservice.AzureAppServicePreDeploymentData;
-import io.harness.exception.InvalidRequestException;
 import io.harness.logging.LogCallback;
 import io.harness.logstreaming.LogStreamingTaskClient;
 import io.harness.rule.Owner;
@@ -73,8 +70,6 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
   private static final String IMAGE_AND_TAG = "image/tag";
 
   @Mock private AzureWebClient mockAzureWebClient;
-  @Mock private AzureTimeLimiter mockAzureTimeLimiter;
-  @Mock private AzureMonitorClient mockAzureMonitorClient;
   @Mock private LogStreamingTaskClient mockLogStreamingTaskClient;
   @Mock private LogCallback mockLogCallback;
   @Mock private SlotSteadyStateChecker slotSteadyStateChecker;
