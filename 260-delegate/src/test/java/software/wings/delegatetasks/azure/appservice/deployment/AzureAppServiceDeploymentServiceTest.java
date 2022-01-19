@@ -244,30 +244,6 @@ public class AzureAppServiceDeploymentServiceTest extends WingsBaseTest {
   @Test
   @Owner(developers = TMACARI)
   @Category(UnitTests.class)
-  public void testDeployDockerImageInvalidImagePathAndTag() {
-    AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
-    AzureAppServiceDockerDeploymentContext azureAppServiceDockerDeploymentContext =
-        AzureAppServiceDockerDeploymentContext.builder()
-            .imagePathAndTag("")
-            .slotName(SLOT_NAME)
-            .steadyStateTimeoutInMin(1)
-            .logStreamingTaskClient(mockLogStreamingTaskClient)
-            .dockerSettings(new HashMap<>())
-            .azureWebClientContext(azureWebClientContext)
-            .build();
-
-    doReturn(Optional.empty()).when(mockAzureWebClient).getDeploymentSlotByName(azureWebClientContext, SLOT_NAME);
-
-    assertThatExceptionOfType(InvalidRequestException.class)
-        .isThrownBy(()
-                        -> azureAppServiceDeploymentService.deployDockerImage(
-                            azureAppServiceDockerDeploymentContext, AzureAppServicePreDeploymentData.builder().build()))
-        .withMessageContaining(IMAGE_AND_TAG_BLANK_ERROR_MSG);
-  }
-
-  @Test
-  @Owner(developers = TMACARI)
-  @Category(UnitTests.class)
   public void testRerouteProductionSlotTraffic() {
     AzureWebClientContext azureWebClientContext = getAzureWebClientContext();
     azureAppServiceDeploymentService.rerouteProductionSlotTraffic(
