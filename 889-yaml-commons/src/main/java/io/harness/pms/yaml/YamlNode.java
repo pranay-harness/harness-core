@@ -97,7 +97,7 @@ public class YamlNode implements Visitable {
     return String.join(PATH_SEP, path);
   }
 
-  public String getStageLocalYamlPath() {
+  public String extractStageLocalYamlPath() {
     String fullYamlPath = getYamlPath();
     List<String> split = Arrays.stream(fullYamlPath.split(PATH_SEP)).collect(Collectors.toList());
     if (split.size() < 4 || !split.get(3).equals(YAMLFieldNameConstants.STAGE)) {

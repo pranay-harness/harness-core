@@ -74,18 +74,18 @@ public class YamlNodeTest extends CategoryTest {
   @Owner(developers = NAMAN)
   @Category(UnitTests.class)
   public void testGetStageLocalYamlPath() {
-    assertThatThrownBy(pipelineNode::getStageLocalYamlPath).hasMessage("Yaml node is not a node inside a stage.");
+    assertThatThrownBy(pipelineNode::extractStageLocalYamlPath).hasMessage("Yaml node is not a node inside a stage.");
     YamlNode variables = pipelineNode.getFieldOrThrow("pipeline").getNode().getFieldOrThrow("variables").getNode();
     YamlNode var0 = variables.asArray().get(0);
-    assertThatThrownBy(var0::getStageLocalYamlPath).hasMessage("Yaml node is not a node inside a stage.");
+    assertThatThrownBy(var0::extractStageLocalYamlPath).hasMessage("Yaml node is not a node inside a stage.");
     YamlNode stages = pipelineNode.getFieldOrThrow("pipeline").getNode().getFieldOrThrow("stages").getNode();
     YamlNode stage0 = stages.asArray().get(0);
-    assertThatThrownBy(stage0::getStageLocalYamlPath).hasMessage("Yaml node is not a node inside a stage.");
+    assertThatThrownBy(stage0::extractStageLocalYamlPath).hasMessage("Yaml node is not a node inside a stage.");
     YamlNode stageInternal = stage0.getFieldOrThrow("stage").getNode();
-    assertThat(stageInternal.getStageLocalYamlPath()).isEqualTo("stage");
+    assertThat(stageInternal.extractStageLocalYamlPath()).isEqualTo("stage");
     YamlNode stageName = stageInternal.getFieldOrThrow("name").getNode();
-    assertThat(stageName.getStageLocalYamlPath()).isEqualTo("stage/name");
+    assertThat(stageName.extractStageLocalYamlPath()).isEqualTo("stage/name");
     YamlNode serviceConfig = stageInternal.getFieldOrThrow("spec").getNode().getFieldOrThrow("execution").getNode();
-    assertThat(serviceConfig.getStageLocalYamlPath()).isEqualTo("stage/spec/execution");
+    assertThat(serviceConfig.extractStageLocalYamlPath()).isEqualTo("stage/spec/execution");
   }
 }

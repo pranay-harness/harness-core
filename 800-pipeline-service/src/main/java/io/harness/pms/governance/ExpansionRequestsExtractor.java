@@ -151,7 +151,7 @@ public class ExpansionRequestsExtractor {
     for (YamlField field : fields) {
       YamlNode currNode = field.getNode();
       String yamlPath = currNode.getYamlPath();
-      String localPath = currNode.getStageLocalYamlPath();
+      String localPath = currNode.extractStageLocalYamlPath();
       List<LocalFQNExpansionInfo> selectedExpansionRequestData =
           currStageRequestsData.stream().filter(e -> e.getLocalFQN().equals(localPath)).collect(Collectors.toList());
       selectedExpansionRequestData.forEach(e -> {
