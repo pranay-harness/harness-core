@@ -20,6 +20,7 @@ import org.mongodb.morphia.annotations.Transient;
 @Builder
 public class DelegateConfiguration {
   private List<String> delegateVersions;
+  private List<String> watcherVersions;
   private Action action;
   @Transient private boolean accountVersion;
 

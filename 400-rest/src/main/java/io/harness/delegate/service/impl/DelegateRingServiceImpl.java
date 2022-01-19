@@ -1,5 +1,6 @@
 package io.harness.delegate.service.impl;
 
+import io.harness.delegate.beans.DelegateConfiguration;
 import io.harness.delegate.beans.DelegateRing;
 import io.harness.delegate.beans.DelegateRing.DelegateRingKeys;
 import io.harness.delegate.service.intfc.DelegateRingService;
@@ -33,5 +34,12 @@ public class DelegateRingServiceImpl implements DelegateRingService {
                 .filter(DelegateRingKeys.ringName, accountService.get(accountId).getRingName())
                 .get())
         .getUpgraderImageTag();
+  }
+
+  public DelegateConfiguration getDelegateConfiguration(String accountId) {
+    return (persistence.createQuery(DelegateRing.class)
+                .filter(DelegateRingKeys.ringName, accountService.get(accountId).getRingName())
+                .get())
+        .getDelegateConfiguration();
   }
 }

@@ -40,6 +40,5 @@ public class DelegateRing implements PersistentEntity {
   @Id @NotEmpty private String ringName;
   private String delegateImageTag;
   private String upgraderImageTag;
-  private List<String> delegateVersions;
-  private List<String> watcherVersions;
+  private DelegateConfiguration delegateConfiguration;
 }

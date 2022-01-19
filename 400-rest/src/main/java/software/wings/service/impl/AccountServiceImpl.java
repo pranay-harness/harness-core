@@ -69,6 +69,7 @@ import io.harness.datahandler.models.AccountDetails;
 import io.harness.dataretention.AccountDataRetentionEntity;
 import io.harness.dataretention.AccountDataRetentionService;
 import io.harness.delegate.beans.DelegateConfiguration;
+import io.harness.delegate.service.intfc.DelegateRingService;
 import io.harness.delegate.utils.DelegateRingConstants;
 import io.harness.eraro.Level;
 import io.harness.event.handler.impl.EventPublishHelper;
@@ -300,6 +301,7 @@ public class AccountServiceImpl implements AccountService {
   @Inject private RemoteObserverInformer remoteObserverInformer;
   @Inject private DelegateNgTokenService delegateNgTokenService;
   @Inject private HPersistence persistence;
+  @Inject private DelegateRingService delegateRingService;
 
   @Inject @Named("BackgroundJobScheduler") private PersistentScheduler jobScheduler;
   @Inject private GovernanceFeature governanceFeature;
@@ -971,23 +973,7 @@ public class AccountServiceImpl implements AccountService {
     if (licenseService.isAccountDeleted(accountId)) {
       throw new InvalidRequestException("Deleted AccountId: " + accountId);
     }
-
-    Account account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-                          .filter(AccountKeys.uuid, accountId)
-                          .project("delegateConfiguration", true)
-                          .get();
-
-    if (account.getDelegateConfiguration() == null) {
-      account = wingsPersistence.createQuery(Account.class, excludeAuthorityCount)
-                    .filter(AccountKeys.uuid, GLOBAL_ACCOUNT_ID)
-                    .project("delegateConfiguration", true)
-                    .get();
-      return account.getDelegateConfiguration();
-    }
-    return DelegateConfiguration.builder()
-        .accountVersion(true)
-        .delegateVersions(account.getDelegateConfiguration().getDelegateVersions())
-        .build();
+    return delegateRingService.getDelegateConfiguration(accountId);
   }
 
   @Override
