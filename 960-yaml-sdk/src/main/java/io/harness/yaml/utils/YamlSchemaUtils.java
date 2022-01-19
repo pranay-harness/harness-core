@@ -370,6 +370,8 @@ public class YamlSchemaUtils {
   private String getNamespaceFromModuleType(ModuleType moduleType) {
     if (moduleType == ModuleType.CD) {
       return "cd/";
+    } else if (moduleType == ModuleType.CV) {
+      return "cvng/";
     } else if (moduleType == ModuleType.CI) {
       return "ci/";
     } else if (moduleType == ModuleType.CE) {

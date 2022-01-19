@@ -190,7 +190,6 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
           partialSchemaDtoMap.put(partialSchemaDTOList1.get(0).getModuleType(), partialSchemaDTOList1);
         }
       }
-      mergeCVIntoCDIfPresent(partialSchemaDtoMap);
 
       partialSchemaDtoMap.values().forEach(partialSchemaDTOList1
           -> partialSchemaDTOList1.forEach(partialSchemaDTO
@@ -226,6 +225,7 @@ public class PMSYamlSchemaServiceImpl implements PMSYamlSchemaService {
     }
   }
 
+  // TODO(Brijesh): Will remove this method.
   private void mergeCVIntoCDIfPresent(Map<ModuleType, List<PartialSchemaDTO>> partialSchemaDTOMap) {
     if (!partialSchemaDTOMap.containsKey(ModuleType.CD) || !partialSchemaDTOMap.containsKey(ModuleType.CV)) {
       partialSchemaDTOMap.remove(ModuleType.CV);

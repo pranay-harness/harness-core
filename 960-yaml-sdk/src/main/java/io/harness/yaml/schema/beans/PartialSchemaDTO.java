@@ -26,5 +26,6 @@ public class PartialSchemaDTO {
   String nodeType;
   String nodeName;
   String namespace;
+  boolean skipStageSchema;
   ModuleType moduleType;
 }

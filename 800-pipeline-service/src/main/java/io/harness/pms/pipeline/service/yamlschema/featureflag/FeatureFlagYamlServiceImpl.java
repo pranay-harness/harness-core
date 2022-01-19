@@ -93,6 +93,7 @@ public class FeatureFlagYamlServiceImpl implements FeatureFlagYamlService {
         .schema(partialApprovalSchema)
         .nodeType(getFeatureFlagStageTypeName())
         .moduleType(ModuleType.PMS)
+        .skipStageSchema(false)
         .build();
   }
 

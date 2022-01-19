@@ -107,10 +107,11 @@ public class CVNGYamlSchemaServiceImpl implements CVNGYamlSchemaService {
     JsonNode partialCVNGSchema = ((ObjectNode) deploymentSteps).set(DEFINITIONS_NODE, node);
     return PartialSchemaDTO.builder()
         .namespace(CVNG_NAMESPACE)
-        .nodeName(YamlSchemaUtils.getSwaggerName(CVNGStepInfo.class))
+        .nodeName("CVNGStageInfo")
         .schema(partialCVNGSchema)
         .nodeType(getVerifyStepTypeName())
         .moduleType(ModuleType.CV)
+        .skipStageSchema(true)
         .build();
   }
 

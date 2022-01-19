@@ -130,7 +130,9 @@ public class PmsYamlSchemaHelper {
         partialSchemaDTO.getNodeName(), (ObjectNode) partialSchemaDTO.getSchema(), partialSchemaDTO.getNamespace());
 
     mergePipelineStepsIntoStage(stageDefinitionsNode, pipelineSteps, partialSchemaDTO);
-    mergeStageElementConfig(stageElementConfig, subtypeClassMap);
+    if (!partialSchemaDTO.isSkipStageSchema()) {
+      mergeStageElementConfig(stageElementConfig, subtypeClassMap);
+    }
 
     pipelineDefinitions.set(partialSchemaDTO.getNamespace(), stageDefinitionsNode.get(partialSchemaDTO.getNamespace()));
   }

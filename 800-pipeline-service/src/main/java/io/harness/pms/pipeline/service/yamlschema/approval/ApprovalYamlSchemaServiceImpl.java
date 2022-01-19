@@ -90,6 +90,7 @@ public class ApprovalYamlSchemaServiceImpl implements ApprovalYamlSchemaService 
         .schema(partialApprovalSchema)
         .nodeType(getApprovalStageTypeName())
         .moduleType(ModuleType.PMS)
+        .skipStageSchema(false)
         .build();
   }
 

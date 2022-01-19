@@ -161,6 +161,7 @@ public class CIYamlSchemaServiceImpl implements CIYamlSchemaService {
         .schema(partialCiSchema)
         .nodeType(getIntegrationStageTypeName())
         .moduleType(ModuleType.CI)
+        .skipStageSchema(false)
         .build();
   }
 

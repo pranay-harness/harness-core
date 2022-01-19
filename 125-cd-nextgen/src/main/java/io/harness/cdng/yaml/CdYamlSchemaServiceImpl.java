@@ -162,6 +162,7 @@ public class CdYamlSchemaServiceImpl implements CdYamlSchemaService {
         .schema(partialCdSchema)
         .nodeType(getDeploymentStageTypeName())
         .moduleType(ModuleType.CD)
+        .skipStageSchema(false)
         .build();
   }
 
