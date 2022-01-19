@@ -7,6 +7,7 @@
 
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.DEPLOY_TO_INLINE_HOSTS;
 import static io.harness.beans.OrchestrationWorkflowType.ROLLING;
 import static io.harness.beans.PageRequest.PageRequestBuilder.aPageRequest;
 import static io.harness.beans.SearchFilter.Operator.EQ;
@@ -79,6 +80,7 @@ import software.wings.sm.WorkflowStandardParams;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.inject.Inject;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -86,6 +88,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.mongodb.morphia.annotations.Transient;
 
 /**
@@ -150,6 +153,9 @@ public abstract class NodeSelectState extends State {
           && ((AwsInfrastructureMapping) infrastructureMapping).isProvisionInstances()) {
         throw new InvalidRequestException("Cannot specify hosts when using an auto scale group", WingsException.USER);
       }
+      if (featureFlagService.isEnabled(DEPLOY_TO_INLINE_HOSTS, context.getAccountId()) && isNotEmpty(hostNames)) {
+        hostNames = getResolvedHosts(context, hostNames);
+      }
       selectionParams.withHostNames(hostNames);
       instancesToAdd = hostNames.size();
       log.info("Selecting specific hosts: {}", hostNames);
@@ -165,6 +171,11 @@ public abstract class NodeSelectState extends State {
     selectionParams.withCount(instancesToAdd);
 
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
+
+    if (featureFlagService.isEnabled(DEPLOY_TO_INLINE_HOSTS, context.getAccountId())
+        && isNotEmpty(workflowStandardParams.getExecutionHosts())) {
+      workflowStandardParams.setExecutionHosts(getResolvedHosts(context, workflowStandardParams.getExecutionHosts()));
+    }
 
     StringBuilder message = new StringBuilder();
     boolean nodesOverriddenFromExecutionHosts = processExecutionHosts(
@@ -252,6 +263,15 @@ public abstract class NodeSelectState extends State {
     }
 
     return executionResponse.build();
+  }
+
+  @NotNull
+  private List<String> getResolvedHosts(ExecutionContext context, List<String> hosts) {
+    return hosts.stream()
+        .map(context::renderExpression)
+        .map(s -> Arrays.asList(s.split(",")))
+        .flatMap(resolvedHosts -> resolvedHosts.stream().map(String::trim))
+        .collect(toList());
   }
 
   @VisibleForTesting
@@ -409,7 +429,8 @@ public abstract class NodeSelectState extends State {
         }
       }
       errorMessage = msg.toString();
-    } else if (serviceInstances.size() > totalAvailableInstances) {
+    } else if (featureFlagService.isNotEnabled(DEPLOY_TO_INLINE_HOSTS, infraMapping.getAccountId())
+        && serviceInstances.size() > totalAvailableInstances) {
       errorMessage =
           "Too many nodes selected. Did you change service infrastructure without updating Select Nodes in the workflow?";
     } else if (serviceInstances.size() > DEFAULT_CONCURRENT_EXECUTION_INSTANCE_LIMIT) {

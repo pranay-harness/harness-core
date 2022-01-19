@@ -7,6 +7,8 @@
 
 package software.wings.sm.states;
 
+import static io.harness.beans.FeatureName.DEPLOY_TO_INLINE_HOSTS;
+import static io.harness.beans.FeatureName.DEPLOY_TO_SPECIFIC_HOSTS;
 import static io.harness.beans.PageResponse.PageResponseBuilder.aPageResponse;
 import static io.harness.data.structure.UUIDGenerator.generateUuid;
 import static io.harness.rule.OwnerRule.ANIL;
@@ -28,6 +30,7 @@ import static software.wings.beans.ServiceInstanceSelectionParams.Builder.aServi
 import static software.wings.beans.ServiceTemplate.Builder.aServiceTemplate;
 import static software.wings.beans.infrastructure.Host.Builder.aHost;
 import static software.wings.service.impl.workflow.WorkflowServiceHelper.SELECT_NODE_NAME;
+import static software.wings.sm.WorkflowStandardParams.Builder.aWorkflowStandardParams;
 import static software.wings.utils.WingsTestConstants.ACCOUNT_ID;
 import static software.wings.utils.WingsTestConstants.APP_ID;
 import static software.wings.utils.WingsTestConstants.ARTIFACT_ID;
@@ -45,13 +48,13 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
+import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.harness.beans.ExecutionStatus;
-import io.harness.beans.FeatureName;
 import io.harness.beans.OrchestrationWorkflowType;
 import io.harness.beans.PageRequest;
 import io.harness.beans.PageResponse;
@@ -255,6 +258,157 @@ public class NodeSelectStateTest extends WingsBaseTest {
         (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
     assertThat(selectedNodeExecutionData).isNotNull();
     assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(3);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldTestExecuteWithInlineHosts() {
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(Arrays.asList("test-host1", "test-host2", "${two-more-hosts}"));
+    ServiceInstance testInstance1 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host1").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    ServiceInstance testInstance2 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host2").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    ServiceInstance testInstance3 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host3").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    ServiceInstance testInstance4 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host4").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(testInstance1, testInstance2, testInstance3, testInstance4))
+        .thenReturn(instances);
+    when(context.renderExpression("3")).thenReturn("3");
+    when(context.renderExpression("test-host1")).thenReturn("test-host1");
+    when(context.renderExpression("test-host2")).thenReturn("test-host2");
+    when(context.renderExpression("${two-more-hosts}")).thenReturn("test-host3 ,test-host4");
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+    doReturn(true).when(featureFlagService).isEnabled(eq(DEPLOY_TO_INLINE_HOSTS), any());
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    ArgumentCaptor<ServiceInstanceSelectionParams> argumentCaptor =
+        ArgumentCaptor.forClass(ServiceInstanceSelectionParams.class);
+    verify(infrastructureMappingService, times(2))
+        .selectServiceInstances(any(), any(), any(), argumentCaptor.capture());
+    assertThat(argumentCaptor.getAllValues().get(0).getHostNames().size()).isEqualTo(4);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+    SelectedNodeExecutionData selectedNodeExecutionData =
+        (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
+    assertThat(selectedNodeExecutionData).isNotNull();
+    assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(4);
+  }
+
+  @Test
+  @Owner(developers = TMACARI)
+  @Category(UnitTests.class)
+  public void shouldTestExecuteWithInlineExecutionHosts() {
+    nodeSelectState.setSpecificHosts(true);
+    nodeSelectState.setHostNames(Arrays.asList("test-host1", "test-host2"));
+    ServiceInstance testInstance1 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host1").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    ServiceInstance testInstance2 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host2").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    ServiceInstance testInstance3 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host3").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    ServiceInstance testInstance4 = aServiceInstance()
+                                        .withUuid(generateUuid())
+                                        .withHost(aHost().withHostName("test-host4").build())
+                                        .withServiceTemplate(SERVICE_TEMPLATE)
+                                        .build();
+    PhaseElement phaseElement = PhaseElement.builder()
+                                    .infraDefinitionId(INFRA_DEFINITION_ID)
+                                    .rollback(false)
+                                    .phaseName("Phase 1")
+                                    .phaseNameForRollback("Rollback Phase 1")
+                                    .serviceElement(ServiceElement.builder().uuid(generateUuid()).build())
+                                    .build();
+    WorkflowStandardParams workflowStandardParams =
+        aWorkflowStandardParams()
+            .withExecutionHosts(Arrays.asList("test-host1", "test-host2", "${two-more-hosts}"))
+            .build();
+    workflowStandardParams.setExcludeHostsWithSameArtifact(true);
+    when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
+    when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
+    when(context.getAppId()).thenReturn(APP_ID);
+    when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
+        .thenReturn(Arrays.asList(testInstance1, testInstance2, testInstance3, testInstance4))
+        .thenReturn(instances);
+    when(context.renderExpression("3")).thenReturn("3");
+    when(context.renderExpression("test-host1")).thenReturn("test-host1");
+    when(context.renderExpression("test-host2")).thenReturn("test-host2");
+    when(context.renderExpression("${two-more-hosts}")).thenReturn("test-host3 ,test-host4");
+    when(context.fetchRequiredEnvironment()).thenReturn(anEnvironment().uuid(ENV_ID).build());
+    when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
+    when(context.prepareSweepingOutputBuilder(Scope.WORKFLOW)).thenReturn(SweepingOutputInstance.builder());
+    when(contextElement.getUuid()).thenReturn(instance1.getUuid());
+    when(serviceInstanceArtifactParam.getInstanceArtifactMap())
+        .thenReturn(ImmutableMap.of(instance1.getUuid(), ARTIFACT_ID));
+    when(artifactService.get(ARTIFACT_ID)).thenReturn(artifact);
+    doReturn(true).when(featureFlagService).isEnabled(eq(DEPLOY_TO_INLINE_HOSTS), any());
+    doReturn(true).when(featureFlagService).isEnabled(eq(DEPLOY_TO_SPECIFIC_HOSTS), any());
+
+    PageResponse<Instance> pageResponse = aPageResponse().withResponse(asList(instance)).build();
+
+    when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
+    when(context.getContextElement(ContextElementType.STANDARD)).thenReturn(workflowStandardParams);
+    doReturn(Collections.singletonList(stateExecutionInstance))
+        .when(workflowExecutionService)
+        .getStateExecutionInstancesForPhases(any());
+
+    ExecutionResponse executionResponse = nodeSelectState.execute(context);
+    ArgumentCaptor<ServiceInstanceSelectionParams> argumentCaptor =
+        ArgumentCaptor.forClass(ServiceInstanceSelectionParams.class);
+    verify(infrastructureMappingService, times(2))
+        .selectServiceInstances(any(), any(), any(), argumentCaptor.capture());
+    assertThat(argumentCaptor.getAllValues().get(0).getHostNames().size()).isEqualTo(4);
+    assertThat(executionResponse.getExecutionStatus()).isEqualTo(ExecutionStatus.SUCCESS);
+    assertThat(executionResponse.getStateExecutionData()).isNotNull();
+    SelectedNodeExecutionData selectedNodeExecutionData =
+        (SelectedNodeExecutionData) executionResponse.getStateExecutionData();
+    assertThat(selectedNodeExecutionData).isNotNull();
+    assertThat(selectedNodeExecutionData.getServiceInstanceList()).size().isEqualTo(4);
   }
 
   @Test
@@ -573,9 +727,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
                                     .build();
     when(context.getContextElement(ContextElementType.PARAM, PhaseElement.PHASE_PARAM)).thenReturn(phaseElement);
     when(context.getContextElement(ContextElementType.STANDARD))
-        .thenReturn(WorkflowStandardParams.Builder.aWorkflowStandardParams()
-                        .withExecutionHosts(Arrays.asList("host1", "host2"))
-                        .build());
+        .thenReturn(aWorkflowStandardParams().withExecutionHosts(Arrays.asList("host1", "host2")).build());
     when(context.renderExpression("1")).thenReturn("1");
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(physicalSSHInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
@@ -594,7 +746,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
 
     when(instanceService.list(any(PageRequest.class))).thenReturn(pageResponse);
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
+    doReturn(true).when(featureFlagService).isEnabled(DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance().build();
     doReturn(Collections.singletonList(stateExecutionInstance))
         .when(workflowExecutionService)
@@ -643,7 +795,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldReturnFalseWhenExecutionHostsNotPresent() {
-    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams().build();
+    WorkflowStandardParams workflowStandardParams = aWorkflowStandardParams().build();
 
     boolean nodesOverridden = nodeSelectState.processExecutionHosts(APP_ID, aServiceInstanceSelectionParams(),
         workflowStandardParams, new StringBuilder(), WingsTestConstants.WORKFLOW_EXECUTION_ID);
@@ -655,11 +807,10 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldOverrideForFirstPhase() {
-    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams()
-                                                        .withExecutionHosts(Arrays.asList("host1", "host2"))
-                                                        .build();
+    WorkflowStandardParams workflowStandardParams =
+        aWorkflowStandardParams().withExecutionHosts(Arrays.asList("host1", "host2")).build();
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
+    doReturn(true).when(featureFlagService).isEnabled(DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
     StateExecutionInstance stateExecutionInstance = StateExecutionInstance.Builder.aStateExecutionInstance().build();
     doReturn(Collections.singletonList(stateExecutionInstance))
         .when(workflowExecutionService)
@@ -679,11 +830,10 @@ public class NodeSelectStateTest extends WingsBaseTest {
   @Owner(developers = VAIBHAV_SI)
   @Category(UnitTests.class)
   public void shouldSkipSubsequentPhases() {
-    WorkflowStandardParams workflowStandardParams = WorkflowStandardParams.Builder.aWorkflowStandardParams()
-                                                        .withExecutionHosts(Collections.singletonList("host1"))
-                                                        .build();
+    WorkflowStandardParams workflowStandardParams =
+        aWorkflowStandardParams().withExecutionHosts(Collections.singletonList("host1")).build();
     doReturn(ACCOUNT_ID).when(appService).getAccountIdByAppId(APP_ID);
-    doReturn(true).when(featureFlagService).isEnabled(FeatureName.DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
+    doReturn(true).when(featureFlagService).isEnabled(DEPLOY_TO_SPECIFIC_HOSTS, ACCOUNT_ID);
     StateExecutionInstance stateExecutionInstance1 = StateExecutionInstance.Builder.aStateExecutionInstance().build();
     StateExecutionInstance stateExecutionInstance2 = StateExecutionInstance.Builder.aStateExecutionInstance().build();
     doReturn(Arrays.asList(stateExecutionInstance1, stateExecutionInstance2))
@@ -1058,6 +1208,7 @@ public class NodeSelectStateTest extends WingsBaseTest {
     when(context.fetchInfraMappingId()).thenReturn(INFRA_MAPPING_ID);
     when(contextElement.getUuid()).thenReturn(instance1.getUuid());
     when(workflowStandardParams.isExcludeHostsWithSameArtifact()).thenReturn(true);
+    when(featureFlagService.isNotEnabled(eq(DEPLOY_TO_INLINE_HOSTS), any())).thenReturn(true);
 
     when(infrastructureMappingService.get(APP_ID, INFRA_MAPPING_ID)).thenReturn(awsInfrastructureMapping);
     when(infrastructureMappingService.selectServiceInstances(anyString(), anyString(), anyString(), any()))
