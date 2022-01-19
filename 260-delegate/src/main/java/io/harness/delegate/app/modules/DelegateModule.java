@@ -681,7 +681,7 @@ public class DelegateModule extends AbstractModule {
   @Provides
   @Singleton
   @Named("profileExecutor")
-  public ScheduledExecutorService installCheckExecutor() {
+  public ScheduledExecutorService profileExecutor() {
     ScheduledExecutorService profileExecutor = new ScheduledThreadPoolExecutor(
         1, new ThreadFactoryBuilder().setNameFormat("profile-%d").setPriority(Thread.NORM_PRIORITY).build());
     Runtime.getRuntime().addShutdownHook(new Thread(profileExecutor::shutdownNow));
