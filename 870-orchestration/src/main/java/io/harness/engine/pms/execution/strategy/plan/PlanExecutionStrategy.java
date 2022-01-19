@@ -124,10 +124,9 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
     if (planExecution == null) {
       log.error("Cannot transition plan execution to status : {}", status);
       // TODO: Incorporate error handling
-      planExecution = planExecutionService.updateStatus(
+      planExecutionService.updateStatus(
           ambiance.getPlanExecutionId(), ERRORED, ops -> ops.set(PlanExecutionKeys.endTs, System.currentTimeMillis()));
     }
-    eventEmitter.emitEvent(buildEndEvent(ambiance, planExecution.getStatus()));
     handleEndObservers(ambiance);
   }
 
@@ -145,14 +144,6 @@ public class PlanExecutionStrategy implements NodeExecutionStrategy<Plan, PlanEx
       // TODO: Make a call to archiver here
       log.info("Orchestration Ended");
     }
-  }
-
-  private OrchestrationEvent buildEndEvent(Ambiance ambiance, Status status) {
-    return OrchestrationEvent.newBuilder()
-        .setAmbiance(ambiance)
-        .setEventType(OrchestrationEventType.ORCHESTRATION_END)
-        .setStatus(status)
-        .build();
   }
 
   @Override

@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import lombok.NonNull;
 
 public class Subject<T> {
