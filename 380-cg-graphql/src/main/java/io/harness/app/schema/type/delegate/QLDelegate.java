@@ -10,11 +10,14 @@ package io.harness.app.schema.type.delegate;
 import static io.harness.annotations.dev.HarnessTeam.DEL;
 
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.delegate.beans.DelegateScope;
 
+import software.wings.beans.DelegateConnection;
 import software.wings.graphql.schema.type.QLObject;
 import software.wings.security.PermissionAttribute;
 import software.wings.security.annotations.Scope;
 
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Value;
@@ -37,4 +40,9 @@ public class QLDelegate implements QLObject {
   long lastHeartBeat;
   String version;
   String delegateProfileId;
+  List<String> tags;
+  List<DelegateConnection> connections;
+  List<DelegateScope> includeScopes;
+  List<DelegateScope> excludeScopes;
+  List<String> supportedTasks;
 }
