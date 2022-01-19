@@ -176,7 +176,7 @@ public class InputSetEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Inp
   }
 
   @Override
-  public InputSetYamlDTO updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
+  protected InputSetYamlDTO updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
     InputSetEntity inputSetEntity = PMSInputSetElementMapper.toInputSetEntity(accountIdentifier, yaml);
     validateInputSetEntity(accountIdentifier, inputSetEntity);
     InputSetEntity updatedEntity = pmsInputSetService.updateGitFilePath(inputSetEntity, newFilePath);

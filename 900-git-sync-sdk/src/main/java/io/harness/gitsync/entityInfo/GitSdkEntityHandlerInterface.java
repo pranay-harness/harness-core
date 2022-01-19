@@ -58,6 +58,4 @@ public interface GitSdkEntityHandlerInterface<B extends GitSyncableEntity, Y ext
   List<FileChange> listAllEntities(ScopeDetails scopeDetails);
 
   Y updateFilePath(String accountIdentifier, String yaml, String prevFilePath, String newFilePath);
-
-  Y updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath);
 }

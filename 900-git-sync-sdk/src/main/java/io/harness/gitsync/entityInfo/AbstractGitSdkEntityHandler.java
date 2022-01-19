@@ -102,4 +102,6 @@ public abstract class AbstractGitSdkEntityHandler<B extends GitSyncableEntity, Y
   }
 
   public abstract String getYamlFromEntityRef(EntityDetailProtoDTO entityReference);
+
+  protected abstract Y updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath);
 }

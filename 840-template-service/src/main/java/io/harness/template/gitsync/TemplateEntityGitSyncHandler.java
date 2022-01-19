@@ -146,7 +146,7 @@ public class TemplateEntityGitSyncHandler extends AbstractGitSdkEntityHandler<Te
   }
 
   @Override
-  public NGTemplateConfig updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
+  protected NGTemplateConfig updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
     TemplateEntity templateEntity = NGTemplateDtoMapper.toTemplateEntity(accountIdentifier, yaml);
     return NGTemplateDtoMapper.toDTO(templateService.updateGitFilePath(templateEntity, newFilePath));
   }
