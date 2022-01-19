@@ -7,7 +7,7 @@
 
 package io.harness.datahandler.services;
 
-import static io.harness.NGConstants.DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER;
+import static io.harness.NGConstants.DEFAULT_RESOURCE_GROUP_IDENTIFIER;
 
 import static java.util.Collections.singletonList;
 
@@ -52,7 +52,7 @@ public class AdminUserServiceImpl implements AdminUserService {
             .emails(singletonList(email))
             .roleBindings(singletonList(RoleBinding.builder()
                                             .roleIdentifier(ACCOUNT_ADMIN)
-                                            .resourceGroupIdentifier(DEFAULT_ACCOUNT_LEVEL_RESOURCE_GROUP_IDENTIFIER)
+                                            .resourceGroupIdentifier(DEFAULT_RESOURCE_GROUP_IDENTIFIER)
                                             .build()))
             .build();
     NGRestUtils.getResponse(ngInviteClient.addUsers(accountId, null, null, addUsersDTO));
