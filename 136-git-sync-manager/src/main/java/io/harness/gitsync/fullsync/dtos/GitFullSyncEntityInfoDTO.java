@@ -35,8 +35,11 @@ public class GitFullSyncEntityInfoDTO {
   @Schema(description = GitSyncApiConstants.ENTITY_TYPE_PARAM_MESSAGE) EntityType entityType;
   @Schema(description = GitSyncApiConstants.SYNC_STATUS_PARAM_MESSAGE) GitFullSyncEntityInfo.SyncStatus syncStatus;
   @Schema(description = "Name of the Entity") String name;
+  @Schema(description = "Identifier of the Entity") String identifier;
   @Schema(description = GitSyncApiConstants.BRANCH_PARAM_MESSAGE) String branch;
-  @Schema(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) String repo;
+  @Schema(description = GitSyncApiConstants.REPO_NAME_PARAM_MESSAGE) String repoName;
+  @Schema(description = GitSyncApiConstants.REPO_URL_PARAM_MESSAGE) String repoUrl;
+  @Schema(description = GitSyncApiConstants.FOLDER_PATH_PARAM_MESSAGE) String rootFolder;
   @Schema(description = "This is the number of Full Sync retry attempts") long retryCount;
   @Schema(description = "This is the list of Full Sync errors") List<String> errorMessages;
 }

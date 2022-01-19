@@ -59,7 +59,8 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
   String microservice;
   @NotNull EntityDetail entityDetail;
   String syncStatus;
-  String yamlGitConfigId;
+  String repoUrl;
+  String repoName;
   String branchName;
   String rootFolder;
   int retryCount;
@@ -69,7 +70,7 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
   @EqualsAndHashCode.Exclude @CreatedDate private long createdAt;
   @EqualsAndHashCode.Exclude @LastModifiedDate private long lastUpdatedAt;
 
-  public enum SyncStatus { QUEUED, PUSHED, FAILED }
+  public enum SyncStatus { QUEUED, SUCCESS, FAILED }
 
   @Override
   public Long obtainNextIteration(String fieldName) {
@@ -99,7 +100,7 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
                  .field(GitFullSyncEntityInfoKeys.syncStatus)
                  .field(GitFullSyncEntityInfoKeys.filePath)
                  .field(GitFullSyncEntityInfoKeys.entityDetail + "." + EntityDetailKeys.name)
-                 .field(GitFullSyncEntityInfoKeys.yamlGitConfigId)
+                 .field(GitFullSyncEntityInfoKeys.repoName)
                  .field(GitFullSyncEntityInfoKeys.branchName)
                  .collation(
                      Collation.builder().locale(CollationLocale.ENGLISH).strength(CollationStrength.PRIMARY).build())

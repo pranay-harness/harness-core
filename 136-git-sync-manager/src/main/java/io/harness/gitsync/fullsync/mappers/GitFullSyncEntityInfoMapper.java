@@ -28,17 +28,10 @@ public class GitFullSyncEntityInfoMapper {
     return Optional.ofNullable(entityDetail).map(EntityDetail::getName).orElse(null);
   }
 
-  private String getBranch(EntityDetail entityDetail) {
+  private String getEntityIdentifier(EntityDetail entityDetail) {
     return Optional.ofNullable(entityDetail)
         .map(EntityDetail::getEntityRef)
-        .map(EntityReference::getBranch)
-        .orElse(null);
-  }
-
-  private String getRepo(EntityDetail entityDetail) {
-    return Optional.ofNullable(entityDetail)
-        .map(EntityDetail::getEntityRef)
-        .map(EntityReference::getRepoIdentifier)
+        .map(EntityReference::getIdentifier)
         .orElse(null);
   }
 
@@ -49,10 +42,13 @@ public class GitFullSyncEntityInfoMapper {
         .projectIdentifier(gitFullSyncEntityInfo.getProjectIdentifier())
         .entityType(getEntityType(gitFullSyncEntityInfo.getEntityDetail()))
         .errorMessages(gitFullSyncEntityInfo.getErrorMessage())
-        .branch(getBranch(gitFullSyncEntityInfo.getEntityDetail()))
-        .repo(getRepo(gitFullSyncEntityInfo.getEntityDetail()))
+        .branch(gitFullSyncEntityInfo.getBranchName())
+        .repoName(gitFullSyncEntityInfo.getRepoName())
+        .repoUrl(gitFullSyncEntityInfo.getRepoUrl())
         .name(getName(gitFullSyncEntityInfo.getEntityDetail()))
+        .identifier(getEntityIdentifier(gitFullSyncEntityInfo.getEntityDetail()))
         .filePath(gitFullSyncEntityInfo.getFilePath())
+        .rootFolder(gitFullSyncEntityInfo.getRootFolder())
         .retryCount(gitFullSyncEntityInfo.getRetryCount())
         .syncStatus(SyncStatus.valueOf(gitFullSyncEntityInfo.getSyncStatus()))
         .build();

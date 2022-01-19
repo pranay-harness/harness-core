@@ -101,7 +101,7 @@ public class GitFullSyncEntityServiceImplTest extends GitSyncTestBase {
     }
     for (int i = 0; i < 6; i++) {
       createFullSyncFile(ACCOUNT, ORG, PROJECT, random(String.class), EntityTypeProtoEnum.INPUT_SETS,
-          random(String.class), SyncStatus.PUSHED);
+          random(String.class), SyncStatus.SUCCESS);
     }
     PageResponse<GitFullSyncEntityInfoDTO> response =
         gitFullSyncEntityService.list(ACCOUNT, ORG, PROJECT, PageRequest.builder().pageIndex(0).pageSize(5).build(),
@@ -118,7 +118,7 @@ public class GitFullSyncEntityServiceImplTest extends GitSyncTestBase {
     response = gitFullSyncEntityService.list(ACCOUNT, ORG, PROJECT,
         PageRequest.builder().pageIndex(0).pageSize(5).build(), null,
         GitFullSyncEntityInfoFilterDTO.builder()
-            .syncStatus(SyncStatus.PUSHED)
+            .syncStatus(SyncStatus.SUCCESS)
             .entityType(EntityType.INPUT_SETS)
             .build());
     assertThat(response.getContent()).hasSize(5);
@@ -135,7 +135,7 @@ public class GitFullSyncEntityServiceImplTest extends GitSyncTestBase {
     }
     for (int i = 0; i < 6; i++) {
       createFullSyncFile(ACCOUNT, ORG, PROJECT, random(String.class), EntityTypeProtoEnum.INPUT_SETS,
-          random(String.class), SyncStatus.PUSHED);
+          random(String.class), SyncStatus.SUCCESS);
     }
 
     long count =
@@ -150,12 +150,12 @@ public class GitFullSyncEntityServiceImplTest extends GitSyncTestBase {
     assertThat(count).isEqualTo(6);
 
     count = gitFullSyncEntityService.count(
-        ACCOUNT, ORG, PROJECT, GitFullSyncEntityInfoFilterDTO.builder().syncStatus(SyncStatus.PUSHED).build());
+        ACCOUNT, ORG, PROJECT, GitFullSyncEntityInfoFilterDTO.builder().syncStatus(SyncStatus.SUCCESS).build());
     assertThat(count).isEqualTo(6);
 
     count = gitFullSyncEntityService.count(ACCOUNT, ORG, PROJECT,
         GitFullSyncEntityInfoFilterDTO.builder()
-            .syncStatus(SyncStatus.PUSHED)
+            .syncStatus(SyncStatus.SUCCESS)
             .entityType(EntityType.INPUT_SETS)
             .build());
     assertThat(count).isEqualTo(6);

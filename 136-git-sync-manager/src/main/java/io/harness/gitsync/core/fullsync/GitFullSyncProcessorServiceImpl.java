@@ -110,9 +110,9 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     final FullSyncServiceGrpc.FullSyncServiceBlockingStub fullSyncServiceBlockingStub =
         fullSyncServiceBlockingStubMap.get(microservice);
     GitFullSyncEntityInfo gitFullSyncEntityInfo = entityInfoList.get(0);
-    final YamlGitConfigDTO yamlGitConfigDTO =
-        yamlGitConfigService.get(gitFullSyncEntityInfo.getProjectIdentifier(), gitFullSyncEntityInfo.getOrgIdentifier(),
-            gitFullSyncEntityInfo.getAccountIdentifier(), gitFullSyncEntityInfo.getYamlGitConfigId());
+    final YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.getByProjectIdAndRepo(
+        gitFullSyncEntityInfo.getProjectIdentifier(), gitFullSyncEntityInfo.getOrgIdentifier(),
+        gitFullSyncEntityInfo.getAccountIdentifier(), gitFullSyncEntityInfo.getRepoUrl());
     List<FullSyncChangeSet> fullSyncChangeSets = new ArrayList<>();
     for (GitFullSyncEntityInfo fullSyncEntityInfo : entityInfoList) {
       fullSyncChangeSets.add(getFullSyncChangeSet(fullSyncEntityInfo, yamlGitConfigDTO));
@@ -200,7 +200,7 @@ public class GitFullSyncProcessorServiceImpl implements io.harness.gitsync.core.
     Map<String, List<GitFullSyncEntityInfo>> filesGroupedByMsvc =
         emptyIfNull(allEntitiesToBeSynced)
             .stream()
-            .filter(x -> !x.getSyncStatus().equals(GitFullSyncEntityInfo.SyncStatus.PUSHED.toString()))
+            .filter(x -> !x.getSyncStatus().equals(GitFullSyncEntityInfo.SyncStatus.SUCCESS.toString()))
             .collect(Collectors.groupingBy(GitFullSyncEntityInfo::getMicroservice));
     for (Map.Entry<String, List<GitFullSyncEntityInfo>> entry : filesGroupedByMsvc.entrySet()) {
       FullSyncFilesGroupedByMsvc fullSyncFilesGroupedByMsvc = FullSyncFilesGroupedByMsvc.builder()

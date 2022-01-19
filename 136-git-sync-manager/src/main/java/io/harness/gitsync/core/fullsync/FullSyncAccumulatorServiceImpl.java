@@ -60,6 +60,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     log.info("Started triggering the git full sync job for the message Id {}", messageId);
     final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
     final ScopeDetails scopeDetails = getScopeDetails(gitConfigScope, messageId);
+    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(gitConfigScope.getProjectId().getValue(),
+        gitConfigScope.getOrgId().getValue(), gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
     for (Map.Entry<Microservice, FullSyncServiceBlockingStub> fullSyncStubEntry :
         fullSyncServiceBlockingStubMap.entrySet()) {
       FullSyncServiceBlockingStub fullSyncServiceBlockingStub = fullSyncStubEntry.getValue();
@@ -78,11 +80,11 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
       log.info("Saving {} files for the microservice {}", fileNumber, microservice);
       emptyIfNull(entitiesForFullSync.getFileChangesList()).forEach(entityForFullSync -> {
         saveFullSyncEntityInfo(gitConfigScope, messageId, microservice, entityForFullSync,
-            fullSyncEventRequest.getBranch(), fullSyncEventRequest.getRootFolder());
+            fullSyncEventRequest.getBranch(), fullSyncEventRequest.getRootFolder(), yamlGitConfigDTO);
       });
     }
     if (fullSyncEventRequest.getIsNewBranch()) {
-      createNewBranch(fullSyncEventRequest);
+      createNewBranch(fullSyncEventRequest, yamlGitConfigDTO.getRepo());
     }
     GitFullSyncJob gitFullSyncJob = saveTheFullSyncJob(fullSyncEventRequest, messageId);
     if (gitFullSyncJob == null) {
@@ -115,7 +117,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
   }
 
   private void saveFullSyncEntityInfo(EntityScopeInfo entityScopeInfo, String messageId, Microservice microservice,
-      FileChange entityForFullSync, String branchName, String rootFolder) {
+      FileChange entityForFullSync, String branchName, String rootFolder, YamlGitConfigDTO yamlGitConfigDTO) {
     final GitFullSyncEntityInfo gitFullSyncEntityInfo =
         GitFullSyncEntityInfo.builder()
             .accountIdentifier(entityScopeInfo.getAccountId())
@@ -126,7 +128,8 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
             .messageId(messageId)
             .entityDetail(entityDetailProtoToRestMapper.createEntityDetailDTO(entityForFullSync.getEntityDetail()))
             .syncStatus(QUEUED.name())
-            .yamlGitConfigId(entityScopeInfo.getIdentifier())
+            .repoName(yamlGitConfigDTO.getName())
+            .repoUrl(yamlGitConfigDTO.getRepo())
             .branchName(branchName)
             .rootFolder(rootFolder)
             .retryCount(0)
@@ -147,14 +150,12 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
     return null;
   }
 
-  private void createNewBranch(FullSyncEventRequest fullSyncEventRequest) {
+  private void createNewBranch(FullSyncEventRequest fullSyncEventRequest, String repoUrl) {
     final EntityScopeInfo gitConfigScope = fullSyncEventRequest.getGitConfigScope();
     String projectIdentifier = gitConfigScope.getProjectId().getValue();
     String orgIdentifier = gitConfigScope.getOrgId().getValue();
-    YamlGitConfigDTO yamlGitConfigDTO = yamlGitConfigService.get(
-        projectIdentifier, orgIdentifier, gitConfigScope.getAccountId(), gitConfigScope.getIdentifier());
-    GitBranch gitBranch = gitBranchService.get(
-        gitConfigScope.getAccountId(), yamlGitConfigDTO.getRepo(), fullSyncEventRequest.getBranch());
+    GitBranch gitBranch =
+        gitBranchService.get(gitConfigScope.getAccountId(), repoUrl, fullSyncEventRequest.getBranch());
     if (gitBranch != null) {
       throw new InvalidRequestException(
           String.format("A branch with name {} already exists in Harness", fullSyncEventRequest.getBranch()));
@@ -174,7 +175,7 @@ public class FullSyncAccumulatorServiceImpl implements FullSyncAccumulatorServic
                     .accountIdentifier(gitConfigScope.getAccountId())
                     .branchName(fullSyncEventRequest.getBranch())
                     .branchSyncStatus(BranchSyncStatus.SYNCED)
-                    .repoURL(yamlGitConfigDTO.getRepo())
+                    .repoURL(repoUrl)
                     .build();
     gitBranchService.save(gitBranch);
   }

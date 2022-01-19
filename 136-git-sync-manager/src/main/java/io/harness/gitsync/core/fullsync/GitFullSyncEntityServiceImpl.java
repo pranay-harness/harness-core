@@ -56,7 +56,7 @@ public class GitFullSyncEntityServiceImpl implements GitFullSyncEntityService {
     criteria.and(GitFullSyncEntityInfoKeys.uuid).is(uuid);
     criteria.and(GitFullSyncEntityInfoKeys.accountIdentifier).is(accountId);
     Update update = new Update();
-    update.set(GitFullSyncEntityInfoKeys.syncStatus, GitFullSyncEntityInfo.SyncStatus.PUSHED);
+    update.set(GitFullSyncEntityInfoKeys.syncStatus, GitFullSyncEntityInfo.SyncStatus.SUCCESS);
     update.push(GitFullSyncEntityInfoKeys.errorMessage, null);
     gitFullSyncEntityRepository.update(criteria, update);
   }
