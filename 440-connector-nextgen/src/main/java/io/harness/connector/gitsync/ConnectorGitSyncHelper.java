@@ -157,6 +157,16 @@ public class ConnectorGitSyncHelper extends AbstractGitSdkEntityHandler<Connecto
   }
 
   @Override
+  public ConnectorDTO updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
+    ConnectorDTO connectorDTO = getYamlDTO(yaml);
+    validate(connectorDTO);
+    ConnectorResponseDTO connectorResponseDTO =
+        connectorService.updateGitFilePath(connectorDTO, accountIdentifier, newFilePath);
+    ConnectorInfoDTO connectorInfo = connectorResponseDTO.getConnector();
+    return ConnectorDTO.builder().connectorInfo(connectorInfo).build();
+  }
+
+  @Override
   public String getYamlFromEntityRef(EntityDetailProtoDTO entityReference) {
     final IdentifierRefProtoDTO identifierRef = entityReference.getIdentifierRef();
     final Optional<ConnectorResponseDTO> connectorResponseDTO =

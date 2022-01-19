@@ -527,6 +527,23 @@ public class DefaultConnectorServiceImpl implements ConnectorService {
     return ConnectorDTO.builder().connectorInfo(connectorInfoDTO).build();
   }
 
+  @Override
+  public ConnectorResponseDTO updateGitFilePath(
+      ConnectorDTO connectorDTO, String accountIdentifier, String newFilePath) {
+    Criteria criteria = Criteria.where(ConnectorKeys.accountIdentifier)
+                            .is(accountIdentifier)
+                            .and(ConnectorKeys.orgIdentifier)
+                            .is(connectorDTO.getConnectorInfo().getOrgIdentifier())
+                            .and(ConnectorKeys.projectIdentifier)
+                            .is(connectorDTO.getConnectorInfo().getProjectIdentifier())
+                            .and(ConnectorKeys.identifier)
+                            .is(connectorDTO.getConnectorInfo().getIdentifier());
+
+    Update update = new Update().set(ConnectorKeys.filePath, newFilePath);
+    return getResponse(accountIdentifier, connectorDTO.getConnectorInfo().getOrgIdentifier(),
+        connectorDTO.getConnectorInfo().getProjectIdentifier(), connectorRepository.update(criteria, update));
+  }
+
   private void deleteTheExistingReferences(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String identifier) {
     GitEntityInfo oldGitEntityInfo = GitContextHelper.getGitEntityInfo();

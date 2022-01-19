@@ -20,6 +20,7 @@ import io.harness.pms.contracts.steps.StepCategory;
 import io.harness.pms.pipeline.service.yamlschema.PmsYamlSchemaHelper;
 import io.harness.pms.yaml.YAMLFieldNameConstants;
 import io.harness.steps.approval.stage.ApprovalStageConfig;
+import io.harness.utils.FeatureRestrictionsGetter;
 import io.harness.yaml.schema.SchemaGeneratorUtils;
 import io.harness.yaml.schema.YamlSchemaGenerator;
 import io.harness.yaml.schema.YamlSchemaProvider;
@@ -35,6 +36,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableSet;
 import com.google.inject.Inject;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @OwnedBy(HarnessTeam.PIPELINE)
@@ -46,7 +48,7 @@ public class ApprovalYamlSchemaServiceImpl implements ApprovalYamlSchemaService 
   @Inject private PmsYamlSchemaHelper pmsYamlSchemaHelper;
   @Inject private YamlSchemaGenerator yamlSchemaGenerator;
   @Inject private List<YamlSchemaRootClass> yamlSchemaRootClasses;
-
+  @Inject private FeatureRestrictionsGetter featureRestrictionsGetter;
   @Override
   public PartialSchemaDTO getApprovalYamlSchema(String accountIdentifier, String projectIdentifier,
       String orgIdentifier, Scope scope, List<YamlSchemaWithDetails> yamlSchemaWithDetailsList) {
@@ -69,8 +71,11 @@ public class ApprovalYamlSchemaServiceImpl implements ApprovalYamlSchemaService 
 
     Set<String> enabledFeatureFlags =
         pmsYamlSchemaHelper.getEnabledFeatureFlags(accountIdentifier, yamlSchemaWithDetailsList);
+    Map<String, Boolean> featureRestrictionsMap =
+        featureRestrictionsGetter.getFeatureRestrictionsAvailability(yamlSchemaWithDetailsList, accountIdentifier);
     YamlSchemaUtils.addOneOfInExecutionWrapperConfig(approvalStageSchema.get(DEFINITIONS_NODE),
-        YamlSchemaUtils.getNodeClassesByYamlGroup(yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags),
+        YamlSchemaUtils.getNodeClassesByYamlGroup(
+            yamlSchemaRootClasses, StepCategory.STEP.name(), enabledFeatureFlags, featureRestrictionsMap),
         "");
 
     yamlSchemaGenerator.modifyRefsNamespace(approvalStageSchema, APPROVAL_NAMESPACE);

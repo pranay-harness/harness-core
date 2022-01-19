@@ -61,6 +61,7 @@ public class GitFullSyncEntityInfo implements PersistentEntity, PersistentRegula
   String syncStatus;
   String yamlGitConfigId;
   String branchName;
+  String rootFolder;
   int retryCount;
   @FdIndex @NonFinal Long nextRuntime;
   List<String> errorMessage;

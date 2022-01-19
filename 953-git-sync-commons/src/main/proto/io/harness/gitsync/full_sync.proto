@@ -14,7 +14,7 @@ import "970-ng-commons/src/main/proto/io/harness/eventsframework/schemas/entity/
 
 service FullSyncService {
   rpc getEntitiesForFullSync(ScopeDetails) returns (FileChanges);
-  rpc performEntitySync(FullSyncChangeSet) returns (FullSyncResponse);
+  rpc performEntitySync(FullSyncRequest) returns (FullSyncResponse);
 }
 
 message FileChanges {
@@ -31,9 +31,19 @@ message ScopeDetails {
   map<string, string> log_context = 2;
 }
 
-message FullSyncResponse {
+message FullSyncFileResponse {
   bool success = 1;
   string error_msg = 2;
+  string file_path = 3;
+}
+
+message FullSyncRequest {
+  repeated FullSyncChangeSet file_changes = 1;
+  map<string, string> log_context = 2;
+}
+
+message FullSyncResponse {
+  repeated FullSyncFileResponse file_response = 1;
 }
 
 message FullSyncChangeSet {
@@ -42,7 +52,6 @@ message FullSyncChangeSet {
   string folder_path = 3;
   string yaml_git_config_identifier = 4;
   string branch_name = 5;
-  map<string, string> log_context = 6;
   string account_identifier = 7;
   string commit_message = 8;
 }
@@ -54,4 +63,6 @@ message FullSyncEventRequest {
   string target_branch = 4;
   bool isNewBranch = 5;
   string baseBranch = 6;
+  string prTitle = 7;
+  string rootFolder = 8;
 }

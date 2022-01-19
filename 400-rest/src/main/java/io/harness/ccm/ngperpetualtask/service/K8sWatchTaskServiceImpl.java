@@ -25,6 +25,7 @@ import io.harness.delegate.beans.connector.k8Connector.KubernetesClusterDetailsD
 import io.harness.delegate.beans.connector.k8Connector.KubernetesCredentialDTO;
 import io.harness.delegate.beans.executioncapability.ExecutionCapability;
 import io.harness.delegate.capability.EncryptedDataDetailsCapabilityHelper;
+import io.harness.encryption.Scope;
 import io.harness.ng.core.BaseNGAccess;
 import io.harness.ng.core.NGAccess;
 import io.harness.perpetualtask.PerpetualTaskClientContext;
@@ -175,8 +176,10 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
   // TODO(UTSAV): Move it to sharable module, currently k8s connector validator also uses below implementation
   private ConnectorConfigDTO getConnectorConfig(@NotNull String scopedConnectorIdentifier, String accountIdentifier,
       String orgIdentifier, String projectIdentifier) {
+    final String sanitizedScopedConnectorIdentifier = sanitizeK8sConnectorScope(scopedConnectorIdentifier);
+
     IdentifierRef connectorRef = IdentifierRefHelper.getIdentifierRef(
-        scopedConnectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
+        sanitizedScopedConnectorIdentifier, accountIdentifier, orgIdentifier, projectIdentifier);
 
     Optional<ConnectorDTO> connectorDTO =
         RestCallToNGManagerClientUtils.execute(connectorResourceClient.get(connectorRef.getIdentifier(),
@@ -185,6 +188,20 @@ public class K8sWatchTaskServiceImpl implements K8sWatchTaskService {
     Preconditions.checkArgument(
         connectorDTO.isPresent(), String.format("referenced connector %s not found", connectorRef.toString()));
     return connectorDTO.get().getConnectorInfo().getConnectorConfig();
+  }
+
+  /**
+   * Should return Account scoped connector identifier when the scope is not explicitly defined,
+   * since by default an identifier without an explicit scope is assumed at Project level.
+   */
+  @NotNull
+  private String sanitizeK8sConnectorScope(@NotNull String scopedConnectorIdentifier) {
+    String[] scopedIdentifier = scopedConnectorIdentifier.split("\\.");
+    if (scopedIdentifier.length == 1) {
+      return String.format("%s.%s", Scope.ACCOUNT.getYamlRepresentation(), scopedConnectorIdentifier);
+    }
+
+    return scopedConnectorIdentifier;
   }
 
   @Override

@@ -118,4 +118,5 @@ run_analysis()
 
 exports_files([
     "config.yml",
+    "keystore.jks",
 ])

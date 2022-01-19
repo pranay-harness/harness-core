@@ -201,6 +201,14 @@ public class PipelineEntityGitSyncHelper extends AbstractGitSdkEntityHandler<Pip
   }
 
   @Override
+  public PipelineConfig updateEntityFilePath(String accountIdentifier, String yaml, String newFilePath) {
+    PipelineEntity entity = PMSPipelineDtoMapper.toPipelineEntity(accountIdentifier, yaml);
+    validate(accountIdentifier, entity);
+    PipelineEntity pipelineEntity = pmsPipelineService.updateGitFilePath(entity, newFilePath);
+    return PipelineYamlDtoMapper.toDto(pipelineEntity);
+  }
+
+  @Override
   public PipelineConfig fullSyncEntity(FullSyncChangeSet fullSyncChangeSet) {
     try (GlobalContextManager.GlobalContextGuard ignore = GlobalContextManager.ensureGlobalContextGuard()) {
       GlobalContextManager.upsertGlobalContextRecord(createGitEntityInfo(fullSyncChangeSet));

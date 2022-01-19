@@ -369,6 +369,9 @@ public class NGVaultServiceImpl implements NGVaultService {
     List<String> vaultNames;
     try {
       vaultNames = listVaultsInternal(accountIdentifier, azureVaultConfig);
+    } catch (WingsException wingsException) {
+      log.error("Listing vaults failed for account Id {}", accountIdentifier, wingsException);
+      throw wingsException; // for error handling framework
     } catch (Exception e) {
       log.error("Listing vaults failed for account Id {}", accountIdentifier, e);
       throw new AzureServiceException("Failed to list vaults.", INVALID_AZURE_VAULT_CONFIGURATION, USER);

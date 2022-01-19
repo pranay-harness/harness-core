@@ -62,6 +62,7 @@ import io.harness.eraro.ErrorCode;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
+import io.harness.queue.QueuePublisher;
 import io.harness.validation.Create;
 import io.harness.validation.PersistenceValidator;
 import io.harness.validation.Update;
@@ -101,9 +102,14 @@ import software.wings.beans.template.dto.TemplateMetaData;
 import software.wings.beans.yaml.YamlType;
 import software.wings.dl.WingsPersistence;
 import software.wings.exception.TemplateException;
+import software.wings.prune.PruneEntityListener;
+import software.wings.prune.PruneEvent;
 import software.wings.service.impl.AuditServiceHelper;
+import software.wings.service.impl.ServiceClassLocator;
 import software.wings.service.impl.yaml.handler.BaseYamlHandler;
 import software.wings.service.impl.yaml.handler.YamlHandlerFactory;
+import software.wings.service.intfc.UserGroupService;
+import software.wings.service.intfc.ownership.OwnedByTemplate;
 import software.wings.service.intfc.template.ImportedTemplateService;
 import software.wings.service.intfc.template.TemplateFolderService;
 import software.wings.service.intfc.template.TemplateGalleryService;
@@ -162,6 +168,8 @@ public class TemplateServiceImpl implements TemplateService {
   @Inject private ImportedTemplateService importedTemplateService;
   @Inject private TemplateGalleryHelper templateGalleryHelper;
   @Inject private YamlHandlerFactory yamlHandlerFactory;
+  @Inject private QueuePublisher<PruneEvent> pruneQueue;
+  @Inject private UserGroupService userGroupService;
 
   ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 
@@ -837,10 +845,23 @@ public class TemplateServiceImpl implements TemplateService {
     }
 
     if (templateDeleted) {
+      sendPruneEvent(template);
       yamlPushService.pushYamlChangeSet(
           template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
     }
     return templateDeleted;
+  }
+
+  private void sendPruneEvent(Template template) {
+    pruneQueue.send(new PruneEvent(
+        Template.class, isEmpty(template.getAppId()) ? GLOBAL_APP_ID : template.getAppId(), template.getUuid()));
+  }
+
+  @Override
+  public void pruneDescendingEntities(String appId, String templateId) {
+    List<OwnedByTemplate> services =
+        ServiceClassLocator.descendingServices(this, TemplateServiceImpl.class, OwnedByTemplate.class);
+    PruneEntityListener.pruneDescendingEntities(services, descending -> descending.pruneByTemplate(appId, templateId));
   }
 
   @Override
@@ -945,6 +966,7 @@ public class TemplateServiceImpl implements TemplateService {
                                   .in(templateUuids));
 
       for (Template template : templates) {
+        sendPruneEvent(template);
         Future<?> future = yamlPushService.pushYamlChangeSet(
             template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
         try {
@@ -1453,6 +1475,7 @@ public class TemplateServiceImpl implements TemplateService {
     List<Template> templates = wingsPersistence.createQuery(Template.class).filter(TemplateKeys.appId, appId).asList();
     for (Template template : templates) {
       deleteTemplate(template);
+      sendPruneEvent(template);
       yamlPushService.pushYamlChangeSet(
           template.getAccountId(), template, null, Type.DELETE, template.isSyncFromGit(), false);
     }
