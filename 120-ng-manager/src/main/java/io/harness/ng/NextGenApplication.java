@@ -19,6 +19,7 @@ import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.configuration.DeployVariant.DEPLOY_VERSION;
 import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.ng.NextGenConfiguration.HARNESS_RESOURCE_CLASSES;
+import static io.harness.pms.contracts.plan.ExpansionRequestType.KEY;
 import static io.harness.pms.listener.NgOrchestrationNotifyEventListener.NG_ORCHESTRATION;
 
 import static com.google.common.collect.ImmutableMap.of;
@@ -119,6 +120,7 @@ import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.outbox.OutboxEventPollService;
 import io.harness.persistence.HPersistence;
 import io.harness.pms.contracts.execution.events.OrchestrationEventType;
+import io.harness.pms.contracts.plan.JsonExpansionInfo;
 import io.harness.pms.events.base.PipelineEventConsumerController;
 import io.harness.pms.expressions.functors.ImagePullSecretFunctor;
 import io.harness.pms.governance.EnvironmentRefExpansionHandler;
@@ -130,7 +132,7 @@ import io.harness.pms.sdk.PmsSdkModule;
 import io.harness.pms.sdk.core.SdkDeployMode;
 import io.harness.pms.sdk.core.events.OrchestrationEventHandler;
 import io.harness.pms.sdk.core.execution.expression.SdkFunctor;
-import io.harness.pms.sdk.core.governance.JsonExpansionHandler;
+import io.harness.pms.sdk.core.governance.JsonExpansionHandlerInfo;
 import io.harness.pms.sdk.execution.events.facilitators.FacilitatorEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.interrupts.InterruptEventRedisConsumer;
 import io.harness.pms.sdk.execution.events.node.advise.NodeAdviseEventRedisConsumer;
@@ -616,11 +618,29 @@ public class NextGenApplication extends Application<NextGenConfiguration> {
     return sdkFunctorMap;
   }
 
-  private Map<String, Class<? extends JsonExpansionHandler>> getJsonExpansionHandlers() {
-    Map<String, Class<? extends JsonExpansionHandler>> jsonExpansionHandlers = new HashMap<>();
-    jsonExpansionHandlers.put(YAMLFieldNameConstants.CONNECTOR_REF, DefaultConnectorRefExpansionHandler.class);
-    jsonExpansionHandlers.put(YamlTypes.SERVICE_REF, ServiceRefExpansionHandler.class);
-    jsonExpansionHandlers.put(YamlTypes.ENVIRONMENT_REF, EnvironmentRefExpansionHandler.class);
+  private List<JsonExpansionHandlerInfo> getJsonExpansionHandlers() {
+    List<JsonExpansionHandlerInfo> jsonExpansionHandlers = new ArrayList<>();
+    JsonExpansionInfo connRefInfo =
+        JsonExpansionInfo.newBuilder().setKey(YAMLFieldNameConstants.CONNECTOR_REF).setExpansionType(KEY).build();
+    JsonExpansionHandlerInfo connRefHandlerInfo = JsonExpansionHandlerInfo.builder()
+                                                      .jsonExpansionInfo(connRefInfo)
+                                                      .expansionHandler(DefaultConnectorRefExpansionHandler.class)
+                                                      .build();
+    JsonExpansionInfo serviceRefInfo =
+        JsonExpansionInfo.newBuilder().setKey(YamlTypes.SERVICE_REF).setExpansionType(KEY).build();
+    JsonExpansionHandlerInfo serviceRefHandlerInfo = JsonExpansionHandlerInfo.builder()
+                                                         .jsonExpansionInfo(serviceRefInfo)
+                                                         .expansionHandler(ServiceRefExpansionHandler.class)
+                                                         .build();
+    JsonExpansionInfo envRefInfo =
+        JsonExpansionInfo.newBuilder().setKey(YamlTypes.ENVIRONMENT_REF).setExpansionType(KEY).build();
+    JsonExpansionHandlerInfo envRefHandlerInfo = JsonExpansionHandlerInfo.builder()
+                                                     .jsonExpansionInfo(envRefInfo)
+                                                     .expansionHandler(EnvironmentRefExpansionHandler.class)
+                                                     .build();
+    jsonExpansionHandlers.add(connRefHandlerInfo);
+    jsonExpansionHandlers.add(serviceRefHandlerInfo);
+    jsonExpansionHandlers.add(envRefHandlerInfo);
     return jsonExpansionHandlers;
   }
 

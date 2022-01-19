@@ -118,7 +118,7 @@ public class PmsSdkInstanceService extends PmsServiceImplBase {
             .set(PmsSdkInstanceKeys.interruptConsumerConfig, request.getInterruptConsumerConfig())
             .set(PmsSdkInstanceKeys.staticAliases, request.getStaticAliasesMap())
             .set(PmsSdkInstanceKeys.sdkFunctors, request.getSdkFunctorsList())
-            .set(PmsSdkInstanceKeys.expandableFields, request.getExpandableFieldsList())
+            .set(PmsSdkInstanceKeys.jsonExpansionInfo, request.getJsonExpansionInfoList())
             .set(PmsSdkInstanceKeys.orchestrationEventConsumerConfig, request.getOrchestrationEventConsumerConfig())
             .set(PmsSdkInstanceKeys.active, true)
             .set(PmsSdkInstanceKeys.sdkModuleInfo, request.getSdkModuleInfo())
