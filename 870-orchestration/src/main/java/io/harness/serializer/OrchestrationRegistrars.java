@@ -59,6 +59,8 @@ import io.harness.serializer.spring.converters.executionmetadata.ExecutionMetada
 import io.harness.serializer.spring.converters.executionmetadata.ExecutionMetadataWriteConverter;
 import io.harness.serializer.spring.converters.executionmetadata.TriggerPayloadReadConverter;
 import io.harness.serializer.spring.converters.executionmetadata.TriggerPayloadWriteConverter;
+import io.harness.serializer.spring.converters.expansionhandler.JsonExpansionInfoReadConverter;
+import io.harness.serializer.spring.converters.expansionhandler.JsonExpansionInfoWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentReadConverter;
 import io.harness.serializer.spring.converters.facilitators.obtainment.FacilitatorObtainmentWriteConverter;
 import io.harness.serializer.spring.converters.facilitators.response.FacilitatorResponseReadConverter;
@@ -225,7 +227,8 @@ public class OrchestrationRegistrars {
       PmsStepParametersWriteConverter.class, PmsStepDetailsReadConverter.class, PmsStepDetailsWriteConverter.class,
       PolicyMetadataReadConverter.class, PolicyMetadataWriteConverter.class, PolicySetMetadataReadConverter.class,
       PolicySetMetadataWriteConverter.class, GovernanceMetadataReadConverter.class,
-      GovernanceMetadataWriteConverter.class);
+      GovernanceMetadataWriteConverter.class, JsonExpansionInfoReadConverter.class,
+      JsonExpansionInfoWriteConverter.class);
 
   public static final List<Class<? extends Converter<?, ?>>> springConverters =
       ImmutableList.<Class<? extends Converter<?, ?>>>builder()
