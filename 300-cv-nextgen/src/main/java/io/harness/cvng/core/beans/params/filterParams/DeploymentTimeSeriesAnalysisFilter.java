@@ -23,7 +23,7 @@ import lombok.experimental.SuperBuilder;
 public class DeploymentTimeSeriesAnalysisFilter extends TimeSeriesAnalysisFilter {
   // currently not removing hostName for backward compatibility
   // TODO: remove String hostName and only use List<String> hostNameList
-  @Deprecated @QueryParam("hostName") String hostName;
+  @QueryParam("hostName") @Deprecated String hostName;
   @QueryParam("hostNames") List<String> hostNames;
   @QueryParam("transactionNames") List<String> transactionNames;
 
