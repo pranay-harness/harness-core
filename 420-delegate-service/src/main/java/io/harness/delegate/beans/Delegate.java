@@ -69,7 +69,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   @Id @NotNull(groups = {Update.class}) @SchemaIgnore private String uuid;
   @SchemaIgnore @FdIndex private long createdAt;
   // Will be used by ECS delegate, when hostName is mentioned in TaskSpec.
-  @NotEmpty @FdIndex private String accountId;
+  @NotEmpty private String accountId;
 
   // Will be used for NG to hold delegate size details
   private DelegateSizeDetails sizeDetails;
@@ -96,6 +96,7 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private boolean polllingModeEnabled;
   private boolean proxy;
   private boolean ceEnabled;
+  private DelegateCapacity delegateCapacity;
 
   private List<String> supportedTaskTypes;
 
@@ -137,6 +138,8 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
   private boolean immutable;
 
   private boolean mtls;
+
+  @Transient private Integer numberOfTaskAssigned;
 
   @Override
   public void updateNextIteration(String fieldName, long nextIteration) {
@@ -191,5 +194,9 @@ public class Delegate implements PersistentEntity, UuidAware, CreatedAtAware, Ac
         .immutable(delegateParams.isImmutable())
         .tags(delegateParams.getTags())
         .build();
+  }
+
+  public boolean hasCapacityRegistered() {
+    return this.getDelegateCapacity() != null;
   }
 }

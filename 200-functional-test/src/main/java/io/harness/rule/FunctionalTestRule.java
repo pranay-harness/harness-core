@@ -53,6 +53,7 @@ import io.harness.observer.RemoteObserverInformer;
 import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
+import io.harness.queueservice.config.DelegateQueueServiceConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rest.RestResponse;
@@ -73,6 +74,8 @@ import io.harness.timescaledb.TimeScaleDBConfig;
 
 import software.wings.DataStorageMode;
 import software.wings.app.AuthModule;
+import software.wings.app.ExecutorConfig;
+import software.wings.app.ExecutorsConfig;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.IndexMigratorModule;
 import software.wings.app.MainConfiguration;
@@ -389,6 +392,9 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
         Connector.builder().port(9880).secure(true).keyFilePath("key.pem").certFilePath("cert.pem").build()));
     configuration.setGrpcServerConfig(grpcServerConfig);
 
+    configuration.setExecutorsConfig(
+        ExecutorsConfig.builder().dataReconciliationExecutorConfig(ExecutorConfig.builder().build()).build());
+
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
 
@@ -441,6 +447,14 @@ public class FunctionalTestRule implements MethodRule, InjectorRuleMixin, MongoR
                                               .url("dummy_url")
                                               .certValidationRequired(false)
                                               .build());
+    configuration.setQueueServiceConfig(DelegateQueueServiceConfig.builder()
+                                            .queueServiceConfig(ServiceHttpClientConfig.builder()
+                                                                    .baseUrl("http://localhost:9091/")
+                                                                    .readTimeOutSeconds(15)
+                                                                    .connectTimeOutSeconds(15)
+                                                                    .build())
+                                            .topic("delegate-service")
+                                            .build());
     return configuration;
   }
 

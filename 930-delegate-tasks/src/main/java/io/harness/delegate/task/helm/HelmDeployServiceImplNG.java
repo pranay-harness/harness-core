@@ -15,6 +15,10 @@ import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.HTTP
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.OCI_HELM;
 import static io.harness.delegate.beans.storeconfig.StoreDelegateConfigType.S3_HELM;
 import static io.harness.delegate.clienttools.ClientTool.OC;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HELM_CHART_ERROR_EXPLANATION;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HELM_CHART_EXCEPTION;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HELM_CHART_REGEX;
+import static io.harness.delegate.task.helm.HelmExceptionConstants.Hints.HELM_CUSTOM_EXCEPTION_HINT;
 import static io.harness.delegate.task.helm.HelmTaskHelperBase.getChartDirectory;
 import static io.harness.exception.WingsException.USER;
 import static io.harness.filesystem.FileIo.createDirectoryIfDoesNotExist;
@@ -71,6 +75,7 @@ import io.harness.exception.HelmClientRuntimeException;
 import io.harness.exception.InvalidArgumentsException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.NestedExceptionUtils;
+import io.harness.exception.WingsException;
 import io.harness.exception.sanitizer.ExceptionMessageSanitizer;
 import io.harness.filesystem.FileIo;
 import io.harness.helm.HelmCliCommandType;
@@ -199,13 +204,13 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       kubernetesConfig =
           containerDeploymentDelegateBaseHelper.createKubernetesConfig(commandRequest.getK8sInfraDelegateConfig());
 
-      prepareRepoAndCharts(commandRequest, commandRequest.getTimeoutInMillis());
+      prepareRepoAndCharts(commandRequest, commandRequest.getTimeoutInMillis(), logCallback);
 
       resources = printHelmChartKubernetesResources(commandRequest);
 
       List<KubernetesResourceId> workloads = readResources(resources);
 
-      boolean useSteadyStateCheck = useSteadyStateCheck(logCallback);
+      boolean useSteadyStateCheck = useSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(), logCallback);
 
       if (useSteadyStateCheck) {
         releaseHistory = createNewRelease(commandRequest, workloads, prevVersion);
@@ -273,13 +278,15 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
 
     } catch (UncheckedTimeoutException e) {
       logCallback.saveExecutionLog(TIMED_OUT_IN_STEADY_STATE, LogLevel.ERROR);
-      if (isInstallUpgrade && useSteadyStateCheck(logCallback) && releaseHistory != null) {
+      if (isInstallUpgrade && useSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(), logCallback)
+          && releaseHistory != null) {
         saveReleaseHistory(commandRequest, releaseHistory, CommandExecutionStatus.FAILURE);
       }
       throw new HelmNGException(prevVersion, ExceptionMessageSanitizer.sanitizeException(e), isInstallUpgrade);
     } catch (Exception e) {
       Exception sanitizedException = ExceptionMessageSanitizer.sanitizeException(e);
-      if (isInstallUpgrade && useSteadyStateCheck(logCallback) && releaseHistory != null) {
+      if (isInstallUpgrade && useSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(), logCallback)
+          && releaseHistory != null) {
         saveReleaseHistory(commandRequest, releaseHistory, CommandExecutionStatus.FAILURE);
       }
 
@@ -475,7 +482,10 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         .collect(Collectors.toList());
   }
 
-  private boolean useSteadyStateCheck(LogCallback logCallback) {
+  private boolean useSteadyStateCheck(boolean isK8sSteadyStateCheckEnabled, LogCallback logCallback) {
+    if (!isK8sSteadyStateCheckEnabled) {
+      return false;
+    }
     String versionAsString = kubernetesContainerService.getVersionAsString(kubernetesConfig);
     logCallback.saveExecutionLog(format("Kubernetes version [%s]", versionAsString));
     int versionMajorMin = Integer.parseInt(escapeNonDigitsAndTruncate(versionAsString));
@@ -508,7 +518,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       }
 
       List<KubernetesResourceId> rollbackWorkloads = new ArrayList<>();
-      boolean useSteadyStateCheck = useSteadyStateCheck(logCallback);
+      boolean useSteadyStateCheck = useSteadyStateCheck(commandRequest.isK8SteadyStateCheckEnabled(), logCallback);
       if (useSteadyStateCheck) {
         rollbackWorkloads = readResourcesForRollback(commandRequest, commandRequest.getPrevReleaseVersion());
         ReleaseHistory releaseHistory = createNewRelease(commandRequest, rollbackWorkloads, null);
@@ -662,7 +672,8 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
   }
 
   @VisibleForTesting
-  void prepareRepoAndCharts(HelmCommandRequestNG commandRequest, long timeoutInMillis) throws Exception {
+  void prepareRepoAndCharts(HelmCommandRequestNG commandRequest, long timeoutInMillis, LogCallback logCallback)
+      throws Exception {
     ManifestDelegateConfig manifestDelegateConfig = commandRequest.getManifestDelegateConfig();
     HelmChartManifestDelegateConfig helmChartManifestDelegateConfig =
         (HelmChartManifestDelegateConfig) manifestDelegateConfig;
@@ -672,7 +683,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
         fetchLocalChartRepo(commandRequest);
         break;
       case CUSTOM_REMOTE:
-        fetchCustomSourceManifest(commandRequest);
+        fetchCustomSourceManifest(commandRequest, logCallback);
         break;
       case GIT:
         fetchSourceRepo(commandRequest);
@@ -689,7 +700,7 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
     }
   }
 
-  void fetchCustomSourceManifest(HelmCommandRequestNG commandRequest) throws IOException {
+  void fetchCustomSourceManifest(HelmCommandRequestNG commandRequest, LogCallback logCallback) throws IOException {
     CustomRemoteStoreDelegateConfig storeDelegateConfig =
         (CustomRemoteStoreDelegateConfig) commandRequest.getManifestDelegateConfig().getStoreDelegateConfig();
 
@@ -702,8 +713,20 @@ public class HelmDeployServiceImplNG implements HelmDeployServiceNG {
       throw new InvalidRequestException("No manifest files found under working directory", USER);
     }
     File manifestDirectory = file.listFiles(pathname -> !file.isHidden())[0];
-    copyManifestFilesToWorkingDir(manifestDirectory, new File(workingDirectory));
 
+    try {
+      copyManifestFilesToWorkingDir(manifestDirectory, new File(workingDirectory));
+    } catch (IOException e) {
+      String exceptionMessage = ExceptionUtils.getMessage(ExceptionMessageSanitizer.sanitizeException(e));
+      String msg = HELM_CHART_EXCEPTION + exceptionMessage;
+      log.error(msg, e);
+      if (e.getMessage().matches(HELM_CHART_REGEX)) {
+        throw NestedExceptionUtils.hintWithExplanationException(HELM_CUSTOM_EXCEPTION_HINT,
+            HELM_CHART_ERROR_EXPLANATION, new InvalidRequestException(HELM_CHART_EXCEPTION, e, WingsException.USER));
+      } else {
+        throw new InvalidRequestException(HELM_CHART_EXCEPTION, e, WingsException.USER);
+      }
+    }
     commandRequest.setWorkingDir(workingDirectory);
     commandRequest.getLogCallback().saveExecutionLog("Custom source manifest downloaded locally");
   }

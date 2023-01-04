@@ -31,11 +31,11 @@ import io.harness.delegate.exception.DelegateRetryableException;
 import io.harness.delegate.exceptionhandler.core.DelegateExceptionManager;
 import io.harness.delegate.task.TaskParameters;
 import io.harness.delegate.task.tasklogging.TaskLogContext;
+import io.harness.exception.ExceptionLogger;
 import io.harness.exception.ExceptionUtils;
 import io.harness.exception.FailureType;
 import io.harness.globalcontex.ErrorHandlingGlobalContextData;
 import io.harness.logging.AccountLogContext;
-import io.harness.logging.ExceptionLogger;
 import io.harness.manage.GlobalContextManager;
 import io.harness.secret.SecretSanitizerThreadLocal;
 
@@ -108,7 +108,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
         ErrorNotifyResponseData.builder().delegateMetaInfo(delegateMetaInfo);
 
     try {
-      log.info("Started executing task {}", taskId);
+      log.debug("Started executing task {}", taskId);
 
       if (!GlobalContextManager.isAvailable()) {
         GlobalContextManager.set(new GlobalContext());
@@ -138,7 +138,7 @@ public abstract class AbstractDelegateRunnableTask implements DelegateRunnableTa
                                   .build());
         taskResponse.responseCode(ResponseCode.FAILED);
       }
-      log.info("Completed executing task {}", taskId);
+      log.debug("Completed executing task {}", taskId);
     } catch (DelegateRetryableException exception) {
       ExceptionLogger.logProcessedMessages(exception, DELEGATE, log);
       taskResponse.response(errorNotifyResponseDataBuilder.failureTypes(ExceptionUtils.getFailureTypes(exception))

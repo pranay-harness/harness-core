@@ -11,7 +11,6 @@ import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.accesscontrol.PlatformPermissions.VIEW_PROJECT_PERMISSION;
 import static io.harness.ng.accesscontrol.PlatformResourceTypes.PROJECT;
-import static io.harness.ng.core.service.resources.ServiceResourceApiUtils.mustBeAtProjectLevel;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_CREATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_UPDATE_PERMISSION;
 import static io.harness.rbac.CDNGRbacPermissions.SERVICE_VIEW_PERMISSION;
@@ -155,6 +154,8 @@ public class ServiceResourceV2 {
   private final OrgAndProjectValidationHelper orgAndProjectValidationHelper;
   @Inject CustomDeploymentYamlHelper customDeploymentYamlHelper;
   @Inject ArtifactSourceTemplateHelper artifactSourceTemplateHelper;
+  private ServiceEntityYamlSchemaHelper serviceSchemaHelper;
+
   public static final String SERVICE_PARAM_MESSAGE = "Service Identifier for the entity";
   public static final String SERVICE_YAML_METADATA_INPUT_PARAM_MESSAGE = "List of Service Identifiers for the entities";
 
@@ -211,9 +212,7 @@ public class ServiceResourceV2 {
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
-
-    ServiceResourceApiUtils.mustBeAtProjectLevel(serviceRequestDTO);
-
+    serviceSchemaHelper.validateSchema(accountId, serviceRequestDTO.getYaml());
     ServiceEntity serviceEntity = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(
         serviceEntity.getOrgIdentifier(), serviceEntity.getProjectIdentifier(), serviceEntity.getAccountId());
@@ -238,11 +237,12 @@ public class ServiceResourceV2 {
           description = "Details of the Services to be created") @Valid List<ServiceRequestDTO> serviceRequestDTOs) {
     throwExceptionForNoRequestDTO(serviceRequestDTOs);
     for (ServiceRequestDTO serviceRequestDTO : serviceRequestDTOs) {
-      ServiceResourceApiUtils.mustBeAtProjectLevel(serviceRequestDTO);
       accessControlClient.checkForAccessOrThrow(
           ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
           Resource.of(NGResourceType.SERVICE, null), SERVICE_CREATE_PERMISSION);
     }
+    serviceRequestDTOs.forEach(
+        serviceRequestDTO -> serviceSchemaHelper.validateSchema(accountId, serviceRequestDTO.getYaml()));
     List<ServiceEntity> serviceEntities =
         serviceRequestDTOs.stream()
             .map(serviceRequestDTO -> ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO))
@@ -285,10 +285,10 @@ public class ServiceResourceV2 {
           NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @Parameter(description = "Details of the Service to be updated") @Valid ServiceRequestDTO serviceRequestDTO) {
     throwExceptionForNoRequestDTO(serviceRequestDTO);
-    ServiceResourceApiUtils.mustBeAtProjectLevel(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
+    serviceSchemaHelper.validateSchema(accountId, serviceRequestDTO.getYaml());
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     ServiceEntity updatedService = serviceEntityService.update(requestService);
@@ -307,10 +307,10 @@ public class ServiceResourceV2 {
           NGCommonEntityConstants.ACCOUNT_KEY) String accountId,
       @Parameter(description = "Details of the Service to be updated") @Valid ServiceRequestDTO serviceRequestDTO) {
     throwExceptionForNoRequestDTO(serviceRequestDTO);
-    mustBeAtProjectLevel(serviceRequestDTO);
     accessControlClient.checkForAccessOrThrow(
         ResourceScope.of(accountId, serviceRequestDTO.getOrgIdentifier(), serviceRequestDTO.getProjectIdentifier()),
         Resource.of(NGResourceType.SERVICE, serviceRequestDTO.getIdentifier()), SERVICE_UPDATE_PERMISSION);
+    serviceSchemaHelper.validateSchema(accountId, serviceRequestDTO.getYaml());
     ServiceEntity requestService = ServiceElementMapper.toServiceEntity(accountId, serviceRequestDTO);
     requestService.setVersion(isNumeric(ifMatch) ? parseLong(ifMatch) : null);
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(
@@ -350,12 +350,14 @@ public class ServiceResourceV2 {
       @QueryParam("deploymentTemplateIdentifier") String deploymentTemplateIdentifier,
       @Parameter(
           description = "The version label of deployment template if infrastructure is of type custom deployment")
-      @QueryParam("versionLabel") String versionLabel) {
+      @QueryParam("versionLabel") String versionLabel,
+      @Parameter(description = "Specify true if all accessible Services are to be included") @QueryParam(
+          "includeAllServicesAccessibleAtScope") @DefaultValue("false") boolean includeAllServicesAccessibleAtScope) {
     accessControlClient.checkForAccessOrThrow(ResourceScope.of(accountId, orgIdentifier, projectIdentifier),
         Resource.of(NGResourceType.SERVICE, null), SERVICE_VIEW_PERMISSION, "Unauthorized to list services");
 
-    Criteria criteria = ServiceFilterHelper.createCriteriaForGetList(
-        accountId, orgIdentifier, projectIdentifier, false, searchTerm, type, gitOpsEnabled);
+    Criteria criteria = ServiceFilterHelper.createCriteriaForGetList(accountId, orgIdentifier, projectIdentifier, false,
+        searchTerm, type, gitOpsEnabled, includeAllServicesAccessibleAtScope);
     Pageable pageRequest;
     if (isNotEmpty(serviceIdentifiers)) {
       criteria.and(ServiceEntityKeys.identifier).in(serviceIdentifiers);
@@ -417,7 +419,7 @@ public class ServiceResourceV2 {
         Resource.of(PROJECT, projectIdentifier), VIEW_PROJECT_PERMISSION, "Unauthorized to list services");
 
     Criteria criteria = ServiceFilterHelper.createCriteriaForGetList(
-        accountId, orgIdentifier, projectIdentifier, false, searchTerm, type, gitOpsEnabled);
+        accountId, orgIdentifier, projectIdentifier, false, searchTerm, type, gitOpsEnabled, false);
     if (isNotEmpty(serviceIdentifiers)) {
       criteria.and(ServiceEntityKeys.identifier).in(serviceIdentifiers);
     }
@@ -497,6 +499,7 @@ public class ServiceResourceV2 {
       return ResponseDTO.newResponse(
           NGEntityTemplateResponseDTO.builder().inputSetTemplateYaml(serviceInputYaml).build());
     } else {
+      // todo: better error message here
       throw new NotFoundException(format("Service with identifier [%s] in project [%s], org [%s] not found",
           serviceIdentifier, projectIdentifier, orgIdentifier));
     }
@@ -534,6 +537,8 @@ public class ServiceResourceV2 {
           .serviceIdentifier(serviceEntity.getIdentifier())
           .serviceYaml("")
           .inputSetTemplateYaml("")
+          .projectIdentifier(serviceEntity.getProjectIdentifier())
+          .orgIdentifier(serviceEntity.getOrgIdentifier())
           .build();
     }
 
@@ -543,6 +548,8 @@ public class ServiceResourceV2 {
         .serviceIdentifier(serviceEntity.getIdentifier())
         .serviceYaml(serviceEntity.getYaml())
         .inputSetTemplateYaml(serviceInputSetYaml)
+        .orgIdentifier(serviceEntity.getOrgIdentifier())
+        .projectIdentifier(serviceEntity.getProjectIdentifier())
         .build();
   }
 

@@ -7,18 +7,12 @@
 
 package io.harness.ng.core.service.resources;
 
-import static io.harness.NGCommonEntityConstants.NEXT_REL;
-import static io.harness.NGCommonEntityConstants.PAGE;
-import static io.harness.NGCommonEntityConstants.PAGE_SIZE;
-import static io.harness.NGCommonEntityConstants.PREVIOUS_REL;
-import static io.harness.NGCommonEntityConstants.SELF_REL;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.ng.core.mapper.TagMapper.convertToList;
 import static io.harness.ng.core.mapper.TagMapper.convertToMap;
 
-import static javax.ws.rs.core.UriBuilder.fromPath;
-
+import io.harness.accesscontrol.acl.api.AccessControlDTO;
 import io.harness.accesscontrol.acl.api.PermissionCheckDTO;
 import io.harness.accesscontrol.acl.api.ResourceScope;
 import io.harness.exception.InvalidRequestException;
@@ -39,15 +33,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import io.dropwizard.jersey.validation.JerseyViolationException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
-import javax.ws.rs.core.Link;
-import javax.ws.rs.core.Response.ResponseBuilder;
 
 @Singleton
 public class ServiceResourceApiUtils {
-  public static final int FIRST_PAGE = 1;
   private final Validator validator;
 
   @Inject
@@ -95,7 +87,8 @@ public class ServiceResourceApiUtils {
     return serviceResponse;
   }
 
-  public ServiceEntity getServiceEntity(ServiceRequest sharedRequestBody, String org, String project, String account) {
+  public ServiceEntity mapToServiceEntity(
+      ServiceRequest sharedRequestBody, String org, String project, String account) {
     ServiceEntity serviceEntity = ServiceEntity.builder()
                                       .identifier(sharedRequestBody.getSlug())
                                       .accountId(account)
@@ -124,25 +117,6 @@ public class ServiceResourceApiUtils {
     return serviceEntity;
   }
 
-  public ResponseBuilder addLinksHeader(
-      ResponseBuilder responseBuilder, String path, int currentResultCount, int page, int limit) {
-    ArrayList<Link> links = new ArrayList<>();
-
-    links.add(
-        Link.fromUri(fromPath(path).queryParam(PAGE, page).queryParam(PAGE_SIZE, limit).build()).rel(SELF_REL).build());
-
-    if (page >= FIRST_PAGE) {
-      links.add(Link.fromUri(fromPath(path).queryParam(PAGE, page - 1).queryParam(PAGE_SIZE, limit).build())
-                    .rel(PREVIOUS_REL)
-                    .build());
-    }
-    if (limit == currentResultCount) {
-      links.add(Link.fromUri(fromPath(path).queryParam(PAGE, page + 1).queryParam(PAGE_SIZE, limit).build())
-                    .rel(NEXT_REL)
-                    .build());
-    }
-    return responseBuilder.links(links.toArray(new Link[links.size()]));
-  }
   public PermissionCheckDTO serviceResponseToPermissionCheckDTO(ServiceResponse serviceResponse) {
     return PermissionCheckDTO.builder()
         .permission(CDNGRbacPermissions.SERVICE_RUNTIME_PERMISSION)
@@ -183,7 +157,7 @@ public class ServiceResourceApiUtils {
     return property + ',' + order;
   }
 
-  static void mustBeAtProjectLevel(ServiceRequestDTO requestDTO) {
+  static void validateServiceScope(ServiceRequestDTO requestDTO) {
     try {
       Preconditions.checkArgument(isNotEmpty(requestDTO.getOrgIdentifier()),
           "org identifier must be specified. Services can only be created at Project scope");
@@ -192,5 +166,26 @@ public class ServiceResourceApiUtils {
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage());
     }
+  }
+
+  public void throwExceptionForNoRequestDTO(ServiceRequest dto) {
+    if (dto == null) {
+      throw new InvalidRequestException(
+          "No request body sent in the API. Following field is required: identifier. Other optional fields: name, orgIdentifier, projectIdentifier, tags, description, version");
+    }
+  }
+
+  public List<ServiceResponse> filterByPermissionAndId(
+      List<AccessControlDTO> accessControlList, List<ServiceResponse> serviceList) {
+    List<ServiceResponse> filteredAccessControlDtoList = new ArrayList<>();
+    for (int i = 0; i < accessControlList.size(); i++) {
+      AccessControlDTO accessControlDTO = accessControlList.get(i);
+      ServiceResponse serviceResponse = serviceList.get(i);
+      if (accessControlDTO.isPermitted()
+          && serviceResponse.getService().getSlug().equals(accessControlDTO.getResourceIdentifier())) {
+        filteredAccessControlDtoList.add(serviceResponse);
+      }
+    }
+    return filteredAccessControlDtoList;
   }
 }

@@ -12,7 +12,6 @@ import static io.harness.logging.AutoLogContext.OverrideBehavior.OVERRIDE_NESTS;
 
 import io.harness.annotations.StoreIn;
 import io.harness.annotations.dev.OwnedBy;
-import io.harness.execution.NodeExecution.NodeExecutionKeys;
 import io.harness.governance.GovernanceMetadata;
 import io.harness.iterator.PersistentRegularIterable;
 import io.harness.logging.AutoLogContext;
@@ -115,7 +114,7 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess, Pms
     return ImmutableList
         .<MongoIndex>builder()
         // PlanExecutionMonitorService
-        .add(CompoundMongoIndex.builder().name("status_idx").field(NodeExecutionKeys.status).build())
+        .add(CompoundMongoIndex.builder().name("status_idx").field(PlanExecutionKeys.status).build())
         // findPrevUnTerminatedPlanExecutionsByExecutionTag
         .add(SortCompoundMongoIndex.builder()
                  .name("exec_tag_status_idx")
@@ -124,13 +123,10 @@ public class PlanExecution implements PersistentRegularIterable, UuidAccess, Pms
                  .descSortField(PlanExecutionKeys.createdAt)
                  .build())
         .add(SortCompoundMongoIndex.builder()
-                 .name("accountId_orgId_projectId_pipelineId_status_createdAt_idx")
+                 .name("accountId_status_createdAt_idx")
                  .field(PlanExecutionKeys.setupAbstractions + "." + SetupAbstractionKeys.accountId)
-                 .field(PlanExecutionKeys.setupAbstractions + "." + SetupAbstractionKeys.orgIdentifier)
-                 .field(PlanExecutionKeys.setupAbstractions + "." + SetupAbstractionKeys.projectIdentifier)
-                 .field(PlanExecutionKeys.metadata + ".pipelineIdentifier")
-                 .field(NodeExecutionKeys.status)
-                 .descSortField(PlanExecutionKeys.createdAt)
+                 .field(PlanExecutionKeys.status)
+                 .ascSortField(PlanExecutionKeys.createdAt)
                  .build())
         .build();
   }

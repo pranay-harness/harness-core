@@ -37,6 +37,7 @@ import io.harness.cimanager.serializer.CIContractsKryoRegistrar;
 import io.harness.cimanager.serializer.CIContractsMorphiaRegistrar;
 import io.harness.morphia.MorphiaRegistrar;
 import io.harness.pms.contracts.steps.StepCategory;
+import io.harness.serializer.common.CommonsRegistrars;
 import io.harness.serializer.kryo.CIBeansKryoRegistrar;
 import io.harness.serializer.kryo.NgPersistenceKryoRegistrar;
 import io.harness.serializer.kryo.NotificationBeansKryoRegistrar;
@@ -51,6 +52,7 @@ import io.harness.yaml.schema.beans.YamlSchemaRootClass;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import java.util.Arrays;
 import java.util.Collections;
 
 @OwnedBy(HarnessTeam.CI)
@@ -95,6 +97,7 @@ public class CiBeansRegistrars {
           .addAll(LicenseManagerRegistrars.morphiaRegistrars)
           .addAll(PrimaryVersionManagerRegistrars.morphiaRegistrars)
           .addAll(FeatureFlagBeansRegistrars.morphiaRegistrars)
+          .addAll(ContainerRegistrars.morphiaRegistrars)
           .add(NotificationBeansMorphiaRegistrar.class)
           .add(CIBeansMorphiaRegistrar.class)
           .add(CIContractsMorphiaRegistrar.class)
@@ -239,7 +242,7 @@ public class CiBeansRegistrars {
                    .availableAtProjectLevel(true)
                    .availableAtOrgLevel(false)
                    .yamlSchemaMetadata(YamlSchemaMetadata.builder()
-                                           .modulesSupported(Collections.singletonList(ModuleType.CI))
+                                           .modulesSupported(Arrays.asList(ModuleType.CI))
                                            .yamlGroup(YamlGroup.builder().group(StepCategory.STEP.name()).build())
                                            .build())
                    .availableAtAccountLevel(false)

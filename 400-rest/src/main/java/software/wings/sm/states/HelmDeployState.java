@@ -115,7 +115,6 @@ import software.wings.beans.WorkflowExecution;
 import software.wings.beans.appmanifest.AppManifestKind;
 import software.wings.beans.appmanifest.ApplicationManifest;
 import software.wings.beans.appmanifest.StoreType;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.CommandUnitDetails.CommandUnitType;
 import software.wings.beans.command.HelmDummyCommandUnit;
@@ -141,6 +140,7 @@ import software.wings.helpers.ext.helm.response.HelmValuesFetchTaskResponse;
 import software.wings.helpers.ext.helm.response.ReleaseInfo;
 import software.wings.helpers.ext.k8s.request.K8sDelegateManifestConfig;
 import software.wings.helpers.ext.k8s.request.K8sValuesLocation;
+import software.wings.persistence.artifact.Artifact;
 import software.wings.service.impl.ContainerServiceParams;
 import software.wings.service.impl.GitConfigHelperService;
 import software.wings.service.impl.GitFileConfigHelperService;
@@ -1161,7 +1161,9 @@ public class HelmDeployState extends State {
         releaseName, app.getAccountId(), app.getUuid(), activityId, imageDetails, repoName, gitConfig,
         encryptedDataDetails, cmdFlags, manifestConfig, appManifestMap, helmVersion, helmCommandFlag);
 
-    commandRequest.setK8SteadyStateCheckEnabled(true);
+    commandRequest.setK8SteadyStateCheckEnabled(
+        featureFlagService.isEnabled(FeatureName.HELM_STEADY_STATE_CHECK_1_16, context.getAccountId()));
+
     StateExecutionContext stateExecutionContext =
         buildStateExecutionContext(stateExecutionDataBuilder, expressionFunctorToken);
     HelmDeployStateExecutionData stateExecutionData = stateExecutionDataBuilder.build();

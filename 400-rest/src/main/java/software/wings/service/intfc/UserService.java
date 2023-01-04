@@ -225,6 +225,10 @@ public interface UserService extends OwnedByAccount {
    */
   User get(@NotEmpty String accountId, @NotEmpty String userId);
 
+  void loadSupportAccounts(User user);
+
+  void loadSupportAccounts(User user, Set<String> fieldsToBeIncluded);
+
   /**
    * Gets user from cache or db.
    *
@@ -646,6 +650,8 @@ public interface UserService extends OwnedByAccount {
 
   void setUserEmailVerified(String userId);
 
+  List<Account> getUserAccounts(String userId, int pageIndex, int pageSize, String searchTerm);
+
   boolean isUserPasswordPresent(String accountId, String emailId);
 
   URI getInviteAcceptRedirectURL(InviteOperationResponse inviteResponse, UserInvite userInvite, String jwtToken)
@@ -655,4 +661,8 @@ public interface UserService extends OwnedByAccount {
 
   io.harness.ng.beans.PageResponse<Account> getUserAccountsAndSupportAccounts(
       String userId, int pageIndex, int pageSize, String searchTerm);
+
+  boolean ifUserHasAccessToSupportAccount(String userId, String accountId);
+
+  boolean isFFToAvoidLoadingSupportAccountsUnncessarilyDisabled();
 }

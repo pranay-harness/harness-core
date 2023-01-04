@@ -20,10 +20,12 @@ import static io.harness.logging.CommandExecutionStatus.FAILURE;
 import static io.harness.logging.CommandExecutionStatus.SUCCESS;
 import static io.harness.rule.OwnerRule.ACHYUTH;
 import static io.harness.rule.OwnerRule.ANSHUL;
+import static io.harness.rule.OwnerRule.NAMAN_TALAYCHA;
 import static io.harness.rule.OwnerRule.PRATYUSH;
 import static io.harness.rule.OwnerRule.YOGESH;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
@@ -70,6 +72,7 @@ import io.harness.delegate.beans.connector.scm.github.GithubHttpCredentialsDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubTokenSpecDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernamePasswordDTO;
 import io.harness.delegate.beans.connector.scm.github.GithubUsernameTokenDTO;
+import io.harness.delegate.beans.storeconfig.CustomRemoteStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.FetchType;
 import io.harness.delegate.beans.storeconfig.GcsHelmStoreDelegateConfig;
 import io.harness.delegate.beans.storeconfig.GitStoreDelegateConfig;
@@ -91,6 +94,7 @@ import io.harness.exception.HelmClientException;
 import io.harness.exception.HelmClientRuntimeException;
 import io.harness.exception.HintException;
 import io.harness.exception.InvalidRequestException;
+import io.harness.filesystem.FileIo;
 import io.harness.helm.HelmCliCommandType;
 import io.harness.helm.HelmClient;
 import io.harness.helm.HelmClientImpl.HelmCliResponse;
@@ -108,6 +112,7 @@ import io.harness.k8s.releasehistory.IK8sRelease;
 import io.harness.k8s.releasehistory.ReleaseHistory;
 import io.harness.logging.CommandExecutionStatus;
 import io.harness.logging.LogCallback;
+import io.harness.manifest.CustomManifestSource;
 import io.harness.ng.core.dto.secrets.SSHKeySpecDTO;
 import io.harness.rule.Owner;
 import io.harness.security.encryption.EncryptedDataDetail;
@@ -151,6 +156,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Mock private ExecutionConfigOverrideFromFileOnDelegate delegateLocalConfigService;
   @Mock private SecretDecryptionService secretDecryptionService;
   @Mock private ScmFetchFilesHelperNG scmFetchFilesHelperNG;
+  @Mock private CustomManifestFetchTaskHelper customManifestFetchTaskHelper;
   @InjectMocks HelmDeployServiceImplNG helmDeployService;
 
   private HelmInstallCommandRequestNG helmInstallCommandRequestNG;
@@ -230,7 +236,6 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(helmTaskHelperBase)
         .downloadChartFilesFromHttpRepo(eq(helmChartManifestDelegateConfig.build()), anyString(), anyLong());
     doReturn(logCallback).when(k8sTaskHelperBase).getLogCallback(any(), any(), anyBoolean(), any());
-    doReturn("1.15").when(kubernetesContainerService).getVersionAsString(eq(kubernetesConfig));
   }
 
   @Test
@@ -244,7 +249,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     doReturn("abc").when(spyHelmDeployService).getManifestFileNamesInLogFormat(anyString());
 
     spyHelmDeployService.prepareRepoAndCharts(
-        helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis());
+        helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback);
     ArgumentCaptor<HelmChartManifestDelegateConfig> argumentCaptor =
         ArgumentCaptor.forClass(HelmChartManifestDelegateConfig.class);
     verify(helmTaskHelperBase)
@@ -258,8 +263,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .downloadChartFilesFromHttpRepo(eq(helmChartManifestDelegateConfig.build()), anyString(), anyLong());
 
     assertThatThrownBy(()
-                           -> spyHelmDeployService.prepareRepoAndCharts(
-                               helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()))
+                           -> spyHelmDeployService.prepareRepoAndCharts(helmInstallCommandRequestNG,
+                               helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback))
         .isInstanceOf(HelmClientRuntimeException.class);
 
     // general exception -- throws HelmClientException
@@ -271,8 +276,8 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .downloadChartFilesUsingChartMuseum(eq(helmChartManifestDelegateConfig.build()), anyString(), anyLong());
 
     assertThatThrownBy(()
-                           -> spyHelmDeployService.prepareRepoAndCharts(
-                               helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()))
+                           -> spyHelmDeployService.prepareRepoAndCharts(helmInstallCommandRequestNG,
+                               helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback))
         .extracting(exc -> ((HelmClientRuntimeException) exc).getHelmClientException().getMessage())
         .isEqualTo("Failed to download manifest files from GCS_HELM repo. ");
   }
@@ -294,14 +299,14 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     helmInstallCommandRequestNG.setManifestDelegateConfig(helmChartManifestDelegateConfig.build());
     assertThatCode(()
                        -> spyHelmDeployService.prepareRepoAndCharts(
-                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()));
+                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback));
 
     // throw exception
     when(spyHelmDeployService.getManifestFileNamesInLogFormat(anyString())).thenThrow(new IOException());
 
     assertThatThrownBy(()
-                           -> spyHelmDeployService.prepareRepoAndCharts(
-                               helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()))
+                           -> spyHelmDeployService.prepareRepoAndCharts(helmInstallCommandRequestNG,
+                               helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback))
         .isInstanceOf(GitOperationException.class);
   }
 
@@ -313,7 +318,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     helmInstallCommandRequestNG.setManifestDelegateConfig(helmChartManifestDelegateConfig.build());
     assertThatCode(()
                        -> spyHelmDeployService.prepareRepoAndCharts(
-                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()))
+                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback))
         .doesNotThrowAnyException();
   }
 
@@ -328,7 +333,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
         .when(secretDecryptionService)
         .decrypt(any(), eq(gitStoreDelegateConfig.getApiAuthEncryptedDataDetails()));
     doReturn(new SshSessionConfig()).when(gitDecryptionHelper).getSSHSessionConfig(any(), any());
-    doNothing()
+    doReturn(null)
         .when(scmFetchFilesHelperNG)
         .downloadFilesUsingScm(
             anyString(), eq(gitStoreDelegateConfig), eq(helmInstallCommandRequestNG.getLogCallback()));
@@ -336,7 +341,54 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
 
     assertThatCode(()
                        -> spyHelmDeployService.prepareRepoAndCharts(
-                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis()));
+                           helmInstallCommandRequestNG, helmInstallCommandRequestNG.getTimeoutInMillis(), logCallback));
+  }
+
+  @Test
+  @Owner(developers = NAMAN_TALAYCHA)
+  @Category(UnitTests.class)
+  public void testFetchCustomSourceException() throws Exception {
+    final String workingDirPath = "./repository/helm/source/ACTIVITY_ID/test.yaml";
+    final String manifestDirPath = "./repository/helm/source/ACTIVITY_ID/";
+
+    HelmInstallCommandRequestNG request =
+        HelmInstallCommandRequestNG.builder()
+            .releaseName(HelmTestConstants.HELM_RELEASE_NAME_KEY)
+            .kubeConfigLocation(HelmTestConstants.HELM_KUBE_CONFIG_LOCATION_KEY)
+            .logCallback(logCallback)
+            .manifestDelegateConfig(
+                HelmChartManifestDelegateConfig.builder()
+                    .chartName(HelmTestConstants.CHART_NAME_KEY)
+                    .chartVersion("V3")
+                    .helmCommandFlag(HelmCommandFlag.builder().valueMap(new HashMap<>()).build())
+                    .storeDelegateConfig(CustomRemoteStoreDelegateConfig.builder()
+                                             .customManifestSource(CustomManifestSource.builder()
+                                                                       .script("script")
+                                                                       .filePaths(singletonList("file1/test.yaml"))
+                                                                       .zippedManifestFileId("fileId")
+                                                                       .build())
+                                             .build())
+                    .build())
+            .workingDir("./repository/helm/source/ACTIVITY_ID/")
+            .namespace("default")
+            .accountId("harnessCDP123")
+            .helmVersion(V3)
+            .k8SteadyStateCheckEnabled(false)
+            .build();
+
+    FileIo.createDirectoryIfDoesNotExist(manifestDirPath);
+    FileIo.writeFile(workingDirPath, new byte[] {});
+
+    doNothing()
+        .when(customManifestFetchTaskHelper)
+        .downloadAndUnzipCustomSourceManifestFiles(anyString(), anyString(), anyString());
+
+    assertThatThrownBy(() -> helmDeployService.fetchCustomSourceManifest(request, logCallback))
+        .isInstanceOf(HintException.class)
+        .hasMessageContaining(
+            "Provided helm chart path point to a file inside the helm chart. Path to the helm chart directory should be provided instead");
+
+    FileIo.deleteDirectoryAndItsContentIfExists(manifestDirPath);
   }
 
   private GitStoreDelegateConfig getGitStoreDelegateConfigForSCM() {
@@ -431,13 +483,15 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   public void testDeployInstall() throws Exception {
     initForDeploy();
     doReturn(Collections.emptyList()).when(spyHelmDeployService).printHelmChartKubernetesResources(any());
-
-    // K8SteadyStateCheckEnabled true always
-    doReturn("1.16").when(kubernetesContainerService).getVersionAsString(eq(kubernetesConfig));
+    // K8SteadyStateCheckEnabled false
     ArgumentCaptor<HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
     HelmCommandResponseNG helmCommandResponseNG = spyHelmDeployService.deploy(helmInstallCommandRequestNG);
     assertThat(helmCommandResponseNG.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
     verify(helmClient).install(argumentCaptor.capture(), eq(true));
+
+    // K8SteadyStateCheckEnabled true
+    helmInstallCommandRequestNG.setK8SteadyStateCheckEnabled(true);
+    doReturn("1.16").when(kubernetesContainerService).getVersionAsString(eq(kubernetesConfig));
     assertThat(spyHelmDeployService.deploy(helmInstallCommandRequestNG)).isEqualTo(helmCommandResponseNG);
 
     // Check if revokeReadPermission function called when Helm Version is V380
@@ -638,11 +692,16 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
   @Owner(developers = ACHYUTH)
   @Category(UnitTests.class)
   public void testRollback() throws Exception {
-    // K8SteadyStateCheckEnabled true always
+    // K8SteadyStateCheckEnabled false
     setFakeTimeLimiter();
     initForRollback();
+    ArgumentCaptor<HelmCommandData> argumentCaptor = ArgumentCaptor.forClass(HelmCommandData.class);
+    HelmCommandResponseNG helmCommandResponseNG = helmDeployService.rollback(helmRollbackCommandRequestNG);
+    assertThat(helmCommandResponseNG.getCommandExecutionStatus()).isEqualTo(CommandExecutionStatus.SUCCESS);
+    verify(helmClient).rollback(argumentCaptor.capture(), eq(true));
 
-    // -- empty releaseHistory
+    // K8SteadyStateCheckEnabled true -- empty releaseHistory
+    helmRollbackCommandRequestNG.setK8SteadyStateCheckEnabled(true);
     doReturn("1.16").when(kubernetesContainerService).getVersionAsString(eq(kubernetesConfig));
     doReturn("")
         .when(k8sTaskHelperBase)
@@ -654,7 +713,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     assertThatThrownBy(() -> helmDeployService.rollback(helmRollbackCommandRequestNG))
         .isInstanceOf(GeneralException.class);
 
-    // -- valid releaseHistory
+    // K8SteadyStateCheckEnabled true -- valid releaseHistory
     ReleaseHistory releaseHistory = ReleaseHistory.createNew();
     releaseHistory.createNewRelease(Collections.singletonList(
         KubernetesResourceId.builder().namespace("default").name("resource-1").kind(Kind.StatefulSet.name()).build()));
@@ -668,7 +727,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
     assertThat(helmInstallCmdResponseNG.getContainerInfoList().stream().map(ContainerInfo::getHostName))
         .containsExactlyInAnyOrder("resource-1");
 
-    // -- failed release
+    // K8SteadyStateCheckEnabled true -- failed release
     releaseHistory.setReleaseStatus(IK8sRelease.Status.Failed);
 
     assertThatThrownBy(() -> executeRollbackWithReleaseHistory(releaseHistory, 2))
@@ -1011,7 +1070,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
                                               .namespace("default")
                                               .accountId("harnessCDP123")
                                               .helmVersion(V3)
-                                              .k8SteadyStateCheckEnabled(true)
+                                              .k8SteadyStateCheckEnabled(false)
                                               .build();
 
     return request;
@@ -1026,7 +1085,7 @@ public class HelmDeployServiceImplNGTest extends CategoryTest {
                                                .workingDir("tmp")
                                                .namespace("default")
                                                .accountId("harnessCDP123")
-                                               .k8SteadyStateCheckEnabled(true)
+                                               .k8SteadyStateCheckEnabled(false)
                                                .prevReleaseVersion(2)
                                                .newReleaseVersion(3)
                                                .releaseName("release")

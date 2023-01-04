@@ -10,6 +10,7 @@ package software.wings.sm.states.customdeployment;
 import static io.harness.beans.ExecutionStatus.FAILED;
 import static io.harness.beans.ExecutionStatus.SUCCESS;
 import static io.harness.logging.CommandExecutionStatus.RUNNING;
+import static io.harness.utils.Utils.isInstanceOf;
 
 import static software.wings.api.InstanceElement.Builder.anInstanceElement;
 import static software.wings.api.ServiceTemplateElement.Builder.aServiceTemplateElement;
@@ -63,12 +64,12 @@ import software.wings.beans.Log.Builder;
 import software.wings.beans.LogColor;
 import software.wings.beans.ServiceTemplate;
 import software.wings.beans.TaskType;
-import software.wings.beans.artifact.Artifact;
 import software.wings.beans.command.CommandUnit;
 import software.wings.beans.command.FetchInstancesCommandUnit;
 import software.wings.beans.shellscript.provisioner.ShellScriptProvisionParameters;
 import software.wings.beans.template.deploymenttype.CustomDeploymentTypeTemplate;
 import software.wings.expression.ManagerPreviewExpressionEvaluator;
+import software.wings.persistence.artifact.Artifact;
 import software.wings.service.impl.ActivityHelperService;
 import software.wings.service.impl.servicetemplates.ServiceTemplateHelper;
 import software.wings.service.intfc.DelegateService;
@@ -179,11 +180,15 @@ public class InstanceFetchState extends State {
     WorkflowStandardParams workflowStandardParams = context.getContextElement(ContextElementType.STANDARD);
     String envId = workflowStandardParams.getEnvId();
 
-    final CustomDeploymentTypeTemplate deploymentTypeTemplate = customDeploymentTypeService.fetchDeploymentTemplate(
-        accountId, infrastructureMapping.getCustomDeploymentTemplateId(),
-        ((CustomInfrastructureMapping) infrastructureMapping).getDeploymentTypeTemplateVersion());
-
+    final CustomDeploymentTypeTemplate deploymentTypeTemplate;
     try {
+      checkArgument(isInstanceOf(CustomInfrastructureMapping.class, infrastructureMapping),
+          format("Infrastructure definition %s is not supported on fetch instance",
+              infrastructureMapping.getDisplayName()));
+
+      deploymentTypeTemplate = customDeploymentTypeService.fetchDeploymentTemplate(accountId,
+          infrastructureMapping.getCustomDeploymentTemplateId(),
+          ((CustomInfrastructureMapping) infrastructureMapping).getDeploymentTypeTemplateVersion());
       validatePrerequisites(deploymentTypeTemplate);
     } catch (IllegalArgumentException e) {
       return handleException(e, "Prerequisites not met.");

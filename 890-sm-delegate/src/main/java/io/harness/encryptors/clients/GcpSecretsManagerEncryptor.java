@@ -249,6 +249,9 @@ public class GcpSecretsManagerEncryptor implements VaultEncryptor {
   @Override
   public EncryptedRecord renameSecret(
       String accountId, SecretText secretText, EncryptedRecord existingRecord, EncryptionConfig encryptionConfig) {
+    if (existingRecord.getName().equals(secretText.getName())) {
+      return existingRecord;
+    }
     throw new UnsupportedOperationException("Renaming Secrets in GCP Secret Manager is not supported");
   }
 
@@ -312,6 +315,10 @@ public class GcpSecretsManagerEncryptor implements VaultEncryptor {
 
   @VisibleForTesting
   public GoogleCredentials getGoogleCredentials(GcpSecretsManagerConfig gcpSecretsManagerConfig) {
+    if (gcpSecretsManagerConfig.getCredentials() == null) {
+      throw new SecretManagementException(GCP_SECRET_OPERATION_ERROR,
+          "GCP Secret Manager credentials are missing. Please check if the credentials secret exists.", USER);
+    }
     try {
       return GoogleCredentials
           .fromStream(new ByteArrayInputStream(String.valueOf(gcpSecretsManagerConfig.getCredentials()).getBytes()))

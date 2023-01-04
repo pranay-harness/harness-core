@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Harness Inc. All rights reserved.
+ * Copyright 2022 Harness Inc. All rights reserved.
  * Use of this source code is governed by the PolyForm Shield 1.0.0 license
  * that can be found in the licenses directory at the root of this repository, also available at
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
@@ -16,6 +16,7 @@ public interface EntityTypeConstants {
   String GITOPS_CREATE_PR = "CreatePR";
   String GITOPS_MERGE_PR = "MergePR";
   String GITOPS_UPDATE_RELEASE_REPO = "GitOpsUpdateReleaseRepo";
+  String GITOPS_FETCH_LINKED_APPS = "GitOpsFetchLinkedApps";
   String PROJECTS = "Projects";
   String PIPELINES = "Pipelines";
   String PIPELINE_STEPS = "PipelineSteps";
@@ -60,6 +61,16 @@ public interface EntityTypeConstants {
   String K8S_DELETE = "K8sDelete";
   String K8S_BG_SWAP_SERVICES = "K8sBGSwapServices";
   String K8S_CANARY_DELETE = "K8sCanaryDelete";
+
+  String TAS_CANARY_APP_SETUP_STEP = "CanaryAppSetup";
+  String TAS_BG_APP_SETUP_STEP = "BGAppSetup";
+  String TAS_BASIC_APP_SETUP_STEP = "BasicAppSetup";
+  String TAS_APP_RESIZE_STEP = "AppResize";
+  String TAS_ROLLBACK_STEP = "AppRollback";
+  String TAS_SWAP_ROUTES_STEP = "SwapRoutes";
+  String TAS_SWAP_ROLLBACK_STEP = "SwapRollback";
+  String TANZU_COMMAND_STEP = "TanzuCommand";
+
   String RUN_STEP = "Run";
   String BACKGROUND_STEP = "Background";
   String RUN_TEST = "RunTests";
@@ -169,5 +180,18 @@ public interface EntityTypeConstants {
   String CHAOS_STEP = "Chaos";
   String ELASTIGROUP_DEPLOY_STEP = "ElastigroupDeploy";
   String ELASTIGROUP_ROLLBACK_STEP = "ElastigroupRollback";
+  String IACM_STAGE = "IACMStage";
+  String IACM_STEPS = "IACMStep";
+  String IACM = "IACM";
   String ELASTIGROUP_SETUP = "ElastigroupSetup";
+  String TERRAGRUNT_PLAN = "TerragruntPlan";
+  String TERRAGRUNT_APPLY = "TerragruntApply";
+  String TERRAGRUNT_DESTROY = "TerragruntDestroy";
+  String TERRAGRUNT_ROLLBACK = "TerragruntRollback";
+  String CONTAINER_STEP = "Container";
+  String IACM_TERRAFORM_PLAN = "IACMTerraformPlan";
+  String ELASTIGROUP_BG_STAGE_SETUP = "ElastigroupBGStageSetup";
+  String ELASTIGROUP_SWAP_ROUTE = "ElastigroupSwapRoute";
+  String ASG_CANARY_DEPLOY = "AsgCanaryDeploy";
+  String ASG_CANARY_DELETE = "AsgCanaryDelete";
 }

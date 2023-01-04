@@ -80,13 +80,32 @@ public class User extends Base implements Principal {
                  .field(UserKeys.accounts)
                  .field(UserKeys.externalUserId)
                  .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("name_accounts_disabled")
+                 .field(UserKeys.name)
+                 .field(UserKeys.accounts)
+                 .field(UserKeys.disabled)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("email_accounts_disabled")
+                 .field(UserKeys.email)
+                 .field(UserKeys.accounts)
+                 .field(UserKeys.disabled)
+                 .build())
+        .add(CompoundMongoIndex.builder()
+                 .name("email_pendingAccounts_disabled")
+                 .field(UserKeys.email)
+                 .field(UserKeys.pendingAccounts)
+                 .field(UserKeys.disabled)
+                 .build())
         .build();
   }
 
   public static final String EMAIL_KEY = "email";
   public static final String ROLES_KEY = "roles";
 
-  @NotEmpty @FdIndex private String name;
+  @NotEmpty private String name;
+
   @FdIndex private String externalUserId;
 
   private String givenName;
@@ -165,14 +184,13 @@ public class User extends Base implements Principal {
    * @return Partial User object without sensitive information.
    */
   @JsonIgnore
-  public User getPublicUser() {
+  public User getPublicUser(boolean includeSupportAccounts) {
     User publicUser = new User();
     publicUser.setUuid(getUuid());
     publicUser.setName(getName());
     publicUser.setEmail(getEmail());
     publicUser.setDefaultAccountId(getDefaultAccountId());
     publicUser.setAccounts(getAccounts());
-    publicUser.setSupportAccounts(getSupportAccounts());
     publicUser.setTwoFactorAuthenticationEnabled(isTwoFactorAuthenticationEnabled());
     publicUser.setTwoFactorAuthenticationMechanism(getTwoFactorAuthenticationMechanism());
     publicUser.setFirstLogin(isFirstLogin());
@@ -181,6 +199,9 @@ public class User extends Base implements Principal {
     publicUser.setUserLocked(isUserLocked());
     publicUser.setImported(isImported());
     // publicUser.setCompanyName(getCompanyName());
+    if (includeSupportAccounts) {
+      publicUser.setSupportAccounts(getSupportAccounts());
+    }
     return publicUser;
   }
   public boolean isAccountAdmin(String accountId) {

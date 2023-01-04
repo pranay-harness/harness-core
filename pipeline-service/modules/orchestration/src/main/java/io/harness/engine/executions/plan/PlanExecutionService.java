@@ -13,7 +13,9 @@ import io.harness.annotations.dev.OwnedBy;
 import io.harness.engine.observers.NodeStatusUpdateObserver;
 import io.harness.execution.PlanExecution;
 import io.harness.pms.contracts.execution.Status;
+import io.harness.pms.contracts.plan.ExecutionMetadata;
 
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -22,10 +24,10 @@ import org.springframework.data.mongodb.core.query.Update;
 
 @OwnedBy(PIPELINE)
 public interface PlanExecutionService extends NodeStatusUpdateObserver {
-  PlanExecution update(@NonNull String planExecutionId, @NonNull Consumer<Update> ops);
-
+  PlanExecution updateStatusForceful(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops,
+      boolean forced, EnumSet<Status> allowedStartStatuses);
   PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status);
-
+  PlanExecution markPlanExecutionErrored(String planExecutionId);
   PlanExecution updateStatus(@NonNull String planExecutionId, @NonNull Status status, Consumer<Update> ops);
 
   PlanExecution updateStatusForceful(
@@ -33,9 +35,18 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
 
   PlanExecution get(String planExecutionId);
 
+  /**
+   * @param planExecutionId planExecutionId
+   * @return This method returns PlanExecution but excluding ExecutionMetadata, GovernanceMetadata,
+   * setupAbstractions and ambiance
+   */
+  PlanExecution getPlanExecutionMetadata(String planExecutionId);
+
+  ExecutionMetadata getExecutionMetadataFromPlanExecution(String planExecutionId);
+
   PlanExecution save(PlanExecution planExecution);
 
-  PlanExecution getStatus(String planExecutionId);
+  Status getStatus(String planExecutionId);
 
   List<PlanExecution> findAllByPlanExecutionIdIn(List<String> planExecutionIds);
 
@@ -53,8 +64,7 @@ public interface PlanExecutionService extends NodeStatusUpdateObserver {
   List<PlanExecution> findAllByAccountIdAndOrgIdAndProjectIdAndLastUpdatedAtInBetweenTimestamps(
       String accountId, String orgId, String projectId, long startTS, long endTS);
 
-  long countRunningExecutionsForGivenPipeline(
-      String accountId, String orgId, String projectId, String pipelineIdentifier);
+  long countRunningExecutionsForGivenPipelineInAccount(String accountId, String pipelineIdentifier);
 
-  PlanExecution findNextExecutionToRun(String accountId, String orgId, String projectId, String pipelineIdentifier);
+  PlanExecution findNextExecutionToRunInAccount(String accountId);
 }

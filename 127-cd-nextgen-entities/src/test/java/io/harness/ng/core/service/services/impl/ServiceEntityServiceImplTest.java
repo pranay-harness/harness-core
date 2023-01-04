@@ -15,6 +15,7 @@ import static io.harness.rule.OwnerRule.MOHIT_GARG;
 import static io.harness.rule.OwnerRule.PRABU;
 import static io.harness.rule.OwnerRule.YOGESH;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
@@ -29,6 +30,7 @@ import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
 import io.harness.cdng.CDNGEntitiesTestBase;
+import io.harness.cdng.service.beans.ServiceDefinitionType;
 import io.harness.data.structure.UUIDGenerator;
 import io.harness.exception.InvalidRequestException;
 import io.harness.exception.ReferencedEntityException;
@@ -40,6 +42,7 @@ import io.harness.ng.core.service.entity.ArtifactSourcesResponseDTO;
 import io.harness.ng.core.service.entity.ServiceEntity;
 import io.harness.ng.core.service.entity.ServiceInputsMergedResponseDto;
 import io.harness.ng.core.service.mappers.ServiceElementMapper;
+import io.harness.ng.core.service.mappers.ServiceFilterHelper;
 import io.harness.ng.core.serviceoverride.services.ServiceOverrideService;
 import io.harness.ng.core.utils.CoreCriteriaUtils;
 import io.harness.outbox.api.OutboxService;
@@ -54,6 +57,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -62,6 +66,8 @@ import org.joor.Reflect;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.data.domain.Page;
@@ -70,6 +76,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(HarnessTeam.CDC)
+@RunWith(Parameterized.class)
 public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
   @Mock private OutboxService outboxService;
   @Mock private EntitySetupUsageServiceImpl entitySetupUsageService;
@@ -81,6 +88,19 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
   private static final String PROJECT_ID = "PROJECT_ID";
   private static final String SERVICE_ID = "serviceId";
 
+  private String pipelineInputYamlPath;
+  private String actualEntityYamlPath;
+  private String mergedInputYamlPath;
+  private boolean isMergedYamlEmpty;
+
+  public ServiceEntityServiceImplTest(String pipelineInputYamlPath, String actualEntityYamlPath,
+      String mergedInputYamlPath, boolean isMergedYamlEmpty) {
+    this.pipelineInputYamlPath = pipelineInputYamlPath;
+    this.actualEntityYamlPath = actualEntityYamlPath;
+    this.mergedInputYamlPath = mergedInputYamlPath;
+    this.isMergedYamlEmpty = isMergedYamlEmpty;
+  }
+
   @Before
   public void setup() {
     entitySetupUsageService = mock(EntitySetupUsageServiceImpl.class);
@@ -88,6 +108,16 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
     Reflect.on(serviceEntityService).set("outboxService", outboxService);
     Reflect.on(serviceEntityService).set("serviceOverrideService", serviceOverrideService);
     Reflect.on(serviceEntityService).set("entitySetupUsageHelper", entitySetupUsageHelper);
+  }
+  @Parameterized.Parameters
+  public static Collection<Object[]> data() {
+    return asList(new Object[][] {
+        {"service/serviceInputs-with-few-values-fixed.yaml", "service/service-with-primaryArtifactRef-runtime.yaml",
+            "service/serviceInputs-merged.yaml", false},
+        {"service/serviceInputs-with-few-values-fixed.yaml", "service/service-with-no-runtime-input.yaml",
+            "infrastructure/empty-file.yaml", true},
+        {"infrastructure/empty-file.yaml", "service/service-with-primaryArtifactRef-fixed.yaml",
+            "service/merged-service-input-fixed-prime-artifact.yaml", false}});
   }
 
   @Test
@@ -109,6 +139,7 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
                                       .orgIdentifier("ORG_ID")
                                       .projectIdentifier("PROJECT_ID")
                                       .name("Service")
+                                      .type(ServiceDefinitionType.NATIVE_HELM)
                                       .build();
 
     // Create operations
@@ -119,6 +150,7 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
     assertThat(createdService.getProjectIdentifier()).isEqualTo(serviceEntity.getProjectIdentifier());
     assertThat(createdService.getIdentifier()).isEqualTo(serviceEntity.getIdentifier());
     assertThat(createdService.getName()).isEqualTo(serviceEntity.getName());
+    assertThat(createdService.getType()).isEqualTo(serviceEntity.getType());
     assertThat(createdService.getVersion()).isEqualTo(0L);
 
     // Get operations
@@ -135,6 +167,7 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
                                              .projectIdentifier("PROJECT_ID")
                                              .name("UPDATED_SERVICE")
                                              .description("NEW_DESCRIPTION")
+                                             .type(ServiceDefinitionType.NATIVE_HELM)
                                              .build();
     ServiceEntity updatedServiceResponse = serviceEntityService.update(updateServiceRequest);
     assertThat(updatedServiceResponse.getAccountId()).isEqualTo(updateServiceRequest.getAccountId());
@@ -150,6 +183,12 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
         .isInstanceOf(InvalidRequestException.class);
     updatedServiceResponse.setAccountId("ACCOUNT_ID");
 
+    // adding test for 'Deployment Type is not allowed to change'
+    updateServiceRequest.setType(ServiceDefinitionType.KUBERNETES);
+    assertThatThrownBy(() -> serviceEntityService.update(updateServiceRequest))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThat(updatedServiceResponse.getType()).isNotEqualTo(ServiceDefinitionType.KUBERNETES);
+
     // Upsert operations
     ServiceEntity upsertServiceRequest = ServiceEntity.builder()
                                              .accountId("ACCOUNT_ID")
@@ -158,6 +197,7 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
                                              .projectIdentifier("NEW_PROJECT")
                                              .name("UPSERTED_SERVICE")
                                              .description("NEW_DESCRIPTION")
+                                             .type(ServiceDefinitionType.NATIVE_HELM)
                                              .build();
     ServiceEntity upsertService = serviceEntityService.upsert(upsertServiceRequest, UpsertOptions.DEFAULT);
     assertThat(upsertService.getAccountId()).isEqualTo(upsertServiceRequest.getAccountId());
@@ -166,6 +206,33 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
     assertThat(upsertService.getIdentifier()).isEqualTo(upsertServiceRequest.getIdentifier());
     assertThat(upsertService.getName()).isEqualTo(upsertServiceRequest.getName());
     assertThat(upsertService.getDescription()).isEqualTo(upsertServiceRequest.getDescription());
+    assertThat(upsertService.getType()).isEqualTo(upsertServiceRequest.getType());
+
+    // Upsert operations // update via Upsert
+    upsertServiceRequest = ServiceEntity.builder()
+                               .accountId("ACCOUNT_ID")
+                               .identifier("NEW_IDENTIFIER")
+                               .orgIdentifier("ORG_ID")
+                               .projectIdentifier("NEW_PROJECT")
+                               .name("UPSERTED_SERVICE")
+                               .description("NEW_DESCRIPTION")
+                               .type(ServiceDefinitionType.NATIVE_HELM)
+                               .build();
+    upsertService = serviceEntityService.upsert(upsertServiceRequest, UpsertOptions.DEFAULT);
+    assertThat(upsertService.getAccountId()).isEqualTo(upsertServiceRequest.getAccountId());
+    assertThat(upsertService.getOrgIdentifier()).isEqualTo(upsertServiceRequest.getOrgIdentifier());
+    assertThat(upsertService.getProjectIdentifier()).isEqualTo(upsertServiceRequest.getProjectIdentifier());
+    assertThat(upsertService.getIdentifier()).isEqualTo(upsertServiceRequest.getIdentifier());
+    assertThat(upsertService.getName()).isEqualTo(upsertServiceRequest.getName());
+    assertThat(upsertService.getDescription()).isEqualTo(upsertServiceRequest.getDescription());
+    assertThat(upsertService.getType()).isEqualTo(upsertServiceRequest.getType());
+
+    // adding test for 'Deployment Type is not allowed to change'
+    upsertServiceRequest.setType(ServiceDefinitionType.KUBERNETES);
+    ServiceEntity finalUpsertServiceRequest = upsertServiceRequest;
+    assertThatThrownBy(() -> serviceEntityService.upsert(finalUpsertServiceRequest, UpsertOptions.DEFAULT))
+        .isInstanceOf(InvalidRequestException.class);
+    assertThat(upsertService.getType()).isNotEqualTo(ServiceDefinitionType.KUBERNETES);
 
     // List services operations.
     Criteria criteriaFromServiceFilter =
@@ -651,7 +718,7 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
   @Owner(developers = INDER)
   @Category(UnitTests.class)
   public void testMergeServiceInputs() {
-    String yaml = readFile("service/service-with-primaryArtifactRef-runtime.yaml");
+    String yaml = readFile(actualEntityYamlPath);
     ServiceEntity createRequest = ServiceEntity.builder()
                                       .accountId(ACCOUNT_ID)
                                       .orgIdentifier(ORG_ID)
@@ -663,14 +730,129 @@ public class ServiceEntityServiceImplTest extends CDNGEntitiesTestBase {
 
     serviceEntityService.create(createRequest);
 
-    String oldTemplateInputYaml = readFile("service/serviceInputs-with-few-values-fixed.yaml");
-    String mergedTemplateInputsYaml = readFile("service/serviceInputs-merged.yaml");
+    String oldTemplateInputYaml = readFile(pipelineInputYamlPath);
+    String mergedTemplateInputsYaml = readFile(mergedInputYamlPath);
     ServiceInputsMergedResponseDto responseDto = serviceEntityService.mergeServiceInputs(
         ACCOUNT_ID, ORG_ID, PROJECT_ID, "serviceWithPrimaryArtifactRefRuntime", oldTemplateInputYaml);
     String mergedYaml = responseDto.getMergedServiceInputsYaml();
-    assertThat(mergedYaml).isNotNull().isNotEmpty();
-    assertThat(mergedYaml).isEqualTo(mergedTemplateInputsYaml);
+    if (isMergedYamlEmpty) {
+      assertThat(mergedYaml).isNull();
+    } else {
+      assertThat(mergedYaml).isNotNull().isNotEmpty();
+      assertThat(mergedYaml).isEqualTo(mergedTemplateInputsYaml);
+    }
     assertThat(responseDto.getServiceYaml()).isNotNull().isNotEmpty().isEqualTo(yaml);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testGetListCallForOrgAccountLevelService() {
+    ServiceEntity serviceEntity1 =
+        ServiceEntity.builder().accountId("ACCOUNT_ID").identifier("OS1").orgIdentifier("ORG_ID").name("OS1").build();
+
+    ServiceEntity serviceEntity2 = ServiceEntity.builder()
+                                       .accountId("ACCOUNT_ID")
+                                       .identifier("PS1")
+                                       .orgIdentifier("ORG_ID")
+                                       .projectIdentifier("PROJECT_ID")
+                                       .name("PS1")
+                                       .build();
+
+    ServiceEntity serviceEntity3 =
+        ServiceEntity.builder().accountId("ACCOUNT_ID").identifier("AS1").name("AS1").build();
+
+    serviceEntityService.create(serviceEntity1);
+    serviceEntityService.create(serviceEntity2);
+    serviceEntityService.create(serviceEntity3);
+
+    // get by serviceRef
+    Optional<ServiceEntity> optionalService =
+        serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "RANDOM_PIPELINE_PROJECT_ID", "org.OS1", false);
+    assertThat(optionalService).isPresent();
+    // get by serviceIdentifier
+    Optional<ServiceEntity> optionalServiceById = serviceEntityService.get("ACCOUNT_ID", "ORG_ID", null, "OS1", false);
+    assertThat(optionalServiceById).isPresent();
+
+    // List down all services accessible from that scope
+    // project level
+    Criteria criteriaFromServiceFilter =
+        ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", false, true);
+    Pageable pageRequest = PageUtils.getPageRequest(0, 10, null);
+    Page<ServiceEntity> list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
+    assertThat(list.getContent()).isNotNull();
+    // services from all scopes
+    assertThat(list.getContent().size()).isEqualTo(3);
+
+    // org level
+    criteriaFromServiceFilter = ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", "ORG_ID", null, false, true);
+    list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
+    assertThat(list.getContent()).isNotNull();
+    // services from org,account scopes
+    assertThat(list.getContent().size()).isEqualTo(2);
+
+    // account level
+    criteriaFromServiceFilter = ServiceFilterHelper.createCriteriaForGetList("ACCOUNT_ID", null, null, false, true);
+    list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
+    assertThat(list.getContent()).isNotNull();
+    // services from acc scope
+    assertThat(list.getContent().size()).isEqualTo(1);
+  }
+
+  @Test
+  @Owner(developers = HINGER)
+  @Category(UnitTests.class)
+  public void testCRUDForAccountLevelService() {
+    when(entitySetupUsageService.listAllEntityUsage(anyInt(), anyInt(), anyString(), anyString(), any(), anyString()))
+        .thenReturn(Page.empty());
+    ServiceEntity serviceEntity =
+        ServiceEntity.builder().accountId("ACCOUNT_ID").identifier("IDENTIFIER").name("SERVICE").build();
+    // Create operations
+    ServiceEntity createdService = serviceEntityService.create(serviceEntity);
+    assertThat(createdService).isNotNull();
+
+    // Update operations at org level
+    ServiceEntity updateServiceRequest = ServiceEntity.builder()
+                                             .accountId("ACCOUNT_ID")
+                                             .identifier("IDENTIFIER")
+                                             .name("UPDATED_SERVICE")
+                                             .description("NEW_DESCRIPTION")
+                                             .build();
+
+    ServiceEntity updatedServiceResponse = serviceEntityService.update(updateServiceRequest);
+    assertThat(updatedServiceResponse.getName()).isEqualTo(updateServiceRequest.getName());
+    assertThat(updatedServiceResponse.getDescription()).isEqualTo(updateServiceRequest.getDescription());
+
+    // Upsert operations at account level
+    ServiceEntity upsertServiceRequest = ServiceEntity.builder()
+                                             .accountId("ACCOUNT_ID")
+                                             .identifier("NEW_IDENTIFIER")
+                                             .name("UPSERTED_SERVICE")
+                                             .description("NEW_DESCRIPTION")
+                                             .build();
+
+    ServiceEntity upsertService = serviceEntityService.upsert(upsertServiceRequest, UpsertOptions.DEFAULT);
+    assertThat(upsertService.getAccountId()).isEqualTo(upsertServiceRequest.getAccountId());
+    assertThat(upsertService.getOrgIdentifier()).isEqualTo(upsertServiceRequest.getOrgIdentifier());
+    assertThat(upsertService.getProjectIdentifier()).isEqualTo(upsertServiceRequest.getProjectIdentifier());
+    assertThat(upsertService.getIdentifier()).isEqualTo(upsertServiceRequest.getIdentifier());
+    assertThat(upsertService.getName()).isEqualTo(upsertServiceRequest.getName());
+    assertThat(upsertService.getDescription()).isEqualTo(upsertServiceRequest.getDescription());
+
+    // List services operations.
+    Criteria criteriaFromServiceFilter = CoreCriteriaUtils.createCriteriaForGetList("ACCOUNT_ID", null, null, false);
+    Pageable pageRequest = PageUtils.getPageRequest(0, 10, null);
+    Page<ServiceEntity> list = serviceEntityService.list(criteriaFromServiceFilter, pageRequest);
+    assertThat(list.getContent()).isNotNull();
+    assertThat(list.getContent().size()).isEqualTo(2);
+
+    boolean delete = serviceEntityService.delete("ACCOUNT_ID", null, null, "IDENTIFIER", 1L);
+    assertThat(delete).isTrue();
+    verify(serviceOverrideService).deleteAllInProjectForAService("ACCOUNT_ID", null, null, "IDENTIFIER");
+
+    Optional<ServiceEntity> deletedService =
+        serviceEntityService.get("ACCOUNT_ID", "ORG_ID", "PROJECT_ID", "account.NEW_IDENTIFIER", false);
+    assertThat(deletedService.isPresent()).isTrue();
   }
 
   private String readFile(String filename) {

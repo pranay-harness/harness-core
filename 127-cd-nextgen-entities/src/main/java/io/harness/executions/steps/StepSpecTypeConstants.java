@@ -35,6 +35,11 @@ public interface StepSpecTypeConstants {
   String TERRAFORM_DESTROY = "TerraformDestroy";
   String TERRAFORM_ROLLBACK = "TerraformRollback";
 
+  String TERRAGRUNT_PLAN = "TerragruntPlan";
+  String TERRAGRUNT_APPLY = "TerragruntApply";
+  String TERRAGRUNT_DESTROY = "TerragruntDestroy";
+  String TERRAGRUNT_ROLLBACK = "TerragruntRollback";
+
   String AZURE_CREATE_ARM_RESOURCE = "AzureCreateARMResource";
   String AZURE_CREATE_BP_RESOURCE = "AzureCreateBPResource";
   String AZURE_ROLLBACK_ARM_RESOURCE = "AzureARMRollback";
@@ -60,6 +65,15 @@ public interface StepSpecTypeConstants {
   String DEPLOYMENT_TYPE_CUSTOM_DEPLOYMENT = "CustomDeployment";
   String CUSTOM_DEPLOYMENT_FETCH_INSTANCE_SCRIPT = "FetchInstanceScript";
 
+  String TAS_CANARY_APP_SETUP = "CanaryAppSetup";
+  String TAS_BG_APP_SETUP = "BGAppSetup";
+  String TAS_APP_RESIZE = "AppResize";
+  String TAS_ROLLBACK = "AppRollback";
+  String TAS_SWAP_ROUTES = "SwapRoutes";
+  String TAS_BASIC_APP_SETUP = "BasicAppSetup";
+  String SWAP_ROLLBACK = "SwapRollback";
+  String TANZU_COMMAND = "TanzuCommand";
+
   String ECS_ROLLING_DEPLOY = "EcsRollingDeploy";
   String ECS_ROLLING_ROLLBACK = "EcsRollingRollback";
   String ECS_CANARY_DEPLOY = "EcsCanaryDeploy";
@@ -74,4 +88,11 @@ public interface StepSpecTypeConstants {
   String CHAOS_STEP = "Chaos";
 
   String ELASTIGROUP_SETUP = "ElastigroupSetup";
+
+  String GITOPS_FETCH_LINKED_APPS = "GitOpsFetchLinkedApps";
+
+  String ELASTIGROUP_BG_STAGE_SETUP = "ElastigroupBGStageSetup";
+  String ELASTIGROUP_SWAP_ROUTE = "ElastigroupSwapRoute";
+  String ASG_CANARY_DEPLOY = "AsgCanaryDeploy";
+  String ASG_CANARY_DELETE = "AsgCanaryDelete";
 }

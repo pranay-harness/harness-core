@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Harness Inc. All rights reserved.
+ * Copyright 2022 Harness Inc. All rights reserved.
  * Use of this source code is governed by the PolyForm Shield 1.0.0 license
  * that can be found in the licenses directory at the root of this repository, also available at
  * https://polyformproject.org/wp-content/uploads/2020/06/PolyForm-Shield-1.0.0.txt.
@@ -26,6 +26,7 @@ public class EntityYamlRootNames {
   public static final String GITOPS_CREATE_PR = "CreatePR";
   public static final String GITOPS_MERGE_PR = "MergePR";
   public static final String GITOPS_UPDATE_RELEASE_REPO = "GitOpsUpdateReleaseRepo";
+  public static final String GITOPS_FETCH_LINKED_APPS = "GitOpsFetchLinkedApps";
   public static final String ENVIRONMENT_GROUP = "environmentGroup";
   public static final String PROJECT = "project";
   public static final String PIPELINE = "pipeline";
@@ -145,6 +146,7 @@ public class EntityYamlRootNames {
   public static final String BUILD_AND_PUSH_DOCKER_REGISTRY = "BuildAndPushDockerRegistry";
   public static final String ACTION_STEP = "Action";
   public static final String BITRISE_STEP = "Bitrise";
+  public static final String CONTAINER_STEP = "Container";
 
   public static final String NG_FILE = "NgFile";
   public static final String QUEUE = "Lock";
@@ -179,5 +181,25 @@ public class EntityYamlRootNames {
   public static final String CHAOS_STEP = "Chaos";
   public static final String ELASTIGROUP_DEPLOY_STEP = "ElastigroupDeploy";
   public static final String ELASTIGROUP_ROLLBACK_STEP = "ElastigroupRollback";
+  public static final String IACM_STAGE = "IACMStage";
+  public static final String IACM_STEP = "IACMStep";
+  public static final String IACM = "IACM";
   public static final String ELASTIGROUP_SETUP = "ElastigroupSetup";
+  public static final String TERRAGRUNT_PLAN = "TerragruntPlan";
+  public static final String TERRAGRUNT_APPLY = "TerragruntApply";
+  public static final String TERRAGRUNT_DESTROY = "TerragruntDestroy";
+  public static final String TERRAGRUNT_ROLLBACK = "TerragruntRollback";
+  public static final String IACM_TERRAFORM_PLAN = "IACMTerraformPlan";
+  public static final String ELASTIGROUP_BG_STAGE_SETUP = "ElastigroupBGStageSetup";
+  public static final String ELASTIGROUP_SWAP_ROUTE = "ElastigroupSwapRoute";
+  public static final String ASG_CANARY_DEPLOY = "AsgCanaryDeploy";
+  public static final String ASG_CANARY_DELETE = "AsgCanaryDelete";
+  public static final String TAS_SWAP_ROUTES_STEP = "SwapRoutes";
+  public static final String TAS_SWAP_ROLLBACK_STEP = "SwapRollback";
+  public static final String TAS_APP_RESIZE_STEP = "AppResize";
+  public static final String TAS_ROLLBACK_STEP = "AppRollback";
+  public static final String TAS_CANARY_APP_SETUP_STEP = "CanaryAppSetup";
+  public static final String TAS_BG_APP_SETUP_STEP = "BGAppSetup";
+  public static final String TAS_BASIC_APP_SETUP_STEP = "BasicAppSetup";
+  public static final String TANZU_COMMAND_STEP = "TanzuCommand";
 }

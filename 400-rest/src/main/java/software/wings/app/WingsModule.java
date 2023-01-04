@@ -7,8 +7,6 @@
 
 package software.wings.app;
 
-import static io.harness.AuthorizationServiceHeader.DELEGATE_SERVICE;
-import static io.harness.AuthorizationServiceHeader.MANAGER;
 import static io.harness.annotations.dev.HarnessModule._360_CG_MANAGER;
 import static io.harness.annotations.dev.HarnessTeam.PL;
 import static io.harness.audit.ResourceTypeConstants.DELEGATE;
@@ -16,6 +14,8 @@ import static io.harness.audit.ResourceTypeConstants.DELEGATE_GROUPS;
 import static io.harness.audit.ResourceTypeConstants.DELEGATE_TOKEN;
 import static io.harness.audit.ResourceTypeConstants.NG_LOGIN_SETTINGS;
 import static io.harness.audit.ResourceTypeConstants.USER;
+import static io.harness.authorization.AuthorizationServiceHeader.DELEGATE_SERVICE;
+import static io.harness.authorization.AuthorizationServiceHeader.MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.ORGANIZATION_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
@@ -114,6 +114,8 @@ import io.harness.delegate.event.listener.OrganizationEntityCRUDEventListener;
 import io.harness.delegate.event.listener.ProjectEntityCRUDEventListener;
 import io.harness.delegate.heartbeat.HeartbeatModule;
 import io.harness.delegate.outbox.DelegateOutboxEventHandler;
+import io.harness.delegate.queueservice.DelegateTaskQueueService;
+import io.harness.delegate.queueservice.HQueueServiceClientFactory;
 import io.harness.delegate.service.impl.DelegateDownloadServiceImpl;
 import io.harness.delegate.service.impl.DelegateRingServiceImpl;
 import io.harness.delegate.service.impl.DelegateUpgraderServiceImpl;
@@ -153,6 +155,7 @@ import io.harness.governance.pipeline.service.evaluators.OnWorkflow;
 import io.harness.governance.pipeline.service.evaluators.PipelineStatusEvaluator;
 import io.harness.governance.pipeline.service.evaluators.WorkflowStatusEvaluator;
 import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
+import io.harness.hsqs.client.HsqsServiceClient;
 import io.harness.instancesync.InstanceSyncResourceClientModule;
 import io.harness.instancesyncmonitoring.module.InstanceSyncMonitoringModule;
 import io.harness.invites.NgInviteClientModule;
@@ -196,6 +199,8 @@ import io.harness.persistence.HPersistence;
 import io.harness.polling.client.PollResourceClientModule;
 import io.harness.project.ProjectClientModule;
 import io.harness.queue.QueueController;
+import io.harness.queueservice.config.DelegateQueueServiceConfig;
+import io.harness.queueservice.infc.DelegateServiceQueue;
 import io.harness.redis.CompatibleFieldSerializerCodec;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ClientMode;
@@ -805,6 +810,7 @@ import com.google.inject.matcher.Matchers;
 import com.google.inject.multibindings.MapBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.google.inject.util.Providers;
 import io.dropwizard.jackson.Jackson;
 import io.dropwizard.lifecycle.Managed;
 import java.io.Closeable;
@@ -1047,6 +1053,8 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(MicrosoftTeamsNotificationService.class).to(MicrosoftTeamsNotificationServiceImpl.class);
     bind(EcsContainerService.class).to(EcsContainerServiceImpl.class);
     bind(AwsClusterService.class).to(AwsClusterServiceImpl.class);
+    bind(DelegateServiceQueue.class).to(DelegateTaskQueueService.class);
+    bind(DelegateQueueServiceConfig.class).toProvider(Providers.of(configuration.getQueueServiceConfig()));
     bind(GkeClusterService.class).to(GkeClusterServiceImpl.class);
     try {
       bind(new TypeLiteral<DataStore<StoredCredential>>() {
@@ -1351,10 +1359,16 @@ public class WingsModule extends AbstractModule implements ServersModule {
                 .setPriority(Thread.MIN_PRIORITY)
                 .build()));
 
-    bind(ExecutorService.class)
-        .annotatedWith(Names.named("DeploymentReconTaskExecutor"))
-        .toInstance(ThreadPool.create(1, 5, 10, TimeUnit.SECONDS,
-            new ThreadFactoryBuilder().setNameFormat("DeploymentReconTaskExecutor-%d").build()));
+    if (configuration.getExecutorsConfig() != null) {
+      bind(ExecutorService.class)
+          .annotatedWith(Names.named("DeploymentReconTaskExecutor"))
+          .toInstance(ThreadPool.create(
+              configuration.getExecutorsConfig().getDataReconciliationExecutorConfig().getCorePoolSize(),
+              configuration.getExecutorsConfig().getDataReconciliationExecutorConfig().getMaxPoolSize(),
+              configuration.getExecutorsConfig().getDataReconciliationExecutorConfig().getIdleTime(),
+              configuration.getExecutorsConfig().getDataReconciliationExecutorConfig().getTimeUnit(),
+              new ThreadFactoryBuilder().setNameFormat("DeploymentReconTaskExecutor-%d").build()));
+    }
 
     bind(ExecutorService.class)
         .annotatedWith(Names.named("CustomDashboardAPIExecutor"))
@@ -1478,6 +1492,7 @@ public class WingsModule extends AbstractModule implements ServersModule {
     bind(K8sWatchTaskService.class).to(K8sWatchTaskServiceImpl.class);
     bind(HelmChartService.class).to(HelmChartServiceImpl.class);
     bind(LogStreamingServiceRestClient.class).toProvider(LogStreamingServiceClientFactory.class);
+    bind(HsqsServiceClient.class).toProvider(HQueueServiceClientFactory.class);
     bind(IInstanceReconService.class).to(InstanceReconServiceImpl.class);
 
     // audit service

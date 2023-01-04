@@ -67,7 +67,40 @@ public class PmsStepPlanCreatorUtilsTest extends OrchestrationStepsTestBase {
 
     YamlField yamlField = YamlUtils.readTree(yaml);
     AdviserObtainment adviserObtainment =
-        PmsStepPlanCreatorUtils.getNextStepAdviserObtainment(kryoSerializer, yamlField);
+        PmsStepPlanCreatorUtils.getNextStepAdviserObtainment(kryoSerializer, yamlField, false);
+    assertNull(adviserObtainment);
+  }
+
+  @Test
+  @Owner(developers = OwnerRule.PRASHANTSHARMA)
+  @Category(UnitTests.class)
+  public void testGetNextStepAdviserObtainmentForParallelPipelineStage() throws IOException {
+    String yaml = "---\n"
+        + "stages:\n"
+        + "  - parallel:\n"
+        + "       - __uuid: uuid1\n"
+        + "         stage:\n"
+        + "           __uuid: uuid2\n"
+        + "           type: Pipeline\n"
+        + "       - stage:\n"
+        + "           __uuid: uuid3\n"
+        + "           type: Pipeline\n"
+        + "  - stage:\n"
+        + "       type: Deployment\n";
+
+    YamlField yamlField = YamlUtils.readTree(yaml);
+    YamlField stage = yamlField.getNode()
+                          .getField("stages")
+                          .getNode()
+                          .asArray()
+                          .get(0)
+                          .getField("parallel")
+                          .getNode()
+                          .asArray()
+                          .get(1)
+                          .getField("stage");
+    AdviserObtainment adviserObtainment =
+        PmsStepPlanCreatorUtils.getNextStepAdviserObtainment(kryoSerializer, stage, true);
     assertNull(adviserObtainment);
   }
 

@@ -7,22 +7,31 @@
 
 package io.harness.ngmigration.service.step;
 
+import io.harness.cdng.pipeline.CdAbstractStepNode;
 import io.harness.data.structure.CollectionUtils;
+import io.harness.ngmigration.beans.NGYamlFile;
 import io.harness.ngmigration.service.MigratorUtility;
 import io.harness.plancreator.steps.AbstractStepNode;
 import io.harness.plancreator.steps.internal.PmsAbstractStepNode;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.yaml.core.timeout.Timeout;
 
+import software.wings.ngmigration.CgEntityId;
 import software.wings.sm.State;
 import software.wings.yaml.workflow.StepYaml;
 
 import java.util.Map;
 
 public interface StepMapper {
+  int DEFAULT_TIMEOUT_MILLI = 600000;
+
   String getStepType(StepYaml stepYaml);
 
-  AbstractStepNode getSpec(StepYaml stepYaml);
+  State getState(StepYaml stepYaml);
+
+  AbstractStepNode getSpec(Map<CgEntityId, NGYamlFile> migratedEntities, StepYaml stepYaml);
+
+  boolean areSimilar(StepYaml stepYaml1, StepYaml stepYaml2);
 
   default ParameterField<Timeout> getTimeout(StepYaml stepYaml) {
     Map<String, Object> properties = getProperties(stepYaml);
@@ -33,6 +42,10 @@ public interface StepMapper {
       timeoutString = t + "s";
     }
     return ParameterField.createValueField(Timeout.builder().timeoutString(timeoutString).build());
+  }
+
+  default ParameterField<Timeout> getTimeout(State state) {
+    return MigratorUtility.getTimeout(state.getTimeoutMillis());
   }
 
   default String getDescription(StepYaml stepYaml) {
@@ -52,6 +65,10 @@ public interface StepMapper {
       PmsAbstractStepNode pmsAbstractStepNode = (PmsAbstractStepNode) stepNode;
       pmsAbstractStepNode.setTimeout(getTimeout(stepYaml));
     }
+    if (stepNode instanceof CdAbstractStepNode) {
+      CdAbstractStepNode cdAbstractStepNode = (CdAbstractStepNode) stepNode;
+      cdAbstractStepNode.setTimeout(getTimeout(stepYaml));
+    }
   }
 
   default void baseSetup(State state, AbstractStepNode stepNode) {
@@ -59,8 +76,11 @@ public interface StepMapper {
     stepNode.setName(state.getName());
     if (stepNode instanceof PmsAbstractStepNode) {
       PmsAbstractStepNode pmsAbstractStepNode = (PmsAbstractStepNode) stepNode;
-      pmsAbstractStepNode.setTimeout(
-          ParameterField.createValueField(Timeout.builder().timeoutInMillis(state.getTimeoutMillis()).build()));
+      pmsAbstractStepNode.setTimeout(getTimeout(state));
+    }
+    if (stepNode instanceof CdAbstractStepNode) {
+      CdAbstractStepNode cdAbstractStepNode = (CdAbstractStepNode) stepNode;
+      cdAbstractStepNode.setTimeout(getTimeout(state));
     }
   }
 }

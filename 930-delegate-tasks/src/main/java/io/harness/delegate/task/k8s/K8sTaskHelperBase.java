@@ -866,14 +866,15 @@ public class K8sTaskHelperBase {
   }
 
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
-      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess)
-      throws Exception {
-    return applyManifests(client, resources, k8sDelegateTaskParams, executionLogCallback, denoteOverallSuccess, false);
+      K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
+      String commandFlags) throws Exception {
+    return applyManifests(
+        client, resources, k8sDelegateTaskParams, executionLogCallback, denoteOverallSuccess, false, commandFlags);
   }
 
   public boolean applyManifests(Kubectl client, List<KubernetesResource> resources,
       K8sDelegateTaskParams k8sDelegateTaskParams, LogCallback executionLogCallback, boolean denoteOverallSuccess,
-      boolean isErrorFrameworkEnabled) throws Exception {
+      boolean isErrorFrameworkEnabled, String commandFlags) throws Exception {
     FileIo.writeUtf8StringToFile(
         k8sDelegateTaskParams.getWorkingDirectory() + "/manifests.yaml", ManifestHelper.toYaml(resources));
 
@@ -885,7 +886,8 @@ public class K8sTaskHelperBase {
             .map(resource -> resource.getMetadataAnnotationValue(KUBERNETES_CHANGE_CAUSE_ANNOTATION))
             .noneMatch(Objects::nonNull);
 
-    final ApplyCommand applyCommand = overriddenClient.apply().filename("manifests.yaml").record(recordCommand);
+    final ApplyCommand applyCommand =
+        overriddenClient.apply().filename("manifests.yaml").record(recordCommand).commandFlags(commandFlags);
     ProcessResponse response = runK8sExecutable(k8sDelegateTaskParams, executionLogCallback, applyCommand);
     ProcessResult result = response.getProcessResult();
     if (result.getExitValue() != 0) {
@@ -1931,45 +1933,45 @@ public class K8sTaskHelperBase {
 
     String valuesFileOptions =
         createValuesFileOptions(k8sDelegateTaskParams.getWorkingDirectory(), valuesFiles, executionLogCallback);
-    logManifestRenderMessages(executionLogCallback, valuesFileOptions);
-
-    List<FileData> nonValuesFiles =
-        manifestFiles.stream().filter(file -> isValidManifestFile(file.getFileName())).collect(toList());
-
-    String combinedContents = ManifestHelper.concatenateFileContents(nonValuesFiles);
-    FileIo.writeUtf8StringToFile(k8sDelegateTaskParams.getWorkingDirectory() + "/template.yaml", combinedContents);
-
-    try (
-        ByteArrayOutputStream errorCaptureStream = new ByteArrayOutputStream(1024);
-        LogOutputStream logErrorStream = getExecutionLogOutputStream(executionLogCallback, ERROR, errorCaptureStream)) {
-      String goTemplateCommand = encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
-          + " -t template.yaml " + valuesFileOptions;
-      ProcessResult processResult = executeShellCommand(
-          k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
-
-      if (processResult.getExitValue() != 0) {
-        throwManifestRenderException(errorCaptureStream.toString(), processResult);
-      }
-
-      String fileContent = processResult.outputUTF8();
-      logIfRenderHasValuesMissing(executionLogCallback, fileContent);
-      FileData combinedManifestFile = FileData.builder().fileName("template.yaml").fileContent(fileContent).build();
-      return List.of(combinedManifestFile);
-    }
-  }
-
-  private void logManifestRenderMessages(LogCallback executionLogCallback, String valuesFileOptions) {
     log.info("Values file options: " + valuesFileOptions);
+
+    List<FileData> result = new ArrayList<>();
 
     executionLogCallback.saveExecutionLog(color("\nRendering manifest files using go template", White, Bold));
     executionLogCallback.saveExecutionLog(
         color("Only manifest files with [.yaml] or [.yml] extension will be processed", White, Bold));
-  }
 
-  private void throwManifestRenderException(String errorMessage, ProcessResult processResult) {
-    throw NestedExceptionUtils.hintWithExplanationException(KubernetesExceptionHints.MANIFEST_RENDER_ERROR_GO_TEMPLATE,
-        format(KubernetesExceptionExplanation.MANIFEST_RENDER_ERROR_GO_TEMPLATE, errorMessage),
-        new KubernetesTaskException(getErrorMessageIfProcessFailed("Failed to render template.", processResult)));
+    for (FileData manifestFile : manifestFiles) {
+      if (StringUtils.equals(values_filename, manifestFile.getFileName())) {
+        continue;
+      }
+
+      FileIo.writeUtf8StringToFile(
+          k8sDelegateTaskParams.getWorkingDirectory() + "/template.yaml", manifestFile.getFileContent());
+
+      try (ByteArrayOutputStream errorCaptureStream = new ByteArrayOutputStream(1024);
+           LogOutputStream logErrorStream =
+               getExecutionLogOutputStream(executionLogCallback, ERROR, errorCaptureStream)) {
+        String goTemplateCommand = encloseWithQuotesIfNeeded(k8sDelegateTaskParams.getGoTemplateClientPath())
+            + " -t template.yaml " + valuesFileOptions;
+        ProcessResult processResult = executeShellCommand(
+            k8sDelegateTaskParams.getWorkingDirectory(), goTemplateCommand, logErrorStream, timeoutInMillis);
+
+        if (processResult.getExitValue() != 0) {
+          throw NestedExceptionUtils.hintWithExplanationException(
+              KubernetesExceptionHints.MANIFEST_RENDER_ERROR_GO_TEMPLATE,
+              format(KubernetesExceptionExplanation.MANIFEST_RENDER_ERROR_GO_TEMPLATE, errorCaptureStream.toString()),
+              new KubernetesTaskException(getErrorMessageIfProcessFailed(
+                  format("Failed to render template for %s.", manifestFile.getFileName()), processResult)));
+        }
+
+        String fileContent = processResult.outputUTF8();
+        logIfRenderHasValuesMissing(executionLogCallback, fileContent);
+        result.add(FileData.builder().fileName(manifestFile.getFileName()).fileContent(fileContent).build());
+      }
+    }
+
+    return result;
   }
 
   private void logIfRenderHasValuesMissing(LogCallback executionLogCallback, String fileContent) {

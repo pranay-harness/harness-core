@@ -7,6 +7,7 @@
 
 package io.harness.artifacts.docker.service;
 
+import static io.harness.delegate.beans.connector.docker.DockerRegistryProviderType.DOCKER_HUB;
 import static io.harness.delegate.beans.connector.docker.DockerRegistryProviderType.HARBOR;
 import static io.harness.delegate.beans.connector.docker.DockerRegistryProviderType.OTHER;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -14,9 +15,11 @@ import static io.harness.logging.LoggingInitializer.initializeLogging;
 import static io.harness.rule.OwnerRule.ANSHUL;
 import static io.harness.rule.OwnerRule.ARCHIT;
 import static io.harness.rule.OwnerRule.DEEPAK_PUTHRAYA;
+import static io.harness.rule.OwnerRule.FERNANDOD;
 import static io.harness.rule.OwnerRule.ROHITKARELIA;
 import static io.harness.rule.OwnerRule.SHIVAM;
 import static io.harness.rule.OwnerRule.SRINIVAS;
+import static io.harness.rule.OwnerRule.vivekveman;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -26,10 +29,14 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForClassTypes.fail;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import io.harness.CategoryTest;
 import io.harness.annotations.dev.HarnessTeam;
@@ -41,6 +48,7 @@ import io.harness.artifacts.docker.client.DockerRestClientFactory;
 import io.harness.artifacts.docker.client.DockerRestClientFactoryImpl;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerImageTagResponse;
 import io.harness.artifacts.docker.service.DockerRegistryServiceImpl.DockerRegistryToken;
+import io.harness.beans.ArtifactMetaInfo;
 import io.harness.category.element.UnitTests;
 import io.harness.context.GlobalContext;
 import io.harness.eraro.ErrorCode;
@@ -68,6 +76,7 @@ import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
@@ -83,6 +92,7 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
   @Mock private DockerRestClientFactory dockerRestClientFactory;
   @Mock private DockerRegistryUtils dockerRegistryUtils;
   @InjectMocks DockerRegistryServiceImpl dockerRegistryService;
+  @Mock private DockerPublicRegistryProcessor dockerPublicRegistryProcessor;
 
   private static String url;
   private static DockerInternalConfig dockerConfig;
@@ -585,5 +595,70 @@ public class DockerRegistryServiceImplTest extends CategoryTest {
         .isInstanceOf(ExplanationException.class)
         .extracting("message")
         .isEqualTo("The given Docker Registry URL may be incorrect or not reachable from your delegate(s)");
+  }
+
+  @Test
+  @Owner(developers = vivekveman)
+  @Category(UnitTests.class)
+  public void testgenerateConnectivityUrl() {
+    assertThat(dockerRegistryService.generateConnectivityUrl("https://harness.atlassian.net/", DOCKER_HUB))
+        .isEqualTo("https://harness.atlassian.net/v2");
+
+    assertThat(dockerRegistryService.generateConnectivityUrl("https://harness.atlassian.net", DOCKER_HUB))
+        .isEqualTo("https://harness.atlassian.net/v2");
+
+    assertThat(dockerRegistryService.generateConnectivityUrl("https://harness.atlassian.net/", HARBOR))
+        .isEqualTo("https://harness.atlassian.net/api/v2.0/ping");
+
+    assertThat(dockerRegistryService.generateConnectivityUrl("https://harness.atlassian.net", HARBOR))
+        .isEqualTo("https://harness.atlassian.net/api/v2.0/ping");
+  }
+
+  @Test
+  @Owner(developers = vivekveman)
+  @Category(UnitTests.class)
+  public void testgetArtifactMetaInfo() {
+    DockerInternalConfig dockerInternalConfig = DockerInternalConfig.builder().dockerRegistryUrl(url).build();
+
+    ArtifactMetaInfo artifactMetaInfo = ArtifactMetaInfo.builder().build();
+
+    when(dockerPublicRegistryProcessor.getArtifactMetaInfo(dockerInternalConfig, "imageName", "tag"))
+        .thenReturn(artifactMetaInfo);
+
+    assertThat(dockerRegistryService.getArtifactMetaInfo(dockerInternalConfig, "imageName", "tag"))
+        .isEqualTo(artifactMetaInfo);
+  }
+
+  @Test
+  @Owner(developers = FERNANDOD)
+  @Category(UnitTests.class)
+  public void shouldRetryFetchToken() {
+    Map<String, String> tokens = new HashMap<>();
+    tokens.put("realm", "realm-value");
+    tokens.put("service", "service-value");
+    tokens.put("scope", "scope-value");
+
+    final DockerRegistryRestClient restClient = Mockito.spy(dockerRegistryRestClient);
+    doThrow(RuntimeException.class)
+        .when(restClient)
+        .getToken("authHeader", "realm-value", "service-value", "scope-value");
+    try {
+      dockerRegistryService.fetchTokenWithRetry(restClient, "authHeader", tokens);
+    } catch (Exception e) {
+      verify(restClient, times(5)).getToken("authHeader", "realm-value", "service-value", "scope-value");
+    }
+  }
+
+  @Test
+  @Owner(developers = FERNANDOD)
+  @Category(UnitTests.class)
+  public void shouldRetryListImageTagsByUrl() {
+    final DockerRegistryRestClient restClient = Mockito.spy(dockerRegistryRestClient);
+    doThrow(RuntimeException.class).when(restClient).listImageTagsByUrl("authHeader", "nextPage");
+    try {
+      dockerRegistryService.listImageTagsByUrl(restClient, "authHeader", "nextPage");
+    } catch (Exception e) {
+      verify(restClient, times(5)).listImageTagsByUrl(anyString(), anyString());
+    }
   }
 }

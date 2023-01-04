@@ -7,8 +7,8 @@
 
 package io.harness.app;
 
-import static io.harness.AuthorizationServiceHeader.CI_MANAGER;
-import static io.harness.AuthorizationServiceHeader.MANAGER;
+import static io.harness.authorization.AuthorizationServiceHeader.CI_MANAGER;
+import static io.harness.authorization.AuthorizationServiceHeader.MANAGER;
 import static io.harness.eventsframework.EventsFrameworkConstants.DEFAULT_MAX_PROCESSING_TIME;
 import static io.harness.eventsframework.EventsFrameworkConstants.DEFAULT_READ_BATCH_SIZE;
 import static io.harness.eventsframework.EventsFrameworkConstants.OBSERVER_EVENT_CHANNEL;
@@ -29,6 +29,8 @@ import io.harness.callback.MongoDatabase;
 import io.harness.ci.CIExecutionServiceModule;
 import io.harness.ci.app.intfc.CIYamlSchemaService;
 import io.harness.ci.buildstate.SecretDecryptorViaNg;
+import io.harness.ci.enforcement.CIBuildEnforcer;
+import io.harness.ci.enforcement.CIBuildEnforcerImpl;
 import io.harness.ci.execution.DelegateTaskEventListener;
 import io.harness.ci.ff.CIFeatureFlagService;
 import io.harness.ci.ff.impl.CIFeatureFlagServiceImpl;
@@ -62,6 +64,7 @@ import io.harness.grpc.DelegateServiceDriverGrpcClientModule;
 import io.harness.grpc.DelegateServiceGrpcClient;
 import io.harness.grpc.client.AbstractManagerGrpcClientModule;
 import io.harness.grpc.client.ManagerGrpcClientModule;
+import io.harness.iacmserviceclient.IACMServiceClientModule;
 import io.harness.impl.scm.ScmServiceClientImpl;
 import io.harness.licensing.remote.NgLicenseHttpClientModule;
 import io.harness.lock.DistributedLockImplementation;
@@ -220,6 +223,7 @@ public class CIManagerServiceModule extends AbstractModule {
     bind(BitbucketService.class).to(BitbucketServiceImpl.class);
     bind(AzureRepoService.class).to(AzureRepoServiceImpl.class);
     bind(SecretDecryptor.class).to(SecretDecryptorViaNg.class);
+    bind(CIBuildEnforcer.class).to(CIBuildEnforcerImpl.class);
     bind(CIYAMLSanitizationService.class).to(CIYAMLSanitizationServiceImpl.class).in(Singleton.class);
     install(NgLicenseHttpClientModule.getInstance(ciManagerConfiguration.getNgManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.getServiceId()));
@@ -229,6 +233,13 @@ public class CIManagerServiceModule extends AbstractModule {
         .toInstance(new ScheduledThreadPoolExecutor(1,
             new ThreadFactoryBuilder()
                 .setNameFormat("ci-telemetry-publisher-Thread-%d")
+                .setPriority(Thread.NORM_PRIORITY)
+                .build()));
+    bind(ScheduledExecutorService.class)
+        .annotatedWith(Names.named("pluginMetadataPublishExecutor"))
+        .toInstance(new ScheduledThreadPoolExecutor(1,
+            new ThreadFactoryBuilder()
+                .setNameFormat("plugin-metadata-publisher-Thread-%d")
                 .setPriority(Thread.NORM_PRIORITY)
                 .build()));
     bind(AwsClient.class).to(AwsClientImpl.class);
@@ -312,6 +323,7 @@ public class CIManagerServiceModule extends AbstractModule {
         ciManagerConfiguration.getManagerServiceSecret(), CI_MANAGER.getServiceId()));
     install(new TIServiceClientModule(ciManagerConfiguration.getTiServiceConfig()));
     install(new STOServiceClientModule(ciManagerConfiguration.getStoServiceConfig()));
+    install(new IACMServiceClientModule(ciManagerConfiguration.getIacmServiceConfig()));
     install(new AccountClientModule(ciManagerConfiguration.getManagerClientConfig(),
         ciManagerConfiguration.getNgManagerServiceSecret(), CI_MANAGER.toString()));
     install(EnforcementClientModule.getInstance(ciManagerConfiguration.getNgManagerClientConfig(),

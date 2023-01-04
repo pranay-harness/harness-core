@@ -14,6 +14,7 @@ import static io.harness.beans.ExecutionStatus.ERROR;
 import static io.harness.beans.ExecutionStatus.EXPIRED;
 import static io.harness.beans.ExecutionStatus.PREPARING;
 import static io.harness.beans.ExecutionStatus.flowingStatuses;
+import static io.harness.beans.FeatureName.SPG_DISABLE_EXPIRING_TO_MANUAL_INTERVENTION_CANDIDATE;
 import static io.harness.beans.RepairActionCode.CONTINUE_WITH_DEFAULTS;
 import static io.harness.exception.WingsException.ExecutionContext.MANAGER;
 
@@ -28,6 +29,7 @@ import io.harness.annotations.dev.TargetModule;
 import io.harness.beans.ExecutionInterruptType;
 import io.harness.beans.ExecutionStatus;
 import io.harness.beans.FeatureName;
+import io.harness.exception.ExceptionLogger;
 import io.harness.exception.WingsException;
 import io.harness.ff.FeatureFlagService;
 import io.harness.iterator.IteratorExecutionHandler;
@@ -35,7 +37,6 @@ import io.harness.iterator.IteratorPumpModeHandler;
 import io.harness.iterator.PersistenceIteratorFactory;
 import io.harness.iterator.PersistenceIteratorFactory.PumpExecutorOptions;
 import io.harness.logging.AutoLogContext;
-import io.harness.logging.ExceptionLogger;
 import io.harness.mongo.iterator.MongoPersistenceIterator;
 import io.harness.mongo.iterator.MongoPersistenceIterator.Handler;
 import io.harness.mongo.iterator.MongoPersistenceIterator.SchedulingType;
@@ -117,6 +118,8 @@ public class WorkflowExecutionMonitorHandler extends IteratorPumpModeHandler imp
         updateStartStatusAndUnsetMessage(entity.getAppId(), entity.getUuid(), EXPIRED);
         return;
       }
+      boolean disableExpiringManualInterventionFF =
+          featureFlagService.isEnabled(SPG_DISABLE_EXPIRING_TO_MANUAL_INTERVENTION_CANDIDATE, entity.getAccountId());
 
       boolean hasActiveStates = false;
       try (HIterator<StateExecutionInstance> stateExecutionInstances =
@@ -161,6 +164,9 @@ public class WorkflowExecutionMonitorHandler extends IteratorPumpModeHandler imp
                     .executionUuid(stateExecutionInstance.getExecutionUuid())
                     .stateExecutionInstanceId(stateExecutionInstance.getUuid())
                     .build();
+          } else if (stateExecutionInstance.isManualInterventionCandidate() && disableExpiringManualInterventionFF) {
+            // should add some threshold here to expire?
+            continue;
           } else {
             executionInterrupt = anExecutionInterrupt()
                                      .executionInterruptType(MARK_EXPIRED)

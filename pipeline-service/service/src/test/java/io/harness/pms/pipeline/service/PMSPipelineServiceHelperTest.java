@@ -10,19 +10,20 @@ package io.harness.pms.pipeline.service;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
 import static io.harness.rule.OwnerRule.ADITHYA;
 import static io.harness.rule.OwnerRule.NAMAN;
+import static io.harness.rule.OwnerRule.RAGHAV_GUPTA;
 import static io.harness.rule.OwnerRule.SAMARTH;
 import static io.harness.rule.OwnerRule.UTKARSH_CHOUBEY;
 import static io.harness.rule.OwnerRule.VIVEK_DIXIT;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doReturn;
 
-import io.harness.CategoryTest;
+import io.harness.PipelineServiceTestBase;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.category.element.UnitTests;
-import io.harness.engine.GovernanceService;
 import io.harness.exception.DuplicateFileImportException;
 import io.harness.exception.InvalidRequestException;
 import io.harness.filter.FilterType;
@@ -30,6 +31,7 @@ import io.harness.filter.dto.FilterDTO;
 import io.harness.filter.service.FilterService;
 import io.harness.gitaware.helper.GitAwareContextHelper;
 import io.harness.gitaware.helper.GitAwareEntityHelper;
+import io.harness.gitsync.helpers.GitContextHelper;
 import io.harness.gitsync.interceptor.GitEntityInfo;
 import io.harness.governance.GovernanceMetadata;
 import io.harness.ng.core.common.beans.NGTag;
@@ -42,11 +44,11 @@ import io.harness.pms.pipeline.PipelineEntity.PipelineEntityKeys;
 import io.harness.pms.pipeline.PipelineFilterPropertiesDto;
 import io.harness.pms.pipeline.PipelineImportRequestDTO;
 import io.harness.pms.pipeline.governance.service.PipelineGovernanceService;
+import io.harness.pms.pipeline.validation.PipelineValidationResponse;
 import io.harness.pms.pipeline.validation.service.PipelineValidationService;
 import io.harness.pms.yaml.PipelineVersion;
 import io.harness.repositories.pipeline.PMSPipelineRepository;
 import io.harness.rule.Owner;
-import io.harness.telemetry.TelemetryReporter;
 import io.harness.utils.PmsFeatureFlagService;
 import io.harness.yaml.validator.InvalidYamlException;
 
@@ -56,31 +58,27 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.bson.Document;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.jupiter.api.Assertions;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.data.mongodb.core.query.Criteria;
 
 @OwnedBy(PIPELINE)
-public class PMSPipelineServiceHelperTest extends CategoryTest {
-  PMSPipelineServiceHelper pmsPipelineServiceHelper;
+public class PMSPipelineServiceHelperTest extends PipelineServiceTestBase {
   @Mock FilterService filterService;
   @Mock FilterCreatorMergeService filterCreatorMergeService;
-
-  @Mock PmsFeatureFlagService pmsFeatureFlagService;
-  @Mock TelemetryReporter telemetryReporter;
   @Mock PMSPipelineTemplateHelper pipelineTemplateHelper;
-  @Mock PMSYamlSchemaService yamlSchemaService;
-  @Mock GovernanceService governanceService;
   @Mock GitAwareEntityHelper gitAwareEntityHelper;
   @Mock PMSPipelineRepository pmsPipelineRepository;
   @Mock PipelineValidationService pipelineValidationService;
   @Mock PipelineGovernanceService pipelineGovernanceService;
+  @Mock PmsFeatureFlagService pmsFeatureFlagService;
+  @Spy @InjectMocks PMSPipelineServiceHelper pmsPipelineServiceHelper;
 
   String accountIdentifier = "account";
   String orgIdentifier = "org";
@@ -88,14 +86,6 @@ public class PMSPipelineServiceHelperTest extends CategoryTest {
   String pipelineIdentifier = "pipeline";
 
   String repoName = "testRepo";
-
-  @Before
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
-    pmsPipelineServiceHelper = new PMSPipelineServiceHelper(filterService, filterCreatorMergeService,
-        pipelineValidationService, pipelineGovernanceService, pipelineTemplateHelper, pmsFeatureFlagService,
-        telemetryReporter, gitAwareEntityHelper, pmsPipelineRepository);
-  }
 
   @Test
   @Owner(developers = NAMAN)
@@ -276,12 +266,31 @@ public class PMSPipelineServiceHelperTest extends CategoryTest {
                                                             .build();
     doReturn(templateMergeResponseDTO)
         .when(pipelineTemplateHelper)
-        .resolveTemplateRefsInPipeline(pipelineEntity, false);
+        .resolveTemplateRefsInPipeline(pipelineEntity, false, false);
 
-    Mockito.when(pipelineGovernanceService.validateGovernanceRules(any(), any(), any(), any()))
-        .thenReturn(GovernanceMetadata.newBuilder().setDeny(false).build());
+    Mockito.when(pipelineValidationService.validateYamlAndGovernanceRules(any(), any(), any(), any(), any(), any()))
+        .thenReturn(PipelineValidationResponse.builder()
+                        .governanceMetadata(GovernanceMetadata.newBuilder().setDeny(false).build())
+                        .build());
     GovernanceMetadata governanceMetadata =
-        pmsPipelineServiceHelper.validatePipelineYamlInternal(pipelineEntity, false);
+        pmsPipelineServiceHelper.resolveTemplatesAndValidatePipelineYaml(pipelineEntity, true, false);
+    assertThat(governanceMetadata.getDeny()).isFalse();
+  }
+
+  @Test
+  @Owner(developers = RAGHAV_GUPTA)
+  @Category(UnitTests.class)
+  public void testValidatePipelineYamlInternalForV1Pipeline() {
+    String yaml = "yaml";
+    PipelineEntity pipelineEntity = PipelineEntity.builder()
+                                        .accountId(accountIdentifier)
+                                        .orgIdentifier(orgIdentifier)
+                                        .projectIdentifier(projectIdentifier)
+                                        .yaml(yaml)
+                                        .harnessVersion(PipelineVersion.V1)
+                                        .build();
+    GovernanceMetadata governanceMetadata =
+        pmsPipelineServiceHelper.resolveTemplatesAndValidatePipelineYaml(pipelineEntity, true, false);
     assertThat(governanceMetadata.getDeny()).isFalse();
   }
 
@@ -390,5 +399,45 @@ public class PMSPipelineServiceHelperTest extends CategoryTest {
         ()
             -> PMSPipelineServiceHelper.checkAndThrowMismatchInImportedPipelineMetadataInternal(
                 orgIdentifier, projectIdentifier, pipelineIdentifier, pipelineImportRequest, importedPipeline));
+  }
+
+  @Test
+  @Owner(developers = ADITHYA)
+  @Category(UnitTests.class)
+  public void testResolveTemplatesAndValidatePipeline() {
+    String yaml = "yaml";
+    PipelineEntity pipelineEntity = PipelineEntity.builder()
+                                        .accountId(accountIdentifier)
+                                        .orgIdentifier(orgIdentifier)
+                                        .projectIdentifier(projectIdentifier)
+                                        .yaml(yaml)
+                                        .build();
+    List<TemplateReferenceSummary> templateReferenceSummaryList = new ArrayList<>();
+    TemplateMergeResponseDTO templateMergeResponseDTO = TemplateMergeResponseDTO.builder()
+                                                            .mergedPipelineYaml(yaml)
+                                                            .templateReferenceSummaries(templateReferenceSummaryList)
+                                                            .build();
+    doReturn(templateMergeResponseDTO)
+        .when(pipelineTemplateHelper)
+        .resolveTemplateRefsInPipeline(pipelineEntity, false, false);
+
+    Mockito.when(pipelineValidationService.validateYamlAndGovernanceRules(any(), any(), any(), any(), any(), any()))
+        .thenReturn(PipelineValidationResponse.builder()
+                        .governanceMetadata(GovernanceMetadata.newBuilder().setDeny(false).build())
+                        .build());
+
+    GitEntityInfo gitEntityInfo = GitEntityInfo.builder()
+                                      .repoName("repoName")
+                                      .connectorRef("connectorRef")
+                                      .isNewBranch(true)
+                                      .branch("branch")
+                                      .build();
+    GitAwareContextHelper.updateGitEntityContext(gitEntityInfo);
+
+    GovernanceMetadata governanceMetadata =
+        pmsPipelineServiceHelper.resolveTemplatesAndValidatePipeline(pipelineEntity, true, false);
+    GitEntityInfo gitEntityInfo1 = GitContextHelper.getGitEntityInfo();
+
+    assertEquals(gitEntityInfo1.getBranch(), gitEntityInfo.getBranch());
   }
 }

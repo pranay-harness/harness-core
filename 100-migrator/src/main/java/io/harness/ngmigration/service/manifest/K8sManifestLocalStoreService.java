@@ -16,7 +16,6 @@ import io.harness.cdng.manifest.yaml.kinds.K8sManifest;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigType;
 import io.harness.cdng.manifest.yaml.storeConfig.StoreConfigWrapper;
 import io.harness.data.structure.EmptyPredicate;
-import io.harness.exception.InvalidRequestException;
 import io.harness.ngmigration.beans.FileYamlDTO;
 import io.harness.ngmigration.beans.ManifestProvidedEntitySpec;
 import io.harness.ngmigration.beans.NGYamlFile;
@@ -30,6 +29,8 @@ import software.wings.ngmigration.CgEntityNode;
 import software.wings.service.intfc.ApplicationManifestService;
 
 import com.google.inject.Inject;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -40,11 +41,11 @@ public class K8sManifestLocalStoreService implements NgManifestService {
   @Inject ApplicationManifestService applicationManifestService;
 
   @Override
-  public ManifestConfigWrapper getManifestConfigWrapper(ApplicationManifest applicationManifest,
+  public List<ManifestConfigWrapper> getManifestConfigWrapper(ApplicationManifest applicationManifest,
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, NGYamlFile> migratedEntities,
       ManifestProvidedEntitySpec entitySpec, List<NGYamlFile> yamlFileList) {
     if (EmptyPredicate.isEmpty(yamlFileList)) {
-      throw new InvalidRequestException("No manifest files found in inline manifests");
+      return new ArrayList<>();
     }
 
     List<NGYamlFile> manifestFiles = yamlFileList.stream()
@@ -70,12 +71,13 @@ public class K8sManifestLocalStoreService implements NgManifestService {
                                                        .build()))
             .build();
 
-    return ManifestConfigWrapper.builder()
-        .manifest(ManifestConfig.builder()
-                      .identifier(MigratorUtility.generateIdentifier(applicationManifest.getUuid()))
-                      .type(ManifestConfigType.K8_MANIFEST)
-                      .spec(k8sManifest)
-                      .build())
-        .build();
+    return Collections.singletonList(
+        ManifestConfigWrapper.builder()
+            .manifest(ManifestConfig.builder()
+                          .identifier(MigratorUtility.generateIdentifier(applicationManifest.getUuid()))
+                          .type(ManifestConfigType.K8_MANIFEST)
+                          .spec(k8sManifest)
+                          .build())
+            .build());
   }
 }

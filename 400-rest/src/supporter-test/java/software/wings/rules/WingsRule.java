@@ -64,6 +64,7 @@ import io.harness.observer.consumer.AbstractRemoteObserverModule;
 import io.harness.queue.QueueListener;
 import io.harness.queue.QueueListenerController;
 import io.harness.queue.QueuePublisher;
+import io.harness.queueservice.config.DelegateQueueServiceConfig;
 import io.harness.redis.RedisConfig;
 import io.harness.remote.client.ServiceHttpClientConfig;
 import io.harness.rule.Cache;
@@ -92,6 +93,8 @@ import io.harness.waiter.OrchestrationNotifyEventListener;
 import software.wings.DataStorageMode;
 import software.wings.WingsTestModule;
 import software.wings.app.AuthModule;
+import software.wings.app.ExecutorConfig;
+import software.wings.app.ExecutorsConfig;
 import software.wings.app.GcpMarketplaceIntegrationModule;
 import software.wings.app.GeneralNotifyEventListener;
 import software.wings.app.IndexMigratorModule;
@@ -326,6 +329,9 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.getBackgroundSchedulerConfig().setAutoStart(getProperty("setupScheduler", "false"));
     configuration.getServiceSchedulerConfig().setAutoStart(getProperty("setupScheduler", "false"));
 
+    configuration.setExecutorsConfig(
+        ExecutorsConfig.builder().dataReconciliationExecutorConfig(ExecutorConfig.builder().build()).build());
+
     configuration.setGrpcDelegateServiceClientConfig(
         GrpcClientConfig.builder().target("localhost:9880").authority("localhost").build());
     configuration.setGrpcDMSClientConfig(
@@ -338,6 +344,14 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
     configuration.setLogStreamingServiceConfig(
         LogStreamingServiceConfig.builder().baseUrl("http://localhost:8079").serviceToken("token").build());
 
+    configuration.setQueueServiceConfig(DelegateQueueServiceConfig.builder()
+                                            .queueServiceConfig(ServiceHttpClientConfig.builder()
+                                                                    .baseUrl("http://localhost:9091/")
+                                                                    .readTimeOutSeconds(15)
+                                                                    .connectTimeOutSeconds(15)
+                                                                    .build())
+                                            .topic("delegate-service")
+                                            .build());
     configuration.setAccessControlClientConfiguration(
         AccessControlClientConfiguration.builder()
             .enableAccessControl(false)
@@ -348,7 +362,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
                                             .connectTimeOutSeconds(15)
                                             .build())
             .build());
-
     MarketPlaceConfig marketPlaceConfig =
         MarketPlaceConfig.builder().azureMarketplaceAccessKey("qwertyu").azureMarketplaceSecretKey("qwertyu").build();
     configuration.setMarketPlaceConfig(marketPlaceConfig);
@@ -398,7 +411,6 @@ public class WingsRule implements MethodRule, InjectorRuleMixin, MongoRuleMixin 
                                            .build());
     configuration.setLdapSyncJobConfig(
         LdapSyncJobConfig.builder().defaultCronExpression("0 0 23 ? * SAT *").poolSize(3).syncInterval(15).build());
-
     configuration.setTotpConfig(
         TotpConfig.builder()
             .secOpsEmail("secops.fake.email@mailnator.com")

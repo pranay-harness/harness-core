@@ -7,9 +7,9 @@
 
 package io.harness;
 
-import static io.harness.AuthorizationServiceHeader.MANAGER;
-import static io.harness.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.annotations.dev.HarnessTeam.PIPELINE;
+import static io.harness.authorization.AuthorizationServiceHeader.MANAGER;
+import static io.harness.authorization.AuthorizationServiceHeader.PIPELINE_SERVICE;
 import static io.harness.eventsframework.EventsFrameworkConstants.ENTITY_CRUD;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PIPELINE_ENTITY;
 import static io.harness.eventsframework.EventsFrameworkMetadataConstants.PROJECT_ENTITY;
@@ -65,14 +65,6 @@ import io.harness.outbox.api.OutboxEventHandler;
 import io.harness.persistence.HPersistence;
 import io.harness.persistence.NoopUserProvider;
 import io.harness.persistence.UserProvider;
-import io.harness.pms.Dashboard.PMSLandingDashboardResource;
-import io.harness.pms.Dashboard.PMSLandingDashboardResourceImpl;
-import io.harness.pms.Dashboard.PMSLandingDashboardService;
-import io.harness.pms.Dashboard.PMSLandingDashboardServiceImpl;
-import io.harness.pms.Dashboard.PipelineDashboardOverviewResource;
-import io.harness.pms.Dashboard.PipelineDashboardOverviewResourceImpl;
-import io.harness.pms.Dashboard.PipelineDashboardOverviewResourceV2;
-import io.harness.pms.Dashboard.PipelineDashboardOverviewResourceV2Impl;
 import io.harness.pms.approval.ApprovalResourceService;
 import io.harness.pms.approval.ApprovalResourceServiceImpl;
 import io.harness.pms.approval.custom.CustomApprovalHelperServiceImpl;
@@ -85,6 +77,14 @@ import io.harness.pms.barriers.resources.PMSBarrierResource;
 import io.harness.pms.barriers.resources.PMSBarrierResourceImpl;
 import io.harness.pms.barriers.service.PMSBarrierService;
 import io.harness.pms.barriers.service.PMSBarrierServiceImpl;
+import io.harness.pms.dashboard.PMSLandingDashboardResource;
+import io.harness.pms.dashboard.PMSLandingDashboardResourceImpl;
+import io.harness.pms.dashboard.PMSLandingDashboardService;
+import io.harness.pms.dashboard.PMSLandingDashboardServiceImpl;
+import io.harness.pms.dashboard.PipelineDashboardOverviewResource;
+import io.harness.pms.dashboard.PipelineDashboardOverviewResourceImpl;
+import io.harness.pms.dashboard.PipelineDashboardOverviewResourceV2;
+import io.harness.pms.dashboard.PipelineDashboardOverviewResourceV2Impl;
 import io.harness.pms.event.entitycrud.PipelineEntityCRUDStreamListener;
 import io.harness.pms.event.entitycrud.ProjectEntityCrudStreamListener;
 import io.harness.pms.event.pollingevent.PollingEventStreamListener;
@@ -92,6 +92,10 @@ import io.harness.pms.expressions.PMSExpressionEvaluatorProvider;
 import io.harness.pms.health.HealthResource;
 import io.harness.pms.health.HealthResourceImpl;
 import io.harness.pms.jira.JiraStepHelperServiceImpl;
+import io.harness.pms.ngpipeline.inputs.api.InputsApiImpl;
+import io.harness.pms.ngpipeline.inputs.service.PMSInputsService;
+import io.harness.pms.ngpipeline.inputs.service.PMSInputsServiceImpl;
+import io.harness.pms.ngpipeline.inputset.api.InputSetsApiImpl;
 import io.harness.pms.ngpipeline.inputset.resources.InputSetResourcePMS;
 import io.harness.pms.ngpipeline.inputset.resources.InputSetResourcePMSImpl;
 import io.harness.pms.ngpipeline.inputset.service.PMSInputSetService;
@@ -126,6 +130,8 @@ import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlSer
 import io.harness.pms.pipeline.service.yamlschema.featureflag.FeatureFlagYamlServiceImpl;
 import io.harness.pms.pipeline.service.yamlschema.pipelinestage.PipelineStageYamlSchemaService;
 import io.harness.pms.pipeline.service.yamlschema.pipelinestage.PipelineStageYamlSchemaServiceImpl;
+import io.harness.pms.pipeline.validation.async.service.PipelineAsyncValidationService;
+import io.harness.pms.pipeline.validation.async.service.PipelineAsyncValidationServiceImpl;
 import io.harness.pms.pipeline.validation.service.PipelineValidationService;
 import io.harness.pms.pipeline.validation.service.PipelineValidationServiceImpl;
 import io.harness.pms.plan.creation.NodeTypeLookupService;
@@ -169,6 +175,8 @@ import io.harness.serializer.NGTriggerRegistrars;
 import io.harness.serializer.OrchestrationStepsModuleRegistrars;
 import io.harness.serializer.PipelineServiceModuleRegistrars;
 import io.harness.service.DelegateServiceDriverModule;
+import io.harness.spec.server.pipeline.v1.InputSetsApi;
+import io.harness.spec.server.pipeline.v1.InputsApi;
 import io.harness.spec.server.pipeline.v1.PipelinesApi;
 import io.harness.steps.approval.ApprovalNotificationHandler;
 import io.harness.steps.approval.step.custom.CustomApprovalHelperService;
@@ -336,8 +344,8 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getNgManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new DelegateSelectionLogHttpClientModule(configuration.getManagerClientConfig(),
         configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
-    install(new PipelineServiceEventsFrameworkModule(
-        configuration.getEventsFrameworkConfiguration(), configuration.getPipelineRedisEventsConfig()));
+    install(new PipelineServiceEventsFrameworkModule(configuration.getEventsFrameworkConfiguration(),
+        configuration.getPipelineRedisEventsConfig(), configuration.getDebeziumConsumerConfigs()));
     install(new EntitySetupUsageClientModule(this.configuration.getNgManagerServiceHttpClientConfig(),
         this.configuration.getManagerServiceSecret(), PIPELINE_SERVICE.getServiceId()));
     install(new LogStreamingModule(configuration.getLogStreamingServiceConfig().getBaseUrl()));
@@ -365,6 +373,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PipelineMetadataService.class).to(PipelineMetadataServiceImpl.class);
 
     bind(PMSPipelineService.class).to(PMSPipelineServiceImpl.class);
+    bind(PipelineAsyncValidationService.class).to(PipelineAsyncValidationServiceImpl.class);
     bind(PmsExecutionSummaryService.class).to(PmsExecutionSummaryServiceImpl.class);
     bind(PipelineGovernanceService.class).to(PipelineGovernanceServiceImpl.class);
     bind(PipelineValidationService.class).to(PipelineValidationServiceImpl.class);
@@ -412,6 +421,7 @@ public class PipelineServiceModule extends AbstractModule {
     bind(ApprovalResourceService.class).to(ApprovalResourceServiceImpl.class);
     bind(PipelineResource.class).to(PipelineResourceImpl.class);
     bind(PipelinesApi.class).to(PipelinesApiImpl.class);
+    bind(InputSetsApi.class).to(InputSetsApiImpl.class);
     bind(PipelineDashboardOverviewResource.class).to(PipelineDashboardOverviewResourceImpl.class);
     bind(PipelineDashboardOverviewResourceV2.class).to(PipelineDashboardOverviewResourceV2Impl.class);
     bind(PMSLandingDashboardResource.class).to(PMSLandingDashboardResourceImpl.class);
@@ -424,6 +434,8 @@ public class PipelineServiceModule extends AbstractModule {
     bind(PMSResourceConstraintService.class).to(PMSResourceConstraintServiceImpl.class);
     bind(PMSLandingDashboardService.class).to(PMSLandingDashboardServiceImpl.class);
     bind(InputSetResourcePMS.class).to(InputSetResourcePMSImpl.class);
+    bind(InputsApi.class).to(InputsApiImpl.class);
+    bind(PMSInputsService.class).to(PMSInputsServiceImpl.class);
     bind(PlanExecutionResource.class).to(PlanExecutionResourceImpl.class);
     bind(WaitStepResource.class).to(WaitStepResourceImpl.class);
     bind(WaitStepService.class).to(WaitStepServiceImpl.class);
@@ -674,6 +686,17 @@ public class PipelineServiceModule extends AbstractModule {
         configuration.getPlanCreatorMergeServicePoolConfig().getIdleTime(),
         configuration.getPlanCreatorMergeServicePoolConfig().getTimeUnit(),
         new ThreadFactoryBuilder().setNameFormat("PipelineExecutorService-%d").build());
+  }
+
+  @Provides
+  @Singleton
+  @Named("YamlSchemaExecutorService")
+  public ExecutorService yamlSchemaExecutorService() {
+    return ThreadPool.create(configuration.getYamlSchemaExecutorServiceConfig().getCorePoolSize(),
+        configuration.getYamlSchemaExecutorServiceConfig().getMaxPoolSize(),
+        configuration.getYamlSchemaExecutorServiceConfig().getIdleTime(),
+        configuration.getYamlSchemaExecutorServiceConfig().getTimeUnit(),
+        new ThreadFactoryBuilder().setNameFormat("YamlSchemaService-%d").build());
   }
 
   @Provides

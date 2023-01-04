@@ -7,6 +7,7 @@
 
 package io.harness.cdng.service.steps;
 
+import static io.harness.data.structure.CollectionUtils.emptyIfNull;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 
 import io.harness.accesscontrol.clients.AccessControlClient;
@@ -18,6 +19,8 @@ import io.harness.eventsframework.schemas.entity.EntityDetailProtoDTO;
 import io.harness.exception.UnsupportedOperationException;
 import io.harness.logstreaming.LogStreamingStepClientFactory;
 import io.harness.logstreaming.NGLogCallback;
+import io.harness.ng.core.EntityDetail;
+import io.harness.ng.core.entitydetail.EntityDetailProtoToRestMapper;
 import io.harness.ng.core.service.yaml.NGServiceConfig;
 import io.harness.pms.contracts.ambiance.Ambiance;
 import io.harness.pms.contracts.ambiance.Level;
@@ -33,6 +36,7 @@ import io.harness.pms.sdk.core.steps.io.StepResponseNotifyData;
 import io.harness.rbac.CDNGRbacPermissions;
 import io.harness.steps.EntityReferenceExtractorUtils;
 import io.harness.tasks.ResponseData;
+import io.harness.yaml.core.variables.NGVariable;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -52,8 +56,9 @@ public class ServiceStepsHelper {
   @Inject private EntityReferenceExtractorUtils entityReferenceExtractorUtils;
   @Inject private PipelineRbacHelper pipelineRbacHelper;
   @Inject @Named("PRIVILEGED") private AccessControlClient accessControlClient;
+  @Inject EntityDetailProtoToRestMapper entityDetailProtoToRestMapper;
 
-  void validateResources(Ambiance ambiance, NGServiceConfig serviceConfig) {
+  void checkForVariablesAccessOrThrow(Ambiance ambiance, NGServiceConfig serviceConfig) {
     final ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
     final String principal = executionPrincipalInfo.getPrincipal();
     if (isEmpty(principal)) {
@@ -63,25 +68,36 @@ public class ServiceStepsHelper {
     io.harness.accesscontrol.principals.PrincipalType principalType =
         PrincipalTypeProtoToPrincipalTypeMapper.convertToAccessControlPrincipalType(
             executionPrincipalInfo.getPrincipalType());
-    ServiceDefinition serviceDefinition = serviceConfig.getNgServiceV2InfoConfig().getServiceDefinition();
-    Set<EntityDetailProtoDTO> entityDetails =
-        entityReferenceExtractorUtils.extractReferredEntities(ambiance, serviceDefinition);
-    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails);
+
     accessControlClient.checkForAccessOrThrow(io.harness.accesscontrol.acl.api.Principal.of(principalType, principal),
         io.harness.accesscontrol.acl.api.ResourceScope.of(AmbianceUtils.getAccountId(ambiance),
             AmbianceUtils.getOrgIdentifier(ambiance), AmbianceUtils.getProjectIdentifier(ambiance)),
         io.harness.accesscontrol.acl.api.Resource.of(
             NGResourceType.SERVICE, serviceConfig.getNgServiceV2InfoConfig().getIdentifier()),
         CDNGRbacPermissions.SERVICE_RUNTIME_PERMISSION, "Validation for Service Step failed");
+
+    List<NGVariable> serviceVariables =
+        serviceConfig.getNgServiceV2InfoConfig().getServiceDefinition().getServiceSpec().getVariables();
+
+    if (EmptyPredicate.isEmpty(serviceVariables)) {
+      return;
+    }
+
+    List<EntityDetail> entityDetails = new ArrayList<>();
+
+    for (NGVariable ngVariable : serviceVariables) {
+      Set<EntityDetailProtoDTO> entityDetailsProto =
+          ngVariable == null ? Set.of() : entityReferenceExtractorUtils.extractReferredEntities(ambiance, ngVariable);
+      List<EntityDetail> entityDetail =
+          entityDetailProtoToRestMapper.createEntityDetailsDTO(new ArrayList<>(emptyIfNull(entityDetailsProto)));
+      if (EmptyPredicate.isNotEmpty(entityDetail)) {
+        entityDetails.addAll(entityDetail);
+      }
+    }
+    pipelineRbacHelper.checkRuntimePermissions(ambiance, entityDetails, true);
   }
 
-  void validateResourcesV2(Ambiance ambiance, ServiceStepParametersV2 stepParameters) {
-    final ServiceDefinition serviceDefinition = stepParameters.getServiceDefinition().getValue();
-    final String identifier = stepParameters.getIdentifier();
-    validateResources(ambiance, serviceDefinition, identifier);
-  }
-
-  void validateResources(Ambiance ambiance, ServiceDefinition serviceDefinition, String identifier) {
+  void checkForVariablesAccessOrThrow(Ambiance ambiance, ServiceDefinition serviceDefinition, String identifier) {
     ExecutionPrincipalInfo executionPrincipalInfo = ambiance.getMetadata().getPrincipalInfo();
     String principal = executionPrincipalInfo.getPrincipal();
     if (isEmpty(principal)) {

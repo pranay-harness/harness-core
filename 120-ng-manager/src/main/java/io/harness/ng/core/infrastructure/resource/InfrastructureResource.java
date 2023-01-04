@@ -28,6 +28,7 @@ import io.harness.accesscontrol.acl.api.ResourceScope;
 import io.harness.accesscontrol.clients.AccessControlClient;
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.beans.FeatureName;
 import io.harness.cdng.customdeploymentng.CustomDeploymentInfrastructureHelper;
 import io.harness.cdng.infra.mapper.InfrastructureEntityConfigMapper;
 import io.harness.cdng.infra.mapper.InfrastructureMapper;
@@ -44,11 +45,13 @@ import io.harness.ng.core.dto.ErrorDTO;
 import io.harness.ng.core.dto.FailureDTO;
 import io.harness.ng.core.dto.ResponseDTO;
 import io.harness.ng.core.infrastructure.InfrastructureType;
+import io.harness.ng.core.infrastructure.dto.InfrastructureInputsMergedResponseDto;
 import io.harness.ng.core.infrastructure.dto.InfrastructureRequestDTO;
 import io.harness.ng.core.infrastructure.dto.InfrastructureResponse;
 import io.harness.ng.core.infrastructure.dto.InfrastructureYamlMetadata;
 import io.harness.ng.core.infrastructure.dto.InfrastructureYamlMetadataApiInput;
 import io.harness.ng.core.infrastructure.dto.InfrastructureYamlMetadataDTO;
+import io.harness.ng.core.infrastructure.dto.NoInputMergeInputAction;
 import io.harness.ng.core.infrastructure.entity.InfrastructureEntity;
 import io.harness.ng.core.infrastructure.entity.InfrastructureEntity.InfrastructureEntityKeys;
 import io.harness.ng.core.infrastructure.mappers.InfrastructureFilterHelper;
@@ -56,6 +59,7 @@ import io.harness.ng.core.infrastructure.services.InfrastructureEntityService;
 import io.harness.pms.rbac.NGResourceType;
 import io.harness.repositories.UpsertOptions;
 import io.harness.security.annotations.NextGenManagerAuth;
+import io.harness.utils.NGFeatureFlagHelperService;
 import io.harness.utils.PageUtils;
 
 import com.google.common.base.Preconditions;
@@ -141,6 +145,7 @@ public class InfrastructureResource {
   @Inject private final AccessControlClient accessControlClient;
   @Inject CustomDeploymentYamlHelper customDeploymentYamlHelper;
   @Inject CustomDeploymentInfrastructureHelper customDeploymentInfrastructureHelper;
+  private final NGFeatureFlagHelperService featureFlagHelperService;
 
   public static final String INFRA_PARAM_MESSAGE = "Infrastructure Identifier for the entity";
 
@@ -159,7 +164,7 @@ public class InfrastructureResource {
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(description = NGCommonEntityConstants.ENVIRONMENT_KEY, required = true) @NotNull @QueryParam(
-          NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY) @AccountIdentifier String envIdentifier,
+          NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY) String envIdentifier,
       @Parameter(description = "Specify whether Infrastructure is deleted or not") @QueryParam(
           NGCommonEntityConstants.DELETED_KEY) @DefaultValue("false") boolean deleted) {
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(orgIdentifier, projectIdentifier, accountId);
@@ -197,7 +202,7 @@ public class InfrastructureResource {
       @Parameter(description = "Details of the Infrastructure to be created")
       @Valid InfrastructureRequestDTO infrastructureRequestDTO) {
     throwExceptionForNoRequestDTO(infrastructureRequestDTO);
-    mustBeAtProjectLevel(infrastructureRequestDTO);
+    validateProjectLevelInfraScope(infrastructureRequestDTO, accountId);
 
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(
         infrastructureRequestDTO.getOrgIdentifier(), infrastructureRequestDTO.getProjectIdentifier(), accountId);
@@ -234,8 +239,13 @@ public class InfrastructureResource {
       @Parameter(description = "Details of the Infrastructures to be created")
       @Valid List<InfrastructureRequestDTO> infrastructureRequestDTOS) {
     throwExceptionForNoRequestDTO(infrastructureRequestDTOS);
+    boolean isInfraScoped = checkFeatureFlagForEnvOrgAccountLevel(accountId);
     infrastructureRequestDTOS.forEach(infrastructureRequestDTO -> {
-      mustBeAtProjectLevel(infrastructureRequestDTO);
+      if (isInfraScoped) {
+        validateProjectLevelInfraScope(infrastructureRequestDTO);
+      } else {
+        mustBeAtProjectLevel(infrastructureRequestDTO);
+      }
       orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(
           infrastructureRequestDTO.getOrgIdentifier(), infrastructureRequestDTO.getProjectIdentifier(), accountId);
       environmentValidationHelper.checkThatEnvExists(accountId, infrastructureRequestDTO.getOrgIdentifier(),
@@ -274,7 +284,7 @@ public class InfrastructureResource {
       @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
           NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
       @Parameter(description = NGCommonEntityConstants.ENV_PARAM_MESSAGE, required = true) @QueryParam(
-          NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY) @ProjectIdentifier String envIdentifier) {
+          NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY) String envIdentifier) {
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(orgIdentifier, projectIdentifier, accountId);
     environmentValidationHelper.checkThatEnvExists(accountId, orgIdentifier, projectIdentifier, envIdentifier);
     checkForAccessOrThrow(
@@ -295,7 +305,8 @@ public class InfrastructureResource {
       @Parameter(description = "Details of the Infrastructure to be updated")
       @Valid InfrastructureRequestDTO infrastructureRequestDTO) {
     throwExceptionForNoRequestDTO(infrastructureRequestDTO);
-    mustBeAtProjectLevel(infrastructureRequestDTO);
+    validateProjectLevelInfraScope(infrastructureRequestDTO, accountId);
+
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(
         infrastructureRequestDTO.getOrgIdentifier(), infrastructureRequestDTO.getProjectIdentifier(), accountId);
     environmentValidationHelper.checkThatEnvExists(accountId, infrastructureRequestDTO.getOrgIdentifier(),
@@ -331,7 +342,8 @@ public class InfrastructureResource {
       @Parameter(description = "Details of the Infrastructure to be updated")
       @Valid InfrastructureRequestDTO infrastructureRequestDTO) {
     throwExceptionForNoRequestDTO(infrastructureRequestDTO);
-    mustBeAtProjectLevel(infrastructureRequestDTO);
+    validateProjectLevelInfraScope(infrastructureRequestDTO, accountId);
+
     orgAndProjectValidationHelper.checkThatTheOrganizationAndProjectExists(
         infrastructureRequestDTO.getOrgIdentifier(), infrastructureRequestDTO.getProjectIdentifier(), accountId);
     environmentValidationHelper.checkThatEnvExists(accountId, infrastructureRequestDTO.getOrgIdentifier(),
@@ -436,8 +448,9 @@ public class InfrastructureResource {
           NGCommonEntityConstants.INFRA_IDENTIFIERS) List<String> infraIdentifiers,
       @Parameter(description = "Specify whether Deploy to all infrastructures in the environment") @QueryParam(
           NGCommonEntityConstants.DEPLOY_TO_ALL) @DefaultValue("false") boolean deployToAll) {
-    String infrastructureInputsYaml = infrastructureEntityService.createInfrastructureInputsFromYaml(
-        accountId, orgIdentifier, projectIdentifier, environmentIdentifier, infraIdentifiers, deployToAll);
+    String infrastructureInputsYaml =
+        infrastructureEntityService.createInfrastructureInputsFromYaml(accountId, orgIdentifier, projectIdentifier,
+            environmentIdentifier, infraIdentifiers, deployToAll, NoInputMergeInputAction.RETURN_EMPTY);
     return ResponseDTO.newResponse(
         NGEntityTemplateResponseDTO.builder().inputSetTemplateYaml(infrastructureInputsYaml).build());
   }
@@ -509,6 +522,55 @@ public class InfrastructureResource {
         InfrastructureYamlMetadataDTO.builder().infrastructureYamlMetadataList(infrastructureYamlMetadataList).build());
   }
 
+  @POST
+  @Path("/mergeInfrastructureInputs/{infraIdentifier}")
+  @ApiOperation(value = "This api merges old and new infrastructure inputs YAML", nickname = "mergeInfraInputs")
+  @Hidden
+  public ResponseDTO<InfrastructureInputsMergedResponseDto> mergeInfrastructureInputs(
+      @Parameter(description = INFRA_PARAM_MESSAGE) @PathParam(
+          "infraIdentifier") @ResourceIdentifier String infraIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ACCOUNT_PARAM_MESSAGE) @NotNull @QueryParam(
+          NGCommonEntityConstants.ACCOUNT_KEY) @AccountIdentifier String accountId,
+      @Parameter(description = NGCommonEntityConstants.ORG_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.ORG_KEY) @OrgIdentifier String orgIdentifier,
+      @Parameter(description = NGCommonEntityConstants.PROJECT_PARAM_MESSAGE) @QueryParam(
+          NGCommonEntityConstants.PROJECT_KEY) @ProjectIdentifier String projectIdentifier,
+      @Parameter(description = NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY, required = true) @NotNull
+      @QueryParam(NGCommonEntityConstants.ENVIRONMENT_IDENTIFIER_KEY) String envIdentifier,
+      String oldInfrastructureInputsYaml) {
+    return ResponseDTO.newResponse(infrastructureEntityService.mergeInfraStructureInputs(
+        accountId, orgIdentifier, projectIdentifier, envIdentifier, infraIdentifier, oldInfrastructureInputsYaml));
+  }
+
+  private void validateProjectLevelInfraScope(InfrastructureRequestDTO requestDTO, String accountId) {
+    try {
+      if (checkFeatureFlagForEnvOrgAccountLevel(accountId)) {
+        if (isNotEmpty(requestDTO.getProjectIdentifier())) {
+          Preconditions.checkArgument(isNotEmpty(requestDTO.getOrgIdentifier()),
+              "org identifier must be specified when project identifier is specified. Infra can be created at Project/Org/Account scope");
+        }
+      } else {
+        Preconditions.checkArgument(isNotEmpty(requestDTO.getOrgIdentifier()),
+            "org identifier must be specified. Infrastructure Definitions can only be created at Project scope");
+        Preconditions.checkArgument(isNotEmpty(requestDTO.getProjectIdentifier()),
+            "project identifier must be specified. Infrastructure Definitions can only be created at Project scope");
+      }
+    } catch (Exception ex) {
+      throw new InvalidRequestException(ex.getMessage());
+    }
+  }
+
+  private void validateProjectLevelInfraScope(InfrastructureRequestDTO requestDTO) {
+    try {
+      if (isNotEmpty(requestDTO.getProjectIdentifier())) {
+        Preconditions.checkArgument(isNotEmpty(requestDTO.getOrgIdentifier()),
+            "org identifier must be specified when project identifier is specified. Infra can be created at Project/Org/Account scope");
+      }
+    } catch (Exception ex) {
+      throw new InvalidRequestException(ex.getMessage());
+    }
+  }
+
   private void mustBeAtProjectLevel(InfrastructureRequestDTO requestDTO) {
     try {
       Preconditions.checkArgument(isNotEmpty(requestDTO.getOrgIdentifier()),
@@ -518,5 +580,9 @@ public class InfrastructureResource {
     } catch (Exception ex) {
       throw new InvalidRequestException(ex.getMessage());
     }
+  }
+
+  private boolean checkFeatureFlagForEnvOrgAccountLevel(String accountId) {
+    return featureFlagHelperService.isEnabled(accountId, FeatureName.CDS_OrgAccountLevelServiceEnvEnvGroup);
   }
 }

@@ -9,6 +9,7 @@ package io.harness.ng.core.environment.services;
 
 import io.harness.ng.core.environment.beans.Environment;
 import io.harness.ng.core.environment.beans.EnvironmentInputSetYamlAndServiceOverridesMetadataDTO;
+import io.harness.ng.core.environment.beans.EnvironmentInputsMergedResponseDto;
 import io.harness.repositories.UpsertOptions;
 
 import java.util.List;
@@ -52,6 +53,8 @@ public interface EnvironmentService {
       String accountId, String orgIdentifier, String projectIdentifier, List<String> envIdentifiers);
 
   EnvironmentInputSetYamlAndServiceOverridesMetadataDTO getEnvironmentsInputYamlAndServiceOverridesMetadata(
-      String accountId, String orgIdentifier, String projectIdentifier, List<String> envIdentifiers,
-      List<String> serviceIdentifiers);
+      String accountId, String orgIdentifier, String projectIdentifier, List<String> envRefs, List<String> serviceRefs);
+
+  EnvironmentInputsMergedResponseDto mergeEnvironmentInputs(
+      String accountId, String orgId, String projectId, String serviceId, String oldEnvironmentInputsYaml);
 }

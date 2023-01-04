@@ -14,6 +14,7 @@ import io.harness.annotation.RecasterAlias;
 import io.harness.annotations.dev.OwnedBy;
 import io.harness.beans.SwaggerConstants;
 import io.harness.cdng.envgroup.helper.EnvironmentGroupYamlVisitorHelper;
+import io.harness.cdng.environment.filters.FilterYaml;
 import io.harness.cdng.environment.yaml.EnvironmentYamlV2;
 import io.harness.pms.yaml.ParameterField;
 import io.harness.pms.yaml.YamlNode;
@@ -44,6 +45,10 @@ public class EnvironmentGroupYaml implements Visitable {
   @ApiModelProperty(dataType = SwaggerConstants.ENVIRONMENT_YAML_LIST_CLASSPATH)
   @YamlSchemaTypes(runtime)
   ParameterField<List<EnvironmentYamlV2>> environments;
+
+  @ApiModelProperty(dataType = SwaggerConstants.FILTER_YAML_LIST_CLASSPATH)
+  @YamlSchemaTypes(runtime)
+  ParameterField<List<FilterYaml>> filters;
 
   @ApiModelProperty(dataType = SwaggerConstants.BOOLEAN_CLASSPATH)
   @YamlSchemaTypes(runtime)

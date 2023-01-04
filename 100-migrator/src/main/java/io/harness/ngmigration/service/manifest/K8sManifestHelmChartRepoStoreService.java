@@ -41,24 +41,31 @@ import software.wings.ngmigration.CgEntityNode;
 import software.wings.ngmigration.NGMigrationEntityType;
 
 import com.google.inject.Inject;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
 @OwnedBy(HarnessTeam.CDC)
+@Slf4j
 public class K8sManifestHelmChartRepoStoreService implements NgManifestService {
   @Inject ManifestMigrationService manifestMigrationService;
 
   @Override
-  public ManifestConfigWrapper getManifestConfigWrapper(ApplicationManifest applicationManifest,
+  public List<ManifestConfigWrapper> getManifestConfigWrapper(ApplicationManifest applicationManifest,
       Map<CgEntityId, CgEntityNode> entities, Map<CgEntityId, NGYamlFile> migratedEntities,
       ManifestProvidedEntitySpec entitySpec, List<NGYamlFile> yamlFileList) {
     HelmChartConfig helmChartConfig = applicationManifest.getHelmChartConfig();
-    SettingAttribute settingAttribute =
-        (SettingAttribute) entities
-            .get(
-                CgEntityId.builder().type(NGMigrationEntityType.CONNECTOR).id(helmChartConfig.getConnectorId()).build())
-            .getEntity();
+    CgEntityId connectorId =
+        CgEntityId.builder().type(NGMigrationEntityType.CONNECTOR).id(helmChartConfig.getConnectorId()).build();
+    if (!migratedEntities.containsKey(connectorId)) {
+      log.error(
+          String.format("We could not migrate the following manifest %s as we could not find the helm connector %s",
+              applicationManifest.getUuid(), helmChartConfig.getConnectorId()));
+      return Collections.emptyList();
+    }
+    SettingAttribute settingAttribute = (SettingAttribute) entities.get(connectorId).getEntity();
     String name = StringUtils.isBlank(applicationManifest.getName()) ? applicationManifest.getUuid()
                                                                      : applicationManifest.getName();
 
@@ -130,12 +137,12 @@ public class K8sManifestHelmChartRepoStoreService implements NgManifestService {
           .build();
     }
 
-    return ManifestConfigWrapper.builder()
-        .manifest(ManifestConfig.builder()
-                      .identifier(identifier)
-                      .type(ManifestConfigType.HELM_CHART)
-                      .spec(helmChartManifest.build())
-                      .build())
-        .build();
+    return Collections.singletonList(ManifestConfigWrapper.builder()
+                                         .manifest(ManifestConfig.builder()
+                                                       .identifier(identifier)
+                                                       .type(ManifestConfigType.HELM_CHART)
+                                                       .spec(helmChartManifest.build())
+                                                       .build())
+                                         .build());
   }
 }

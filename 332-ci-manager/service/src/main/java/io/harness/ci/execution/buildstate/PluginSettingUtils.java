@@ -14,6 +14,7 @@ import static io.harness.beans.serializer.RunTimeInputHandler.resolveJsonNodeMap
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveListParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveMapParameter;
 import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameter;
+import static io.harness.beans.serializer.RunTimeInputHandler.resolveStringParameterV2;
 import static io.harness.beans.steps.CIStepInfoType.GIT_CLONE;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_BUILD_EVENT;
 import static io.harness.ci.commonconstants.BuildEnvironmentConstants.DRONE_COMMIT_BRANCH;
@@ -44,6 +45,8 @@ import static io.harness.ci.commonconstants.CIExecutionConstants.STEP_MOUNT_PATH
 import static io.harness.ci.commonconstants.CIExecutionConstants.TENANT_ID;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
 import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
+import static io.harness.sto.utils.STOSettingsUtils.getSTOKey;
+import static io.harness.sto.utils.STOSettingsUtils.getSTOPluginEnvVariables;
 
 import static java.lang.String.format;
 import static org.springframework.util.StringUtils.trimLeadingCharacter;
@@ -68,6 +71,7 @@ import io.harness.beans.steps.stepinfo.SecurityStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToArtifactoryStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToGCSStepInfo;
 import io.harness.beans.steps.stepinfo.UploadToS3StepInfo;
+import io.harness.beans.steps.stepinfo.security.shared.STOGenericStepInfo;
 import io.harness.beans.sweepingoutputs.StageInfraDetails.Type;
 import io.harness.beans.yaml.extended.ArchiveFormat;
 import io.harness.ci.integrationstage.BuildEnvironmentUtils;
@@ -90,8 +94,10 @@ import io.harness.yaml.extended.ci.codebase.impl.TagBuildSpec;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -130,7 +136,6 @@ public class PluginSettingUtils {
   public static final String PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT = "PLUGIN_FAIL_RESTORE_IF_KEY_NOT_PRESENT";
   public static final String PLUGIN_SNAPSHOT_MODE = "PLUGIN_SNAPSHOT_MODE";
   public static final String REDO_SNAPSHOT_MODE = "redo";
-  public static final String SECURITY_ENV_PREFIX = "SECURITY_";
   public static final String PLUGIN_BACKEND_OPERATION_TIMEOUT = "PLUGIN_BACKEND_OPERATION_TIMEOUT";
   public static final String PLUGIN_CACHE_KEY = "PLUGIN_CACHE_KEY";
   public static final String PLUGIN_AUTO_DETECT_CACHE = "PLUGIN_AUTO_CACHE";
@@ -141,11 +146,10 @@ public class PluginSettingUtils {
   public static final String PLUGIN_ARTIFACT_FILE = "PLUGIN_ARTIFACT_FILE";
   public static final String PLUGIN_DAEMON_OFF = "PLUGIN_DAEMON_OFF";
   public static final String ECR_REGISTRY_PATTERN = "%s.dkr.ecr.%s.amazonaws.com";
-
   @Inject private CodebaseUtils codebaseUtils;
 
-  public Map<String, String> getPluginCompatibleEnvVariables(
-      PluginCompatibleStep stepInfo, String identifier, long timeout, Ambiance ambiance, Type infraType) {
+  public Map<String, String> getPluginCompatibleEnvVariables(PluginCompatibleStep stepInfo, String identifier,
+      long timeout, Ambiance ambiance, Type infraType, boolean isMandatory) {
     switch (stepInfo.getNonYamlInfo().getStepInfoType()) {
       case ECR:
         return getECRStepInfoEnvVariables((ECRStepInfo) stepInfo, identifier, infraType);
@@ -160,7 +164,7 @@ public class PluginSettingUtils {
       case UPLOAD_GCS:
         return getUploadToGCSStepInfoEnvVariables((UploadToGCSStepInfo) stepInfo, identifier);
       case UPLOAD_S3:
-        return getUploadToS3StepInfoEnvVariables((UploadToS3StepInfo) stepInfo, identifier);
+        return getUploadToS3StepInfoEnvVariables((UploadToS3StepInfo) stepInfo, identifier, isMandatory);
       case SAVE_CACHE_GCS:
         return getSaveCacheGCSStepInfoEnvVariables((SaveCacheGCSStepInfo) stepInfo, identifier, timeout);
       case SECURITY:
@@ -230,6 +234,17 @@ public class PluginSettingUtils {
         map.put(EnvVariableEnum.ARTIFACTORY_PASSWORD, PLUGIN_PASSW);
         return map;
       case GIT_CLONE:
+        return map;
+      case IACM_TERRAFORM_PLAN:
+        map.put(EnvVariableEnum.AWS_ACCESS_KEY, PLUGIN_ACCESS_KEY);
+        map.put(EnvVariableEnum.AWS_SECRET_KEY, PLUGIN_SECRET_KEY);
+        map.put(EnvVariableEnum.AWS_CROSS_ACCOUNT_ROLE_ARN, PLUGIN_ASSUME_ROLE);
+        map.put(EnvVariableEnum.AWS_CROSS_ACCOUNT_EXTERNAL_ID, PLUGIN_EXTERNAL_ID);
+        map.put(EnvVariableEnum.AZURE_APP_SECRET, CLIENT_SECRET);
+        map.put(EnvVariableEnum.AZURE_APP_ID, CLIENT_ID);
+        map.put(EnvVariableEnum.AZURE_TENANT_ID, TENANT_ID);
+        map.put(EnvVariableEnum.AZURE_CERT, CLIENT_CERTIFICATE);
+        map.put(EnvVariableEnum.GCP_KEY, PLUGIN_JSON_KEY);
         return map;
       default:
         throw new IllegalStateException("Unexpected value: " + stepInfoType);
@@ -524,21 +539,23 @@ public class PluginSettingUtils {
 
     return map;
   }
-
   private static Map<String, String> getSecurityStepInfoEnvVariables(SecurityStepInfo stepInfo, String identifier) {
     Map<String, String> map = new HashMap<>();
 
     Map<String, JsonNode> settings =
         resolveJsonNodeMapParameter("settings", "Security", identifier, stepInfo.getSettings(), false);
 
+    if (stepInfo instanceof STOGenericStepInfo) {
+      map.putAll(getSTOPluginEnvVariables((STOGenericStepInfo) stepInfo, identifier));
+    }
     if (!isEmpty(settings)) {
       for (Map.Entry<String, JsonNode> entry : settings.entrySet()) {
-        String key = SECURITY_ENV_PREFIX + entry.getKey().toUpperCase();
-        map.put(key, SerializerUtils.convertJsonNodeToString(entry.getKey(), entry.getValue()));
+        map.put(getSTOKey(entry.getKey()), SerializerUtils.convertJsonNodeToString(entry.getKey(), entry.getValue()));
       }
     }
 
     setMandatoryEnvironmentVariable(map, PLUGIN_STEP_ID, identifier);
+    map.values().removeAll(Collections.singleton(null));
     return map;
   }
 
@@ -679,13 +696,14 @@ public class PluginSettingUtils {
     return map;
   }
 
-  private static Map<String, String> getUploadToS3StepInfoEnvVariables(UploadToS3StepInfo stepInfo, String identifier) {
+  private static Map<String, String> getUploadToS3StepInfoEnvVariables(
+      UploadToS3StepInfo stepInfo, String identifier, boolean isMandatory) {
     Map<String, String> map = new HashMap<>();
 
-    setMandatoryEnvironmentVariable(
-        map, PLUGIN_BUCKET, resolveStringParameter("bucket", "S3Upload", identifier, stepInfo.getBucket(), true));
+    setMandatoryEnvironmentVariable(map, PLUGIN_BUCKET,
+        resolveStringParameterV2("bucket", "S3Upload", identifier, stepInfo.getBucket(), isMandatory));
     setMandatoryEnvironmentVariable(map, PLUGIN_SOURCE,
-        resolveStringParameter("sourcePath", "S3Upload", identifier, stepInfo.getSourcePath(), true));
+        resolveStringParameterV2("sourcePath", "S3Upload", identifier, stepInfo.getSourcePath(), isMandatory));
 
     String target = resolveStringParameter("target", "S3Upload", identifier, stepInfo.getTarget(), false);
     if (target != null && !target.equals(UNRESOLVED_PARAMETER)) {
@@ -718,17 +736,18 @@ public class PluginSettingUtils {
     Map<String, String> map = new HashMap<>();
 
     final String connectorRef = stepInfo.getConnectorRef().getValue();
-    String repoName = stepInfo.getRepoName().getValue();
-    Pair<String, String> buildEnvVar = getBuildEnvVar(stepInfo);
+    final NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
+    final ConnectorDetails gitConnector = codebaseUtils.getGitConnector(ngAccess, connectorRef);
 
+    String repoName = stepInfo.getRepoName().getValue();
     // Overwrite all codebase env variables by setting to blank
     map.putAll(getBlankCodebaseEnvVars());
 
     map.putAll(getSslVerifyEnvVars(stepInfo.getSslVerify()));
-    map.putAll(getGitEnvVars(connectorRef, repoName, ambiance));
-    map.putAll(getBuildEnvVars(buildEnvVar));
+    map.putAll(getGitEnvVars(gitConnector, repoName));
+    map.putAll(getBuildEnvVars(ambiance, gitConnector, stepInfo));
     map.putAll(getCloneDirEnvVars(stepInfo.getCloneDirectory(), repoName, map.get(DRONE_REMOTE_URL), identifier));
-    map.putAll(getPluginDepthEnvVars(stepInfo.getDepth(), buildEnvVar));
+    map.putAll(getPluginDepthEnvVars(stepInfo.getDepth()));
 
     return map;
   }
@@ -751,22 +770,34 @@ public class PluginSettingUtils {
     return map;
   }
 
-  private Map<String, String> getGitEnvVars(String connectorRef, String repoName, Ambiance ambiance) {
-    // Get the Git Connector
-    final NGAccess ngAccess = AmbianceUtils.getNgAccess(ambiance);
-    final ConnectorDetails gitConnector = codebaseUtils.getGitConnector(ngAccess, connectorRef);
-
+  private Map<String, String> getGitEnvVars(ConnectorDetails gitConnector, String repoName) {
     // Get the Git Connector Reference environment variables
     return codebaseUtils.getGitEnvVariables(gitConnector, repoName);
   }
 
-  private static Map<String, String> getBuildEnvVars(Pair<String, String> buildEnvVar) {
+  private Map<String, String> getBuildEnvVars(
+      Ambiance ambiance, ConnectorDetails gitConnector, GitCloneStepInfo gitCloneStepInfo) {
+    final String identifier = gitCloneStepInfo.getIdentifier();
+    final String type = gitCloneStepInfo.getStepType().getType();
+    Build build = RunTimeInputHandler.resolveBuild(gitCloneStepInfo.getBuild());
+    final Pair<BuildType, String> buildTypeAndValue = getBuildTypeAndValue(build);
     Map<String, String> map = new HashMap<>();
-    if (buildEnvVar != null) {
-      String type = buildEnvVar.getKey();
-      setMandatoryEnvironmentVariable(map, type, buildEnvVar.getValue());
-      if (DRONE_TAG.equals(type)) {
-        setMandatoryEnvironmentVariable(map, DRONE_BUILD_EVENT, TAG_BUILD_EVENT);
+
+    if (buildTypeAndValue != null) {
+      switch (buildTypeAndValue.getKey()) {
+        case BRANCH:
+          setMandatoryEnvironmentVariable(map, DRONE_COMMIT_BRANCH, buildTypeAndValue.getValue());
+          break;
+        case TAG:
+          setMandatoryEnvironmentVariable(map, DRONE_TAG, buildTypeAndValue.getValue());
+          setMandatoryEnvironmentVariable(map, DRONE_BUILD_EVENT, TAG_BUILD_EVENT);
+          break;
+        case PR:
+          map.putAll(codebaseUtils.getRuntimeCodebaseVars(ambiance, gitConnector));
+          break;
+        default:
+          throw new CIStageExecutionException(format("%s is not a valid build type in step type %s with identifier %s",
+              buildTypeAndValue.getKey(), type, identifier));
       }
     } else {
       throw new CIStageExecutionException("Build environment variables are null");
@@ -811,60 +842,17 @@ public class PluginSettingUtils {
     return map;
   }
 
-  private static Map<String, String> getPluginDepthEnvVars(
-      ParameterField<Integer> depthParameter, Pair<String, String> buildEnvVar) {
+  private static Map<String, String> getPluginDepthEnvVars(ParameterField<Integer> depthParameter) {
     Map<String, String> map = new HashMap<>();
-    Integer depth = null;
+    Integer depth = GIT_CLONE_MANUAL_DEPTH;
     if (depthParameter != null && depthParameter.getValue() != null) {
       depth = depthParameter.getValue();
-    } else {
-      if (buildEnvVar != null && isNotEmpty(buildEnvVar.getValue())) {
-        depth = GIT_CLONE_MANUAL_DEPTH;
-      }
     }
     if (depth != null && depth != 0) {
-      String pluginDepthKey = PLUGIN_ENV_PREFIX + GIT_CLONE_DEPTH_ATTRIBUTE.toUpperCase();
+      String pluginDepthKey = PLUGIN_ENV_PREFIX + GIT_CLONE_DEPTH_ATTRIBUTE.toUpperCase(Locale.ROOT);
       map.put(pluginDepthKey, depth.toString());
     }
     return map;
-  }
-
-  /**
-   * Get Build Env variable - branch or tag
-   *
-   * @param gitCloneStepInfo gitCloneStepInfo
-   * @return a pair containing whether the build is configured for a branch or tag, and the value of the branch or tag
-   */
-  private static Pair<String, String> getBuildEnvVar(GitCloneStepInfo gitCloneStepInfo) {
-    final String identifier = gitCloneStepInfo.getIdentifier();
-    final String type = gitCloneStepInfo.getStepType().getType();
-    Pair<String, String> buildEnvVar = null;
-    Build build = RunTimeInputHandler.resolveBuild(gitCloneStepInfo.getBuild());
-
-    final Pair<BuildType, String> buildTypeAndValue = getBuildTypeAndValue(build);
-    if (buildTypeAndValue != null) {
-      final String buildValue = buildTypeAndValue.getValue();
-      switch (buildTypeAndValue.getKey()) {
-        case BRANCH:
-          if (isNotEmpty(buildValue)) {
-            buildEnvVar = new ImmutablePair<>(DRONE_COMMIT_BRANCH, buildValue);
-          } else {
-            throw new CIStageExecutionException("Branch should not be empty for branch build type");
-          }
-          break;
-        case TAG:
-          if (isNotEmpty(buildValue)) {
-            buildEnvVar = new ImmutablePair<>(DRONE_TAG, buildValue);
-          } else {
-            throw new CIStageExecutionException("Tag should not be empty for tag build type");
-          }
-          break;
-        default:
-          throw new CIStageExecutionException(format("%s is not a valid build type in step type %s with identifier %s",
-              buildTypeAndValue.getKey(), type, identifier));
-      }
-    }
-    return buildEnvVar;
   }
 
   private static Pair<BuildType, String> getBuildTypeAndValue(Build build) {

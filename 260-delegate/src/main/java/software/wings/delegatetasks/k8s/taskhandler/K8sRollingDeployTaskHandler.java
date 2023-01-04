@@ -9,7 +9,6 @@ package software.wings.delegatetasks.k8s.taskhandler;
 
 import static io.harness.annotations.dev.HarnessTeam.CDP;
 import static io.harness.data.structure.EmptyPredicate.isEmpty;
-import static io.harness.data.structure.EmptyPredicate.isNotEmpty;
 import static io.harness.delegate.k8s.K8sRollingBaseHandler.HARNESS_TRACK_STABLE_SELECTOR;
 import static io.harness.delegate.task.k8s.K8sTaskHelperBase.getTimeoutMillisFromMinutes;
 import static io.harness.exception.ExceptionUtils.getMessage;
@@ -171,10 +170,16 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
     List<K8sPod> existingPodList = k8sRollingBaseHandler.getExistingPods(steadyStateTimeoutInMillis, allWorkloads,
         k8sRollingHandlerConfig.getKubernetesConfig(), k8sRollingHandlerConfig.getReleaseName(), prepareLogCallback);
 
-    success =
-        k8sTaskHelperBase.applyManifests(k8sRollingHandlerConfig.getClient(), k8sRollingHandlerConfig.getResources(),
-            k8sDelegateTaskParams, k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true);
+    success = k8sTaskHelperBase.applyManifests(k8sRollingHandlerConfig.getClient(),
+        k8sRollingHandlerConfig.getResources(), k8sDelegateTaskParams,
+        k8sTaskHelper.getExecutionLogCallback(k8sRollingDeployTaskParameters, Apply), true, null);
     if (!success) {
+      k8sRollingBaseHandler.setManagedWorkloadsInRelease(k8sDelegateTaskParams,
+          k8sRollingHandlerConfig.getManagedWorkloads(), k8sRollingHandlerConfig.getRelease(),
+          k8sRollingHandlerConfig.getClient());
+      k8sRollingBaseHandler.setCustomWorkloadsInRelease(
+          k8sRollingHandlerConfig.getCustomWorkloads(), k8sRollingHandlerConfig.getRelease());
+      saveRelease(k8sRollingDeployTaskParameters, IK8sRelease.Status.Failed);
       return getFailureResponse();
     }
 
@@ -382,8 +387,13 @@ public class K8sRollingDeployTaskHandler extends K8sTaskHandler {
 
       List<KubernetesResource> managedWorkloads = getWorkloads(k8sRollingHandlerConfig.getResources());
       k8sRollingHandlerConfig.setManagedWorkloads(managedWorkloads);
-      if (isNotEmpty(managedWorkloads) && isNotTrue(skipVersioningForAllK8sObjects)) {
+      boolean noManagedWorkloads = isEmpty(managedWorkloads);
+
+      if (!noManagedWorkloads && isNotTrue(skipVersioningForAllK8sObjects)) {
         markVersionedResources(k8sRollingHandlerConfig.getResources());
+      } else if (noManagedWorkloads) {
+        executionLogCallback.saveExecutionLog(
+            color("No managed workloads, skipping resource versioning \n", Yellow, Bold));
       }
 
       executionLogCallback.saveExecutionLog("Manifests processed. Found following resources: \n"

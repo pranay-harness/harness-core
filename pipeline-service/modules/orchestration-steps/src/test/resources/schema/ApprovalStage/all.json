@@ -32,7 +32,7 @@
     },
     "identifier": {
       "type": "string",
-      "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+      "pattern": "^[a-zA-Z_][0-9a-zA-Z_]{0,63}$"
     },
     "name": {
       "type": "string",
@@ -311,7 +311,7 @@
         },
         "identifier": {
           "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_]{0,63}$"
         },
         "name": {
           "type": "string",
@@ -453,21 +453,6 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "CIVolume": {
-      "type": "object",
-      "discriminator": "type",
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "EmptyDir",
-            "PersistentVolumeClaim",
-            "HostPath"
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "Capabilities": {
       "type": "object",
       "properties": {
@@ -583,6 +568,159 @@
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "ContainerInfraYamlSpec": {
+      "type": "object",
+      "required": [
+        "connectorRef",
+        "namespace"
+      ],
+      "properties": {
+        "annotations": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "automountServiceAccountToken": {
+          "oneOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        },
+        "connectorRef": {
+          "type": "string"
+        },
+        "containerSecurityContext": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/SecurityContext"
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        },
+        "harnessImageConnectorRef": {
+          "type": "string"
+        },
+        "initTimeout": {
+          "type": "string"
+        },
+        "labels": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "namespace": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2147483647
+        },
+        "nodeSelector": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        },
+        "os": {
+          "oneOf": [
+            {
+              "type": "string",
+              "enum": [
+                "Linux",
+                "MacOS",
+                "Windows"
+              ]
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        },
+        "priorityClassName": {
+          "type": "string"
+        },
+        "runAsUser": {
+          "oneOf": [
+            {
+              "type": "integer",
+              "format": "int32"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "serviceAccountName": {
+          "type": "string"
+        },
+        "tolerations": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Toleration"
+              }
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        },
+        "volumes": {
+          "oneOf": [
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ContainerVolume"
+              }
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ContainerK8sInfra": {
       "allOf": [
         {
@@ -596,7 +734,7 @@
           ],
           "properties": {
             "spec": {
-              "$ref": "#/definitions/K8sDirectInfraYamlSpec"
+              "$ref": "#/definitions/ContainerInfraYamlSpec"
             },
             "type": {
               "type": "string",
@@ -629,10 +767,14 @@
         {
           "type": "object",
           "required": [
+            "command",
             "infrastructure",
             "resources"
           ],
           "properties": {
+            "command": {
+              "type": "string"
+            },
             "connectorRef": {
               "type": "string"
             },
@@ -694,6 +836,21 @@
             "metadata": {
               "type": "string"
             },
+            "outputVariables": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/OutputNGVariable"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "privileged": {
               "oneOf": [
                 {
@@ -736,6 +893,24 @@
                 }
               ]
             },
+            "shell": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "enum": [
+                    "Sh",
+                    "Bash",
+                    "Powershell",
+                    "Pwsh"
+                  ]
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "uses": {
               "type": "string"
             }
@@ -752,6 +927,21 @@
           "type": "string",
           "enum": [
             "KubernetesDirect"
+          ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "ContainerVolume": {
+      "type": "object",
+      "discriminator": "type",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "EmptyDir",
+            "PersistentVolumeClaim",
+            "HostPath"
           ]
         }
       },
@@ -1013,7 +1203,7 @@
     "EmptyDirYaml": {
       "allOf": [
         {
-          "$ref": "#/definitions/CIVolume"
+          "$ref": "#/definitions/ContainerVolume"
         },
         {
           "type": "object",
@@ -1356,7 +1546,7 @@
     "HostPathYaml": {
       "allOf": [
         {
-          "$ref": "#/definitions/CIVolume"
+          "$ref": "#/definitions/ContainerVolume"
         },
         {
           "type": "object",
@@ -1776,159 +1966,6 @@
       "type": "object",
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
-    "K8sDirectInfraYamlSpec": {
-      "type": "object",
-      "required": [
-        "connectorRef",
-        "namespace"
-      ],
-      "properties": {
-        "annotations": {
-          "oneOf": [
-            {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "automountServiceAccountToken": {
-          "oneOf": [
-            {
-              "type": "boolean"
-            },
-            {
-              "type": "string",
-              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
-              "minLength": 1
-            }
-          ]
-        },
-        "connectorRef": {
-          "type": "string"
-        },
-        "containerSecurityContext": {
-          "oneOf": [
-            {
-              "$ref": "#/definitions/SecurityContext"
-            },
-            {
-              "type": "string",
-              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
-              "minLength": 1
-            }
-          ]
-        },
-        "harnessImageConnectorRef": {
-          "type": "string"
-        },
-        "initTimeout": {
-          "type": "string"
-        },
-        "labels": {
-          "oneOf": [
-            {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "namespace": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 2147483647
-        },
-        "nodeSelector": {
-          "oneOf": [
-            {
-              "type": "object",
-              "additionalProperties": {
-                "type": "string"
-              }
-            },
-            {
-              "type": "string",
-              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
-              "minLength": 1
-            }
-          ]
-        },
-        "os": {
-          "oneOf": [
-            {
-              "type": "string",
-              "enum": [
-                "Linux",
-                "MacOS",
-                "Windows"
-              ]
-            },
-            {
-              "type": "string",
-              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
-              "minLength": 1
-            }
-          ]
-        },
-        "priorityClassName": {
-          "type": "string"
-        },
-        "runAsUser": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "format": "int32"
-            },
-            {
-              "type": "string"
-            }
-          ]
-        },
-        "serviceAccountName": {
-          "type": "string"
-        },
-        "tolerations": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/Toleration"
-              }
-            },
-            {
-              "type": "string",
-              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
-              "minLength": 1
-            }
-          ]
-        },
-        "volumes": {
-          "oneOf": [
-            {
-              "type": "array",
-              "items": {
-                "$ref": "#/definitions/CIVolume"
-              }
-            },
-            {
-              "type": "string",
-              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
-              "minLength": 1
-            }
-          ]
-        }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
     "KeyValuesCriteriaSpec": {
       "allOf": [
         {
@@ -2192,7 +2229,8 @@
               "Verification",
               "DelegateProvisioning",
               "PolicyEvaluationFailure",
-              "InputTimeoutError"
+              "InputTimeoutError",
+              "ApprovalRejection"
             ]
           }
         }
@@ -2269,6 +2307,19 @@
               "$ref": "#/definitions/StepGroupFailureActionConfig"
             }
           ]
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "OutputNGVariable": {
+      "type": "object",
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string",
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_]{0,63}$"
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -2418,7 +2469,7 @@
     "PersistentVolumeClaimYaml": {
       "allOf": [
         {
-          "$ref": "#/definitions/CIVolume"
+          "$ref": "#/definitions/ContainerVolume"
         },
         {
           "type": "object",
@@ -3518,7 +3569,8 @@
       ],
       "properties": {
         "condition": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(?!<\\+input>.*\\.executionInput\\(\\)(.*)$)"
         },
         "pipelineStatus": {
           "type": "string",
@@ -3550,7 +3602,7 @@
         },
         "identifier": {
           "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_]{0,63}$"
         },
         "name": {
           "type": "string",
@@ -3893,7 +3945,7 @@
         },
         "identifier": {
           "type": "string",
-          "pattern": "^[a-zA-Z_][0-9a-zA-Z_$]{0,63}$"
+          "pattern": "^[a-zA-Z_][0-9a-zA-Z_]{0,63}$"
         },
         "name": {
           "type": "string",
@@ -3950,7 +4002,8 @@
       ],
       "properties": {
         "condition": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(?!<\\+input>.*\\.executionInput\\(\\)(.*)$)"
         },
         "stageStatus": {
           "type": "string",

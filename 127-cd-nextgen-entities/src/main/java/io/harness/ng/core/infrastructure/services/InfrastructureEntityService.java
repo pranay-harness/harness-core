@@ -9,7 +9,9 @@ package io.harness.ng.core.infrastructure.services;
 
 import io.harness.annotations.dev.HarnessTeam;
 import io.harness.annotations.dev.OwnedBy;
+import io.harness.ng.core.infrastructure.dto.InfrastructureInputsMergedResponseDto;
 import io.harness.ng.core.infrastructure.dto.InfrastructureYamlMetadata;
+import io.harness.ng.core.infrastructure.dto.NoInputMergeInputAction;
 import io.harness.ng.core.infrastructure.entity.InfrastructureEntity;
 import io.harness.persistence.HIterator;
 import io.harness.repositories.UpsertOptions;
@@ -54,19 +56,17 @@ public interface InfrastructureEntityService {
       @NotEmpty String accountId, @NotNull List<InfrastructureEntity> infrastructureEntities);
 
   List<InfrastructureEntity> getAllInfrastructureFromIdentifierList(String accountIdentifier, String orgIdentifier,
-      String projectIdentifier, String value, List<String> infraIdentifier);
+      String projectIdentifier, String envIdentifier, List<String> infraIdentifier);
 
-  List<InfrastructureEntity> getAllInfrastructureFromEnvIdentifier(
+  List<InfrastructureEntity> getAllInfrastructureFromEnvRef(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, String envIdentifier);
 
   List<InfrastructureEntity> getAllInfrastructureFromProjectIdentifier(
       String accountIdentifier, String orgIdentifier, String projectIdentifier);
 
   String createInfrastructureInputsFromYaml(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, List<String> infraIdentifiers, boolean deployToAll);
-
-  String createInfrastructureInputsFromYamlV2(String accountId, String orgIdentifier, String projectIdentifier,
-      String environmentIdentifier, List<String> infraIdentifiers, boolean deployToAll);
+      String environmentIdentifier, List<String> infraIdentifiers, boolean deployToAll,
+      NoInputMergeInputAction noInputMergeInputAction);
 
   UpdateResult batchUpdateInfrastructure(String accountIdentifier, String orgIdentifier, String projectIdentifier,
       String envIdentifier, List<String> infraIdentifier, Update update);
@@ -76,4 +76,7 @@ public interface InfrastructureEntityService {
 
   String createInfrastructureInputsFromYaml(String accountId, String orgIdentifier, String projectIdentifier,
       String environmentIdentifier, String infraIdentifier);
+
+  InfrastructureInputsMergedResponseDto mergeInfraStructureInputs(String accountId, String orgIdentifier,
+      String projectIdentifier, String envIdentifier, String infraIdentifier, String oldInfrastructureInputsYaml);
 }
