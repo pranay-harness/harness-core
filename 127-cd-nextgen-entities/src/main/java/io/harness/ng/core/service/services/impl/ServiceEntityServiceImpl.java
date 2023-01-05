@@ -230,6 +230,11 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
         throw new InvalidRequestException(String.format("Service Deployment Type is not allowed to change."));
       }
 
+      if (oldService != null && oldService.getGitOpsEnabled() != null && requestService.getGitOpsEnabled() != null
+          && !oldService.getGitOpsEnabled().equals(requestService.getGitOpsEnabled())) {
+        throw new InvalidRequestException(String.format("GitOps Enabled is not allowed to change."));
+      }
+
       if (ServiceDefinitionType.TAS.equals(requestService.getType())) {
         validateTasServiceEntity(requestService);
       }
@@ -280,6 +285,11 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
       if (oldService != null && oldService.getType() != null && requestService.getType() != null
           && !oldService.getType().equals(requestService.getType())) {
         throw new InvalidRequestException(String.format("Service Deployment Type is not allowed to change."));
+      }
+
+      if (oldService != null && oldService.getGitOpsEnabled() != null && requestService.getGitOpsEnabled() != null
+          && !oldService.getGitOpsEnabled().equals(requestService.getGitOpsEnabled())) {
+        throw new InvalidRequestException(String.format("GitOps Enabled is not allowed to change."));
       }
     }
     if (ServiceDefinitionType.TAS.equals(requestService.getType())) {
@@ -508,7 +518,6 @@ public class ServiceEntityServiceImpl implements ServiceEntityService {
     return getScopedServiceEntities(accountIdentifier, orgIdentifier, projectIdentifier, serviceRefs);
   }
 
-  @org.jetbrains.annotations.NotNull
   private List<ServiceEntity> getScopedServiceEntities(
       String accountIdentifier, String orgIdentifier, String projectIdentifier, List<String> serviceRefs) {
     List<ServiceEntity> entities = new ArrayList<>();

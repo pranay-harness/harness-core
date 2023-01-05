@@ -25,6 +25,7 @@ import io.harness.cdng.artifact.outcome.ArtifactsOutcome;
 import io.harness.cdng.configfile.steps.ConfigFilesOutcome;
 import io.harness.cdng.creator.plan.environment.EnvironmentMapper;
 import io.harness.cdng.creator.plan.environment.EnvironmentPlanCreatorHelper;
+import io.harness.cdng.creator.plan.environment.EnvironmentStepsUtils;
 import io.harness.cdng.envGroup.beans.EnvironmentGroupEntity;
 import io.harness.cdng.envGroup.services.EnvironmentGroupService;
 import io.harness.cdng.expressions.CDExpressionResolver;
@@ -121,6 +122,8 @@ public class ServiceStepV3 implements ChildrenExecutable<ServiceStepV3Parameters
   public static final String FREEZE_SWEEPING_OUTPUT = "freezeSweepingOutput";
   public static final String SERVICE_MANIFESTS_SWEEPING_OUTPUT = "serviceManifestsSweepingOutput";
   public static final String SERVICE_CONFIG_FILES_SWEEPING_OUTPUT = "serviceConfigFilesSweepingOutput";
+  public static final String SERVICE_APP_SETTINGS_SWEEPING_OUTPUT = "serviceAppSettingsSweepingOutput";
+  public static final String SERVICE_CONNECTION_STRINGS_SWEEPING_OUTPUT = "serviceConnectionStringsSweepingOutput";
   public static final String PIPELINE_EXECUTION_EXPRESSION = "<+pipeline.execution.url>";
 
   @Inject private ServiceEntityService serviceEntityService;
@@ -219,6 +222,8 @@ public class ServiceStepV3 implements ChildrenExecutable<ServiceStepV3Parameters
 
     List<Environment> environments = getEnvironmentsFromEnvRef(ambiance, parameters.getEnvRefs());
 
+    EnvironmentStepsUtils.checkForAllEnvsAccessOrThrow(accessControlClient, ambiance, environments);
+
     log.info("Starting execution for Environments: [{}]", Arrays.toString(environments.toArray()));
     for (Environment environment : environments) {
       NGEnvironmentConfig ngEnvironmentConfig;
@@ -266,6 +271,12 @@ public class ServiceStepV3 implements ChildrenExecutable<ServiceStepV3Parameters
 
     serviceStepOverrideHelper.prepareAndSaveFinalConfigFilesMetadataToSweepingOutput(
         servicePartResponse.getNgServiceConfig(), null, null, ambiance, SERVICE_CONFIG_FILES_SWEEPING_OUTPUT);
+
+    serviceStepOverrideHelper.prepareAndSaveFinalAppServiceMetadataToSweepingOutput(
+        servicePartResponse.getNgServiceConfig(), null, null, ambiance, SERVICE_APP_SETTINGS_SWEEPING_OUTPUT);
+
+    serviceStepOverrideHelper.prepareAndSaveFinalConnectionStringsMetadataToSweepingOutput(
+        servicePartResponse.getNgServiceConfig(), null, null, ambiance, SERVICE_CONNECTION_STRINGS_SWEEPING_OUTPUT);
   }
 
   private List<Environment> getEnvironmentsFromEnvRef(Ambiance ambiance, List<ParameterField<String>> envRefs) {
@@ -298,6 +309,9 @@ public class ServiceStepV3 implements ChildrenExecutable<ServiceStepV3Parameters
     }
 
     log.info("Starting execution for Environment Step [{}]", envRef.getValue());
+
+    EnvironmentStepsUtils.checkForEnvAccessOrThrow(accessControlClient, ambiance, envRef);
+
     if (envRef.fetchFinalValue() != null) {
       Optional<Environment> environment =
           environmentService.get(AmbianceUtils.getAccountId(ambiance), AmbianceUtils.getOrgIdentifier(ambiance),
@@ -355,6 +369,14 @@ public class ServiceStepV3 implements ChildrenExecutable<ServiceStepV3Parameters
       serviceStepOverrideHelper.prepareAndSaveFinalConfigFilesMetadataToSweepingOutput(
           servicePartResponse.getNgServiceConfig(), ngServiceOverrides, ngEnvironmentConfig, ambiance,
           SERVICE_CONFIG_FILES_SWEEPING_OUTPUT);
+
+      serviceStepOverrideHelper.prepareAndSaveFinalAppServiceMetadataToSweepingOutput(
+          servicePartResponse.getNgServiceConfig(), ngServiceOverrides, ngEnvironmentConfig, ambiance,
+          SERVICE_APP_SETTINGS_SWEEPING_OUTPUT);
+
+      serviceStepOverrideHelper.prepareAndSaveFinalConnectionStringsMetadataToSweepingOutput(
+          servicePartResponse.getNgServiceConfig(), ngServiceOverrides, ngEnvironmentConfig, ambiance,
+          SERVICE_CONNECTION_STRINGS_SWEEPING_OUTPUT);
     }
   }
 

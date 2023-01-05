@@ -862,6 +862,115 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "AsgRollingDeployStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "required": [
+            "useAlreadyRunningInstances"
+          ],
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "instanceWarmup": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "minimumHealthyPercentage": {
+              "oneOf": [
+                {
+                  "type": "integer",
+                  "format": "int32"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "skipMatching": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
+            "useAlreadyRunningInstances": {
+              "oneOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "AsgRollingRollbackStepInfo": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/StepSpecType"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "delegateSelectors": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "AsgScalingPolicyManifest": {
       "allOf": [
         {
@@ -3947,6 +4056,9 @@
             },
             "taskDefinition": {
               "$ref": "#/definitions/StoreConfigWrapper"
+            },
+            "taskDefinitionArn": {
+              "type": "string"
             }
           }
         }
@@ -4626,6 +4738,12 @@
               "minLength": 1
             }
           ]
+        },
+        "servicesOverrides": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ServiceOverrideInputsYaml"
+          }
         }
       },
       "$schema": "http://json-schema.org/draft-07/schema#"
@@ -6538,6 +6656,13 @@
         "name": {
           "type": "string"
         },
+        "type": {
+          "type": "string",
+          "enum": [
+            "String",
+            "Number"
+          ]
+        },
         "value": {
           "type": "string"
         }
@@ -6586,6 +6711,21 @@
         {
           "type": "object",
           "properties": {
+            "commandFlags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/K8sStepCommandFlag"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "delegateSelectors": {
               "oneOf": [
                 {
@@ -6741,6 +6881,21 @@
         {
           "type": "object",
           "properties": {
+            "commandFlags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/K8sStepCommandFlag"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "delegateSelectors": {
               "oneOf": [
                 {
@@ -6811,6 +6966,21 @@
             "instanceSelection"
           ],
           "properties": {
+            "commandFlags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/K8sStepCommandFlag"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "delegateSelectors": {
               "oneOf": [
                 {
@@ -6971,6 +7141,21 @@
         {
           "type": "object",
           "properties": {
+            "commandFlags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/K8sStepCommandFlag"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "delegateSelectors": {
               "oneOf": [
                 {
@@ -7009,6 +7194,21 @@
         {
           "type": "object",
           "properties": {
+            "commandFlags": {
+              "oneOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/K8sStepCommandFlag"
+                  }
+                },
+                {
+                  "type": "string",
+                  "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+                  "minLength": 1
+                }
+              ]
+            },
             "delegateSelectors": {
               "oneOf": [
                 {
@@ -7096,6 +7296,24 @@
           }
         }
       ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "K8sStepCommandFlag": {
+      "type": "object",
+      "required": [
+        "commandType"
+      ],
+      "properties": {
+        "commandType": {
+          "type": "string",
+          "enum": [
+            "Apply"
+          ]
+        },
+        "flag": {
+          "type": "string"
+        }
+      },
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
     "KubernetesServiceSpec": {
@@ -10118,6 +10336,30 @@
         }
       ]
     },
+    "ServiceOverrideInputsYaml": {
+      "type": "object",
+      "required": [
+        "serviceRef"
+      ],
+      "properties": {
+        "serviceOverrideInputs": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/JsonNode"
+            },
+            {
+              "type": "string",
+              "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
+              "minLength": 1
+            }
+          ]
+        },
+        "serviceRef": {
+          "type": "string"
+        }
+      },
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "ServiceOverrides": {
       "type": "object",
       "properties": {
@@ -11024,6 +11266,38 @@
             "properties": {
               "spec": {
                 "$ref": "#/definitions/AsgCanaryDeployStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AsgRollingDeploy"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AsgRollingDeployStepInfo"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "AsgRollingRollback"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/AsgRollingRollbackStepInfo"
               }
             }
           }
@@ -12889,12 +13163,40 @@
       ],
       "$schema": "http://json-schema.org/draft-07/schema#"
     },
+    "TasCountInstanceSelection": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TasInstanceSelectionBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldString"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TasInstanceSelectionBase": {
+      "type": "object",
+      "discriminator": "type",
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
     "TasInstanceSelectionWrapper": {
       "type": "object",
       "properties": {
-        "spec": {
-          "$ref": "#/definitions/TasInstanceValue"
-        },
         "type": {
           "type": "string",
           "enum": [
@@ -12903,29 +13205,41 @@
           ]
         }
       },
-      "$schema": "http://json-schema.org/draft-07/schema#"
-    },
-    "TasInstanceValue": {
-      "type": "object",
-      "required": [
-        "value"
-      ],
-      "properties": {
-        "value": {
-          "oneOf": [
-            {
-              "type": "integer",
-              "format": "int32"
-            },
-            {
-              "type": "string",
-              "pattern": "(<\\+.+>.*)",
-              "minLength": 1
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Count"
+              }
             }
-          ]
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TasCountInstanceSelection"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "type": {
+                "const": "Percentage"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "spec": {
+                "$ref": "#/definitions/TasPercentageInstanceSelection"
+              }
+            }
+          }
         }
-      },
-      "$schema": "http://json-schema.org/draft-07/schema#"
+      ]
     },
     "TasManifest": {
       "allOf": [
@@ -12974,6 +13288,32 @@
                   "type": "string",
                   "pattern": "^<\\+input>((\\.)((executionInput\\(\\))|(allowedValues|default|regex)\\(.+?\\)))*$",
                   "minLength": 1
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "$schema": "http://json-schema.org/draft-07/schema#"
+    },
+    "TasPercentageInstanceSelection": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/TasInstanceSelectionBase"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "oneOf": [
+                {
+                  "$ref": "#/definitions/ParameterFieldString"
+                },
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "number"
                 }
               ]
             }

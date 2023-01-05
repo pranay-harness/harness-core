@@ -441,6 +441,15 @@ import io.harness.delegate.task.aws.asg.AsgCanaryDeployResult;
 import io.harness.delegate.task.aws.asg.AsgCommandRequest;
 import io.harness.delegate.task.aws.asg.AsgCommandResponse;
 import io.harness.delegate.task.aws.asg.AsgInfraConfig;
+import io.harness.delegate.task.aws.asg.AsgPrepareRollbackDataRequest;
+import io.harness.delegate.task.aws.asg.AsgPrepareRollbackDataResponse;
+import io.harness.delegate.task.aws.asg.AsgPrepareRollbackDataResult;
+import io.harness.delegate.task.aws.asg.AsgRollingDeployRequest;
+import io.harness.delegate.task.aws.asg.AsgRollingDeployResponse;
+import io.harness.delegate.task.aws.asg.AsgRollingDeployResult;
+import io.harness.delegate.task.aws.asg.AsgRollingRollbackRequest;
+import io.harness.delegate.task.aws.asg.AsgRollingRollbackResponse;
+import io.harness.delegate.task.aws.asg.AsgRollingRollbackResult;
 import io.harness.delegate.task.aws.asg.AutoScalingGroupContainer;
 import io.harness.delegate.task.aws.asg.AutoScalingGroupInstance;
 import io.harness.delegate.task.azure.AzureTaskExecutionResponse;
@@ -585,6 +594,7 @@ import io.harness.delegate.task.ecs.request.EcsGitFetchRunTaskRequest;
 import io.harness.delegate.task.ecs.request.EcsPrepareRollbackDataRequest;
 import io.harness.delegate.task.ecs.request.EcsRollingDeployRequest;
 import io.harness.delegate.task.ecs.request.EcsRollingRollbackRequest;
+import io.harness.delegate.task.ecs.request.EcsRunTaskArnRequest;
 import io.harness.delegate.task.ecs.request.EcsRunTaskRequest;
 import io.harness.delegate.task.ecs.request.EcsS3FetchRequest;
 import io.harness.delegate.task.ecs.request.EcsS3FetchRunTaskRequest;
@@ -725,6 +735,7 @@ import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequest;
 import io.harness.delegate.task.pcf.request.CfRunPluginCommandRequestNG;
 import io.harness.delegate.task.pcf.request.CfSwapRollbackCommandRequestNG;
 import io.harness.delegate.task.pcf.request.CfSwapRoutesRequestNG;
+import io.harness.delegate.task.pcf.request.TasManifestsPackage;
 import io.harness.delegate.task.pcf.response.CfBasicSetupResponseNG;
 import io.harness.delegate.task.pcf.response.CfBlueGreenSetupResponseNG;
 import io.harness.delegate.task.pcf.response.CfCommandExecutionResponse;
@@ -898,6 +909,7 @@ import io.harness.serializer.KryoRegistrar;
 
 import software.wings.api.LoadBalancerConfig;
 import software.wings.api.terraform.TfVarGitSource;
+import software.wings.api.terraform.TfVarS3Source;
 import software.wings.beans.APMValidateCollectorConfig;
 import software.wings.beans.AwsConfig;
 import software.wings.beans.AwsElbConfig;
@@ -1471,6 +1483,7 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(TasArtifactRegistryType.class, 10000257);
     kryo.register(TasResizeStrategyType.class, 10000258);
     kryo.register(TasConstants.class, 10000259);
+    kryo.register(TasManifestsPackage.class, 10000260);
 
     kryo.register(SecretType.class, 543214);
     kryo.register(ValueType.class, 543215);
@@ -2032,6 +2045,15 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AsgNGException.class, 573580);
     kryo.register(AutoScalingGroupContainer.class, 573581);
     kryo.register(AutoScalingGroupInstance.class, 573582);
+    kryo.register(AsgPrepareRollbackDataRequest.class, 573584);
+    kryo.register(AsgPrepareRollbackDataResponse.class, 573585);
+    kryo.register(AsgPrepareRollbackDataResult.class, 573586);
+    kryo.register(AsgRollingDeployRequest.class, 573587);
+    kryo.register(AsgRollingDeployResponse.class, 573588);
+    kryo.register(AsgRollingDeployResult.class, 573589);
+    kryo.register(AsgRollingRollbackRequest.class, 573590);
+    kryo.register(AsgRollingRollbackResponse.class, 573591);
+    kryo.register(AsgRollingRollbackResult.class, 573592);
 
     kryo.register(AzurePackageArtifactConfig.class, 55410);
     kryo.register(AzureArtifactRequestDetails.class, 55411);
@@ -2141,7 +2163,6 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(AbstractTerragruntTaskResponse.class, 573556);
     kryo.register(TerragruntPlanTaskResponse.class, 573557);
 
-    kryo.register(TerragruntApplyTaskResponse.class, 573558);
     kryo.register(TerragruntDestroyTaskResponse.class, 573559);
     kryo.register(TerragruntRollbackTaskResponse.class, 573560);
 
@@ -2153,9 +2174,12 @@ public class DelegateTasksBeansKryoRegister implements KryoRegistrar {
     kryo.register(EcsS3FetchFileConfig.class, 573565);
     kryo.register(EcsS3FetchRunTaskRequest.class, 573566);
     kryo.register(EcsS3FetchRunTaskResponse.class, 573567);
+    kryo.register(TerragruntApplyTaskResponse.class, 573558);
     kryo.register(TerragruntCommandType.class, 573568);
     kryo.register(TerragruntApplyTaskParameters.class, 573569);
     kryo.register(TerragruntDestroyTaskParameters.class, 573570);
+    kryo.register(EcsRunTaskArnRequest.class, 573583);
+    kryo.register(TfVarS3Source.class, 573593);
     kryo.register(ConcurrentHashMap.class, 673567);
   }
 }
