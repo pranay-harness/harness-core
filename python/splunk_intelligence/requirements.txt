@@ -13,7 +13,7 @@ certifi==2018.4.16
 cffi==1.11.5
 chardet==3.0.4
 configparser==3.5.0
-cryptography==2.2.2
+cryptography==41.0.2
 Cython==0.28.3
 debacl==1.1
 decorator==4.3.0
