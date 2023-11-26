@@ -3,7 +3,8 @@ name: Your Workflow Name
 on:
   push:
     branches:
-      - main
+      - '*'
+  pull_request:
 
 jobs:
   your-job-name:
