@@ -1,39 +1,86 @@
+# Notice the v1beta3 version
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 # some metadata about the template itself
 metadata:
-  name: use-user-identity
-  title: Use User Identity
-  tags:
-    - nextjs
-    - react
-    - javascript
-# these are the steps which are rendered in the frontend with the form input
+  name: v1beta3-demo
+  title: Test Action template
+  description: scaffolder v1beta3 template demo
 spec:
-  owner: user@example.com
+  owner: backstage/techdocs-core
   type: service
+
+  # these are the steps which are rendered in the frontend with the form input
   parameters:
-    - title: Details
+    - title: Fill in some steps
+      required:
+        - name
       properties:
         name:
-          title: title
+          title: Name
           type: string
-          description: description
+          description: Unique name of the component
+          ui:autofocus: true
+          ui:options:
+            rows: 5
+        owner:
+          title: Owner
+          type: string
+          description: Owner of the component
+          ui:field: OwnerPicker
+          ui:options:
+            catalogFilter:
+              kind: Group
+    - title: Choose a location
+      required:
+        - repoUrl
+      properties:
+        repoUrl:
+          title: Repository Location
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts:
+              - github.com
+
   # here's the steps that are executed in series in the scaffolder backend
   steps:
-    - id: log
-      name: log
-      action: debug:log
+    - id: fetch-base
+      name: Fetch Base
+      action: fetch:template
       input:
-        message: "Hello World"
+        url: ./template
+        values:
+          name: ${{ parameters.name }}
+          owner: ${{ parameters.owner }}
 
-    - id: log2
-      name: log2
-      action: debug:log
+    - id: fetch-docs
+      name: Fetch Docs
+      action: fetch:plain
       input:
-        message: '${{ user.entity.spec.profile.email }}'
+        targetPath: ./community
+        url: https://github.com/backstage/community/tree/main/backstage-community-sessions
+
+    - id: publish
+      name: Publish
+      action: publish:github
+      input:
+        allowedHosts: ['github.com']
+        description: This is ${{ parameters.name }}
+        repoUrl: ${{ parameters.repoUrl }}
+
+    - id: register
+      name: Register
+      action: catalog:register
+      input:
+        repoContentsUrl: ${{ steps['publish'].output.repoContentsUrl }}
+        catalogInfoPath: '/catalog-info.yaml'
+
   # some outputs which are saved along with the job for use in the frontend
   output:
     links:
-      - title: Pipeline Details
-        url: ${{ steps.trigger.output.PipelineUrl }}
+      - title: Repository
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Open in catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
