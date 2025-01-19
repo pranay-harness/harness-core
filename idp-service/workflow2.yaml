@@ -29,7 +29,7 @@ spec:
         github_repo:
           title: Name of the GitHub repositories to be scanned
           type: string
-          description: Enter Repo names (comma seperated, eg: repo1,repo2,repo3)
+          description: Enter Repo names comma seperated - eg: repo1,repo2,repo3
     - title: Service Infrastructure Details
       required:
         - owner
