@@ -1,7 +1,7 @@
 apiVersion: scaffolder.backstage.io/v1beta3
 kind: Template
 metadata:
-  name: react-app
+  name: scs-idp
   title: Onboard repos for Supply Chain Security
   description: A workflow to onboard github repos for automated scanning
   tags:
