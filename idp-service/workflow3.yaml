@@ -67,7 +67,7 @@ spec:
       name: Creating your react app
       action: trigger:harness-custom-pipeline
       input:
-        url: "https://qa.harness.io/ng/account/px7xd_BFRCi-pfWPYXVjvw/module/idp-admin/orgs/Audit_Demo/projects/Reetika_Test/pipelines/SCSIDP_integration/pipeline-studio/?storeType=INLINE"
+        url: "https://qa.harness.io/ng/account/ppbLW9YpRharzPs_JtWT7g/module/ssca/orgs/default/projects/SBOM_orchestration/pipelines/RSPM_Onboarding_via_APIs/pipeline-studio?storeType=INLINE"
         inputset:
  #         project_name: ${{ parameters.project_name }}
           github_repo: ${{ parameters.github_repo }}
