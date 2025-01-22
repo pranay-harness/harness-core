@@ -30,32 +30,8 @@ spec:
           title: Name of the GitHub repositories to be scanned
           type: string
           description: Enter Repo names comma seperated
-    - title: Service Infrastructure Details
-      required:
-        - owner
+    - title: Fetch Harness Token
       properties:
-        cloud_provider:
-          title: Choose a cloud provider for Deployment
-          type: string
-          enum: ["GCP","AWS"]
-          default: GCP
-        db:
-          title: Choose a Database Type for the Service
-          type: string
-          enum: ["None","MySQL","Postgres","MongoDB"]
-          default: None
-        cache:
-          title: Choose a caching system for the Service
-          type: string
-          enum: ["None","Redis"]
-          default: None
-        owner:
-          title: Choose an Owner for the Service
-          type: string
-          ui:field: OwnerPicker
-          ui:options:
-            allowedKinds:
-              - Group
         # This field is hidden but needed to authenticate the request to trigger the pipeline
         token:
           title: Harness Token
