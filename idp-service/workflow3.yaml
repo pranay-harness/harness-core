@@ -40,16 +40,14 @@ spec:
           ui:field: HarnessAuthToken
   steps:
     - id: trigger
-      name: Creating your react app
+      name: Onboarding Github Repos and running RSPM scans
       action: trigger:harness-custom-pipeline
       input:
         url: "https://qa.harness.io/ng/account/px7xd_BFRCi-pfWPYXVjvw/all/orgs/Audit_Demo/projects/Reetika_Test/pipelines/SCSIDP_integration/pipeline-studio?storeType=INLINE&stageId=Onboarding&sectionId=EXECUTION"
         inputset:
- #         project_name: ${{ parameters.project_name }}
+          project_name: ${{ parameters.project_name }}
           github_repo: ${{ parameters.github_repo }}
-#          cloud_provider: ${{ parameters.provider }}
- #         db: ${{ parameters.db }}
-  #        cache: ${{ parameters.cache }}
+          org_name: ${{ parameters.org_name }}
         apikey: ${{ parameters.token }}
     # The final step is to register our new component in the catalog.
 
